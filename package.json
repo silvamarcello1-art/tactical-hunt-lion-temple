@@ -1,0 +1,19 @@
+{
+  "name": "ot-idle-vertical-slice",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "tsc && vite build && node scripts/prepare-sites-build.mjs",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "pixi.js": "^8.13.2"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3",
+    "vite": "^6.3.5",
+    "vitest": "^3.1.4"
+  }
+}

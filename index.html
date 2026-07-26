@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Lion Temple — Tactical Hunt</title>
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="topbar">
+        <div class="brand">
+          <span class="brand-mark">LT</span>
+          <div><strong>TACTICAL HUNT</strong><small>vertical slice • PixiJS</small></div>
+        </div>
+        <div class="account-resources">
+          <span>🪙 <b>78.531.309</b></span>
+          <span>◆ <b>28</b></span>
+        </div>
+        <nav aria-label="Navegação principal">
+          <button>Helper</button><button>Bestiário</button><button>Progressão</button>
+          <button>Armazém</button><button>Social</button>
+        </nav>
+        <div class="account-chip">MONK 803</div>
+      </header>
+
+      <section class="game-layout">
+        <aside class="left-sidebar">
+          <section class="panel stamina-panel">
+            <header><h2>Stamina</h2><b>39:24</b></header>
+            <div class="meter"><i style="width:94%"></i></div>
+          </section>
+          <section class="panel compact-panel">
+            <header><h2>Boosts</h2><button class="collapse">−</button></header>
+            <dl><dt>XP</dt><dd>+50%</dd><dt>Dano</dt><dd>Inativo</dd><dt>Loot</dt><dd>Inativo</dd></dl>
+          </section>
+          <section class="panel analyzer">
+            <header><h2>Hunt Analyzer</h2><span>↻</span></header>
+            <div id="analyzer"></div>
+          </section>
+          <section class="panel compact-panel">
+            <header><h2>Dano por personagem</h2><button class="collapse">+</button></header>
+            <div id="damage-breakdown" class="mini-list">Aguardando combate.</div>
+          </section>
+          <section class="panel log-panel">
+            <header><h2>Registro</h2><span>ao vivo</span></header>
+            <div id="log"></div>
+          </section>
+        </aside>
+
+        <section class="center-column">
+          <div class="hunt-toolbar">
+            <select aria-label="Hunt selecionada"><option>Lion Temple</option></select>
+            <div class="phase-track" aria-label="Progresso da hunt">
+              <span class="phase active">1</span><i></i><span class="phase">2</span><i></i>
+              <span class="phase">3</span><i></i><span class="phase boss">B</span>
+            </div>
+            <button id="loop-toggle" class="toggle active" aria-pressed="true">
+              ↻ Loop <span>ON</span>
+            </button>
+          </div>
+          <div class="stage-status">
+            <span id="stage-label">Preparação</span>
+            <div><i id="stage-fill"></i></div>
+          </div>
+          <div id="game" aria-label="Mapa tático da hunt"></div>
+          <div class="center-tabs">
+            <button class="active">Geral</button><button>Combate</button><button>Loot</button>
+            <span id="session-state">Pronto para iniciar</span>
+          </div>
+          <div class="action-dock">
+            <div class="controls">
+              <button id="start" class="primary">▶ Iniciar</button>
+              <button id="pause" disabled>Ⅱ Pausar</button>
+              <button id="restart">↺ Reiniciar</button>
+              <div class="speed" aria-label="Velocidade">
+                <button data-speed="1" class="active">1×</button>
+                <button data-speed="2">2×</button>
+                <button data-speed="4">4×</button>
+              </div>
+            </div>
+            <div id="action-bar" class="action-bar"></div>
+            <button id="ability-config" class="config-button">⚙ Habilidades</button>
+          </div>
+        </section>
+
+        <aside class="right-sidebar">
+          <section class="panel party-panel">
+            <header><h2>Party</h2><button id="party-config">Config</button></header>
+            <div id="party" class="party"></div>
+          </section>
+          <section class="panel inventory-panel">
+            <header><h2>Backpack</h2><b>18 / 20</b></header>
+            <div class="inventory-slots" id="backpack-slots"></div>
+          </section>
+          <section class="panel inventory-panel loot-panel">
+            <header><h2>Loot Pouch</h2><b>55 / 64</b></header>
+            <div id="loot" class="loot">Nenhum item ainda.</div>
+          </section>
+          <section class="panel compact-panel">
+            <header><h2>Supply Pouch</h2><button class="collapse">Config</button></header>
+            <dl><dt>Mana Potion</dt><dd>420</dd><dt>Health Potion</dt><dd>180</dd></dl>
+          </section>
+        </aside>
+      </section>
+
+      <dialog id="ability-modal">
+        <form method="dialog">
+          <header>
+            <div><span class="eyebrow">HELPER</span><h2>Prioridade de habilidades</h2></div>
+            <button value="cancel" class="close">×</button>
+          </header>
+          <p>Ative, desative e defina a ordem. Prioridade 1 é tentada primeiro.</p>
+          <div id="ability-list" class="ability-list"></div>
+          <footer>
+            <button value="cancel">Cancelar</button>
+            <button id="save-abilities" value="default" class="primary">Salvar e recalcular</button>
+          </footer>
+        </form>
+      </dialog>
+
+      <dialog id="result">
+        <div id="result-content"></div>
+        <div class="dialog-actions">
+          <button id="close-result">Fechar</button>
+          <button id="repeat" class="primary">Repetir hunt</button>
+        </div>
+      </dialog>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
