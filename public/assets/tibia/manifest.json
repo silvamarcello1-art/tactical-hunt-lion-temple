@@ -1,0 +1,33 @@
+{
+  "source": "rubinot- 2026/ObjectBuilder Tibia.dat + Tibia.spr",
+  "generatedAt": "2026-07-26T23:52:23.096Z",
+  "entities": {
+    "knight": 134,
+    "druid": 144,
+    "sorcerer": 138,
+    "lionKnight": 1384,
+    "lionWarlock": 1385,
+    "drume": 1386
+  },
+  "effects": {
+    "ice": 536,
+    "fire": 521,
+    "energy": 517,
+    "heal": 268,
+    "physical": 537,
+    "holy": 247,
+    "earth": 46
+  },
+  "tiles": {
+    "floor-stone": 417,
+    "floor-ornate": 418,
+    "floor-gold": 419,
+    "floor-mosaic": 425,
+    "wall-horizontal": 440,
+    "wall-vertical": 441,
+    "wall-column": 443,
+    "wall-corner": 444,
+    "temple-carpet": 452,
+    "temple-carpet-alt": 453
+  }
+}

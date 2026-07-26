@@ -1,10 +1,11 @@
 import {
+  AnimatedSprite,
   Application,
   Assets,
   Container,
   Graphics,
-  Rectangle,
   Sprite,
+  Spritesheet,
   Text,
   TextStyle,
   Texture,
@@ -23,11 +24,16 @@ import type {
 type Unit = {
   body: Container;
   shape: Graphics;
+  sprite: AnimatedSprite;
+  spriteKey: string;
+  facing: DirectionName;
   hp: Graphics;
   maxHp: number;
   currentHp: number;
   color: number;
 };
+
+type DirectionName = 'south' | 'east' | 'north' | 'west';
 
 type Tween = {
   elapsed: number;
@@ -45,8 +51,9 @@ export class PixiRenderer {
   private floorText!: Text;
   private bossFill?: Graphics;
   private tweens: Tween[] = [];
-  private atlasTexture!: Texture;
-  private monsterTextures = new Map<string, Texture>();
+  private outfitSheet!: Spritesheet;
+  private effectSheet!: Spritesheet;
+  private tileTextures = new Map<string, Texture>();
 
   constructor(preferences: AbilityPreferences) {
     this.result = new CombatEngine(803, preferences).run();
@@ -67,8 +74,7 @@ export class PixiRenderer {
       resolution:Math.min(window.devicePixelRatio, 2),
       autoDensity:true,
     });
-    this.atlasTexture = await Assets.load<Texture>('/assets/character-atlas.png');
-    await this.loadTemporaryMonsterTextures();
+    await this.loadTibiaAssets();
     parent.replaceChildren(this.app.canvas);
     this.drawArena();
     this.floorText = this.label('PREPARAÇÃO', 13, '#f0d77a');
@@ -87,60 +93,89 @@ export class PixiRenderer {
     this.app.destroy(true, { children:true });
   }
 
-  private async loadTemporaryMonsterTextures() {
+  private async loadTibiaAssets() {
+    [this.outfitSheet, this.effectSheet] = await Promise.all([
+      Assets.load<Spritesheet>('/assets/tibia/outfits.json'),
+      Assets.load<Spritesheet>('/assets/tibia/effects.json'),
+    ]);
     const sources: Record<string, string> = {
-      warrior:'/assets/wiki/ancient-lion-knight.png',
-      mage:'/assets/wiki/ancient-lion-warlock.png',
-      boss:'/assets/wiki/drume.png',
+      floorStone:'/assets/tibia/tiles/floor-stone.png',
+      floorOrnate:'/assets/tibia/tiles/floor-ornate.png',
+      floorGold:'/assets/tibia/tiles/floor-gold.png',
+      floorMosaic:'/assets/tibia/tiles/floor-mosaic.png',
+      wallHorizontal:'/assets/tibia/tiles/wall-horizontal.png',
+      wallVertical:'/assets/tibia/tiles/wall-vertical.png',
+      wallColumn:'/assets/tibia/tiles/wall-column.png',
     };
     await Promise.all(
       Object.entries(sources).map(async ([key, source]) => {
-        try {
-          this.monsterTextures.set(key, await Assets.load<Texture>(source));
-        } catch {
-          // The original atlas remains the explicit offline fallback.
-        }
+        this.tileTextures.set(key, await Assets.load<Texture>(source));
       }),
     );
   }
 
   private drawArena() {
-    const terrain = new Graphics();
+    const terrain = new Container();
+    terrain.zIndex = 0;
     for (let y = 0; y < 18; y++) {
       for (let x = 0; x < 30; x++) {
         const border = x === 0 || y === 0 || x === 29 || y === 17;
-        const path = x >= 3 && x <= 27 && y >= 2 && y <= 15;
-        const alternate = (x + y) % 2 === 0;
-        const color = border
-          ? 0x3b2b1f
-          : path
-            ? alternate
-              ? 0x62624b
-              : 0x575a45
-            : alternate
-              ? 0x243522
-              : 0x2b3d28;
-        terrain
-          .rect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE)
-          .fill(color)
-          .stroke({ width:1, color:0x111811, alpha:.24 });
+        const ceremonialPath = x >= 12 && x <= 17 && y >= 2 && y <= 15;
+        const key = border
+          ? 'floorStone'
+          : ceremonialPath
+            ? (x + y) % 3 === 0 ? 'floorGold' : 'floorOrnate'
+            : (x + y) % 4 === 0
+              ? 'floorMosaic'
+              : 'floorOrnate';
+        const tileSprite = new Sprite(this.tileTextures.get(key)!);
+        tileSprite.position.set(x * TILE_SIZE, y * TILE_SIZE);
+        tileSprite.width = TILE_SIZE;
+        tileSprite.height = TILE_SIZE;
+        terrain.addChild(tileSprite);
       }
     }
-    terrain.zIndex = 0;
 
-    const ornament = new Graphics();
-    for (let x = 3; x <= 27; x += 4) {
-      ornament
-        .circle(x * TILE_SIZE, TILE_SIZE * 2, 10)
-        .fill({ color:0x44673a, alpha:.85 })
-        .circle(x * TILE_SIZE, TILE_SIZE * 15, 10)
-        .fill({ color:0x44673a, alpha:.85 });
+    const walls = new Container();
+    walls.zIndex = 2;
+    for (let x = 0; x < 30; x += 1) {
+      for (const y of [0, 17]) {
+        const wall = new Sprite(this.tileTextures.get('wallHorizontal')!);
+        wall.position.set(x * TILE_SIZE, y * TILE_SIZE);
+        wall.width = TILE_SIZE;
+        wall.height = TILE_SIZE;
+        walls.addChild(wall);
+      }
     }
-    ornament
+    for (let y = 1; y < 17; y += 1) {
+      for (const x of [0, 29]) {
+        const wall = new Sprite(this.tileTextures.get('wallVertical')!);
+        wall.position.set(x * TILE_SIZE, y * TILE_SIZE);
+        wall.width = TILE_SIZE;
+        wall.height = TILE_SIZE;
+        walls.addChild(wall);
+      }
+    }
+    for (const x of [4, 10, 19, 25]) {
+      for (const y of [2, 15]) {
+        const column = new Sprite(this.tileTextures.get('wallColumn')!);
+        column.anchor.set(.5);
+        column.position.set(
+          x * TILE_SIZE + TILE_SIZE / 2,
+          y * TILE_SIZE + TILE_SIZE / 2,
+        );
+        column.width = TILE_SIZE;
+        column.height = TILE_SIZE;
+        walls.addChild(column);
+      }
+    }
+    const atmosphere = new Graphics()
+      .rect(TILE_SIZE, TILE_SIZE, 28 * TILE_SIZE, 16 * TILE_SIZE)
+      .fill({ color:0x10202a, alpha:.11 })
       .rect(14 * TILE_SIZE, 2 * TILE_SIZE, TILE_SIZE * 2, TILE_SIZE * 14)
-      .fill({ color:0x2b3328, alpha:.18 });
-    ornament.zIndex = 1;
-    this.app.stage.addChild(terrain, ornament);
+      .fill({ color:0xf2c55b, alpha:.06 });
+    atmosphere.zIndex = 3;
+    this.app.stage.addChild(terrain, walls, atmosphere);
   }
 
   private label(text: string, size: number, color: string) {
@@ -167,10 +202,10 @@ export class PixiRenderer {
     body.zIndex = 10 + position.y;
 
     const shadow = new Graphics()
-      .ellipse(0, 14, 25, 8)
+      .ellipse(0, 15, 24, 7)
       .fill({ color:0x000000, alpha:.45 });
     const shape = new Graphics()
-      .circle(0, 0, snapshot.role === 'boss' ? 25 : 19)
+      .circle(0, 0, snapshot.role === 'boss' ? 23 : 16)
       .fill({ color:snapshot.color, alpha:.08 })
       .stroke({
         width:2,
@@ -189,6 +224,9 @@ export class PixiRenderer {
     const unit = {
       body,
       shape,
+      sprite,
+      spriteKey:this.spriteKey(snapshot),
+      facing:'south' as DirectionName,
       hp,
       maxHp:snapshot.maxHp,
       currentHp:snapshot.hp,
@@ -203,42 +241,49 @@ export class PixiRenderer {
     if (snapshot.role === 'boss') this.createBossBar(snapshot);
   }
 
-  private createSprite(snapshot: EntitySnapshot) {
-    const official =
-      snapshot.role === 'boss'
-        ? this.monsterTextures.get('boss')
-        : snapshot.role === 'monster'
-          ? this.monsterTextures.get(snapshot.name.includes('Mage') ? 'mage' : 'warrior')
-          : undefined;
-    if (official) {
-      const sprite = new Sprite(official);
-      sprite.anchor.set(.5);
-      sprite.scale.set(snapshot.role === 'boss' ? 1.2 : 1);
-      sprite.position.y = snapshot.role === 'boss' ? -8 : -5;
-      return sprite;
-    }
+  private spriteKey(snapshot: EntitySnapshot) {
+    if (snapshot.role === 'knight') return 'knight';
+    if (snapshot.role === 'druid') return 'druid';
+    if (snapshot.role === 'sorcerer') return 'sorcerer';
+    if (snapshot.role === 'boss') return 'drume';
+    return snapshot.name.includes('Mage') || snapshot.name.includes('Warlock')
+      ? 'lion-warlock'
+      : 'lion-knight';
+  }
 
-    let column = 0;
-    let row = 0;
-    if (snapshot.role === 'druid') column = 1;
-    if (snapshot.role === 'sorcerer') column = 2;
-    if (snapshot.role === 'monster') {
-      row = 1;
-      column = snapshot.name.includes('Mage') ? 1 : 0;
-    }
-    if (snapshot.role === 'boss') {
-      row = 1;
-      column = 2;
-    }
-    const texture = new Texture({
-      source:this.atlasTexture.source,
-      frame:new Rectangle(column * 512, row * 512, 512, 512),
-    });
-    const sprite = new Sprite(texture);
+  private directionTextures(key: string, direction: DirectionName) {
+    return Array.from(
+      { length:4 },
+      (_, frame) => this.outfitSheet.textures[`${key}-${direction}-${frame}`],
+    );
+  }
+
+  private createSprite(snapshot: EntitySnapshot) {
+    const key = this.spriteKey(snapshot);
+    const sprite = new AnimatedSprite(this.directionTextures(key, 'south'));
     sprite.anchor.set(.5);
-    sprite.scale.set(snapshot.role === 'boss' ? .2 : .15);
-    sprite.position.y = snapshot.role === 'boss' ? -12 : -8;
+    sprite.position.y = 16;
+    sprite.animationSpeed = .16;
+    sprite.loop = true;
+    sprite.gotoAndStop(0);
+    if (snapshot.role === 'boss') sprite.scale.set(1.12);
     return sprite;
+  }
+
+  private face(unit: Unit, direction: DirectionName, walking = false) {
+    if (unit.facing !== direction) {
+      unit.facing = direction;
+      unit.sprite.textures = this.directionTextures(unit.spriteKey, direction);
+    }
+    if (walking) unit.sprite.play();
+    else unit.sprite.gotoAndStop(0);
+  }
+
+  private movementDirection(from: Point, target: Point): DirectionName {
+    const deltaX = target.x - from.x;
+    const deltaY = target.y - from.y;
+    if (Math.abs(deltaX) > Math.abs(deltaY)) return deltaX >= 0 ? 'east' : 'west';
+    return deltaY >= 0 ? 'south' : 'north';
   }
 
   private createBossBar(snapshot: EntitySnapshot) {
@@ -278,24 +323,33 @@ export class PixiRenderer {
       if (unit && event.data?.position) {
         const from = { x:unit.body.x, y:unit.body.y };
         const target = event.data.position;
-        this.tween(event.data.duration ?? 220, (progress) => {
-          unit.body.position.set(
-            from.x + (target.x - from.x) * progress,
-            from.y + (target.y - from.y) * progress,
-          );
-          unit.body.zIndex = 10 + unit.body.y;
-        });
+        this.face(unit, this.movementDirection(from, target), true);
+        this.tween(
+          event.data.duration ?? 220,
+          (progress) => {
+            unit.body.position.set(
+              from.x + (target.x - from.x) * progress,
+              from.y + (target.y - from.y) * progress,
+            );
+            unit.body.zIndex = 10 + unit.body.y;
+          },
+          () => this.face(unit, unit.facing, false),
+        );
       }
     }
     if (event.type === 'basic_attack' || event.type === 'cast') {
       const unit = this.units.get(event.sourceId!);
       if (unit) {
         this.pulse(unit.shape);
+        unit.sprite.play();
+        this.tween(280, () => undefined, () => unit.sprite.gotoAndStop(0));
         if (event.type === 'cast') {
           this.tileEffect(
             event.data?.tiles ?? [],
             this.elementColor(event.data?.element),
             false,
+            520,
+            this.effectKey(event),
           );
           this.spellLabel(
             unit.body.x,
@@ -314,6 +368,8 @@ export class PixiRenderer {
         event.data?.tiles ?? [],
         this.elementColor(event.data?.element),
         false,
+        620,
+        this.effectKey(event),
       );
     }
     if (event.type === 'projectile') this.projectile(event);
@@ -371,6 +427,7 @@ export class PixiRenderer {
     color: number,
     warning = false,
     duration = 430,
+    effectKey?: string,
   ) {
     if (!tiles.length) return;
     const graphics = new Graphics();
@@ -387,6 +444,26 @@ export class PixiRenderer {
     }
     graphics.zIndex = warning ? 5 : 45;
     this.app.stage.addChild(graphics);
+    const effects: AnimatedSprite[] = [];
+    if (!warning && effectKey) {
+      const textures = Array.from(
+        { length:4 },
+        (_, frame) => this.effectSheet.textures[`${effectKey}-${frame}`],
+      ).filter(Boolean);
+      if (textures.length) {
+        for (const point of tiles) {
+          const effect = new AnimatedSprite(textures);
+          effect.anchor.set(.5);
+          effect.position.set(point.x, point.y);
+          effect.animationSpeed = .24;
+          effect.loop = false;
+          effect.zIndex = 46;
+          effect.play();
+          effects.push(effect);
+          this.app.stage.addChild(effect);
+        }
+      }
+    }
     this.tween(
       duration,
       (progress) => {
@@ -394,7 +471,29 @@ export class PixiRenderer {
           ? .35 + Math.abs(Math.sin(progress * Math.PI * 6)) * .65
           : 1 - progress;
       },
-      () => graphics.destroy(),
+      () => {
+        graphics.destroy();
+        effects.forEach((effect) => effect.destroy());
+      },
+    );
+  }
+
+  private effectKey(event: CombatEvent) {
+    const abilityMap: Record<string, string> = {
+      challenge:'holy',
+      berserk:'physical',
+      groundshaker:'physical',
+      heal_friend:'heal',
+      strong_ice_wave:'ice',
+      eternal_winter:'ice',
+      flame_strike:'fire',
+      energy_wave:'energy',
+      rage_skies:'energy',
+    };
+    return (
+      abilityMap[event.data?.abilityId ?? ''] ??
+      (event.data?.element === 'healing' ? 'heal' : event.data?.element) ??
+      'physical'
     );
   }
 
@@ -402,9 +501,17 @@ export class PixiRenderer {
     const source = this.units.get(event.sourceId!);
     const target = this.units.get(event.targetId!);
     if (!source || !target) return;
-    const projectile = new Graphics()
-      .circle(0, 0, 6)
-      .fill(this.elementColor(event.data?.element));
+    const key = this.effectKey(event);
+    const projectile = new AnimatedSprite(
+      Array.from(
+        { length:4 },
+        (_, frame) => this.effectSheet.textures[`${key}-${frame}`],
+      ),
+    );
+    projectile.anchor.set(.5);
+    projectile.scale.set(.52);
+    projectile.animationSpeed = .26;
+    projectile.play();
     projectile.position.copyFrom(source.body.position);
     projectile.zIndex = 50;
     this.app.stage.addChild(projectile);
