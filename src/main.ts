@@ -89,11 +89,17 @@ function renderActionBar() {
 }
 
 function renderInventory() {
-  const glyphs = ['◆','⬟','✦','◈','✧','⌁','⬢','◉','♜','✤','◇','✥','◌','⬡','✶'];
   $('#backpack-slots').innerHTML = Array.from(
     { length:20 },
-    (_, index) => `<span class="slot">${glyphs[index] ?? ''}</span>`,
+    (_, index) =>
+      `<span class="slot" data-slot="${index + 1}" aria-label="Slot ${index + 1}"></span>`,
   ).join('');
+}
+
+function healthBarColor(ratio: number) {
+  if (ratio <= .3) return '#df4848';
+  if (ratio <= .6) return '#e2c245';
+  return '#43c965';
 }
 
 function renderAnalyzer(hunt?: HuntResult) {
@@ -139,7 +145,7 @@ function labelEvent(event: CombatEvent) {
   if (event.type === 'critical') return `${event.sourceId}: crítico.`;
   if (event.type === 'dodge') return `${event.targetId}: esquiva.`;
   if (event.type === 'death') return `${event.targetId} foi derrotado.`;
-  if (event.type === 'aggro') return 'Aldric assumiu o aggro.';
+  if (event.type === 'aggro') return 'Aldric puxou os inimigos com exeta amp res.';
   if (event.type === 'reposition') return `${event.sourceId} reposicionou-se.`;
   if (event.type === 'monster_aoe') return `${event.data?.ability} atingiu os tiles.`;
   if (event.type === 'loot') return `${event.data?.quantity}× ${event.data?.item}`;
@@ -221,10 +227,36 @@ window.addEventListener('hunt-floor', (rawEvent) => {
 
 window.addEventListener('hunt-event', (rawEvent) => {
   const event = (rawEvent as CustomEvent<CombatEvent>).detail;
+  if (
+    event.type === 'spawn' &&
+    ['knight','druid','sorcerer'].includes(event.targetId ?? '')
+  ) {
+    const hp = document.querySelector<HTMLElement>(`#card-${event.targetId} .hp i`);
+    const mp = document.querySelector<HTMLElement>(`#card-${event.targetId} .mp i`);
+    if (hp) {
+      hp.style.width = '100%';
+      hp.style.background = healthBarColor(1);
+    }
+    if (mp) mp.style.width = '100%';
+  }
   if (event.type === 'damage' || event.type === 'heal') {
     const unit = renderer.units.get(event.targetId!);
     const bar = document.querySelector<HTMLElement>(`#card-${event.targetId} .hp i`);
-    if (bar && unit) bar.style.width = `${(100 * unit.currentHp) / unit.maxHp}%`;
+    if (bar && unit) {
+      const ratio = unit.currentHp / unit.maxHp;
+      bar.style.width = `${100 * ratio}%`;
+      bar.style.background = healthBarColor(ratio);
+    }
+  }
+  if (
+    event.type === 'cast' &&
+    ['knight','druid','sorcerer'].includes(event.sourceId ?? '')
+  ) {
+    const unit = renderer.units.get(event.sourceId!);
+    const bar = document.querySelector<HTMLElement>(`#card-${event.sourceId} .mp i`);
+    if (bar && unit) {
+      bar.style.width = `${100 * unit.currentMana / unit.maxMana}%`;
+    }
   }
   if (
     event.type === 'damage' &&

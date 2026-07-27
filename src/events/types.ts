@@ -41,6 +41,9 @@ export interface CombatEvent {
     facing?: Direction;
     ability?: string;
     abilityId?: string;
+    words?: string;
+    mana?: number;
+    manaCost?: number;
     item?: string;
     quantity?: number;
     entity?: EntitySnapshot;
@@ -48,6 +51,7 @@ export interface CombatEvent {
     radius?: number;
     duration?: number;
     targets?: string[];
+    pull?: boolean;
   };
 }
 

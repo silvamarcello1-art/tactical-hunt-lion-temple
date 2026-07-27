@@ -2,9 +2,9 @@ import { tile } from '../combat/tiles';
 import type { EntitySnapshot } from '../events/types';
 
 export const heroes: EntitySnapshot[] = [
-  { id:'knight',name:'Aldric',role:'knight',hp:1650,maxHp:1650,mana:260,maxMana:260,attack:128,defense:42,crit:.12,dodge:.04,position:tile(8,9),color:0xd8ad51 },
-  { id:'druid',name:'Lyra',role:'druid',hp:920,maxHp:920,mana:1000,maxMana:1000,attack:96,defense:17,crit:.1,dodge:.09,position:tile(5,6),color:0x67c891 },
-  { id:'sorcerer',name:'Orin',role:'sorcerer',hp:840,maxHp:840,mana:1120,maxMana:1120,attack:152,defense:14,crit:.18,dodge:.08,position:tile(5,12),color:0x8d7ce4 },
+  { id:'knight',name:'Aldric',role:'knight',hp:1650,maxHp:1650,mana:720,maxMana:720,attack:128,defense:42,crit:.12,dodge:.04,position:tile(8,9),color:0xd8ad51 },
+  { id:'druid',name:'Lyra',role:'druid',hp:920,maxHp:920,mana:1600,maxMana:1600,attack:96,defense:17,crit:.1,dodge:.09,position:tile(5,6),color:0x67c891 },
+  { id:'sorcerer',name:'Orin',role:'sorcerer',hp:840,maxHp:840,mana:1350,maxMana:1350,attack:152,defense:14,crit:.18,dodge:.08,position:tile(5,12),color:0x8d7ce4 },
 ];
 
 const lion = (

@@ -115,6 +115,7 @@ export class CombatEngine {
   private canCast(entity: SimEntity, ability: AbilityDefinition) {
     return (
       this.enabled(ability.id) &&
+      entity.mana >= ability.manaCost &&
       (entity.cooldowns[ability.id] ?? 0) <= this.now &&
       (entity.groupCooldowns[ability.group] ?? 0) <= this.now
     );
@@ -138,9 +139,13 @@ export class CombatEngine {
   ) {
     entity.cooldowns[ability.id] = this.now + ability.cooldown;
     entity.groupCooldowns[ability.group] = this.now + ability.groupCooldown;
+    entity.mana = Math.max(0, entity.mana - ability.manaCost);
     this.emit('cast', floor, entity.id, targetId, {
       ability: ability.name,
       abilityId: ability.id,
+      words: ability.words,
+      mana: entity.mana,
+      manaCost: ability.manaCost,
       element: this.element(ability),
       tiles: clone(tiles),
       facing,
@@ -289,7 +294,7 @@ export class CombatEngine {
     ) {
       caster.returnToSafe = true;
     }
-    if (ability.shape === 'single' || ability.shape === 'wave') {
+    if (ability.shape === 'single') {
       this.emit('projectile', floor, caster.id, targeting.targets[0].id, {
         ability: ability.name,
         abilityId: ability.id,
@@ -323,11 +328,28 @@ export class CombatEngine {
     const challenge = this.ability('challenge');
     if (knight.alive && this.canCast(knight, challenge)) {
       const tiles = worldTiles(knight.position, challenge.id, 'right');
-      const taunted = aliveEnemies.filter((enemy) =>
-        pointInTiles(enemy.position, tiles),
-      );
+      const taunted = aliveEnemies
+        .filter(
+          (enemy) =>
+            enemy.role !== 'boss' &&
+            enemy.name.includes('Mage') &&
+            tileDistance(knight.position, enemy.position) > 1 &&
+            pointInTiles(enemy.position, tiles),
+        )
+        .sort(
+          (left, right) =>
+            tileDistance(knight.position, left.position) -
+            tileDistance(knight.position, right.position),
+        )
+        .slice(0, 4);
       if (taunted.length) {
         this.cast(knight, challenge, floor, undefined, tiles, 'right');
+        const pullOffsets = [
+          { x:1, y:0 },
+          { x:1, y:-1 },
+          { x:0, y:-1 },
+          { x:-1, y:-1 },
+        ];
         for (const enemy of taunted) {
           enemy.targetId = knight.id;
           enemy.aggroUntil = this.now + 6000;
@@ -336,6 +358,18 @@ export class CombatEngine {
           tiles,
           duration: 6000,
           targets: taunted.map((enemy) => enemy.id),
+        });
+        taunted.forEach((enemy, index) => {
+          const offset = pullOffsets[index];
+          enemy.position = {
+            x:knight.position.x + offset.x * TILE_SIZE,
+            y:knight.position.y + offset.y * TILE_SIZE,
+          };
+          this.emit('reposition', floor, enemy.id, knight.id, {
+            position:clone(enemy.position),
+            duration:420,
+            pull:true,
+          });
         });
       }
     }
@@ -552,6 +586,7 @@ export class CombatEngine {
       for (const hero of party) {
         if (hero.alive) {
           hero.hp = Math.min(hero.maxHp, hero.hp + Math.round(hero.maxHp * 0.4));
+          hero.mana = hero.maxMana;
         }
       }
     }

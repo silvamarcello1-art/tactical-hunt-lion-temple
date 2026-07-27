@@ -36,21 +36,26 @@ npm run build
 ## O que está implementado
 
 - Mapa em grade de 30 × 18 tiles, com 32 pixels por tile.
-- Cenário de templo montado com pisos, mosaicos, paredes e colunas extraídos do
-  pacote DAT/SPR fornecido.
-- Knight, Druid e Sorcerer com sprites coloridos, quatro direções e animações.
-- Criaturas e chefe usando looktypes do mesmo pacote.
-- Aggro do Knight por área de tiles.
+- Cenário de templo reorganizado com piso de pedra, bordas e caminho central
+  montados com tiles extraídos do pacote DAT/SPR fornecido.
+- Knight, Druid e Sorcerer mantêm temporariamente as sprites antigas do
+  protótipo; criaturas e chefe usam looktypes do pacote.
+- Nomes, HP e mana aparecem sobre os personagens; HP muda de verde para
+  amarelo em 60% e vermelho em 30%, e a mana é exibida em azul.
+- Chivalrous Challenge (`exeta amp res`) puxa até quatro inimigos de distância
+  para o Knight e mantém o aggro.
 - Reposicionamento dos conjuradores para alcançar o alvo e retorno ao tile
   seguro.
-- Nove habilidades com cooldown próprio e cooldown de grupo.
-- Strong Ice Wave e Energy Wave com padrões direcionais por tiles.
-- Efeitos SPR animados de gelo, fogo, energia, cura, físico, sagrado e terra.
+- Nove habilidades com custo de mana, cooldown próprio e cooldown de grupo.
+- Áreas explícitas por SQM: Berserk (9), Groundshaker (37), Strong Ice Wave
+  (25), Energy Wave (11), Eternal Winter (61) e Rage of the Skies (85).
+- As palavras de invocação aparecem sobre o conjurador e os efeitos SPR de
+  gelo, fogo, energia, cura, físico, sagrado e terra são animados tile a tile.
 - Áreas de monstros com aviso prévio e resolução nos tiles marcados.
 - Quatro fases, boss, experiência, gold, loot, cura e dano.
 - Interface compacta em três colunas, editor de habilidades e Hunt Analyzer.
 - Velocidades 1×, 2× e 4×, pausa, reinício e loop automático opcional.
-- Oito testes automatizados do motor, das áreas e das preferências.
+- Onze testes automatizados do motor, mana, pull, áreas e preferências.
 
 ## Arquitetura
 
@@ -88,7 +93,8 @@ arquivos `Tibia.dat`, `Tibia.spr` e `Tibia.otfi` permanecem intactos.
 
 1. Definir obstáculos sólidos e pathfinding A*.
 2. Criar editor data-driven de mapas, spawns e posições seguras.
-3. Refinar a seleção de looktypes e paletas dos personagens.
+3. Substituir gradualmente as sprites provisórias dos personagens por
+   looktypes direcionais revisados.
 4. Adicionar condições avançadas ao Helper: HP, mana, alvos e boss.
 5. Persistir personagens e sessões em um backend.
 6. Criar a equipe AFK e comparar os rendimentos das duas expedições.

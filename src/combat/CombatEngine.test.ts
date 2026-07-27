@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { defaultAbilityPreferences } from '../data/abilities';
 import { heroes } from '../data/config';
 import { CombatEngine } from './CombatEngine';
-import { TILE_SIZE } from './tiles';
+import { TILE_SIZE, abilityOffsets } from './tiles';
 
 describe('CombatEngine', () => {
   it('gera uma timeline determinística e completa', () => {
@@ -72,10 +72,17 @@ describe('CombatEngine', () => {
     const energy = casts.find(
       (event) => event.data?.abilityId === 'energy_wave',
     );
-    expect(ice?.data?.tiles).toHaveLength(13);
+    expect(ice?.data?.tiles).toHaveLength(25);
     expect(energy?.data?.tiles).toHaveLength(11);
     expect(new Set(ice?.data?.tiles?.map((point) => `${point.x}:${point.y}`)).size)
-      .toBe(13);
+      .toBe(25);
+  });
+
+  it('usa as áreas originais cadastradas em SQMs', () => {
+    expect(abilityOffsets('berserk')).toHaveLength(9);
+    expect(abilityOffsets('groundshaker')).toHaveLength(37);
+    expect(abilityOffsets('eternal_winter')).toHaveLength(61);
+    expect(abilityOffsets('rage_skies')).toHaveLength(85);
   });
 
   it('reposiciona conjuradores e retorna ao tile seguro depois da magia', () => {
@@ -102,7 +109,7 @@ describe('CombatEngine', () => {
       .run()
       .events.filter((event) => event.type === 'cast');
     const expected: Record<string, number> = {
-      Challenge:2000,
+      'Chivalrous Challenge':2000,
       Berserk:4000,
       Groundshaker:8000,
       'Heal Friend':1000,
@@ -123,6 +130,33 @@ describe('CombatEngine', () => {
         );
       }
     }
+  });
+
+  it('usa exeta amp res para puxar até quatro criaturas à distância', () => {
+    const events = new CombatEngine().run().events;
+    const cast = events.find(
+      (event) =>
+        event.type === 'cast' &&
+        event.data?.abilityId === 'challenge' &&
+        event.data?.words === 'exeta amp res',
+    );
+    expect(cast).toBeDefined();
+    expect(cast?.data?.manaCost).toBe(80);
+    const pullEvents = events.filter(
+      (event) => event.type === 'reposition' && event.data?.pull,
+    );
+    expect(pullEvents.length).toBeGreaterThan(0);
+    expect(pullEvents.length).toBeLessThanOrEqual(8);
+    expect(pullEvents.every((event) => event.targetId === 'knight')).toBe(true);
+  });
+
+  it('desconta mana das magias sem produzir valores negativos', () => {
+    const casts = new CombatEngine()
+      .run()
+      .events.filter((event) => event.type === 'cast');
+    expect(casts.length).toBeGreaterThan(0);
+    expect(casts.every((event) => (event.data?.mana ?? -1) >= 0)).toBe(true);
+    expect(casts.every((event) => (event.data?.manaCost ?? 0) > 0)).toBe(true);
   });
 
   it('obedece à configuração que desativa uma habilidade', () => {

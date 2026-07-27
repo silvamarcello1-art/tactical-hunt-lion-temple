@@ -55,29 +55,63 @@ function waveRows(widths: number[]) {
   return offsets;
 }
 
-function diamond(radius: number, trim = 0) {
+function square(radius: number) {
   const offsets: Point[] = [];
   for (let x = -radius; x <= radius; x++) {
     for (let y = -radius; y <= radius; y++) {
-      if (Math.abs(x) + Math.abs(y) <= radius + trim) offsets.push({ x, y });
+      offsets.push({ x, y });
     }
   }
   return offsets;
 }
 
+function horizontalRows(widths: number[]) {
+  const middle = Math.floor(widths.length / 2);
+  return widths.flatMap((width, index) => {
+    const half = Math.floor(width / 2);
+    return Array.from({ length:width }, (_, cross) => ({
+      x:cross - half,
+      y:index - middle,
+    }));
+  });
+}
+
 export function abilityOffsets(abilityId: string): Point[] {
   if (abilityId === 'berserk') {
-    return Array.from({ length: 9 }, (_, index) => ({
+    return Array.from({ length:9 }, (_, index) => ({
       x: (index % 3) - 1,
       y: Math.floor(index / 3) - 1,
     }));
   }
-  if (abilityId === 'strong_ice_wave') return waveRows([1, 1, 3, 3, 5]);
+  // A forma revisada em 2026 possui 25 SQMs num cone crescente.
+  if (abilityId === 'strong_ice_wave') return waveRows([1, 3, 5, 7, 9]);
+  // A wiki descreve explicitamente o cone como 1 / 1 / 3 / 3 / 3.
   if (abilityId === 'energy_wave') return waveRows([1, 1, 3, 3, 3]);
-  if (abilityId === 'groundshaker') return diamond(3, 1);
-  if (abilityId === 'eternal_winter') return diamond(5, 0);
-  if (abilityId === 'rage_skies') return diamond(6, 0);
-  if (abilityId === 'challenge') return diamond(7, 0);
+  // Groundshaker: 37 SQMs num padrão 7×7 com cantos aparados.
+  if (abilityId === 'groundshaker') return horizontalRows([3, 5, 7, 7, 7, 5, 3]);
+  // Eternal Winter: 61 SQMs, construídos como 7×7 + quatro braços de 3 tiles.
+  if (abilityId === 'eternal_winter') {
+    return [
+      ...square(3),
+      ...[-1, 0, 1].flatMap((cross) => [
+        { x:cross, y:-4 },
+        { x:cross, y:4 },
+        { x:-4, y:cross },
+        { x:4, y:cross },
+      ]),
+    ];
+  }
+  // Rage of the Skies: 85 SQMs, um campo 9×9 com quatro extremos cardeais.
+  if (abilityId === 'rage_skies') {
+    return [
+      ...square(4),
+      { x:0, y:-5 },
+      { x:0, y:5 },
+      { x:-5, y:0 },
+      { x:5, y:0 },
+    ];
+  }
+  if (abilityId === 'challenge') return square(7);
   return [{ x: 1, y: 0 }];
 }
 
