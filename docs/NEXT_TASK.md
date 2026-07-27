@@ -1,29 +1,38 @@
 # Próxima tarefa
 
-## MVP 1B — Helper individual, skills por vocação e comportamento configurável da party
+## MVP 1B — Helper individual e regras editáveis
 
-O MVP 0 e o MVP 1A estão encerrados. Não iniciar inventário, progressões,
-backend, pathfinding ou novos módulos do shell.
+O aggro espacial, threat, Challenge, posicionamento tático, rotação com
+preferência/mínimo obrigatório, cooldown lógico e camadas de efeitos estão
+concluídos. Não reimplementar esses sistemas.
 
 Primeira entrega recomendada:
 
 1. versionar preferências por personagem e contexto `hunt`;
-2. configurar limiar de cura do Druid;
-3. configurar quantidade mínima de alvos para AOE;
-4. configurar prioridade e distância do alvo;
-5. manter três habilidades por vocação, ordenáveis e ativáveis;
-6. aplicar as preferências no `CombatEngine`, nunca no renderer;
-7. persistir localmente com migração do formato atual;
-8. provar por testes determinísticos que cada regra altera a timeline esperada;
-9. preservar seleção, loop, Analyzer, debug e limpeza do MVP 1A.
+2. expor no Helper `preferredMinTargets` e `hardMinTargets`;
+3. configurar o limiar de cura do Druid;
+4. configurar prioridade, distância preferida e reserva para boss;
+5. preservar três habilidades por vocação, ordenáveis e ativáveis;
+6. migrar o formato atual do `localStorage` sem perder configurações;
+7. aplicar as regras exclusivamente no `CombatEngine`;
+8. provar por testes determinísticos que cada mudança altera a timeline;
+9. preservar seleção, loop, Analyzer, cooldown, camadas PixiJS e limpeza.
 
-### Fora do escopo
+## Fora do escopo
 
-Novas vocações, inventário, equipamentos, progressões, backend, multiplayer,
-market, economia, colisão, pathfinding e troca de renderer.
+Novas vocações, inventário real, equipamentos, progressões, backend,
+multiplayer, market, economia e pathfinding avançado.
 
-### Prompt curto
+## Leitura obrigatória
 
-> Leia `AGENTS.md` e `docs/NEXT_TASK.md`. Execute somente o MVP 1B, preserve
-> PixiJS e as fronteiras arquiteturais, faça as preferências serem individuais
-> por personagem, valide no navegador e atualize os documentos afetados.
+- `docs/THREAT_AND_AGGRO.md`
+- `docs/HELPER_RULES.md`
+- `docs/CURRENT_STATE.md`
+- `docs/ARCHITECTURE.md`
+
+## Prompt curto
+
+> Leia `AGENTS.md` e `docs/NEXT_TASK.md`. Implemente somente o Helper individual
+> e suas regras editáveis, preserve PixiJS e o motor autoritativo, migre as
+> preferências atuais, valide timeline, cooldown, loop e navegador, e atualize a
+> documentação afetada.

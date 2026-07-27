@@ -195,11 +195,31 @@ button:disabled { opacity: .4; cursor: not-allowed; }
   border: 1px solid #59605b; border-radius: 4px; padding: 4px;
   background: linear-gradient(#2a302c, #161a18);
 }
-.action img { width: 37px; height: 37px; image-rendering: pixelated; }
+.action img { display: block; width: 37px; height: 37px; image-rendering: pixelated; }
 .action em {
   position: absolute; right: 2px; bottom: 1px; padding: 1px 3px; border-radius: 2px;
-  background: #070908d9; color: #fff; font-size: 8px; font-style: normal; font-weight: 800;
+  z-index: 3; background: #070908d9; color: #fff; font-size: 8px; font-style: normal; font-weight: 800;
 }
+.cooldown-mask {
+  --cooldown-angle: 0deg;
+  position: absolute; inset: 4px; z-index: 1; border-radius: 50%;
+  pointer-events: none; opacity: 0;
+  background: conic-gradient(
+    from 0deg,
+    #050706d9 0deg,
+    #050706d9 var(--cooldown-angle),
+    transparent var(--cooldown-angle),
+    transparent 360deg
+  );
+}
+.cooldown-number {
+  position: absolute; inset: 0; z-index: 2; display: none;
+  place-items: center; color: #fff; font-size: 14px; line-height: 1;
+  text-shadow: 0 1px 2px #000, 0 0 3px #000;
+  pointer-events: none;
+}
+.action.cooling-down .cooldown-mask { opacity: 1; }
+.action.cooling-down .cooldown-number { display: grid; }
 .action.disabled { filter: grayscale(1); opacity: .38; }
 .config-button { white-space: nowrap; }
 

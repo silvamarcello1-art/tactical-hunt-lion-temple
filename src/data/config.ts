@@ -20,8 +20,8 @@ export const HUNT_LAYOUT_CONFIG = {
     sorcerer:tile(5,12),
   },
   enemySpawnPositions:[
-    [tile(20,5),tile(24,7),tile(21,11),tile(25,14)],
-    [tile(20,5),tile(24,6),tile(26,10),tile(21,14)],
+    [tile(10,9),tile(6,5),tile(6,13),tile(18,9)],
+    [tile(20,8),tile(22,10),tile(7,5),tile(7,13)],
     [
       tile(19,4),
       tile(23,5),

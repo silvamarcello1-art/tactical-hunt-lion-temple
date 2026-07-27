@@ -82,6 +82,10 @@ export class PixiRenderer {
   private effectSheet!: Spritesheet;
   private heroAtlas!: Texture;
   private tileTextures = new Map<string, Texture>();
+  private readonly terrainLayer = new Container();
+  private readonly effectLayer = new Container();
+  private readonly entityLayer = new Container();
+  private readonly overlayLayer = new Container();
   private parent?: HTMLElement;
   private destroyed = false;
   private selectedHeroId: string;
@@ -125,13 +129,29 @@ export class PixiRenderer {
     await this.loadTibiaAssets();
     if (this.destroyed) return;
     parent.replaceChildren(this.app.canvas);
+    this.app.stage.sortableChildren = true;
+    this.terrainLayer.label = 'terrain';
+    this.effectLayer.label = 'effects';
+    this.entityLayer.label = 'entities';
+    this.overlayLayer.label = 'overlay';
+    this.terrainLayer.zIndex = 0;
+    this.effectLayer.zIndex = 10;
+    this.entityLayer.zIndex = 20;
+    this.overlayLayer.zIndex = 30;
+    this.entityLayer.sortableChildren = true;
+    this.overlayLayer.sortableChildren = true;
+    this.app.stage.addChild(
+      this.terrainLayer,
+      this.effectLayer,
+      this.entityLayer,
+      this.overlayLayer,
+    );
     this.drawArena();
     if (this.debugEnabled) this.drawDebugOverlay();
     this.floorText = this.label('PREPARAÇÃO', 13, '#f0d77a');
     this.floorText.position.set(18, 14);
     this.floorText.zIndex = 60;
-    this.app.stage.addChild(this.floorText);
-    this.app.stage.sortableChildren = true;
+    this.overlayLayer.addChild(this.floorText);
     this.app.ticker.add(this.tickerHandler);
     parent.dataset.debugEnabled = String(this.debugEnabled);
     this.syncDiagnostics();
@@ -156,6 +176,8 @@ export class PixiRenderer {
       this.parent.dataset.stageChildren = '0';
       this.parent.dataset.tweenCount = '0';
       this.parent.dataset.outOfBounds = '0';
+      this.parent.dataset.effectCount = '0';
+      this.parent.dataset.entityCount = '0';
     }
   }
 
@@ -301,7 +323,7 @@ export class PixiRenderer {
       )
       .fill({ color:0xf2c55b, alpha:.045 });
     atmosphere.zIndex = 3;
-    this.app.stage.addChild(terrain, frame, grid, atmosphere);
+    this.terrainLayer.addChild(terrain, frame, grid, atmosphere);
   }
 
   private drawDebugOverlay() {
@@ -344,7 +366,7 @@ export class PixiRenderer {
       addMarker(point, 0xf0bd57, `combat:${index + 1}`, 5),
     );
     addMarker(HUNT_LAYOUT_CONFIG.bossPosition, 0xd77aff, 'boss', 10);
-    this.app.stage.addChild(overlay);
+    this.terrainLayer.addChild(overlay);
   }
 
   private label(text: string, size: number, color: string) {
@@ -431,7 +453,7 @@ export class PixiRenderer {
         );
       });
     }
-    this.app.stage.addChild(body);
+    this.entityLayer.addChild(body);
 
     const unit = {
       body,
@@ -626,7 +648,7 @@ export class PixiRenderer {
     title.anchor.set(.5);
     title.position.set(RENDER_CONFIG.arena.width / 2, 25);
     container.addChild(title);
-    this.app.stage.addChild(container);
+    this.overlayLayer.addChild(container);
     this.drawBossHp(1);
   }
 
@@ -666,6 +688,10 @@ export class PixiRenderer {
 
   private applyEvent(event: CombatEvent) {
     if (event.type === 'spawn' || event.type === 'boss_spawn') this.spawn(event);
+    if (event.type === 'target_change') {
+      const unit = this.units.get(event.sourceId!);
+      if (unit) this.setUnitState(unit, unit.state, event.targetId);
+    }
     if (event.type === 'move' || event.type === 'reposition') {
       const unit = this.units.get(event.sourceId!);
       if (unit && event.data?.position) {
@@ -693,7 +719,7 @@ export class PixiRenderer {
       const unit = this.units.get(event.sourceId!);
       if (unit) {
         unit.targetId = event.targetId;
-        this.pulse(unit.body);
+        this.castPulse(unit);
         this.animateUnit(
           unit,
           event.type === 'basic_attack'
@@ -840,7 +866,7 @@ export class PixiRenderer {
         .stroke({ width:warning ? 2 : 1, color, alpha:warning ? .88 : .25 });
     }
     graphics.zIndex = warning ? 5 : 45;
-    this.app.stage.addChild(graphics);
+    this.effectLayer.addChild(graphics);
 
     if (warning) {
       this.tween(
@@ -879,7 +905,7 @@ export class PixiRenderer {
           effect.alpha = 0;
           effect.scale.set(.72);
           effect.gotoAndStop(0);
-          this.app.stage.addChild(effect);
+          this.effectLayer.addChild(effect);
           let started = false;
           this.tween(
             duration,
@@ -947,7 +973,7 @@ export class PixiRenderer {
     projectile.play();
     projectile.position.copyFrom(source.body.position);
     projectile.zIndex = 50;
-    this.app.stage.addChild(projectile);
+    this.effectLayer.addChild(projectile);
     const start = { x:projectile.x, y:projectile.y };
     this.tween(
       RENDER_CONFIG.effects.projectileDuration,
@@ -960,12 +986,21 @@ export class PixiRenderer {
     );
   }
 
-  private pulse(shape: Container) {
-    this.tween(RENDER_CONFIG.effects.pulseDuration, (progress) => {
-      const scale =
-        progress < .5 ? 1 + progress * .12 : 1.06 - (progress - .5) * .12;
-      shape.scale.set(scale);
-    });
+  private castPulse(unit: Unit) {
+    const ring = new Graphics()
+      .circle(0, 0, unit.hero ? 22 : 18)
+      .stroke({ width:2, color:0xffdf76, alpha:.85 });
+    ring.position.copyFrom(unit.body.position);
+    ring.zIndex = 55;
+    this.effectLayer.addChild(ring);
+    this.tween(
+      RENDER_CONFIG.effects.pulseDuration,
+      (progress) => {
+        ring.scale.set(.65 + progress * .75);
+        ring.alpha = 1 - progress;
+      },
+      () => ring.destroy(),
+    );
   }
 
   private spellLabel(x: number, y: number, value: string) {
@@ -973,7 +1008,7 @@ export class PixiRenderer {
     text.anchor.set(.5);
     text.position.set(x, y);
     text.zIndex = 90;
-    this.app.stage.addChild(text);
+    this.overlayLayer.addChild(text);
     this.tween(
       RENDER_CONFIG.effects.spellLabelDuration,
       (progress) => {
@@ -1006,14 +1041,14 @@ export class PixiRenderer {
         .lineTo(target.body.x, target.body.y)
         .stroke({ width:2, color:0xe9a947, alpha:.65 });
       line.zIndex = 44;
-      this.app.stage.addChild(line);
+      this.effectLayer.addChild(line);
       const chain = new Graphics()
         .circle(0, 0, 4)
         .fill({ color:0xf2c45b, alpha:.95 })
         .stroke({ width:1, color:0xffefaa, alpha:.9 });
       chain.position.set(target.body.x, target.body.y);
       chain.zIndex = 45;
-      this.app.stage.addChild(chain);
+      this.effectLayer.addChild(chain);
       const start = { x:target.body.x, y:target.body.y };
       this.tween(
         RENDER_CONFIG.effects.aggroDuration,
@@ -1041,7 +1076,7 @@ export class PixiRenderer {
     text.anchor.set(.5);
     text.position.set(unit.body.x, unit.body.y - (unit.hero ? 76 : 44));
     text.zIndex = 100;
-    this.app.stage.addChild(text);
+    this.overlayLayer.addChild(text);
     const startY = text.y;
     this.tween(
       RENDER_CONFIG.effects.floatingTextDuration,
@@ -1112,6 +1147,8 @@ export class PixiRenderer {
     this.parent.dataset.unitCount = String(this.units.size);
     this.parent.dataset.stageChildren = String(this.app.stage.children.length);
     this.parent.dataset.tweenCount = String(this.tweens.length);
+    this.parent.dataset.effectCount = String(this.effectLayer.children.length);
+    this.parent.dataset.entityCount = String(this.entityLayer.children.length);
     this.parent.dataset.outOfBounds = String(outOfBounds);
     this.parent.dataset.selectedHero = this.selectedHeroId;
     this.parent.dataset.unitStates = [...this.units.entries()]

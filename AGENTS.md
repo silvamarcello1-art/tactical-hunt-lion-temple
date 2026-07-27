@@ -45,6 +45,8 @@ Leia antes de planejar:
 - `docs/MVP0_BASELINE.md`
 - `docs/CURRENT_STATE.md`
 - `docs/ARCHITECTURE.md`
+- `docs/THREAT_AND_AGGRO.md`
+- `docs/HELPER_RULES.md`
 - `docs/FEATURE_PARITY_MATRIX.md`
 - `docs/MVP_ROADMAP.md`
 - `docs/ACCEPTANCE_MVP0.md`

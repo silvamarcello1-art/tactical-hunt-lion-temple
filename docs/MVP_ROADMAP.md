@@ -28,13 +28,22 @@
 
 ## MVP 1B — Helper individual e comportamento configurável
 
-Próximo escopo:
+Base concluída:
+
+- aggro espacial, threat e Challenge com forced target;
+- reposicionamento tático da backline;
+- rotação com preferência e mínimo obrigatório;
+- reserva de habilidades para boss;
+- cooldown visual sincronizado;
+- camadas PixiJS de efeitos isoladas.
+
+Próximo incremento:
 
 - preferências independentes por personagem e contexto;
 - limiar configurável de cura;
-- mínimo de alvos para AOE;
+- edição do mínimo preferido e obrigatório para AOE;
 - prioridade e distância de alvo;
-- rotação data-driven por vocação;
+- edição da rotação data-driven por vocação;
 - comportamento de frontline e backline configurável;
 - importação/exportação local das regras;
 - testes determinísticos que provem a aplicação das preferências.

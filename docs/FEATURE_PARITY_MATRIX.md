@@ -6,13 +6,13 @@ Referência comportamental: `docs/reference/VIDEO_REFERENCE_MAP.md`.
 |---|---|---|---|---|---|---|---|
 | Shell compacto | Hunt central e dados nas bordas | Implementado no MVP 1A | Dados reais ainda limitados | P1 | 1A | Design | Hunt permanece principal em 1366–1920 px |
 | Mapa em tiles | Salas e decoração variadas | Parcial, melhorado no MVP 1A | Um mapa, sem colisão sólida | P1 | 1A/1C | Modelo de mapa | Salas data-driven e obstáculos sólidos |
-| Movimento da party | Formação e reposicionamento | Implementado no escopo 1A | Slots e deslocamento curto | P1 | 1A | Timeline | Frontline/backline e retorno seguro permanecem legíveis |
+| Movimento da party | Formação e reposicionamento | Implementado com posição tática dos magos | Sem pathfinding avançado | P1 | 1A/1B | Timeline | Magos não atravessam a box, saem da arena ou se sobrepõem |
 | Movimento de monstros | Cerco e perseguição | Parcial | Sem pathfinding | P1 | 1 | Colisão | Alvos alcançados sem atravessar bloqueios |
-| Aggro do Knight | Tank concentra criaturas | Implementado | Threat simplificado | P1 | 1 | Threat model | Ameaça configurável e testada |
+| Aggro do Knight | Tank concentra criaturas | Aggro espacial, threat e Challenge implementados | Parâmetros ainda não editáveis no Helper | P1 | 1B | Threat model | Proximidade, forced target, perda e recuperação testados |
 | AOE de monstros | Aviso e impacto por tiles | Implementado | Poucos padrões | P1 | 1 | Catálogo | Aviso e dano usam os mesmos tiles |
-| Magias da party | Palavras, área e animação | Implementado no escopo 1A | Arte provisória | P1 | 1A | Asset pipeline | Três magias por vocação consistentes |
+| Magias da party | Palavras, área e animação | Áreas, rotação e cooldown lógico implementados | Arte provisória | P1 | 1A/1B | Asset pipeline | Preferência não bloqueia ação e cooldown acompanha pausa/velocidade |
 | Cura e mana | Automação e barras | Implementado | Regra fixa | P1 | 1 | Helper | Limiares configuráveis e testados |
-| Morte/limpeza | Feedback sem resíduo | Implementado | Sem cadáver/revive | P2 | 2 | Regras | Entidade removida uma vez |
+| Morte/limpeza | Feedback sem resíduo | Implementado com camadas PixiJS isoladas | Sem cadáver/revive | P2 | 2 | Regras | Entidade removida uma vez e efeitos/tweens terminam em zero |
 | Transição | Ondas e boss no mesmo shell | Parcial | Mesmo mapa | P1 | 1 | Mapas | Troca clara e limpeza total |
 | Loop | Repetição opcional | Implementado | Sem metas de parada | P1 | 1 | Sessão | ON repete, OFF encerra, sem duplicação |
 | Party lateral | HP, mana e skills | Parcial | Sem equipamentos | P1 | 2 | Itens | Ficha real por personagem |

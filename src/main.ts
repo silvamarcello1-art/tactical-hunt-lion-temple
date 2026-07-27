@@ -46,6 +46,11 @@ let loopTimer: number | undefined;
 let restartInProgress = false;
 let completedCycles = 0;
 let lastResult: HuntResult | undefined;
+let logicalTime = 0;
+const abilityCooldowns = new Map<
+  string,
+  { endsAt: number; duration: number }
+>();
 
 function loadPreferences(): AbilityPreferences {
   try {
@@ -141,9 +146,48 @@ function renderActionBar() {
       }" data-ability="${ability.id}" title="${ability.name} • ${ability.words}">
         <img src="${ability.icon}" alt="${ability.name}">
         <em>${ability.cooldown / 1000}s</em>
+        <span class="cooldown-mask" aria-hidden="true"></span>
+        <strong class="cooldown-number" aria-hidden="true"></strong>
       </button>`,
     )
     .join('');
+  updateCooldownVisuals(logicalTime);
+}
+
+function updateCooldownVisuals(time: number) {
+  logicalTime = Math.max(0, time);
+  document.querySelectorAll<HTMLButtonElement>('[data-ability]').forEach((button) => {
+    const abilityId = button.dataset.ability ?? '';
+    const state = abilityCooldowns.get(abilityId);
+    const remaining = state ? Math.max(0, state.endsAt - logicalTime) : 0;
+    if (state && remaining === 0) abilityCooldowns.delete(abilityId);
+    const ratio = state && state.duration > 0 ? remaining / state.duration : 0;
+    button
+      .querySelector<HTMLElement>('.cooldown-mask')
+      ?.style.setProperty('--cooldown-angle', `${Math.round(ratio * 360)}deg`);
+    const number = button.querySelector<HTMLElement>('.cooldown-number');
+    button.dataset.cooldownRemaining = String(Math.round(remaining));
+    button.classList.toggle('cooling-down', remaining > 0);
+    if (number) {
+      number.textContent = remaining > 0 ? String(Math.ceil(remaining / 1000)) : '';
+    }
+  });
+}
+
+function registerCooldown(event: CombatEvent) {
+  const abilityId = event.data?.abilityId;
+  const endsAt = event.data?.cooldownEndsAt;
+  const duration = event.data?.cooldownDuration;
+  if (
+    !abilityId ||
+    endsAt === undefined ||
+    duration === undefined ||
+    duration <= 0
+  ) {
+    return;
+  }
+  abilityCooldowns.set(abilityId, { endsAt, duration });
+  updateCooldownVisuals(logicalTime);
 }
 
 function renderInventory() {
@@ -201,6 +245,8 @@ function renderAnalyzer(hunt?: HuntResult) {
 
 function resetInterface() {
   liveState.reset();
+  logicalTime = 0;
+  abilityCooldowns.clear();
   lastResult = undefined;
   document.documentElement.dataset.processedEvents = '0';
   document.documentElement.dataset.bossSpawns = '0';
@@ -241,7 +287,7 @@ function labelEvent(event: CombatEvent) {
   if (event.type === 'dodge') return `${event.targetId}: esquiva.`;
   if (event.type === 'death') return `${event.targetId} foi derrotado.`;
   if (event.type === 'aggro') {
-    return 'Aldric puxou os inimigos com exeta amp res.';
+    return 'Aldric desafiou os inimigos com exeta res.';
   }
   if (event.type === 'reposition') {
     return `${event.sourceId} reposicionou-se.`;
@@ -386,6 +432,7 @@ function scheduleLoop() {
 
 window.addEventListener('hunt-time', (rawEvent) => {
   liveState.setTime((rawEvent as CustomEvent<number>).detail);
+  updateCooldownVisuals(liveState.time);
   const element = document.querySelector('#time');
   if (element) element.textContent = formatTime(liveState.time);
 });
@@ -452,6 +499,7 @@ window.addEventListener('hunt-event', (rawEvent) => {
   }
 
   if (event.type === 'cast' && heroIds.has(event.sourceId ?? '')) {
+    registerCooldown(event);
     const unit = renderer?.units.get(event.sourceId!);
     const bar = document.querySelector<HTMLElement>(
       `#card-${event.sourceId} .mp i`,

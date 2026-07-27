@@ -5,7 +5,7 @@ import {
   type AbilityDefinition,
   type AbilityPreferences,
 } from '../data/abilities';
-import { floors, heroes } from '../data/config';
+import { floors, heroes, HUNT_LAYOUT_CONFIG } from '../data/config';
 import type {
   CombatEvent,
   Direction,
@@ -27,10 +27,22 @@ type SimEntity = EntitySnapshot & {
   cooldowns: Record<string, number>;
   groupCooldowns: Record<string, number>;
   targetId?: string;
-  aggroUntil?: number;
+  forcedTargetUntil?: number;
+  threat: Record<string, number>;
   rewarded?: boolean;
   safePosition: Point;
-  returnToSafe?: boolean;
+};
+
+type AbilityTargeting = {
+  facing: Direction;
+  tiles: Point[];
+  targets: SimEntity[];
+};
+
+type OffensiveAction = {
+  ability: AbilityDefinition;
+  targeting: AbilityTargeting;
+  score: number;
 };
 
 type Hazard = {
@@ -65,6 +77,7 @@ export class CombatEngine {
   private kills = 0;
   private loot: Record<string, number> = {};
   private floorTimes: number[] = [];
+  private floorStartedAt = 0;
 
   constructor(
     private seed = 803,
@@ -100,6 +113,7 @@ export class CombatEngine {
       alive: true,
       cooldowns: {},
       groupCooldowns: {},
+      threat: {},
       safePosition: clone(snapshot.position),
     };
   }
@@ -149,6 +163,8 @@ export class CombatEngine {
       element: this.element(ability),
       tiles: clone(tiles),
       facing,
+      cooldownEndsAt: entity.cooldowns[ability.id],
+      cooldownDuration: ability.cooldown,
     });
   }
 
@@ -188,8 +204,14 @@ export class CombatEngine {
     if (critical) this.emit('critical', floor, source.id, target.id, { amount });
     target.hp = Math.max(0, target.hp - amount);
     this.emit('damage', floor, source.id, target.id, { amount, element });
-    if (isHero(source)) this.damage[source.id] += amount;
-    else this.damageTaken += amount;
+    if (isHero(source)) {
+      this.damage[source.id] += amount;
+      target.threat[source.id] =
+        (target.threat[source.id] ?? 0) +
+        amount * (source.role === 'knight' ? 0.08 : 0.12);
+    } else {
+      this.damageTaken += amount;
+    }
     if (target.hp === 0) {
       target.alive = false;
       this.emit('death', floor, source.id, target.id);
@@ -227,18 +249,76 @@ export class CombatEngine {
       .sort(
         (left, right) =>
           tileDistance(origin.position, left.position) -
-          tileDistance(origin.position, right.position),
+            tileDistance(origin.position, right.position) ||
+          Number(right.role === 'knight') - Number(left.role === 'knight'),
       )[0];
   }
 
-  private returnToAnchor(entity: SimEntity, floor: number) {
-    if (!entity.returnToSafe) return false;
-    if (tileDistance(entity.position, entity.safePosition) === 0) {
-      entity.returnToSafe = false;
-      return false;
+  private setTarget(
+    enemy: SimEntity,
+    target: SimEntity,
+    floor: number,
+    reason: string,
+    forcedUntil?: number,
+  ) {
+    if (enemy.targetId === target.id && !forcedUntil) return;
+    const previousTargetId = enemy.targetId;
+    enemy.targetId = target.id;
+    if (forcedUntil) enemy.forcedTargetUntil = forcedUntil;
+    this.emit('target_change', floor, enemy.id, target.id, {
+      reason,
+      previousTargetId,
+      forcedUntil,
+    });
+  }
+
+  private spatialThreat(enemy: SimEntity, hero: SimEntity) {
+    const proximity = Math.max(1, 160 - tileDistance(enemy.position, hero.position) * 18);
+    return proximity + (hero.role === 'knight' ? 0.01 : 0);
+  }
+
+  private initializeSpatialAggro(
+    enemies: SimEntity[],
+    party: SimEntity[],
+    floor: number,
+  ) {
+    for (const enemy of enemies) {
+      for (const hero of party.filter((candidate) => candidate.alive)) {
+        enemy.threat[hero.id] = this.spatialThreat(enemy, hero);
+      }
+      const target = this.highestThreatTarget(enemy, party);
+      if (target) this.setTarget(enemy, target, floor, 'spatial');
     }
-    this.move(entity, entity.safePosition, floor, true);
-    return true;
+  }
+
+  private highestThreatTarget(enemy: SimEntity, party: SimEntity[]) {
+    return party
+      .filter((hero) => hero.alive)
+      .sort(
+        (left, right) =>
+          (enemy.threat[right.id] ?? 0) - (enemy.threat[left.id] ?? 0) ||
+          tileDistance(enemy.position, left.position) -
+            tileDistance(enemy.position, right.position) ||
+          Number(right.role === 'knight') - Number(left.role === 'knight'),
+      )[0];
+  }
+
+  private monsterTarget(enemy: SimEntity, party: SimEntity[], floor: number) {
+    const forced = party.find(
+      (hero) =>
+        hero.alive &&
+        hero.id === enemy.targetId &&
+        (enemy.forcedTargetUntil ?? 0) > this.now,
+    );
+    if (forced) return forced;
+    const reason =
+      enemy.forcedTargetUntil && enemy.forcedTargetUntil <= this.now
+        ? 'forced_expired'
+        : 'threat';
+    enemy.forcedTargetUntil = undefined;
+    const target = this.highestThreatTarget(enemy, party);
+    if (target) this.setTarget(enemy, target, floor, reason);
+    return target;
   }
 
   private abilityTargets(
@@ -266,20 +346,58 @@ export class CombatEngine {
     };
   }
 
-  private tryOffensiveAbility(
+  private bestTargeting(
     caster: SimEntity,
     ability: AbilityDefinition,
     candidates: SimEntity[],
+  ) {
+    const alive = candidates.filter((candidate) => candidate.alive);
+    if (!alive.length) return undefined;
+    const options = alive.map((target) =>
+      this.abilityTargets(caster, target, ability, alive),
+    );
+    return options.sort(
+      (left, right) =>
+        right.targets.length - left.targets.length ||
+        tileDistance(caster.position, left.targets[0]?.position ?? caster.position) -
+          tileDistance(caster.position, right.targets[0]?.position ?? caster.position),
+    )[0];
+  }
+
+  private offensiveActions(
+    caster: SimEntity,
+    candidates: SimEntity[],
+    floor: number,
+  ): OffensiveAction[] {
+    return abilitiesByVocation(caster.role as AbilityDefinition['vocation'], this.preferences)
+      .filter((ability) => ability.group !== 'healing' && ability.group !== 'support')
+      .filter((ability) => this.canCast(caster, ability))
+      .filter((ability) => !(ability.reserveForBoss && floor < 4))
+      .flatMap((ability) => {
+        const targeting = this.bestTargeting(caster, ability, candidates);
+        if (!targeting || targeting.targets.length < ability.hardMinTargets) return [];
+        const priority = this.preferences[ability.id]?.priority ?? 99;
+        const preferred = targeting.targets.length >= ability.preferredMinTargets;
+        return [{
+          ability,
+          targeting,
+          score:
+            1000 -
+            priority * 100 +
+            targeting.targets.length * 35 +
+            (preferred ? 180 : 0) +
+            ability.power * 10,
+        }];
+      })
+      .sort((left, right) => right.score - left.score);
+  }
+
+  private performOffensiveAction(
+    caster: SimEntity,
+    action: OffensiveAction,
     floor: number,
   ) {
-    if (!this.canCast(caster, ability)) return false;
-    const target = this.nearest(caster, candidates);
-    if (!target) return false;
-    const targeting = this.abilityTargets(caster, target, ability, candidates);
-    if (!targeting.targets.length) {
-      this.move(caster, target.position, floor, caster.role !== 'knight');
-      return true;
-    }
+    const { ability, targeting } = action;
     this.cast(
       caster,
       ability,
@@ -288,11 +406,11 @@ export class CombatEngine {
       targeting.tiles,
       targeting.facing,
     );
-    if (
-      caster.role !== 'knight' &&
-      tileDistance(caster.position, caster.safePosition) > 0
-    ) {
-      caster.returnToSafe = true;
+    const castEvent = this.events.at(-1);
+    if (castEvent?.type === 'cast' && castEvent.data) {
+      castEvent.data.targetCount = targeting.targets.length;
+      castEvent.data.preferredMinTargets = ability.preferredMinTargets;
+      castEvent.data.hardMinTargets = ability.hardMinTargets;
     }
     if (ability.shape === 'single') {
       this.emit('projectile', floor, caster.id, targeting.targets[0].id, {
@@ -310,6 +428,233 @@ export class CombatEngine {
         this.element(ability),
       );
     }
+  }
+
+  private tryBestOffensiveAction(
+    caster: SimEntity,
+    candidates: SimEntity[],
+    floor: number,
+  ) {
+    const action = this.offensiveActions(caster, candidates, floor)[0];
+    if (!action) return false;
+    this.performOffensiveAction(caster, action, floor);
+    return true;
+  }
+
+  private isWalkable(point: Point) {
+    const column = point.x / TILE_SIZE;
+    const row = point.y / TILE_SIZE;
+    const bounds = HUNT_LAYOUT_CONFIG.walkableBounds;
+    return (
+      column >= bounds.minColumn &&
+      column <= bounds.maxColumn &&
+      row >= bounds.minRow &&
+      row <= bounds.maxRow
+    );
+  }
+
+  private isOccupied(
+    point: Point,
+    party: SimEntity[],
+    enemies: SimEntity[],
+    exceptId?: string,
+  ) {
+    return [...party, ...enemies].some(
+      (entity) =>
+        entity.alive &&
+        entity.id !== exceptId &&
+        tileDistance(entity.position, point) === 0,
+    );
+  }
+
+  private boxedEnemies(knight: SimEntity, enemies: SimEntity[]) {
+    return enemies.filter(
+      (enemy) =>
+        enemy.alive && tileDistance(knight.position, enemy.position) <= 1,
+    );
+  }
+
+  private waveScoreAt(
+    caster: SimEntity,
+    position: Point,
+    enemies: SimEntity[],
+  ) {
+    const waves = abilitiesByVocation(
+      caster.role as AbilityDefinition['vocation'],
+      this.preferences,
+    ).filter((ability) => ability.shape === 'wave');
+    let score = 0;
+    for (const ability of waves) {
+      for (const facing of ['up', 'down', 'left', 'right'] as Direction[]) {
+        const tiles = worldTiles(position, ability.id, facing);
+        score = Math.max(
+          score,
+          enemies.filter(
+            (enemy) => enemy.alive && pointInTiles(enemy.position, tiles),
+          ).length,
+        );
+      }
+    }
+    return score;
+  }
+
+  private bestMagePosition(
+    caster: SimEntity,
+    knight: SimEntity,
+    party: SimEntity[],
+    enemies: SimEntity[],
+  ) {
+    const candidates: Array<{ point: Point; score: number }> = [];
+    const bounds = HUNT_LAYOUT_CONFIG.walkableBounds;
+    for (let column = bounds.minColumn; column <= bounds.maxColumn; column++) {
+      for (let row = bounds.minRow; row <= bounds.maxRow; row++) {
+        const point = { x: column * TILE_SIZE, y: row * TILE_SIZE };
+        const knightDistance = tileDistance(point, knight.position);
+        if (knightDistance < 3 || knightDistance > 7) continue;
+        if (this.isOccupied(point, party, enemies, caster.id)) continue;
+        const closestEnemy = Math.min(
+          ...enemies
+            .filter((enemy) => enemy.alive)
+            .map((enemy) => tileDistance(point, enemy.position)),
+        );
+        if (closestEnemy <= 1) continue;
+        const score =
+          this.waveScoreAt(caster, point, enemies) * 100 +
+          Math.min(closestEnemy, 6) * 8 -
+          tileDistance(caster.position, point);
+        candidates.push({ point, score });
+      }
+    }
+    return candidates.sort((left, right) => right.score - left.score)[0]?.point;
+  }
+
+  private maybeRepositionMage(
+    caster: SimEntity,
+    knight: SimEntity,
+    party: SimEntity[],
+    enemies: SimEntity[],
+    floor: number,
+  ) {
+    const box = this.boxedEnemies(knight, enemies);
+    if (box.length < 2) return false;
+    const destination = this.bestMagePosition(caster, knight, party, enemies);
+    if (!destination) return false;
+    const currentScore = this.waveScoreAt(caster, caster.position, enemies);
+    const destinationScore = this.waveScoreAt(caster, destination, enemies);
+    const unsafe = enemies.some(
+      (enemy) =>
+        enemy.alive && tileDistance(caster.position, enemy.position) <= 2,
+    );
+    if (!unsafe && destinationScore <= currentScore) return false;
+    const next = stepToward(caster.position, destination);
+    const crossesBox =
+      tileDistance(next, knight.position) <= 1 ||
+      box.some((enemy) => tileDistance(next, enemy.position) === 0);
+    if (
+      crossesBox ||
+      !this.isWalkable(next) ||
+      this.isOccupied(next, party, enemies, caster.id)
+    ) {
+      return false;
+    }
+    caster.safePosition = clone(destination);
+    return this.move(caster, destination, floor, true);
+  }
+
+  private bestChallengePosition(
+    knight: SimEntity,
+    backlineTargets: SimEntity[],
+    party: SimEntity[],
+    enemies: SimEntity[],
+    range: number,
+  ) {
+    const bounds = HUNT_LAYOUT_CONFIG.walkableBounds;
+    const candidates: Array<{ point: Point; score: number }> = [];
+    for (let column = bounds.minColumn; column <= bounds.maxColumn; column++) {
+      for (let row = bounds.minRow; row <= bounds.maxRow; row++) {
+        const point = { x: column * TILE_SIZE, y: row * TILE_SIZE };
+        if (this.isOccupied(point, party, enemies, knight.id)) continue;
+        const captured = backlineTargets.filter(
+          (enemy) => tileDistance(point, enemy.position) <= range,
+        ).length;
+        if (!captured) continue;
+        const allInRange = enemies.filter(
+          (enemy) =>
+            enemy.alive &&
+            enemy.role !== 'boss' &&
+            tileDistance(point, enemy.position) <= range,
+        ).length;
+        candidates.push({
+          point,
+          score:
+            captured * 1000 +
+            allInRange * 50 -
+            tileDistance(knight.position, point),
+        });
+      }
+    }
+    return candidates.sort((left, right) => right.score - left.score)[0]?.point;
+  }
+
+  private tryChallenge(
+    knight: SimEntity,
+    party: SimEntity[],
+    enemies: SimEntity[],
+    floor: number,
+  ) {
+    const challenge = this.ability('challenge');
+    if (
+      !knight.alive ||
+      this.now - this.floorStartedAt < 2000 ||
+      !this.canCast(knight, challenge)
+    ) {
+      return false;
+    }
+    const backlineTargets = enemies.filter(
+      (enemy) =>
+        enemy.alive &&
+        enemy.role !== 'boss' &&
+        enemy.targetId !== knight.id,
+    );
+    if (!backlineTargets.length) return false;
+    const threatenedInRange = backlineTargets.filter(
+      (enemy) =>
+        tileDistance(knight.position, enemy.position) <= challenge.rangeTiles,
+    );
+    if (!threatenedInRange.length) {
+      const destination = this.bestChallengePosition(
+        knight,
+        backlineTargets,
+        party,
+        enemies,
+        challenge.rangeTiles,
+      );
+      return destination ? this.move(knight, destination, floor, true) : false;
+    }
+    const affected = enemies.filter(
+      (enemy) =>
+        enemy.alive &&
+        enemy.role !== 'boss' &&
+        tileDistance(knight.position, enemy.position) <= challenge.rangeTiles,
+    );
+    const tiles = worldTiles(knight.position, challenge.id, 'right');
+    this.cast(knight, challenge, floor, undefined, tiles, 'right');
+    const castEvent = this.events.at(-1);
+    const forcedUntil = this.now + 6000;
+    for (const enemy of affected) {
+      this.setTarget(enemy, knight, floor, 'challenge', forcedUntil);
+    }
+    if (castEvent?.data) {
+      castEvent.data.targetCount = affected.length;
+      castEvent.data.preferredMinTargets = challenge.preferredMinTargets;
+      castEvent.data.hardMinTargets = challenge.hardMinTargets;
+    }
+    this.emit('aggro', floor, knight.id, undefined, {
+      tiles,
+      duration: 6000,
+      targets: affected.map((enemy) => enemy.id),
+      forcedUntil,
+    });
     return true;
   }
 
@@ -325,65 +670,17 @@ export class CombatEngine {
     const druid = party.find((hero) => hero.id === 'druid')!;
     const sorcerer = party.find((hero) => hero.id === 'sorcerer')!;
 
-    const challenge = this.ability('challenge');
-    if (knight.alive && this.canCast(knight, challenge)) {
-      const tiles = worldTiles(knight.position, challenge.id, 'right');
-      const taunted = aliveEnemies
-        .filter(
-          (enemy) =>
-            enemy.role !== 'boss' &&
-            enemy.name.includes('Mage') &&
-            tileDistance(knight.position, enemy.position) > 1 &&
-            pointInTiles(enemy.position, tiles),
-        )
-        .sort(
-          (left, right) =>
-            tileDistance(knight.position, left.position) -
-            tileDistance(knight.position, right.position),
-        )
-        .slice(0, 4);
-      if (taunted.length) {
-        this.cast(knight, challenge, floor, undefined, tiles, 'right');
-        const pullOffsets = [
-          { x:1, y:0 },
-          { x:1, y:-1 },
-          { x:0, y:-1 },
-          { x:-1, y:-1 },
-        ];
-        for (const enemy of taunted) {
-          enemy.targetId = knight.id;
-          enemy.aggroUntil = this.now + 6000;
-        }
-        this.emit('aggro', floor, knight.id, undefined, {
-          tiles,
-          duration: 6000,
-          targets: taunted.map((enemy) => enemy.id),
-        });
-        taunted.forEach((enemy, index) => {
-          const offset = pullOffsets[index];
-          enemy.position = {
-            x:knight.position.x + offset.x * TILE_SIZE,
-            y:knight.position.y + offset.y * TILE_SIZE,
-          };
-          this.emit('reposition', floor, enemy.id, knight.id, {
-            position:clone(enemy.position),
-            duration:420,
-            pull:true,
-          });
-        });
-      }
-    }
+    const challenged = this.tryChallenge(knight, party, aliveEnemies, floor);
 
-    if (knight.alive) {
+    if (knight.alive && !challenged) {
       const target = this.nearest(knight, aliveEnemies);
       if (target && tileDistance(knight.position, target.position) > 1) {
         this.move(knight, target.position, floor);
       } else {
-        const options = abilitiesByVocation('knight', this.preferences).filter(
-          (ability) => ability.group === 'attack',
-        );
-        const acted = options.some((ability) =>
-          this.tryOffensiveAbility(knight, ability, aliveEnemies, floor),
+        const acted = this.tryBestOffensiveAction(
+          knight,
+          aliveEnemies,
+          floor,
         );
         if (!acted && target && turn % 3 === 0) {
           this.emit('basic_attack', floor, knight.id, target.id);
@@ -393,44 +690,53 @@ export class CombatEngine {
     }
 
     if (druid.alive) {
-      if (!this.returnToAnchor(druid, floor)) {
-        const wounded = party
-          .filter((hero) => hero.alive && hero.hp / hero.maxHp < 0.58)
-          .sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp)[0];
-        const heal = this.ability('heal_friend');
-        if (
-          wounded &&
-          this.canCast(druid, heal) &&
-          tileDistance(druid.position, wounded.position) <= heal.rangeTiles
-        ) {
-          const facing = directionTo(druid.position, wounded.position);
-          this.cast(druid, heal, floor, wounded.id, [clone(wounded.position)], facing);
-          const amount = Math.min(
-            wounded.maxHp - wounded.hp,
-            Math.round(170 + druid.attack * heal.power),
-          );
-          wounded.hp += amount;
-          this.healing += amount;
-          this.emit('heal', floor, druid.id, wounded.id, {
-            amount,
-            element: 'healing',
-          });
-        } else {
-          abilitiesByVocation('druid', this.preferences)
-            .filter((ability) => ability.group !== 'healing')
-            .some((ability) =>
-              this.tryOffensiveAbility(druid, ability, aliveEnemies, floor),
-            );
+      const wounded = party
+        .filter((hero) => hero.alive && hero.hp / hero.maxHp < 0.58)
+        .sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp)[0];
+      const heal = this.ability('heal_friend');
+      if (
+        wounded &&
+        this.canCast(druid, heal) &&
+        tileDistance(druid.position, wounded.position) <= heal.rangeTiles
+      ) {
+        const facing = directionTo(druid.position, wounded.position);
+        this.cast(druid, heal, floor, wounded.id, [clone(wounded.position)], facing);
+        const amount = Math.min(
+          wounded.maxHp - wounded.hp,
+          Math.round(170 + druid.attack * heal.power),
+        );
+        wounded.hp += amount;
+        this.healing += amount;
+        this.emit('heal', floor, druid.id, wounded.id, {
+          amount,
+          element: 'healing',
+        });
+        for (const enemy of aliveEnemies) {
+          enemy.threat[druid.id] = (enemy.threat[druid.id] ?? 0) + amount * 0.02;
+        }
+      } else if (
+        !this.maybeRepositionMage(druid, knight, party, aliveEnemies, floor)
+      ) {
+        const acted = this.tryBestOffensiveAction(druid, aliveEnemies, floor);
+        if (!acted) {
+          const target = this.nearest(druid, aliveEnemies);
+          if (target) this.move(druid, target.position, floor, true);
         }
       }
     }
 
-    if (sorcerer.alive && !this.returnToAnchor(sorcerer, floor)) {
-      const acted = abilitiesByVocation('sorcerer', this.preferences).some(
-        (ability) =>
-          this.tryOffensiveAbility(sorcerer, ability, aliveEnemies, floor),
+    if (sorcerer.alive) {
+      const repositioned = this.maybeRepositionMage(
+        sorcerer,
+        knight,
+        party,
+        aliveEnemies,
+        floor,
       );
-      if (!acted && turn % 4 === 0) {
+      const acted =
+        !repositioned &&
+        this.tryBestOffensiveAction(sorcerer, aliveEnemies, floor);
+      if (!repositioned && !acted && turn % 4 === 0) {
         const target = this.nearest(sorcerer, aliveEnemies);
         if (target && tileDistance(sorcerer.position, target.position) <= 7) {
           this.emit('basic_attack', floor, sorcerer.id, target.id);
@@ -453,13 +759,8 @@ export class CombatEngine {
     const aliveParty = party.filter((hero) => hero.alive);
     for (const enemy of enemies.filter((entity) => entity.alive)) {
       if (!aliveParty.length) break;
-      const forced =
-        enemy.aggroUntil && enemy.aggroUntil > this.now
-          ? party.find((hero) => hero.id === enemy.targetId && hero.alive)
-          : undefined;
-      const target = forced ?? this.nearest(enemy, aliveParty);
+      const target = this.monsterTarget(enemy, aliveParty, floor);
       if (!target) continue;
-      enemy.targetId = target.id;
       const ranged = enemy.name.includes('Mage') || enemy.role === 'boss';
       const rangeTiles = ranged ? 6 : 1;
       if (tileDistance(enemy.position, target.position) > rangeTiles) {
@@ -539,12 +840,12 @@ export class CombatEngine {
     for (let floorIndex = 0; floorIndex < floors.length; floorIndex++) {
       const floor = floorIndex + 1;
       const start = this.now;
+      this.floorStartedAt = start;
       const enemies = floors[floorIndex].map((enemy) => this.entity(enemy));
       for (const hero of party.filter((entity) => entity.alive)) {
         const original = heroes.find((candidate) => candidate.id === hero.id)!;
         hero.position = clone(original.position);
         hero.safePosition = clone(original.position);
-        hero.returnToSafe = false;
         this.emit('spawn', floor, undefined, hero.id, {
           entity: clone(hero),
           position: clone(hero.position),
@@ -559,6 +860,7 @@ export class CombatEngine {
           { entity: clone(enemy), position: clone(enemy.position) },
         );
       }
+      this.initializeSpatialAggro(enemies, party, floor);
       let hazards: Hazard[] = [];
       let turn = 0;
       while (

@@ -84,3 +84,34 @@ Social, Guild, market, pagamentos, login, backend e multiplayer.
 
 O mesmo projeto Sites deve ser preservado. Uma publicação só é considerada
 válida após build, commit, versão implantada e smoke test público.
+
+## Incremento tático — concluído em 27/07/2026
+
+- Aggro inicial agora é espacial: proximidade decide e o Knight vence somente
+  empates.
+- O motor mantém threat por monstro e registra `target_change` com a causa da
+  troca.
+- Challenge usa `exeta res` após dois segundos lógicos, alcance real de sete
+  tiles e forced target temporário, sem puxão físico ou alcance global.
+- Monstros podem voltar à backline após o forced target e ser desafiados
+  novamente.
+- Druid e Sorcerer procuram posições seguras ao redor da box do Knight,
+  priorizando cobertura de waves sem atravessar a box.
+- `preferredMinTargets` é preferência; `hardMinTargets` é bloqueio real.
+- Magias reservadas não são gastas antes do boss.
+- O HUD possui cooldown circular e numeral derivados do mesmo relógio da hunt.
+- PixiJS está separado em camadas de terreno, efeitos, entidades e overlay.
+  Efeitos não alteram transformações das entidades e são destruídos após fade.
+
+### Evidência
+
+| Validação | Resultado |
+|---|---|
+| Vitest | 25 testes aprovados |
+| Playwright/Edge | 6 cenários aprovados |
+| Pausa do cooldown | valor lógico permanece idêntico durante a pausa |
+| Velocidade | cooldown sincronizado em 1×, 2× e 4× |
+| Boss | alcançado e derrotado |
+| Loop | 3 ciclos sem duplicação |
+| Limpeza final | 3 entidades, 0 efeitos e 0 tweens pendentes |
+| Arena | 0 entidades fora dos limites |

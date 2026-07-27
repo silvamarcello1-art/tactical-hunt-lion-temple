@@ -3,6 +3,7 @@ export type EventType =
   | 'boss_spawn'
   | 'move'
   | 'reposition'
+  | 'target_change'
   | 'aggro'
   | 'area_warning'
   | 'monster_aoe'
@@ -52,6 +53,14 @@ export interface CombatEvent {
     duration?: number;
     targets?: string[];
     pull?: boolean;
+    reason?: string;
+    previousTargetId?: string;
+    forcedUntil?: number;
+    targetCount?: number;
+    preferredMinTargets?: number;
+    hardMinTargets?: number;
+    cooldownEndsAt?: number;
+    cooldownDuration?: number;
   };
 }
 

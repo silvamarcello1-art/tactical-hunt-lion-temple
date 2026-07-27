@@ -187,6 +187,12 @@ test.describe.serial('MVP 0 + MVP 1A — fluxo completo', () => {
         'data-tween-count',
       )))
       .toBeGreaterThan(0);
+    const cooldown = page.locator('[data-ability="berserk"]');
+    await expect
+      .poll(async () => Number(await cooldown.getAttribute(
+        'data-cooldown-remaining',
+      )))
+      .toBeGreaterThan(0);
 
     await page.locator('#pause').click();
     await expect(page.locator('html')).toHaveAttribute(
@@ -197,11 +203,18 @@ test.describe.serial('MVP 0 + MVP 1A — fluxo completo', () => {
     const pausedTweens = await page.locator('#game').getAttribute(
       'data-tween-count',
     );
+    const pausedCooldown = await cooldown.getAttribute(
+      'data-cooldown-remaining',
+    );
     await page.waitForTimeout(600);
     await expect(page.locator('#time')).toHaveText(pausedTime ?? '');
     await expect(page.locator('#game')).toHaveAttribute(
       'data-tween-count',
       pausedTweens ?? '',
+    );
+    await expect(cooldown).toHaveAttribute(
+      'data-cooldown-remaining',
+      pausedCooldown ?? '',
     );
     await page.locator('[data-speed="2"]').click();
     await expect(page.locator('html')).toHaveAttribute(
@@ -215,6 +228,11 @@ test.describe.serial('MVP 0 + MVP 1A — fluxo completo', () => {
       'paused',
     );
     await page.locator('[data-speed="4"]').click();
+    await expect
+      .poll(async () => Number(await cooldown.getAttribute(
+        'data-cooldown-remaining',
+      )))
+      .toBeLessThan(Number(pausedCooldown));
     await page.locator('#restart').click();
     await expect(page.locator('html')).toHaveAttribute(
       'data-session-state',
@@ -298,6 +316,8 @@ test.describe.serial('MVP 0 + MVP 1A — fluxo completo', () => {
     await expect(page.locator('#game canvas')).toHaveCount(1);
     await expect(page.locator('#game')).toHaveAttribute('data-unit-count', '3');
     await expect(page.locator('#game')).toHaveAttribute('data-tween-count', '0');
+    await expect(page.locator('#game')).toHaveAttribute('data-effect-count', '0');
+    await expect(page.locator('#game')).toHaveAttribute('data-entity-count', '3');
     await expect(page.locator('#game')).toHaveAttribute('data-out-of-bounds', '0');
     await expect(page.locator('.hero-card')).toHaveCount(3);
     await expect(page.locator('#analyzer')).toContainText('Bosses');

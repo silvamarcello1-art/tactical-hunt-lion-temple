@@ -61,6 +61,17 @@ ela agrega os eventos emitidos e apresenta o `HuntResult` no encerramento.
 | Layout | `index.html` e `src/style.css` |
 | Smoke tests | `tests/e2e/mvp0.spec.ts` |
 
+## Threat, rotação e eventos
+
+- `SimEntity.threat` mantém a tabela de ameaça de cada monstro.
+- `target_change` registra alvo, alvo anterior, motivo e expiração opcional.
+- `Challenge` aplica forced target com alcance limitado; não move criaturas.
+- `preferredMinTargets` participa da pontuação, enquanto `hardMinTargets`
+  invalida a ação.
+- O posicionamento tático dos magos é calculado no motor com candidatos em
+  tiles. O renderer recebe somente eventos `move` e `reposition`.
+- Eventos `cast` carregam `cooldownEndsAt` e `cooldownDuration`.
+
 ## Ciclo de vida
 
 1. `main.ts` cria uma única instância de `PixiRenderer`.
@@ -77,6 +88,27 @@ ela agrega os eventos emitidos e apresenta o `HuntResult` no encerramento.
    atualiza a seleção e abre o Helper sem transferir regra de jogo ao renderer.
 10. Estados visuais do renderer representam a timeline e nunca decidem o
     resultado lógico.
+
+## Camadas PixiJS
+
+O stage possui quatro contêineres permanentes nesta ordem:
+
+1. `terrain`: mapa, molduras, grid e debug;
+2. `effects`: AOE, projéteis, avisos, pulsos e linhas de aggro;
+3. `entities`: personagens, monstros, nomes e barras;
+4. `overlay`: mensagens, números flutuantes, texto de magia e barra do boss.
+
+Efeitos criam objetos próprios. Nenhum efeito recebe o contêiner de uma entidade
+para alterar `scale`, `position`, `alpha`, `anchor` ou parentalidade. Tweens de
+efeito terminam com `destroy()`. As animações próprias de movimento, dano e morte
+continuam limitadas à entidade correspondente.
+
+## Cooldown visual
+
+`main.ts` mantém apenas o estado derivado do último evento `cast`. A máscara
+circular e o numeral são recalculados quando `EventPlayer` emite `hunt-time`.
+Não existem `setInterval`, `setTimeout` ou relógios por ícone; por isso pausa e
+velocidade permanecem alinhadas à timeline.
 
 `data-session-state`, `data-completed-cycles`, `data-playback-speed`,
 `data-processed-events`, `data-boss-spawns`, `data-selected-hero` e os

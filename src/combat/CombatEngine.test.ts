@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { defaultAbilityPreferences } from '../data/abilities';
-import { heroes } from '../data/config';
+import { abilities, defaultAbilityPreferences } from '../data/abilities';
 import { CombatEngine } from './CombatEngine';
 import { TILE_SIZE, abilityOffsets } from './tiles';
 
@@ -85,69 +84,123 @@ describe('CombatEngine', () => {
     expect(abilityOffsets('rage_skies')).toHaveLength(85);
   });
 
-  it('reposiciona conjuradores e retorna ao tile seguro depois da magia', () => {
+  it('reposiciona conjuradores em tiles seguros quando a box se forma', () => {
     const events = new CombatEngine().run().events;
     for (const id of ['druid', 'sorcerer']) {
-      const safe = heroes.find((hero) => hero.id === id)!.position;
       const positions = events
         .filter(
           (event) =>
             event.type === 'reposition' &&
-            event.sourceId === id &&
-            event.floor === 1,
+            event.sourceId === id,
         )
         .map((event) => event.data!.position!);
-      expect(positions.some((point) => point.x !== safe.x || point.y !== safe.y))
-        .toBe(true);
-      expect(positions.some((point) => point.x === safe.x && point.y === safe.y))
-        .toBe(true);
+      expect(positions.length, id).toBeGreaterThan(0);
+      expect(
+        positions.every(
+          (point) =>
+            point.x >= 2 * TILE_SIZE &&
+            point.x <= 27 * TILE_SIZE &&
+            point.y >= 2 * TILE_SIZE &&
+            point.y <= 15 * TILE_SIZE,
+        ),
+      ).toBe(true);
     }
   });
 
-  it('respeita cooldowns próprios das nove magias', () => {
+  it('respeita os cooldowns das magias executadas', () => {
     const casts = new CombatEngine()
       .run()
       .events.filter((event) => event.type === 'cast');
-    const expected: Record<string, number> = {
-      'Chivalrous Challenge':2000,
-      Berserk:4000,
-      Groundshaker:8000,
-      'Heal Friend':1000,
-      'Strong Ice Wave':4000,
-      'Eternal Winter':40000,
-      'Flame Strike':2000,
-      'Energy Wave':8000,
-      'Rage of the Skies':40000,
-    };
-    for (const [name, cooldown] of Object.entries(expected)) {
+    for (const ability of abilities) {
       const times = casts
-        .filter((event) => event.data?.ability === name)
+        .filter((event) => event.data?.abilityId === ability.id)
         .map((event) => event.time);
-      expect(times.length, name).toBeGreaterThan(0);
       for (let index = 1; index < times.length; index++) {
-        expect(times[index] - times[index - 1], name).toBeGreaterThanOrEqual(
-          cooldown,
+        expect(times[index] - times[index - 1], ability.name).toBeGreaterThanOrEqual(
+          ability.cooldown,
         );
       }
     }
+    expect(casts.some((event) => event.data?.abilityId === 'challenge')).toBe(true);
+    expect(casts.some((event) => event.data?.abilityId === 'energy_wave')).toBe(true);
   });
 
-  it('usa exeta amp res para puxar até quatro criaturas à distância', () => {
+  it('usa exeta res após dois segundos sem alcance global ou puxão físico', () => {
     const events = new CombatEngine().run().events;
     const cast = events.find(
       (event) =>
         event.type === 'cast' &&
         event.data?.abilityId === 'challenge' &&
-        event.data?.words === 'exeta amp res',
+        event.data?.words === 'exeta res',
     );
     expect(cast).toBeDefined();
+    expect(cast!.time).toBeGreaterThanOrEqual(2000);
     expect(cast?.data?.manaCost).toBe(80);
     const pullEvents = events.filter(
       (event) => event.type === 'reposition' && event.data?.pull,
     );
-    expect(pullEvents.length).toBeGreaterThan(0);
-    expect(pullEvents.length).toBeLessThanOrEqual(8);
-    expect(pullEvents.every((event) => event.targetId === 'knight')).toBe(true);
+    expect(pullEvents).toHaveLength(0);
+    const challenged = events.filter(
+      (event) =>
+        event.type === 'target_change' &&
+        event.data?.reason === 'challenge' &&
+        event.targetId === 'knight',
+    );
+    expect(challenged.length).toBeGreaterThan(0);
+    expect(challenged.every((event) => event.data?.forcedUntil === event.time + 6000))
+      .toBe(true);
+  });
+
+  it('inicia o aggro por proximidade e favorece o Knight apenas no empate', () => {
+    const initial = new CombatEngine()
+      .run()
+      .events.filter(
+        (event) =>
+          event.type === 'target_change' &&
+          event.floor === 1 &&
+          event.time === 0 &&
+          event.data?.reason === 'spatial',
+      );
+    expect(initial.find((event) => event.sourceId === 'lion-1')?.targetId)
+      .toBe('knight');
+    expect(initial.find((event) => event.sourceId === 'lion-2')?.targetId)
+      .toBe('druid');
+    expect(initial.find((event) => event.sourceId === 'lion-3')?.targetId)
+      .toBe('sorcerer');
+  });
+
+  it('permite perder o forced target e recuperar o aggro com novo Challenge', () => {
+    const events = new CombatEngine().run().events;
+    const recovered = events.some((event, index) => {
+      if (
+        event.type !== 'target_change' ||
+        event.data?.reason !== 'forced_expired' ||
+        event.targetId === 'knight'
+      ) {
+        return false;
+      }
+      return events.slice(index + 1).some(
+        (later) =>
+          later.sourceId === event.sourceId &&
+          later.type === 'target_change' &&
+          later.data?.reason === 'challenge' &&
+          later.targetId === 'knight',
+      );
+    });
+    expect(recovered).toBe(true);
+  });
+
+  it('permite wave contra dois alvos quando a preferência é três', () => {
+    const cast = new CombatEngine()
+      .run()
+      .events.find(
+        (event) =>
+          event.type === 'cast' &&
+          event.data?.targetCount === 2 &&
+          event.data?.preferredMinTargets === 3 &&
+          event.data?.hardMinTargets === 1,
+      );
+    expect(cast).toBeDefined();
   });
 
   it('desconta mana das magias sem produzir valores negativos', () => {
