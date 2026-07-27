@@ -2,11 +2,20 @@
 
 ## Informações do Checkpoint
 - **Data/Hora**: 27/07/2026
-- **Branch**: `recovery/antigravity-mvp1b`
+- **Branch**: `feature/helper-individual`
 - **Commit Base Recebido**: `a7bcb07` ("Complete MVP 1A hunt fidelity")
 - **Commit de Checkpoint Criado**: `3c1a96b` ("checkpoint: preserve inherited MVP 1B state")
 
 ## Estado Recebido e Auditoria
+- HelperPreferencesService criado em `src/app/HelperPreferencesService.ts`.
+- Modelo de preferências versionado por `heroId` implementado.
+- Migração de preferências globais legadas para o novo formato implementada.
+- CombatEngine preparado para consumir preferências por herói e aceitar formato legado global.
+- `src/main.ts` e `src/game/PixiRenderer.ts` adaptados para a nova estrutura de helper preferences.
+- Typecheck aprovado (`pnpm run typecheck`).
+- Testes unitários, build e E2E ainda pendentes após as últimas alterações.
+- Implementação ainda parcial; falta concluir cobertura de testes e validar diffs finais.
+- Próxima ação: auditar diff e concluir testes antes de avançar.
 - **Motor Lógico**: Autoritativo e determinístico em `src/combat/CombatEngine.ts`.
 - **Relógio Lógico & Timeline**: Suporta pausa, resumption e velocidades 1×/2×/4× sem duplicação de eventos.
 - **Renderer PixiJS**: Renderização por camadas isoladas em `src/game/PixiRenderer.ts` sem alteração de estados lógicos.

@@ -61,6 +61,64 @@ const isHero = (entity: SimEntity) =>
   entity.role === 'druid' ||
   entity.role === 'sorcerer';
 
+const defaultHeroPreferencesById = (): Record<string, AbilityPreferences> =>
+  Object.fromEntries(
+    heroes
+      .filter((hero) =>
+        hero.role === 'knight' || hero.role === 'druid' || hero.role === 'sorcerer',
+      )
+      .map((hero) => [hero.id, defaultAbilityPreferences()]),
+  );
+
+const isAbilityPreferencesObject = (
+  value: unknown,
+): value is AbilityPreferences =>
+  typeof value === 'object' &&
+  value !== null &&
+  Object.values(value).every(
+    (entry) =>
+      typeof entry === 'object' &&
+      entry !== null &&
+      'enabled' in entry &&
+      'priority' in entry,
+  );
+
+const normalizePreferences = (
+  preferences: Record<string, AbilityPreferences> | AbilityPreferences,
+): Record<string, AbilityPreferences> => {
+  if (typeof preferences !== 'object' || preferences === null) {
+    return defaultHeroPreferencesById();
+  }
+
+  const heroIds = new Set(
+    heroes
+      .filter(
+        (hero) =>
+          hero.role === 'knight' || hero.role === 'druid' || hero.role === 'sorcerer',
+      )
+      .map((hero) => hero.id),
+  );
+  const keys = Object.keys(preferences);
+  const isHeroMap = keys.length > 0 && keys.every((key) => heroIds.has(key));
+
+  if (isHeroMap) {
+    return preferences as Record<string, AbilityPreferences>;
+  }
+
+  if (isAbilityPreferencesObject(preferences)) {
+    return Object.fromEntries(
+      heroes
+        .filter(
+          (hero) =>
+            hero.role === 'knight' || hero.role === 'druid' || hero.role === 'sorcerer',
+        )
+        .map((hero) => [hero.id, preferences]),
+    );
+  }
+
+  return defaultHeroPreferencesById();
+};
+
 export class CombatEngine {
   private events: CombatEvent[] = [];
   private now = 0;
@@ -79,11 +137,14 @@ export class CombatEngine {
   private loot: Record<string, number> = {};
   private floorTimes: number[] = [];
   private floorStartedAt = 0;
+  private preferences: Record<string, AbilityPreferences>;
 
   constructor(
     private seed = 803,
-    private preferences: AbilityPreferences = defaultAbilityPreferences(),
-  ) {}
+    preferences: Record<string, AbilityPreferences> | AbilityPreferences = defaultHeroPreferencesById(),
+  ) {
+    this.preferences = normalizePreferences(preferences);
+  }
 
   private random() {
     this.seed = (this.seed * 1664525 + 1013904223) >>> 0;
@@ -123,13 +184,17 @@ export class CombatEngine {
     return abilities.find((candidate) => candidate.id === id)!;
   }
 
-  private enabled(id: string) {
-    return this.preferences[id]?.enabled ?? true;
+  private heroPreferences(heroId: string): AbilityPreferences {
+    return this.preferences[heroId] ?? defaultAbilityPreferences();
+  }
+
+  private enabled(id: string, heroId: string) {
+    return this.heroPreferences(heroId)[id]?.enabled ?? true;
   }
 
   private canCast(entity: SimEntity, ability: AbilityDefinition) {
     return (
-      this.enabled(ability.id) &&
+      this.enabled(ability.id, entity.id) &&
       entity.mana >= ability.manaCost &&
       (entity.cooldowns[ability.id] ?? 0) <= this.now &&
       (entity.groupCooldowns[ability.group] ?? 0) <= this.now
@@ -377,14 +442,15 @@ export class CombatEngine {
     candidates: SimEntity[],
     floor: number,
   ): OffensiveAction[] {
-    return abilitiesByVocation(caster.role as AbilityDefinition['vocation'], this.preferences)
+    const preferences = this.heroPreferences(caster.id);
+    return abilitiesByVocation(caster.role as AbilityDefinition['vocation'], preferences)
       .filter((ability) => ability.group !== 'healing' && ability.group !== 'support')
       .filter((ability) => this.canCast(caster, ability))
       .filter((ability) => !(ability.reserveForBoss && floor < 4))
       .flatMap((ability) => {
         const targeting = this.bestTargeting(caster, ability, candidates);
         if (!targeting || targeting.targets.length < ability.hardMinTargets) return [];
-        const priority = this.preferences[ability.id]?.priority ?? 99;
+        const priority = preferences[ability.id]?.priority ?? 99;
         const preferred = targeting.targets.length >= ability.preferredMinTargets;
         return [{
           ability,
@@ -489,7 +555,7 @@ export class CombatEngine {
   ) {
     const waves = abilitiesByVocation(
       caster.role as AbilityDefinition['vocation'],
-      this.preferences,
+      this.heroPreferences(caster.id),
     ).filter((ability) => ability.shape === 'wave');
     let score = 0;
     for (const ability of waves) {

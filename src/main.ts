@@ -2,13 +2,9 @@ import './style.css';
 import { CurrencyService } from './app/CurrencyService';
 import { LiveHuntState } from './app/LiveHuntState';
 import { SESSION_CONFIG } from './app/sessionConfig';
-import {
-  abilities,
-  abilitiesByVocation,
-  defaultAbilityPreferences,
-  type AbilityPreferences,
-} from './data/abilities';
+import { abilities, abilitiesByVocation } from './data/abilities';
 import { heroes } from './data/config';
+import { HelperPreferencesService } from './app/HelperPreferencesService';
 import type { CombatEvent, HuntResult } from './events/types';
 import { PixiRenderer } from './game/PixiRenderer';
 
@@ -28,14 +24,13 @@ const $ = <T extends HTMLElement>(selector: string) =>
   document.querySelector<T>(selector)!;
 
 const heroIds = new Set(['knight', 'druid', 'sorcerer']);
-const storageKey = 'tactical-hunt-ability-preferences';
+const helperPreferencesService = new HelperPreferencesService();
 const liveState = new LiveHuntState();
 const debugEnabled =
   new URLSearchParams(window.location.search).get('debug') === '1';
 
-let preferences = loadPreferences();
 let renderer: PixiRenderer | undefined;
-let selectedHeroId = 'knight';
+let selectedHeroId = helperPreferencesService.getSelectedHeroId();
 let sessionPhase: SessionPhase = 'preparing';
 let resumePhase: Extract<
   SessionPhase,
@@ -55,17 +50,6 @@ const abilityCooldowns = new Map<
   string,
   { endsAt: number; duration: number }
 >();
-
-function loadPreferences(): AbilityPreferences {
-  try {
-    const saved = localStorage.getItem(storageKey);
-    return saved
-      ? { ...defaultAbilityPreferences(), ...JSON.parse(saved) }
-      : defaultAbilityPreferences();
-  } catch {
-    return defaultAbilityPreferences();
-  }
-}
 
 const safeNumber = (value: number) =>
   Number.isFinite(value) && value >= 0 ? value : 0;
@@ -129,12 +113,13 @@ function renderParty() {
   $('#party').innerHTML = heroes
     .map((hero) => {
       const vocation = hero.role as 'knight' | 'druid' | 'sorcerer';
-      const spells = abilitiesByVocation(vocation)
-        .map(
-          (ability) =>
-            `<img class="${preferences[ability.id]?.enabled ? '' : 'disabled'}"
-              src="${ability.icon}" title="${ability.name} — ${ability.cooldown / 1000}s" alt="">`,
-        )
+      const heroConfig = helperPreferencesService.getHeroConfig(hero.id);
+  const spells = abilitiesByVocation(vocation)
+        .map((ability) => {
+          const current = heroConfig.offensiveAbilities[ability.id];
+          return `<img class="${current?.enabled ? '' : 'disabled'}"
+              src="${ability.icon}" title="${ability.name} — ${ability.cooldown / 1000}s" alt="">`;
+        })
         .join('');
       const roleName =
         vocation === 'knight' ? 'TANK' : vocation === 'druid' ? 'SUP' : 'DPS';
@@ -156,16 +141,18 @@ function renderParty() {
 }
 
 function renderActionBar() {
+  const heroConfig = helperPreferencesService.getHeroConfig(selectedHeroId);
   $('#action-bar').innerHTML = abilities
     .map(
-      (ability) => `<button class="action ${
-        preferences[ability.id]?.enabled ? '' : 'disabled'
-      }" data-ability="${ability.id}" title="${ability.name} • ${ability.words}">
-        <img src="${ability.icon}" alt="${ability.name}">
-        <em>${ability.cooldown / 1000}s</em>
-        <span class="cooldown-mask" aria-hidden="true"></span>
-        <strong class="cooldown-number" aria-hidden="true"></strong>
-      </button>`,
+      (ability) => {
+        const current = heroConfig.offensiveAbilities[ability.id];
+        return `<button class="action ${current?.enabled ? '' : 'disabled'}" data-ability="${ability.id}" title="${ability.name} • ${ability.words}">
+          <img src="${ability.icon}" alt="${ability.name}">
+          <em>${ability.cooldown / 1000}s</em>
+          <span class="cooldown-mask" aria-hidden="true"></span>
+          <strong class="cooldown-number" aria-hidden="true"></strong>
+        </button>`;
+      },
     )
     .join('');
   updateCooldownVisuals(logicalTime);
@@ -285,10 +272,13 @@ function resetInterface() {
 async function createRenderer() {
   renderer?.destroy();
   renderer = undefined;
-  const nextRenderer = new PixiRenderer(preferences, {
-    debugEnabled,
-    selectedHeroId,
-  });
+  const nextRenderer = new PixiRenderer(
+    helperPreferencesService.getAllHeroPreferences(),
+    {
+      debugEnabled,
+      selectedHeroId,
+    },
+  );
   try {
     await nextRenderer.mount($('#game'));
     nextRenderer.player.speed = selectedSpeed;
@@ -353,6 +343,7 @@ function vocationLabel(role: string) {
 function selectHero(heroId: string, openHelper = false) {
   if (!heroIds.has(heroId)) return;
   selectedHeroId = heroId;
+  helperPreferencesService.setSelectedHeroId(heroId);
   document.documentElement.dataset.selectedHero = heroId;
   renderer?.selectHero(heroId);
   document.querySelectorAll<HTMLElement>('[data-hero-id]').forEach((card) => {
@@ -366,21 +357,26 @@ function selectHero(heroId: string, openHelper = false) {
 function renderAbilityModal(heroId = selectedHeroId) {
   const hero = heroes.find((candidate) => candidate.id === heroId) ?? heroes[0];
   const vocation = hero.role as 'knight' | 'druid' | 'sorcerer';
+  const heroConfig = helperPreferencesService.getHeroConfig(hero.id);
   $('#helper-character-name').textContent = hero.name;
   $('#helper-character-vocation').textContent = vocationLabel(vocation);
-  $('#ability-list').innerHTML = abilitiesByVocation(vocation, preferences)
+  $('#ability-list').innerHTML = abilitiesByVocation(vocation)
+    .sort((left, right) =>
+      (heroConfig.offensiveAbilities[left.id]?.priority ?? 99) -
+      (heroConfig.offensiveAbilities[right.id]?.priority ?? 99),
+    )
     .map((ability) => {
-      const current = preferences[ability.id];
+      const current = heroConfig.offensiveAbilities[ability.id];
       return `<div class="ability-row">
         <img src="${ability.icon}" alt="">
         <div><b>${ability.name}</b><small>${ability.words} • ${ability.cooldown / 1000}s</small></div>
-        <label><input type="checkbox" data-enabled="${ability.id}" ${current.enabled ? 'checked' : ''}> Ativa</label>
+        <label><input type="checkbox" data-enabled="${ability.id}" ${current?.enabled ? 'checked' : ''}> Ativa</label>
         <label>Prioridade
           <select data-priority="${ability.id}">
             ${[1,2,3]
               .map(
                 (priority) =>
-                  `<option ${priority === current.priority ? 'selected' : ''}>${priority}</option>`,
+                  `<option ${priority === current?.priority ? 'selected' : ''}>${priority}</option>`,
               )
               .join('')}
           </select>
@@ -697,7 +693,9 @@ $('#action-bar').onclick = (event) => {
 };
 $('#save-abilities').onclick = (event) => {
   event.preventDefault();
-  for (const ability of abilities) {
+  const heroConfig = helperPreferencesService.getHeroConfig(selectedHeroId);
+  const updatedAbilities = { ...heroConfig.offensiveAbilities };
+  for (const ability of abilitiesByVocation(heroConfig.vocation)) {
     const enabled = document.querySelector<HTMLInputElement>(
       `[data-enabled="${ability.id}"]`,
     );
@@ -705,12 +703,14 @@ $('#save-abilities').onclick = (event) => {
       `[data-priority="${ability.id}"]`,
     );
     if (!enabled || !priority) continue;
-    preferences[ability.id] = {
-      enabled:enabled.checked,
-      priority:Number(priority.value),
+    updatedAbilities[ability.id] = {
+      enabled: enabled.checked,
+      priority: Number(priority.value),
     };
   }
-  localStorage.setItem(storageKey, JSON.stringify(preferences));
+  helperPreferencesService.updateHeroConfig(selectedHeroId, {
+    offensiveAbilities: updatedAbilities,
+  });
   ($('#ability-modal') as HTMLDialogElement).close();
   void restart();
 };

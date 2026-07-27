@@ -64,6 +64,8 @@ type Tween = {
   done?: () => void;
 };
 
+type HeroPreferencesMap = Record<string, AbilityPreferences>;
+
 type RendererOptions = {
   debugEnabled?: boolean;
   selectedHeroId?: string;
@@ -99,7 +101,7 @@ export class PixiRenderer {
     }
   };
 
-  constructor(preferences: AbilityPreferences, options: RendererOptions = {}) {
+  constructor(preferences: HeroPreferencesMap, options: RendererOptions = {}) {
     this.debugEnabled =
       options.debugEnabled ?? RENDER_CONFIG.arena.debugEnabled;
     this.selectedHeroId = options.selectedHeroId ?? 'knight';
