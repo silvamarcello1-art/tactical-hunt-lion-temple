@@ -2,7 +2,7 @@
 
 ## Resultado
 
-**APROVADO após revisão de encerramento em 27/07/2026.**
+**APROVADO e reconciliado novamente como gate do MVP 1A em 27/07/2026.**
 
 ## Critérios comprovados
 
@@ -21,7 +21,8 @@
 - [x] Valores fictícios visíveis estão marcados como `DEMO`.
 - [x] Controles não falham silenciosamente.
 - [x] Módulos futuros informam “Disponível em um próximo MVP”.
-- [x] 20 testes unitários e 4 cenários no Edge passam.
+- [x] 22 testes unitários passam após as adições não regressivas do MVP 1A.
+- [x] 6 cenários no Edge passam, incluindo os 4 fluxos do MVP 0.
 - [x] Typecheck, build e `git diff --check` passam.
 - [x] 1366×768, 1600×900 e 1920×1080 não têm rolagem horizontal.
 
@@ -37,11 +38,12 @@ git diff --check
 ```
 
 `tests/e2e/mvp0.spec.ts` valida controles, mocks, pausa dos tweens, reset,
-boss único, Analyzer, três loops e resoluções.
+boss único, Analyzer, três loops, reinício no boss, Helper durante a sessão e
+resoluções. O MVP 0 não precisou de correção adicional durante este gate.
 
 ## Débitos aceitos
 
 - Sem lint configurado.
 - Assets provisórios não autorizam uso comercial.
-- Sem colisão/pathfinding.
+- Sem pathfinding avançado; o MVP 1A preserva deslocamentos roteirizados.
 - Sem inventário, progressão ou backend.

@@ -9,7 +9,8 @@
 - `src/game/` representa eventos; não decide dano, cura, loot ou progressão.
 - `src/app/` agrega estado independente de DOM.
 - `src/main.ts` orquestra controles e painéis.
-- `src/data/` concentra dados configuráveis.
+- `src/data/` concentra dados e posições configuráveis.
+- `src/game/renderConfig.ts` concentra escala, duração e limites visuais.
 
 ## Comandos
 
@@ -33,6 +34,7 @@ Não existe lint configurado.
 - Mantenha TypeScript estrito e parâmetros de jogo configuráveis.
 - Mudança no motor/timeline exige teste determinístico.
 - Mudança no fluxo exige teste visual de navegador proporcional.
+- Debug visual é opt-in por `?debug=1` e deve permanecer desligado por padrão.
 - Não copie marcas, código ou assets protegidos das referências.
 - Não refatore o projeto inteiro como efeito colateral.
 

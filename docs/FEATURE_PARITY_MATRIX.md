@@ -4,19 +4,19 @@ Referência comportamental: `docs/reference/VIDEO_REFERENCE_MAP.md`.
 
 | Funcionalidade | Referência | Estado atual | Diferença | Prioridade | MVP | Dependências | Aceite |
 |---|---|---|---|---|---|---|---|
-| Shell compacto | Hunt central e dados nas bordas | Implementado | Dados reais ainda limitados | P1 | 1 | Design | Hunt permanece principal em 1366–1920 px |
-| Mapa em tiles | Salas e decoração variadas | Parcial | Um mapa, sem colisão | P1 | 1 | Modelo de mapa | Salas data-driven e obstáculos sólidos |
-| Movimento da party | Formação e reposicionamento | Parcial | Movimento direto | P1 | 1 | Navegação | Papéis respeitam distância e tiles válidos |
+| Shell compacto | Hunt central e dados nas bordas | Implementado no MVP 1A | Dados reais ainda limitados | P1 | 1A | Design | Hunt permanece principal em 1366–1920 px |
+| Mapa em tiles | Salas e decoração variadas | Parcial, melhorado no MVP 1A | Um mapa, sem colisão sólida | P1 | 1A/1C | Modelo de mapa | Salas data-driven e obstáculos sólidos |
+| Movimento da party | Formação e reposicionamento | Implementado no escopo 1A | Slots e deslocamento curto | P1 | 1A | Timeline | Frontline/backline e retorno seguro permanecem legíveis |
 | Movimento de monstros | Cerco e perseguição | Parcial | Sem pathfinding | P1 | 1 | Colisão | Alvos alcançados sem atravessar bloqueios |
 | Aggro do Knight | Tank concentra criaturas | Implementado | Threat simplificado | P1 | 1 | Threat model | Ameaça configurável e testada |
 | AOE de monstros | Aviso e impacto por tiles | Implementado | Poucos padrões | P1 | 1 | Catálogo | Aviso e dano usam os mesmos tiles |
-| Magias da party | Palavras, área e animação | Implementado | Arte provisória | P1 | 1 | Asset pipeline | Três magias por vocação consistentes |
+| Magias da party | Palavras, área e animação | Implementado no escopo 1A | Arte provisória | P1 | 1A | Asset pipeline | Três magias por vocação consistentes |
 | Cura e mana | Automação e barras | Implementado | Regra fixa | P1 | 1 | Helper | Limiares configuráveis e testados |
 | Morte/limpeza | Feedback sem resíduo | Implementado | Sem cadáver/revive | P2 | 2 | Regras | Entidade removida uma vez |
 | Transição | Ondas e boss no mesmo shell | Parcial | Mesmo mapa | P1 | 1 | Mapas | Troca clara e limpeza total |
 | Loop | Repetição opcional | Implementado | Sem metas de parada | P1 | 1 | Sessão | ON repete, OFF encerra, sem duplicação |
 | Party lateral | HP, mana e skills | Parcial | Sem equipamentos | P1 | 2 | Itens | Ficha real por personagem |
-| Helper | Regras por personagem/contexto | Parcial | Apenas ativação/prioridade | P1 | 1 | Rule engine | Cura, alvo, AOE e distância editáveis |
+| Helper | Regras por personagem/contexto | Parcial, seleção individual no 1A | Ativação/prioridade ainda compartilhadas por habilidade | P1 | 1B | Rule engine | Cura, alvo, AOE e distância editáveis por personagem |
 | Analyzer | XP, loot, boss, dano, dano recebido e cura | Implementado | Sem histórico | P1 | 1 | Telemetria | Timeline e relatório coincidem |
 | Backpack | Slots e itens | Mock explícito | 20 slots vazios e contador coerente | P1 | 2 | Item instance | Mover item sem perda/duplicação |
 | Equipamentos/DnD | Manipulação e comparação | Ausente | Sem modelo | P1 | 2 | Inventário | Operações atômicas e validadas |

@@ -15,6 +15,7 @@ import {
 import { CombatEngine } from '../combat/CombatEngine';
 import { TILE_SIZE } from '../combat/tiles';
 import type { AbilityPreferences } from '../data/abilities';
+import { HUNT_LAYOUT_CONFIG } from '../data/config';
 import { EventPlayer } from '../events/EventPlayer';
 import type {
   CombatEvent,
@@ -24,13 +25,26 @@ import type {
 } from '../events/types';
 import { RENDER_CONFIG } from './renderConfig';
 
+export type EntityVisualState =
+  | 'idle'
+  | 'moving'
+  | 'attacking'
+  | 'casting'
+  | 'healing'
+  | 'hurt'
+  | 'dead';
+
 type Unit = {
   body: Container;
   sprite: Sprite | AnimatedSprite;
   spriteKey: string;
   facing: DirectionName;
+  state: EntityVisualState;
+  targetId?: string;
   hp: Graphics;
   mana?: Graphics;
+  selection?: Graphics;
+  debugLabel?: Text;
   hpWidth: number;
   hpY: number;
   manaY?: number;
@@ -50,6 +64,11 @@ type Tween = {
   done?: () => void;
 };
 
+type RendererOptions = {
+  debugEnabled?: boolean;
+  selectedHeroId?: string;
+};
+
 export class PixiRenderer {
   readonly app = new Application();
   readonly result: HuntResult;
@@ -65,6 +84,8 @@ export class PixiRenderer {
   private tileTextures = new Map<string, Texture>();
   private parent?: HTMLElement;
   private destroyed = false;
+  private selectedHeroId: string;
+  private readonly debugEnabled: boolean;
   private readonly tickerHandler = (ticker: Ticker) => {
     if (this.destroyed) return;
     const timelineWasRunning = this.player.isRunning;
@@ -74,7 +95,10 @@ export class PixiRenderer {
     }
   };
 
-  constructor(preferences: AbilityPreferences) {
+  constructor(preferences: AbilityPreferences, options: RendererOptions = {}) {
+    this.debugEnabled =
+      options.debugEnabled ?? RENDER_CONFIG.arena.debugEnabled;
+    this.selectedHeroId = options.selectedHeroId ?? 'knight';
     this.result = new CombatEngine(803, preferences).run();
     this.player = new EventPlayer(
       this.result.events,
@@ -87,13 +111,13 @@ export class PixiRenderer {
   async mount(parent: HTMLElement) {
     this.parent = parent;
     await this.app.init({
-      width:RENDER_CONFIG.canvas.width,
-      height:RENDER_CONFIG.canvas.height,
+      width:RENDER_CONFIG.arena.width,
+      height:RENDER_CONFIG.arena.height,
       background:'#111611',
       antialias:false,
       resolution:Math.min(
         window.devicePixelRatio,
-        RENDER_CONFIG.canvas.maxResolution,
+        RENDER_CONFIG.arena.maxResolution,
       ),
       autoDensity:true,
     });
@@ -102,12 +126,14 @@ export class PixiRenderer {
     if (this.destroyed) return;
     parent.replaceChildren(this.app.canvas);
     this.drawArena();
+    if (this.debugEnabled) this.drawDebugOverlay();
     this.floorText = this.label('PREPARAÇÃO', 13, '#f0d77a');
     this.floorText.position.set(18, 14);
     this.floorText.zIndex = 60;
     this.app.stage.addChild(this.floorText);
     this.app.stage.sortableChildren = true;
     this.app.ticker.add(this.tickerHandler);
+    parent.dataset.debugEnabled = String(this.debugEnabled);
     this.syncDiagnostics();
     window.dispatchEvent(new CustomEvent('hunt-ready', { detail:this.result }));
   }
@@ -129,7 +155,18 @@ export class PixiRenderer {
       this.parent.dataset.unitCount = '0';
       this.parent.dataset.stageChildren = '0';
       this.parent.dataset.tweenCount = '0';
+      this.parent.dataset.outOfBounds = '0';
     }
+  }
+
+  selectHero(heroId: string) {
+    this.selectedHeroId = heroId;
+    for (const [id, unit] of this.units) {
+      if (unit.hero && unit.selection) {
+        unit.selection.visible = id === heroId;
+      }
+    }
+    if (this.parent) this.parent.dataset.selectedHero = heroId;
   }
 
   private async loadTibiaAssets() {
@@ -157,15 +194,31 @@ export class PixiRenderer {
   private drawArena() {
     const terrain = new Container();
     terrain.zIndex = 0;
-    for (let y = 0; y < 18; y++) {
-      for (let x = 0; x < 30; x++) {
-        const border = x < 2 || y < 2 || x > 27 || y > 15;
-        const ceremonialPath = x >= 14 && x <= 15 && y >= 2 && y <= 15;
+    const { walkableBounds,ceremonialPath } = HUNT_LAYOUT_CONFIG;
+    for (let y = 0; y < HUNT_LAYOUT_CONFIG.arenaRows; y++) {
+      for (let x = 0; x < HUNT_LAYOUT_CONFIG.arenaColumns; x++) {
+        const border =
+          x < walkableBounds.minColumn ||
+          y < walkableBounds.minRow ||
+          x > walkableBounds.maxColumn ||
+          y > walkableBounds.maxRow;
+        const onCeremonialPath =
+          x >= ceremonialPath.minColumn &&
+          x <= ceremonialPath.maxColumn &&
+          y >= walkableBounds.minRow &&
+          y <= walkableBounds.maxRow;
+        const inCombatMosaic =
+          !border &&
+          !onCeremonialPath &&
+          ((x >= 6 && x <= 11 && y >= 5 && y <= 13) ||
+            (x >= 19 && x <= 25 && y >= 4 && y <= 14));
         const key = border
           ? 'floorOrnate'
-          : ceremonialPath
+          : onCeremonialPath
             ? (x + y) % 2 === 0 ? 'floorGold' : 'floorOrnate'
-            : 'floorStone';
+            : inCombatMosaic && (x + y) % 4 === 0
+              ? 'floorMosaic'
+              : 'floorStone';
         const tileSprite = new Sprite(this.tileTextures.get(key)!);
         tileSprite.anchor.set(.5);
         tileSprite.position.set(
@@ -174,8 +227,8 @@ export class PixiRenderer {
         );
         tileSprite.width = TILE_SIZE;
         tileSprite.height = TILE_SIZE;
-        if (!border && !ceremonialPath) {
-          tileSprite.tint = 0xa6bbb5;
+        if (!border && !onCeremonialPath) {
+          tileSprite.tint = inCombatMosaic ? 0xb8c4ad : 0xa6bbb5;
           if ((x * 3 + y * 5) % 4 === 0) tileSprite.scale.x *= -1;
           if ((x * 5 + y * 7) % 6 === 0) tileSprite.scale.y *= -1;
         } else if (border) {
@@ -186,36 +239,112 @@ export class PixiRenderer {
     }
 
     const frame = new Graphics()
-      .rect(5, 5, 950, 566)
+      .rect(
+        5,
+        5,
+        RENDER_CONFIG.arena.width - 10,
+        RENDER_CONFIG.arena.height - 10,
+      )
       .stroke({ width:10, color:0x3a2518, alpha:.96 })
-      .rect(31, 31, 898, 514)
+      .rect(
+        TILE_SIZE - 1,
+        TILE_SIZE - 1,
+        RENDER_CONFIG.arena.width - (TILE_SIZE - 1) * 2,
+        RENDER_CONFIG.arena.height - (TILE_SIZE - 1) * 2,
+      )
       .stroke({ width:3, color:0x8b7442, alpha:.85 })
-      .rect(63, 63, 834, 450)
+      .rect(
+        walkableBounds.minColumn * TILE_SIZE - 1,
+        walkableBounds.minRow * TILE_SIZE - 1,
+        (walkableBounds.maxColumn - walkableBounds.minColumn + 1) * TILE_SIZE + 2,
+        (walkableBounds.maxRow - walkableBounds.minRow + 1) * TILE_SIZE + 2,
+      )
       .stroke({ width:1, color:0xd2bd79, alpha:.35 });
     frame.zIndex = 2;
 
     const grid = new Graphics();
-    for (let x = 2; x <= 28; x++) {
+    for (
+      let x = walkableBounds.minColumn;
+      x <= walkableBounds.maxColumn + 1;
+      x++
+    ) {
       grid
-        .moveTo(x * TILE_SIZE, 2 * TILE_SIZE)
-        .lineTo(x * TILE_SIZE, 16 * TILE_SIZE)
+        .moveTo(x * TILE_SIZE, walkableBounds.minRow * TILE_SIZE)
+        .lineTo(x * TILE_SIZE, (walkableBounds.maxRow + 1) * TILE_SIZE)
         .stroke({ width:1, color:0x111714, alpha:.1 });
     }
-    for (let y = 2; y <= 16; y++) {
+    for (
+      let y = walkableBounds.minRow;
+      y <= walkableBounds.maxRow + 1;
+      y++
+    ) {
       grid
-        .moveTo(2 * TILE_SIZE, y * TILE_SIZE)
-        .lineTo(28 * TILE_SIZE, y * TILE_SIZE)
+        .moveTo(walkableBounds.minColumn * TILE_SIZE, y * TILE_SIZE)
+        .lineTo((walkableBounds.maxColumn + 1) * TILE_SIZE, y * TILE_SIZE)
         .stroke({ width:1, color:0x111714, alpha:.1 });
     }
     grid.zIndex = 2;
 
     const atmosphere = new Graphics()
-      .rect(2 * TILE_SIZE, 2 * TILE_SIZE, 26 * TILE_SIZE, 14 * TILE_SIZE)
+      .rect(
+        walkableBounds.minColumn * TILE_SIZE,
+        walkableBounds.minRow * TILE_SIZE,
+        (walkableBounds.maxColumn - walkableBounds.minColumn + 1) * TILE_SIZE,
+        (walkableBounds.maxRow - walkableBounds.minRow + 1) * TILE_SIZE,
+      )
       .fill({ color:0x10202a, alpha:.08 })
-      .rect(14 * TILE_SIZE, 2 * TILE_SIZE, TILE_SIZE * 2, TILE_SIZE * 14)
+      .rect(
+        ceremonialPath.minColumn * TILE_SIZE,
+        walkableBounds.minRow * TILE_SIZE,
+        (ceremonialPath.maxColumn - ceremonialPath.minColumn + 1) * TILE_SIZE,
+        (walkableBounds.maxRow - walkableBounds.minRow + 1) * TILE_SIZE,
+      )
       .fill({ color:0xf2c55b, alpha:.045 });
     atmosphere.zIndex = 3;
     this.app.stage.addChild(terrain, frame, grid, atmosphere);
+  }
+
+  private drawDebugOverlay() {
+    const overlay = new Container();
+    overlay.zIndex = 8;
+    const { walkableBounds } = HUNT_LAYOUT_CONFIG;
+    overlay.addChild(
+      new Graphics()
+        .rect(
+          walkableBounds.minColumn * TILE_SIZE,
+          walkableBounds.minRow * TILE_SIZE,
+          (walkableBounds.maxColumn - walkableBounds.minColumn + 1) * TILE_SIZE,
+          (walkableBounds.maxRow - walkableBounds.minRow + 1) * TILE_SIZE,
+        )
+        .stroke({ width:2,color:0x70e7ff,alpha:.72 }),
+    );
+
+    const addMarker = (
+      point: Point,
+      color: number,
+      text: string,
+      radius = 8,
+    ) => {
+      const marker = new Graphics()
+        .circle(point.x, point.y, radius)
+        .fill({ color,alpha:.2 })
+        .stroke({ width:2,color,alpha:.9 });
+      const label = this.label(text, 8, `#${color.toString(16).padStart(6, '0')}`);
+      label.position.set(point.x + radius + 2, point.y - radius);
+      overlay.addChild(marker, label);
+    };
+
+    Object.entries(HUNT_LAYOUT_CONFIG.partyPositions).forEach(([role, point]) =>
+      addMarker(point, 0x68e892, `party:${role}`),
+    );
+    HUNT_LAYOUT_CONFIG.enemySpawnPositions.flat().forEach((point, index) =>
+      addMarker(point, 0xf06d5e, `spawn:${index + 1}`, 6),
+    );
+    HUNT_LAYOUT_CONFIG.enemyCombatPositions.forEach((point, index) =>
+      addMarker(point, 0xf0bd57, `combat:${index + 1}`, 5),
+    );
+    addMarker(HUNT_LAYOUT_CONFIG.bossPosition, 0xd77aff, 'boss', 10);
+    this.app.stage.addChild(overlay);
   }
 
   private label(text: string, size: number, color: string) {
@@ -240,17 +369,26 @@ export class PixiRenderer {
     const body = new Container();
     body.position.set(position.x, position.y);
     body.alpha = 0;
-    body.scale.set(.4);
+    body.scale.set(.4 * RENDER_CONFIG.entity.scale);
     body.zIndex = 10 + position.y;
 
     const hero = this.isHero(snapshot);
-    const hpWidth = hero || snapshot.role === 'boss' ? 52 : 44;
-    const hpY = hero ? -49 : snapshot.role === 'boss' ? -34 : -27;
-    const manaY = hero ? -42 : undefined;
+    const boss = snapshot.role === 'boss';
+    const hpWidth = hero ? 58 : boss ? 56 : 48;
+    const hpY = hero
+      ? RENDER_CONFIG.entity.healthBarOffset.hero
+      : boss
+        ? RENDER_CONFIG.entity.healthBarOffset.boss
+        : RENDER_CONFIG.entity.healthBarOffset.monster;
+    const manaY = hero ? hpY + 8 : undefined;
     const sprite = this.createSprite(snapshot);
-    const name = this.label(snapshot.name, 10, '#f4f5e9');
+    const name = this.label(snapshot.name, hero || boss ? 11 : 10, '#f4f5e9');
     name.anchor.set(.5);
-    name.position.y = hero ? -59 : snapshot.role === 'boss' ? -44 : -37;
+    name.position.y = hero
+      ? RENDER_CONFIG.entity.nameOffset.hero
+      : boss
+        ? RENDER_CONFIG.entity.nameOffset.boss
+        : RENDER_CONFIG.entity.nameOffset.monster;
     const hpBackground = new Graphics()
       .rect(-hpWidth / 2 - 1, hpY - 1, hpWidth + 2, 7)
       .fill(0x080a07);
@@ -261,8 +399,38 @@ export class PixiRenderer {
           .fill(0x080a07)
       : undefined;
     const mana = hero ? new Graphics() : undefined;
+    const selection = hero
+      ? new Graphics()
+          .roundRect(-26, -24, 52, 56, 5)
+          .stroke({ width:2,color:0xe4c65a,alpha:.9 })
+      : undefined;
+    if (selection) selection.visible = snapshot.id === this.selectedHeroId;
     body.addChild(sprite, name, hpBackground, hp);
     if (manaBackground && mana) body.addChild(manaBackground, mana);
+    if (selection) body.addChildAt(selection, 0);
+
+    const debugLabel = this.debugEnabled
+      ? this.label(`${snapshot.id} • idle`, 8, '#7de9ff')
+      : undefined;
+    if (debugLabel) {
+      debugLabel.anchor.set(.5);
+      debugLabel.position.y = 38;
+      const hitbox = new Graphics()
+        .rect(-24, -44, 48, 76)
+        .stroke({ width:1,color:0x7de9ff,alpha:.8 });
+      body.addChild(hitbox, debugLabel);
+    }
+
+    if (hero) {
+      body.eventMode = 'static';
+      body.cursor = 'pointer';
+      body.hitArea = new Rectangle(-32, -72, 64, 108);
+      body.on('pointertap', () => {
+        window.dispatchEvent(
+          new CustomEvent('hunt-select-character', { detail:snapshot.id }),
+        );
+      });
+    }
     this.app.stage.addChild(body);
 
     const unit = {
@@ -270,8 +438,11 @@ export class PixiRenderer {
       sprite,
       spriteKey:this.spriteKey(snapshot),
       facing:'south' as DirectionName,
+      state:'idle' as EntityVisualState,
       hp,
       mana,
+      selection,
+      debugLabel,
       hpWidth,
       hpY,
       manaY,
@@ -286,9 +457,11 @@ export class PixiRenderer {
     this.drawVitals(unit);
     this.tween(RENDER_CONFIG.entity.spawnDuration, (progress) => {
       body.alpha = progress;
-      body.scale.set(.4 + progress * .6);
+      body.scale.set(
+        (.4 + progress * .6) * RENDER_CONFIG.entity.scale,
+      );
     });
-    if (snapshot.role === 'boss') this.createBossBar(snapshot);
+    if (boss) this.createBossBar(snapshot);
   }
 
   private spriteKey(snapshot: EntitySnapshot) {
@@ -339,6 +512,8 @@ export class PixiRenderer {
     sprite.gotoAndStop(0);
     if (snapshot.role === 'boss') {
       sprite.scale.set(RENDER_CONFIG.entity.bossScale);
+    } else {
+      sprite.scale.set(RENDER_CONFIG.entity.monsterScale);
     }
     return sprite;
   }
@@ -353,21 +528,51 @@ export class PixiRenderer {
     else unit.sprite.gotoAndStop(0);
   }
 
-  private animateUnit(unit: Unit) {
+  private setUnitState(
+    unit: Unit,
+    state: EntityVisualState,
+    targetId?: string,
+  ) {
+    if (unit.state === 'dead' && state !== 'dead') return;
+    unit.state = state;
+    unit.targetId = targetId;
+    if (unit.debugLabel) {
+      unit.debugLabel.text =
+        `${this.unitId(unit)} • ${state}${targetId ? ` • →${targetId}` : ''}`;
+    }
+    this.syncDiagnostics();
+  }
+
+  private unitId(unit: Unit) {
+    for (const [id, candidate] of this.units) {
+      if (candidate === unit) return id;
+    }
+    return 'unknown';
+  }
+
+  private animateUnit(unit: Unit, state: 'attacking' | 'casting' | 'healing') {
+    this.setUnitState(unit, state, unit.targetId);
+    const duration =
+      state === 'attacking'
+        ? RENDER_CONFIG.entity.attackDuration
+        : RENDER_CONFIG.entity.castDuration;
     if (unit.sprite instanceof AnimatedSprite) {
       const animated = unit.sprite;
       animated.play();
       this.tween(
-        RENDER_CONFIG.entity.attackDuration,
+        duration,
         () => undefined,
-        () => animated.gotoAndStop(0),
+        () => {
+          animated.gotoAndStop(0);
+          this.setUnitState(unit, 'idle');
+        },
       );
       return;
     }
     const startY = unit.sprite.y;
     const startRotation = unit.sprite.rotation;
     this.tween(
-      RENDER_CONFIG.entity.attackDuration,
+      duration,
       (progress) => {
         unit.sprite.y = startY - Math.sin(progress * Math.PI) * 5;
         unit.sprite.rotation =
@@ -376,6 +581,26 @@ export class PixiRenderer {
       () => {
         unit.sprite.y = startY;
         unit.sprite.rotation = startRotation;
+        this.setUnitState(unit, 'idle');
+      },
+    );
+  }
+
+  private animateHurt(unit: Unit) {
+    if (unit.state === 'dead') return;
+    this.setUnitState(unit, 'hurt', unit.targetId);
+    const startX = unit.sprite.x;
+    this.tween(
+      RENDER_CONFIG.entity.hurtDuration,
+      (progress) => {
+        unit.sprite.x =
+          startX + Math.sin(progress * Math.PI * 5) * (1 - progress) * 5;
+        unit.sprite.alpha = .55 + Math.abs(Math.sin(progress * Math.PI)) * .45;
+      },
+      () => {
+        unit.sprite.x = startX;
+        unit.sprite.alpha = 1;
+        this.setUnitState(unit, 'idle');
       },
     );
   }
@@ -388,16 +613,18 @@ export class PixiRenderer {
   }
 
   private createBossBar(snapshot: EntitySnapshot) {
+    const barWidth = 430;
+    const barX = (RENDER_CONFIG.arena.width - barWidth) / 2;
     const container = new Container();
     container.zIndex = 80;
     container.addChild(
-      new Graphics().roundRect(265, 37, 430, 15, 3).fill(0x090b08),
+      new Graphics().roundRect(barX, 37, barWidth, 15, 3).fill(0x090b08),
     );
     this.bossFill = new Graphics();
     container.addChild(this.bossFill);
     const title = this.label(snapshot.name.toUpperCase(), 11, '#f2d991');
     title.anchor.set(.5);
-    title.position.set(480, 25);
+    title.position.set(RENDER_CONFIG.arena.width / 2, 25);
     container.addChild(title);
     this.app.stage.addChild(container);
     this.drawBossHp(1);
@@ -429,9 +656,11 @@ export class PixiRenderer {
   }
 
   private drawBossHp(ratio: number) {
+    const barWidth = 424;
+    const barX = (RENDER_CONFIG.arena.width - barWidth) / 2;
     this.bossFill
       ?.clear()
-      .roundRect(268, 40, 424 * this.ratio(ratio, 1), 9, 2)
+      .roundRect(barX, 40, barWidth * this.ratio(ratio, 1), 9, 2)
       .fill(this.healthColor(this.ratio(ratio, 1)));
   }
 
@@ -442,9 +671,10 @@ export class PixiRenderer {
       if (unit && event.data?.position) {
         const from = { x:unit.body.x, y:unit.body.y };
         const target = event.data.position;
+        this.setUnitState(unit, 'moving', event.targetId);
         this.face(unit, this.movementDirection(from, target), true);
         this.tween(
-          event.data.duration ?? RENDER_CONFIG.entity.defaultMoveDuration,
+          event.data.duration ?? RENDER_CONFIG.entity.movementDuration,
           (progress) => {
             unit.body.position.set(
               from.x + (target.x - from.x) * progress,
@@ -452,15 +682,26 @@ export class PixiRenderer {
             );
             unit.body.zIndex = 10 + unit.body.y;
           },
-          () => this.face(unit, unit.facing, false),
+          () => {
+            this.face(unit, unit.facing, false);
+            this.setUnitState(unit, 'idle');
+          },
         );
       }
     }
     if (event.type === 'basic_attack' || event.type === 'cast') {
       const unit = this.units.get(event.sourceId!);
       if (unit) {
+        unit.targetId = event.targetId;
         this.pulse(unit.body);
-        this.animateUnit(unit);
+        this.animateUnit(
+          unit,
+          event.type === 'basic_attack'
+            ? 'attacking'
+            : event.data?.element === 'healing'
+              ? 'healing'
+              : 'casting',
+        );
         if (event.type === 'cast') {
           if (event.data?.mana !== undefined) {
             unit.currentMana = event.data.mana;
@@ -510,6 +751,7 @@ export class PixiRenderer {
         const amount = this.safeAmount(event.data?.amount);
         unit.currentHp = Math.max(0, unit.currentHp - amount);
         this.drawVitals(unit);
+        this.animateHurt(unit);
         this.floatingText(event.targetId!, `-${amount}`, '#ff746d');
         if (event.targetId === 'lion-king') {
           this.drawBossHp(this.ratio(unit.currentHp, unit.maxHp));
@@ -537,6 +779,7 @@ export class PixiRenderer {
     if (event.type === 'death') {
       const unit = this.units.get(event.targetId!);
       if (unit) {
+        this.setUnitState(unit, 'dead', event.sourceId);
         const rotation = unit.body.rotation;
         this.tween(
           RENDER_CONFIG.entity.deathDuration,
@@ -557,6 +800,16 @@ export class PixiRenderer {
     }
     if (event.type === 'floor_complete') {
       this.floorText.text = `ANDAR ${event.floor} CONCLUÍDO`;
+      this.tween(
+        RENDER_CONFIG.entity.floorTransitionDuration,
+        (progress) => {
+          this.floorText.alpha =
+            .55 + Math.abs(Math.sin(progress * Math.PI * 2)) * .45;
+        },
+        () => {
+          this.floorText.alpha = 1;
+        },
+      );
       window.dispatchEvent(new CustomEvent('hunt-floor', { detail:event.floor }));
     }
     if (event.type === 'hunt_complete') {
@@ -569,7 +822,7 @@ export class PixiRenderer {
     tiles: Point[],
     color: number,
     warning = false,
-    duration = 430,
+    duration: number = RENDER_CONFIG.effects.tileDuration,
     effectKey?: string,
     origin?: Point,
   ) {
@@ -614,7 +867,8 @@ export class PixiRenderer {
                 Math.abs(point.y - origin.y),
               ) / TILE_SIZE
             : 0;
-          const delay = Math.min(7, distance) * 42;
+          const delay =
+            Math.min(7, distance) * RENDER_CONFIG.effects.tileCascadeDelay;
           maxDelay = Math.max(maxDelay, delay);
           const effect = new AnimatedSprite(textures);
           effect.anchor.set(.5);
@@ -707,7 +961,7 @@ export class PixiRenderer {
   }
 
   private pulse(shape: Container) {
-    this.tween(160, (progress) => {
+    this.tween(RENDER_CONFIG.effects.pulseDuration, (progress) => {
       const scale =
         progress < .5 ? 1 + progress * .12 : 1.06 - (progress - .5) * .12;
       shape.scale.set(scale);
@@ -847,8 +1101,21 @@ export class PixiRenderer {
 
   private syncDiagnostics() {
     if (!this.parent || this.destroyed) return;
+    const bounds = RENDER_CONFIG.arena.cameraBounds;
+    const outOfBounds = [...this.units.values()].filter(
+      (unit) =>
+        unit.body.x < bounds.x ||
+        unit.body.y < bounds.y ||
+        unit.body.x > bounds.x + bounds.width ||
+        unit.body.y > bounds.y + bounds.height,
+    ).length;
     this.parent.dataset.unitCount = String(this.units.size);
     this.parent.dataset.stageChildren = String(this.app.stage.children.length);
     this.parent.dataset.tweenCount = String(this.tweens.length);
+    this.parent.dataset.outOfBounds = String(outOfBounds);
+    this.parent.dataset.selectedHero = this.selectedHeroId;
+    this.parent.dataset.unitStates = [...this.units.entries()]
+      .map(([id, unit]) => `${id}:${unit.state}`)
+      .join(',');
   }
 }

@@ -12,23 +12,46 @@
 - Build e publicação repetíveis.
 - Mocks visíveis e contadores coerentes.
 
-## MVP 1 — fidelidade visual e mecânica da hunt
+## MVP 1A — fidelidade da área da hunt
 
-Escopo:
+**Concluído em 27/07/2026.**
 
-- mapas, salas, spawns e transições data-driven;
+- shell mais compacto e arena central ampliada;
+- escala, offsets, durações, câmera e debug centralizados;
+- formação clara de frontline e backline;
+- posições de party, spawns, combate e boss configuradas;
+- estados visuais mínimos para movimento e combate;
+- seleção de personagem pela Party e canvas;
+- Helper filtrado pela vocação selecionada;
+- debug opt-in e validação de limites;
+- uma hunt completa nas três resoluções e três loops estáveis.
+
+## MVP 1B — Helper individual e comportamento configurável
+
+Próximo escopo:
+
+- preferências independentes por personagem e contexto;
+- limiar configurável de cura;
+- mínimo de alvos para AOE;
+- prioridade e distância de alvo;
+- rotação data-driven por vocação;
+- comportamento de frontline e backline configurável;
+- importação/exportação local das regras;
+- testes determinísticos que provem a aplicação das preferências.
+
+## MVP 1C — navegação e salas
+
+- mapas e transições data-driven;
 - tiles bloqueados e colisão;
 - pathfinding simples e fallback explícito;
 - threat/aggro configurável;
-- formação, distância segura e reação a AOE;
-- Helper mínimo para cura, alvo, AOE e rotação;
-- catálogo visual original/licenciado;
-- Analyzer ampliado sem divergência da timeline.
+- reação a AOE;
+- catálogo visual original/licenciado.
 
 Backend, inventário e progressões permanecem proibidos.
 
-Saída: dez ciclos consecutivos sem travar, atravessar obstáculos, duplicar
-eventos/recompensas ou divergir do relatório.
+Saída do MVP 1: dez ciclos consecutivos sem travar, atravessar obstáculos,
+duplicar eventos/recompensas ou divergir do relatório.
 
 ## MVP 2 — inventário e progressão local
 

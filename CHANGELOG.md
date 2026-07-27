@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.2.0 — 2026-07-27
+
+### MVP 1A — fidelidade da área da hunt
+
+- MVP 0 reconciliado sem regressões antes do início da fase visual.
+- Arena central ampliada e shell compactado nas três resoluções-alvo.
+- Escalas, durações, offsets, limites, posições da party, spawns e boss
+  centralizados em configuração.
+- Party mantém frontline e backline legíveis; entidades ganharam estados
+  visuais mínimos de movimento, ataque, magia, cura, dano e morte.
+- Mapa provisório recebeu zonas de combate originais sem novos assets externos.
+- Personagem selecionado abre o Helper filtrado para sua vocação.
+- Seleção funciona pela Party e diretamente nas entidades PixiJS.
+- Debug opt-in por `?debug=1` exibe limites, pontos, IDs, estados e hitboxes.
+- Diagnósticos verificam unidades fora da arena e estados visuais.
+- Suíte ampliada para 22 testes unitários e 6 fluxos no Edge.
+
 ## 0.1.1 — 2026-07-27
 
 ### Encerramento do MVP 0

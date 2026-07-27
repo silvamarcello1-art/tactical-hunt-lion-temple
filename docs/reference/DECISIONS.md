@@ -13,6 +13,9 @@
 | D-007 | Modais preservam shell e contexto da hunt | Mantém densidade e continuidade visual. |
 | D-008 | Documentos canônicos governam prompts curtos | Evita repetir contexto e perder decisões. |
 | D-009 | Playwright/Edge protege o fluxo do MVP 0 | Cobre controle, loop, limpeza e responsividade. |
+| D-010 | Debug visual é opt-in por `?debug=1` | Mantém diagnóstico disponível sem poluir a publicação normal. |
+| D-011 | MVP 1A usa slots e deslocamentos curtos | Fidelidade suficiente sem antecipar pathfinding do MVP 1C. |
+| D-012 | Seleção individual precede regras individuais | MVP 1A integra UI; preferências por personagem pertencem ao MVP 1B. |
 
 ## Riscos aceitos temporariamente
 
@@ -20,7 +23,7 @@
 |---|---|---|
 | R-001 | Assets DAT/SPR e ícones são provisórios | Substituir/licenciar antes de uso comercial. |
 | R-002 | Heróis usam animação provisória | Não bloquear o núcleo mecânico. |
-| R-003 | Orquestração concentrada em `main.ts` | Extrair apenas com necessidade real. |
+| R-003 | Orquestração e seleção concentradas em `main.ts` | Extrair apenas com necessidade real. |
 | R-004 | Sem lint | Typecheck, unitários e navegador são o gate atual. |
 
 ## Dúvidas pendentes

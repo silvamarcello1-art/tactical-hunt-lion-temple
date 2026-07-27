@@ -29,9 +29,12 @@ const $ = <T extends HTMLElement>(selector: string) =>
 const heroIds = new Set(['knight', 'druid', 'sorcerer']);
 const storageKey = 'tactical-hunt-ability-preferences';
 const liveState = new LiveHuntState();
+const debugEnabled =
+  new URLSearchParams(window.location.search).get('debug') === '1';
 
 let preferences = loadPreferences();
 let renderer: PixiRenderer | undefined;
+let selectedHeroId = 'knight';
 let sessionPhase: SessionPhase = 'preparing';
 let resumePhase: Extract<
   SessionPhase,
@@ -113,7 +116,11 @@ function renderParty() {
         .join('');
       const roleName =
         vocation === 'knight' ? 'TANK' : vocation === 'druid' ? 'SUP' : 'DPS';
-      return `<article class="hero-card" id="card-${hero.id}">
+      const selected = hero.id === selectedHeroId;
+      return `<article class="hero-card ${selected ? 'selected' : ''}"
+        id="card-${hero.id}" data-hero-id="${hero.id}" role="button"
+        tabindex="0" aria-pressed="${selected}"
+        aria-label="Abrir Helper de ${hero.name}">
         <div class="hero-title">
           <span class="role-badge role-${vocation}">${roleName}</span>
           <b>${hero.name}</b><small>lv 250</small>
@@ -213,7 +220,10 @@ function resetInterface() {
 async function createRenderer() {
   renderer?.destroy();
   renderer = undefined;
-  const nextRenderer = new PixiRenderer(preferences);
+  const nextRenderer = new PixiRenderer(preferences, {
+    debugEnabled,
+    selectedHeroId,
+  });
   try {
     await nextRenderer.mount($('#game'));
     nextRenderer.player.speed = selectedSpeed;
@@ -289,8 +299,31 @@ async function restart(autoStart = false) {
   }
 }
 
-function renderAbilityModal() {
-  $('#ability-list').innerHTML = abilities
+function vocationLabel(role: string) {
+  if (role === 'knight') return 'Knight • frontline';
+  if (role === 'druid') return 'Druid • suporte';
+  return 'Sorcerer • dano à distância';
+}
+
+function selectHero(heroId: string, openHelper = false) {
+  if (!heroIds.has(heroId)) return;
+  selectedHeroId = heroId;
+  document.documentElement.dataset.selectedHero = heroId;
+  renderer?.selectHero(heroId);
+  document.querySelectorAll<HTMLElement>('[data-hero-id]').forEach((card) => {
+    const selected = card.dataset.heroId === heroId;
+    card.classList.toggle('selected', selected);
+    card.setAttribute('aria-pressed', String(selected));
+  });
+  if (openHelper) showAbilityModal(heroId);
+}
+
+function renderAbilityModal(heroId = selectedHeroId) {
+  const hero = heroes.find((candidate) => candidate.id === heroId) ?? heroes[0];
+  const vocation = hero.role as 'knight' | 'druid' | 'sorcerer';
+  $('#helper-character-name').textContent = hero.name;
+  $('#helper-character-vocation').textContent = vocationLabel(vocation);
+  $('#ability-list').innerHTML = abilitiesByVocation(vocation, preferences)
     .map((ability) => {
       const current = preferences[ability.id];
       return `<div class="ability-row">
@@ -312,8 +345,9 @@ function renderAbilityModal() {
     .join('');
 }
 
-function showAbilityModal() {
-  renderAbilityModal();
+function showAbilityModal(heroId = selectedHeroId) {
+  selectHero(heroId);
+  renderAbilityModal(heroId);
   const dialog = $('#ability-modal') as HTMLDialogElement;
   if (!dialog.open) dialog.showModal();
 }
@@ -519,13 +553,29 @@ $('#loop-toggle').onclick = () => {
   }
 };
 
-$('#ability-config').onclick = showAbilityModal;
-$('#party-config').onclick = showAbilityModal;
+$('#ability-config').onclick = () => showAbilityModal();
+$('#party-config').onclick = () => showAbilityModal();
+$('#party').onclick = (event) => {
+  const card = (event.target as Element).closest<HTMLElement>('[data-hero-id]');
+  if (card?.dataset.heroId) selectHero(card.dataset.heroId, true);
+};
+$('#party').onkeydown = (event) => {
+  if (event.key !== 'Enter' && event.key !== ' ') return;
+  const card = (event.target as Element).closest<HTMLElement>('[data-hero-id]');
+  if (!card?.dataset.heroId) return;
+  event.preventDefault();
+  selectHero(card.dataset.heroId, true);
+};
 $('#action-bar').onclick = (event) => {
   const button = (event.target as Element).closest<HTMLButtonElement>(
     '[data-ability]',
   );
-  if (button) showAbilityModal();
+  if (!button) return;
+  const ability = abilities.find(
+    (candidate) => candidate.id === button.dataset.ability,
+  );
+  const hero = heroes.find((candidate) => candidate.role === ability?.vocation);
+  showAbilityModal(hero?.id ?? selectedHeroId);
 };
 $('#save-abilities').onclick = (event) => {
   event.preventDefault();
@@ -575,6 +625,11 @@ document.querySelectorAll<HTMLButtonElement>('[data-module]').forEach((button) =
     const module = futureModules[button.dataset.module ?? ''];
     if (module) showFutureModule(...module);
   };
+});
+
+window.addEventListener('hunt-select-character', (rawEvent) => {
+  const heroId = (rawEvent as CustomEvent<string>).detail;
+  selectHero(heroId, true);
 });
 
 document.querySelectorAll<HTMLButtonElement>('[data-view]').forEach((button) => {
@@ -644,6 +699,8 @@ async function initialize() {
   document.documentElement.dataset.playbackSpeed = String(selectedSpeed);
   document.documentElement.dataset.processedEvents = '0';
   document.documentElement.dataset.bossSpawns = '0';
+  document.documentElement.dataset.selectedHero = selectedHeroId;
+  document.documentElement.dataset.debugEnabled = String(debugEnabled);
   renderInventory();
   resetInterface();
   setSessionPhase('preparing');

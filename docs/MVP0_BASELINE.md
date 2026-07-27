@@ -54,3 +54,11 @@ Backpack `18 / 20` vazio e Loot Pouch `55 / 64` vazio.
 O MVP 0 é uma vertical slice funcional e reproduzível. Inventário real,
 progressões, backend e fidelidade mecânica avançada não foram localizados porque
 estão fora do escopo. A próxima tarefa permanece o MVP 1.
+
+## Reconciliação antes do MVP 1A
+
+O commit `8220a6d` e a versão pública 6 foram revalidados em 27/07/2026 antes de
+qualquer alteração do MVP 1A. Instalação, typecheck, 20 testes unitários, build,
+4 fluxos no Edge, três loops, reset, Analyzer, Loot Pouch e ausência de
+duplicação foram confirmados. Nenhuma alegação do encerramento precisou ser
+reclassificada ou corrigida.

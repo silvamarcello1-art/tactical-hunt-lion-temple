@@ -53,3 +53,11 @@ A análise usou leitura local equivalente a ffmpeg. Foram geradas contact sheets
 ## Limites da observação
 
 O vídeo mostra claramente Helper, Enciclopédia, Bosstiary, personagem, Prey, progressão, Daily, armazenamento, mercador, Guild, ranking e configurações de rotação. Loja, VIP, Arena competitiva, comércio entre jogadores e Social completo aparecem como pontos de navegação ou contexto, mas não têm fluxo integral demonstrado; seus critérios permanecem pendentes em `DECISIONS.md`.
+
+## Aplicação no MVP 1A
+
+Somente os padrões da área de hunt foram usados: arena dominante, dados nas
+bordas, frontline/backline, nomes e vitais legíveis, movimento curto, feedbacks
+da timeline e configuração sem abandonar o shell. O mapa, as zonas procedurais,
+a seleção e os assets provisórios continuam próprios do protótipo. Nenhum frame
+ou asset do vídeo foi incluído no bundle.
