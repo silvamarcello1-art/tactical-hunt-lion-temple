@@ -1,4 +1,5 @@
 import './style.css';
+import { LiveHuntState } from './app/LiveHuntState';
 import {
   abilities,
   abilitiesByVocation,
@@ -9,26 +10,30 @@ import { heroes } from './data/config';
 import type { CombatEvent, HuntResult } from './events/types';
 import { PixiRenderer } from './game/PixiRenderer';
 
+type SessionPhase =
+  | 'booting'
+  | 'ready'
+  | 'running'
+  | 'paused'
+  | 'completed'
+  | 'error';
+
 const $ = <T extends HTMLElement>(selector: string) =>
   document.querySelector<T>(selector)!;
 
+const heroIds = new Set(['knight', 'druid', 'sorcerer']);
 const storageKey = 'tactical-hunt-ability-preferences';
+const liveState = new LiveHuntState();
+
 let preferences = loadPreferences();
-let renderer: PixiRenderer;
-let result: HuntResult;
-let currentTime = 0;
-let liveXp = 0;
-let liveGold = 0;
-let liveKills = 0;
-let liveHealing = 0;
-let liveDamage: Record<string, number> = {
-  knight:0,
-  druid:0,
-  sorcerer:0,
-};
-let liveLoot: Record<string, number> = {};
+let renderer: PixiRenderer | undefined;
+let sessionPhase: SessionPhase = 'booting';
+let selectedSpeed = 1;
 let loopEnabled = true;
 let loopTimer: number | undefined;
+let restartInProgress = false;
+let completedCycles = 0;
+let lastResult: HuntResult | undefined;
 
 function loadPreferences(): AbilityPreferences {
   try {
@@ -41,13 +46,41 @@ function loadPreferences(): AbilityPreferences {
   }
 }
 
-const formatNumber = (value: number) =>
-  new Intl.NumberFormat('pt-BR').format(Math.round(value));
+const safeNumber = (value: number) =>
+  Number.isFinite(value) && value >= 0 ? value : 0;
 
-const formatTime = (ms: number) =>
-  `${String(Math.floor(ms / 60000)).padStart(2, '0')}:${String(
+const formatNumber = (value: number) =>
+  new Intl.NumberFormat('pt-BR').format(Math.round(safeNumber(value)));
+
+const formatTime = (milliseconds: number) => {
+  const ms = safeNumber(milliseconds);
+  return `${String(Math.floor(ms / 60000)).padStart(2, '0')}:${String(
     Math.floor(ms / 1000) % 60,
   ).padStart(2, '0')}`;
+};
+
+function setSessionPhase(phase: SessionPhase, message?: string) {
+  sessionPhase = phase;
+  document.documentElement.dataset.sessionState = phase;
+  const startButton = $('#start') as HTMLButtonElement;
+  const pauseButton = $('#pause') as HTMLButtonElement;
+  const restartButton = $('#restart') as HTMLButtonElement;
+
+  startButton.disabled = phase !== 'ready';
+  pauseButton.disabled = phase !== 'running' && phase !== 'paused';
+  restartButton.disabled = phase === 'booting';
+  pauseButton.textContent = phase === 'paused' ? '▶ Continuar' : 'Ⅱ Pausar';
+
+  const defaults: Record<SessionPhase, string> = {
+    booting:'Preparando arena',
+    ready:'Pronto para iniciar',
+    running:'Combate em andamento',
+    paused:'Sessão pausada',
+    completed:loopEnabled ? 'Próximo ciclo em 2 segundos' : 'Sessão encerrada',
+    error:'Falha ao carregar a arena',
+  };
+  $('#session-state').textContent = message ?? defaults[phase];
+}
 
 function renderParty() {
   $('#party').innerHTML = heroes
@@ -80,7 +113,7 @@ function renderActionBar() {
     .map(
       (ability) => `<button class="action ${
         preferences[ability.id]?.enabled ? '' : 'disabled'
-      }" title="${ability.name} • ${ability.words}">
+      }" data-ability="${ability.id}" title="${ability.name} • ${ability.words}">
         <img src="${ability.icon}" alt="${ability.name}">
         <em>${ability.cooldown / 1000}s</em>
       </button>`,
@@ -103,40 +136,64 @@ function healthBarColor(ratio: number) {
 }
 
 function renderAnalyzer(hunt?: HuntResult) {
-  const waiting = !renderer || renderer.player.paused;
   const status = hunt
     ? hunt.victory
       ? 'Concluída'
       : 'Derrota'
-    : waiting
-      ? 'Aguardando'
-      : 'Em hunt';
-  const totalDamage = hunt
-    ? Object.values(hunt.damage).reduce((sum, value) => sum + value, 0)
-    : Object.values(liveDamage).reduce((sum, value) => sum + value, 0);
-  const duration = Math.max(1, hunt?.duration ?? currentTime);
-  const xp = hunt?.xp ?? liveXp;
+    : sessionPhase === 'running'
+      ? 'Em hunt'
+      : sessionPhase === 'paused'
+        ? 'Pausada'
+        : 'Aguardando';
+  const damage = hunt?.damage ?? liveState.damage;
+  const totalDamage = Object.values(damage).reduce(
+    (sum, value) => sum + safeNumber(value),
+    0,
+  );
+  const duration = Math.max(1, hunt?.duration ?? liveState.time);
+  const xp = hunt?.xp ?? liveState.xp;
   $('#analyzer').innerHTML = `<div class="stat-grid">
-    <div class="stat"><span>Sessão</span><b id="time">${formatTime(currentTime)}</b></div>
+    <div class="stat"><span>Sessão</span><b id="time">${formatTime(liveState.time)}</b></div>
     <div class="stat"><span>Status</span><b>${status}</b></div>
     <div class="stat highlight"><span>XP/h</span><b>${formatNumber((xp * 3600000) / duration)}</b></div>
     <div class="stat"><span>XP ganho</span><b>${formatNumber(xp)}</b></div>
-    <div class="stat"><span>Kills</span><b>${hunt?.kills ?? liveKills}</b></div>
-    <div class="stat"><span>Loot</span><b>${formatNumber(hunt?.gold ?? liveGold)}</b></div>
-    <div class="stat"><span>Cura</span><b>${formatNumber(hunt?.healing ?? liveHealing)}</b></div>
+    <div class="stat"><span>Kills</span><b>${hunt?.kills ?? liveState.kills}</b></div>
+    <div class="stat"><span>Loot</span><b>${formatNumber(hunt?.gold ?? liveState.gold)}</b></div>
+    <div class="stat"><span>Cura</span><b>${formatNumber(hunt?.healing ?? liveState.healing)}</b></div>
     <div class="stat highlight"><span>Dano</span><b>${formatNumber(totalDamage)}</b></div>
   </div>`;
-  const damage = hunt?.damage ?? liveDamage;
   $('#damage-breakdown').innerHTML = Object.entries(damage)
     .map(([id, amount]) => `${id}: <b>${formatNumber(amount)}</b>`)
     .join('<br>');
 }
 
+function resetInterface() {
+  liveState.reset();
+  lastResult = undefined;
+  renderParty();
+  renderActionBar();
+  $('#log').replaceChildren();
+  $('#loot').textContent = 'Nenhum item ainda.';
+  $('#stage-fill').style.width = '0';
+  $('#stage-label').textContent = 'Preparação';
+  document.querySelectorAll('.phase').forEach((phase, index) => {
+    phase.classList.toggle('active', index === 0);
+    phase.classList.remove('done');
+  });
+}
+
 async function createRenderer() {
   renderer?.destroy();
-  renderer = new PixiRenderer(preferences);
-  await renderer.mount($('#game'));
-  result = renderer.result;
+  renderer = undefined;
+  const nextRenderer = new PixiRenderer(preferences);
+  try {
+    await nextRenderer.mount($('#game'));
+    nextRenderer.player.speed = selectedSpeed;
+    renderer = nextRenderer;
+  } catch (error) {
+    nextRenderer.destroy();
+    throw error;
+  }
 }
 
 function labelEvent(event: CombatEvent) {
@@ -145,50 +202,62 @@ function labelEvent(event: CombatEvent) {
   if (event.type === 'critical') return `${event.sourceId}: crítico.`;
   if (event.type === 'dodge') return `${event.targetId}: esquiva.`;
   if (event.type === 'death') return `${event.targetId} foi derrotado.`;
-  if (event.type === 'aggro') return 'Aldric puxou os inimigos com exeta amp res.';
-  if (event.type === 'reposition') return `${event.sourceId} reposicionou-se.`;
-  if (event.type === 'monster_aoe') return `${event.data?.ability} atingiu os tiles.`;
-  if (event.type === 'loot') return `${event.data?.quantity}× ${event.data?.item}`;
+  if (event.type === 'aggro') {
+    return 'Aldric puxou os inimigos com exeta amp res.';
+  }
+  if (event.type === 'reposition') {
+    return `${event.sourceId} reposicionou-se.`;
+  }
+  if (event.type === 'monster_aoe') {
+    return `${event.data?.ability} atingiu os tiles.`;
+  }
+  if (event.type === 'loot') {
+    return `${event.data?.quantity}× ${event.data?.item}`;
+  }
   return event.type;
 }
 
 function start() {
-  if (!renderer) return;
-  renderer.player.play();
-  $('#start').setAttribute('disabled', '');
-  $('#pause').removeAttribute('disabled');
-  $('#pause').textContent = 'Ⅱ Pausar';
-  $('#session-state').textContent = 'Combate em andamento';
+  if (sessionPhase !== 'ready' || !renderer?.player.play()) return;
+  setSessionPhase('running');
+  renderAnalyzer();
+}
+
+function clearLoopTimer() {
+  window.clearTimeout(loopTimer);
+  loopTimer = undefined;
+}
+
+function showFatalError(error: unknown) {
+  console.error('Falha controlada ao carregar a arena:', error);
+  renderer?.destroy();
+  renderer = undefined;
+  $('#game').innerHTML = `<div class="game-fallback" role="alert">
+    <b>Não foi possível carregar a arena.</b>
+    <small>Use “Reiniciar” para tentar novamente.</small>
+  </div>`;
+  setSessionPhase('error');
   renderAnalyzer();
 }
 
 async function restart(autoStart = false) {
-  window.clearTimeout(loopTimer);
+  if (restartInProgress) return;
+  restartInProgress = true;
+  clearLoopTimer();
   const resultDialog = $('#result') as HTMLDialogElement;
   if (resultDialog.open) resultDialog.close();
-  currentTime = 0;
-  liveXp = 0;
-  liveGold = 0;
-  liveKills = 0;
-  liveHealing = 0;
-  liveDamage = { knight:0, druid:0, sorcerer:0 };
-  liveLoot = {};
-  renderParty();
-  renderActionBar();
-  $('#log').innerHTML = '';
-  $('#loot').textContent = 'Nenhum item ainda.';
-  $('#stage-fill').style.width = '0';
-  $('#stage-label').textContent = 'Preparação';
-  $('#session-state').textContent = 'Pronto para iniciar';
-  document.querySelectorAll('.phase').forEach((phase, index) => {
-    phase.classList.toggle('active', index === 0);
-    phase.classList.remove('done');
-  });
-  $('#start').removeAttribute('disabled');
-  $('#pause').setAttribute('disabled', '');
-  await createRenderer();
-  renderAnalyzer();
-  if (autoStart) start();
+  setSessionPhase('booting');
+  resetInterface();
+  try {
+    await createRenderer();
+    setSessionPhase('ready');
+    renderAnalyzer();
+    restartInProgress = false;
+    if (autoStart) start();
+  } catch (error) {
+    restartInProgress = false;
+    showFatalError(error);
+  }
 }
 
 function renderAbilityModal() {
@@ -201,7 +270,12 @@ function renderAbilityModal() {
         <label><input type="checkbox" data-enabled="${ability.id}" ${current.enabled ? 'checked' : ''}> Ativa</label>
         <label>Prioridade
           <select data-priority="${ability.id}">
-            ${[1,2,3].map((priority) => `<option ${priority === current.priority ? 'selected' : ''}>${priority}</option>`).join('')}
+            ${[1,2,3]
+              .map(
+                (priority) =>
+                  `<option ${priority === current.priority ? 'selected' : ''}>${priority}</option>`,
+              )
+              .join('')}
           </select>
         </label>
       </div>`;
@@ -209,15 +283,45 @@ function renderAbilityModal() {
     .join('');
 }
 
+function showAbilityModal() {
+  renderAbilityModal();
+  const dialog = $('#ability-modal') as HTMLDialogElement;
+  if (!dialog.open) dialog.showModal();
+}
+
+function showFutureModule(title: string, description: string) {
+  $('#future-title').textContent = title;
+  $('#future-description').textContent = description;
+  const dialog = $('#future-modal') as HTMLDialogElement;
+  if (!dialog.open) dialog.showModal();
+}
+
+function showResult(hunt: HuntResult) {
+  $('#result-content').innerHTML = `<h2>${hunt.victory ? 'Vitória no templo' : 'A expedição falhou'}</h2>
+    <div class="result-list">Duração: ${formatTime(hunt.duration)}<br>
+    XP total: ${formatNumber(hunt.xp)}<br>Gold: ${formatNumber(hunt.gold)}<br>
+    Monstros derrotados: ${hunt.kills}<br>Cura de Lyra: ${formatNumber(hunt.healing)}<br>
+    Recompensa: ${hunt.loot['Lion King fragment'] ? 'Lion King fragment' : '—'}</div>`;
+  const dialog = $('#result') as HTMLDialogElement;
+  if (!dialog.open) dialog.showModal();
+}
+
+function scheduleLoop() {
+  clearLoopTimer();
+  if (!loopEnabled || sessionPhase !== 'completed') return;
+  loopTimer = window.setTimeout(() => void restart(true), 2000);
+}
+
 window.addEventListener('hunt-time', (rawEvent) => {
-  currentTime = (rawEvent as CustomEvent<number>).detail;
+  liveState.setTime((rawEvent as CustomEvent<number>).detail);
   const element = document.querySelector('#time');
-  if (element) element.textContent = formatTime(currentTime);
+  if (element) element.textContent = formatTime(liveState.time);
 });
 
 window.addEventListener('hunt-floor', (rawEvent) => {
   const floor = (rawEvent as CustomEvent<number>).detail;
-  $('#stage-label').textContent = floor === 4 ? 'Boss derrotado' : `Andar ${floor + 1} de 4`;
+  $('#stage-label').textContent =
+    floor === 4 ? 'Boss derrotado' : `Andar ${floor + 1} de 4`;
   $('#stage-fill').style.width = `${floor * 25}%`;
   document.querySelectorAll('.phase').forEach((phase, index) => {
     phase.classList.toggle('active', index === Math.min(floor, 3));
@@ -227,69 +331,70 @@ window.addEventListener('hunt-floor', (rawEvent) => {
 
 window.addEventListener('hunt-event', (rawEvent) => {
   const event = (rawEvent as CustomEvent<CombatEvent>).detail;
-  if (
-    event.type === 'spawn' &&
-    ['knight','druid','sorcerer'].includes(event.targetId ?? '')
-  ) {
-    const hp = document.querySelector<HTMLElement>(`#card-${event.targetId} .hp i`);
-    const mp = document.querySelector<HTMLElement>(`#card-${event.targetId} .mp i`);
+  liveState.apply(event);
+
+  if (event.type === 'spawn' && heroIds.has(event.targetId ?? '')) {
+    const hp = document.querySelector<HTMLElement>(
+      `#card-${event.targetId} .hp i`,
+    );
+    const mp = document.querySelector<HTMLElement>(
+      `#card-${event.targetId} .mp i`,
+    );
     if (hp) {
       hp.style.width = '100%';
       hp.style.background = healthBarColor(1);
     }
     if (mp) mp.style.width = '100%';
   }
+
   if (event.type === 'damage' || event.type === 'heal') {
-    const unit = renderer.units.get(event.targetId!);
-    const bar = document.querySelector<HTMLElement>(`#card-${event.targetId} .hp i`);
+    const unit = renderer?.units.get(event.targetId!);
+    const bar = document.querySelector<HTMLElement>(
+      `#card-${event.targetId} .hp i`,
+    );
     if (bar && unit) {
-      const ratio = unit.currentHp / unit.maxHp;
+      const ratio = unit.maxHp > 0 ? unit.currentHp / unit.maxHp : 0;
       bar.style.width = `${100 * ratio}%`;
       bar.style.background = healthBarColor(ratio);
     }
   }
-  if (
-    event.type === 'cast' &&
-    ['knight','druid','sorcerer'].includes(event.sourceId ?? '')
-  ) {
-    const unit = renderer.units.get(event.sourceId!);
-    const bar = document.querySelector<HTMLElement>(`#card-${event.sourceId} .mp i`);
+
+  if (event.type === 'cast' && heroIds.has(event.sourceId ?? '')) {
+    const unit = renderer?.units.get(event.sourceId!);
+    const bar = document.querySelector<HTMLElement>(
+      `#card-${event.sourceId} .mp i`,
+    );
     if (bar && unit) {
-      bar.style.width = `${100 * unit.currentMana / unit.maxMana}%`;
+      const ratio = unit.maxMana > 0 ? unit.currentMana / unit.maxMana : 0;
+      bar.style.width = `${100 * ratio}%`;
     }
   }
+
   if (
-    event.type === 'damage' &&
-    ['knight','druid','sorcerer'].includes(event.sourceId ?? '')
-  ) {
-    liveDamage[event.sourceId!] += event.data?.amount ?? 0;
-  }
-  if (event.type === 'heal') liveHealing += event.data?.amount ?? 0;
-  if (
-    event.type === 'death' &&
-    !['knight','druid','sorcerer'].includes(event.targetId ?? '')
-  ) {
-    liveKills++;
-  }
-  if (event.type === 'experience') liveXp += event.data?.amount ?? 0;
-  if (event.type === 'loot' && event.data?.item) {
-    liveLoot[event.data.item] =
-      (liveLoot[event.data.item] ?? 0) + (event.data.quantity ?? 0);
-    if (event.data.item === 'Gold coin') liveGold += event.data.quantity ?? 0;
-  }
-  if (
-    ['death','critical','dodge','loot','floor_complete','boss_spawn','aggro','monster_aoe','reposition'].includes(event.type)
+    [
+      'death',
+      'critical',
+      'dodge',
+      'loot',
+      'floor_complete',
+      'boss_spawn',
+      'aggro',
+      'monster_aoe',
+      'reposition',
+    ].includes(event.type)
   ) {
     const line = document.createElement('div');
     line.className = 'log-line';
     line.textContent = labelEvent(event);
     $('#log').prepend(line);
   }
+
   if (event.type === 'loot') {
-    $('#loot').innerHTML = Object.entries(liveLoot)
+    $('#loot').innerHTML = Object.entries(liveState.loot)
       .map(([item, quantity]) => `${quantity}× ${item}`)
       .join('<br>');
   }
+
   if (['damage','heal','death','experience','loot'].includes(event.type)) {
     renderAnalyzer();
   }
@@ -297,63 +402,75 @@ window.addEventListener('hunt-event', (rawEvent) => {
 
 window.addEventListener('hunt-complete', (rawEvent) => {
   const hunt = (rawEvent as CustomEvent<HuntResult>).detail;
+  lastResult = hunt;
+  completedCycles++;
+  document.documentElement.dataset.completedCycles = String(completedCycles);
   renderAnalyzer(hunt);
   $('#stage-fill').style.width = '100%';
-  $('#stage-label').textContent = hunt.victory ? 'Hunt concluída' : 'Equipe derrotada';
-  $('#session-state').textContent = loopEnabled
-    ? 'Próximo ciclo em 2 segundos'
-    : 'Sessão encerrada';
-  $('#pause').setAttribute('disabled', '');
-  $('#result-content').innerHTML = `<h2>${hunt.victory ? 'Vitória no templo' : 'A expedição falhou'}</h2>
-    <div class="result-list">Duração: ${formatTime(hunt.duration)}<br>
-    XP total: ${formatNumber(hunt.xp)}<br>Gold: ${formatNumber(hunt.gold)}<br>
-    Monstros derrotados: ${hunt.kills}<br>Cura de Lyra: ${formatNumber(hunt.healing)}<br>
-    Recompensa: ${hunt.loot['Lion King fragment'] ? 'Lion King fragment' : '—'}</div>`;
-  if (loopEnabled) {
-    loopTimer = window.setTimeout(() => void restart(true), 2000);
-  } else {
-    ($('#result') as HTMLDialogElement).showModal();
-  }
+  $('#stage-label').textContent = hunt.victory
+    ? 'Hunt concluída'
+    : 'Equipe derrotada';
+  setSessionPhase('completed');
+  if (loopEnabled) scheduleLoop();
+  else showResult(hunt);
 });
 
 $('#start').onclick = start;
 $('#pause').onclick = () => {
-  if (renderer.player.paused) {
-    renderer.player.play();
-    $('#pause').textContent = 'Ⅱ Pausar';
-    $('#session-state').textContent = 'Combate em andamento';
-  } else {
-    renderer.player.pause();
-    $('#pause').textContent = '▶ Continuar';
-    $('#session-state').textContent = 'Sessão pausada';
+  if (!renderer) return;
+  if (sessionPhase === 'paused') {
+    if (renderer.player.play()) setSessionPhase('running');
+  } else if (sessionPhase === 'running' && renderer.player.pause()) {
+    setSessionPhase('paused');
   }
+  renderAnalyzer();
 };
 $('#restart').onclick = () => void restart();
 $('#repeat').onclick = () => void restart(true);
-$('#close-result').onclick = () => ($('#result') as HTMLDialogElement).close();
+$('#close-result').onclick = () => {
+  ($('#result') as HTMLDialogElement).close();
+};
 $('#loop-toggle').onclick = () => {
   loopEnabled = !loopEnabled;
   const button = $('#loop-toggle');
   button.classList.toggle('active', loopEnabled);
   button.setAttribute('aria-pressed', String(loopEnabled));
   button.innerHTML = `↻ Loop <span>${loopEnabled ? 'ON' : 'OFF'}</span>`;
+  if (!loopEnabled) {
+    clearLoopTimer();
+    if (sessionPhase === 'completed' && lastResult) {
+      setSessionPhase('completed');
+      showResult(lastResult);
+    }
+  } else if (sessionPhase === 'completed') {
+    setSessionPhase('completed');
+    const resultDialog = $('#result') as HTMLDialogElement;
+    if (resultDialog.open) resultDialog.close();
+    scheduleLoop();
+  }
 };
-$('#ability-config').onclick = () => {
-  renderAbilityModal();
-  ($('#ability-modal') as HTMLDialogElement).showModal();
-};
-$('#party-config').onclick = () => {
-  renderAbilityModal();
-  ($('#ability-modal') as HTMLDialogElement).showModal();
+
+$('#ability-config').onclick = showAbilityModal;
+$('#party-config').onclick = showAbilityModal;
+$('#action-bar').onclick = (event) => {
+  const button = (event.target as Element).closest<HTMLButtonElement>(
+    '[data-ability]',
+  );
+  if (button) showAbilityModal();
 };
 $('#save-abilities').onclick = (event) => {
   event.preventDefault();
   for (const ability of abilities) {
+    const enabled = document.querySelector<HTMLInputElement>(
+      `[data-enabled="${ability.id}"]`,
+    );
+    const priority = document.querySelector<HTMLSelectElement>(
+      `[data-priority="${ability.id}"]`,
+    );
+    if (!enabled || !priority) continue;
     preferences[ability.id] = {
-      enabled:document.querySelector<HTMLInputElement>(`[data-enabled="${ability.id}"]`)!.checked,
-      priority:Number(
-        document.querySelector<HTMLSelectElement>(`[data-priority="${ability.id}"]`)!.value,
-      ),
+      enabled:enabled.checked,
+      priority:Number(priority.value),
     };
   }
   localStorage.setItem(storageKey, JSON.stringify(preferences));
@@ -361,21 +478,112 @@ $('#save-abilities').onclick = (event) => {
   void restart();
 };
 
-document.querySelectorAll<HTMLButtonElement>('[data-speed]').forEach((button) => {
+const futureModules: Record<string, [string, string]> = {
+  bestiary:[
+    'Bestiário — próximo MVP',
+    'A progressão por criaturas será implementada no MVP de progressões, após a fidelidade visual e mecânica da hunt.',
+  ],
+  progression:[
+    'Progressão — próximo MVP',
+    'Skills, proficiências, charms e preys permanecem fora do MVP 0.',
+  ],
+  storage:[
+    'Armazém — próximo MVP',
+    'Gestão persistente de itens depende do MVP de inventário e backend.',
+  ],
+  social:[
+    'Social — próximo MVP',
+    'Guild, ranking e comunicação serão tratados somente no MVP social.',
+  ],
+};
+
+document.querySelectorAll<HTMLButtonElement>('[data-module]').forEach((button) => {
   button.onclick = () => {
-    document.querySelectorAll('[data-speed]').forEach((item) => item.classList.remove('active'));
-    button.classList.add('active');
-    renderer.player.speed = Number(button.dataset.speed);
+    if (button.dataset.module === 'helper') {
+      showAbilityModal();
+      return;
+    }
+    const module = futureModules[button.dataset.module ?? ''];
+    if (module) showFutureModule(...module);
   };
 });
 
+document.querySelectorAll<HTMLButtonElement>('[data-view]').forEach((button) => {
+  button.onclick = () => {
+    document.querySelectorAll<HTMLButtonElement>('[data-view]').forEach((item) => {
+      const active = item === button;
+      item.classList.toggle('active', active);
+      item.setAttribute('aria-selected', String(active));
+    });
+    const view = button.dataset.view;
+    const summary = $('#view-summary');
+    if (view === 'general') {
+      summary.hidden = true;
+      summary.textContent = '';
+    } else {
+      summary.hidden = false;
+      summary.textContent =
+        view === 'combat'
+          ? 'A análise detalhada de dano e ameaças será ampliada no MVP 1.'
+          : 'A gestão de loot e filtros pertence ao MVP de inventário.';
+    }
+  };
+});
+
+document.querySelectorAll<HTMLButtonElement>('[data-collapse]').forEach((button) => {
+  button.onclick = () => {
+    const content = button
+      .closest('.panel')
+      ?.querySelector<HTMLElement>('.collapsible-content');
+    if (!content) return;
+    content.hidden = !content.hidden;
+    button.setAttribute('aria-expanded', String(!content.hidden));
+    button.textContent = content.hidden ? '+' : '−';
+  };
+});
+
+$('#supply-config').onclick = () => {
+  showFutureModule(
+    'Supply Pouch — próximo MVP',
+    'Configuração e consumo persistente de supplies serão implementados no MVP de inventário.',
+  );
+};
+$('#close-future').onclick = () => {
+  ($('#future-modal') as HTMLDialogElement).close();
+};
+
+document.querySelectorAll<HTMLButtonElement>('[data-speed]').forEach((button) => {
+  button.onclick = () => {
+    const value = Number(button.dataset.speed);
+    if (![1,2,4].includes(value)) return;
+    selectedSpeed = value;
+    document.documentElement.dataset.playbackSpeed = String(value);
+    document.querySelectorAll('[data-speed]').forEach((item) => {
+      item.classList.toggle('active', item === button);
+    });
+    if (renderer) renderer.player.speed = selectedSpeed;
+  };
+});
+
+window.addEventListener('beforeunload', () => {
+  clearLoopTimer();
+  renderer?.destroy();
+});
+
 async function initialize() {
+  document.documentElement.dataset.completedCycles = '0';
+  document.documentElement.dataset.playbackSpeed = String(selectedSpeed);
   renderInventory();
-  renderParty();
-  renderActionBar();
+  resetInterface();
+  setSessionPhase('booting');
   renderAnalyzer();
-  await createRenderer();
-  renderAnalyzer();
+  try {
+    await createRenderer();
+    setSessionPhase('ready');
+    renderAnalyzer();
+  } catch (error) {
+    showFatalError(error);
+  }
 }
 
 void initialize();

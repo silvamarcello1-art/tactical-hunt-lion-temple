@@ -4,7 +4,7 @@
 
 | Vocação | Magia | Palavras | Cooldown próprio | Grupo |
 |---|---|---|---:|---:|
-| Knight | Challenge | `exeta res` | 2 s | suporte: 2 s |
+| Knight | Chivalrous Challenge | `exeta amp res` | 2 s | suporte: 2 s |
 | Knight | Berserk | `exori` | 4 s | ataque: 2 s |
 | Knight | Groundshaker | `exori mas` | 8 s | ataque: 2 s |
 | Druid | Heal Friend | `exura sio` | 1 s | cura: 1 s |
@@ -21,10 +21,12 @@ separados.
 ## Padrões de tiles no protótipo
 
 - Berserk: área 3 × 3 centralizada no Knight.
-- Strong Ice Wave: onda direcional com fileiras 1, 1, 3, 3 e 5.
+- Strong Ice Wave: onda direcional com fileiras 1, 3, 5, 7 e 9.
 - Energy Wave: onda direcional com fileiras 1, 1, 3, 3 e 3.
-- Groundshaker, Eternal Winter e Rage of the Skies: áreas radiais discretas.
-- Challenge: campo de aggro ao redor do Knight.
+- Groundshaker: 37 SQMs em área 7 × 7 com cantos aparados.
+- Eternal Winter: 61 SQMs.
+- Rage of the Skies: 85 SQMs.
+- Chivalrous Challenge: campo de aggro em raio de 7 tiles, puxando até quatro criaturas elegíveis.
 - Ataques dos magos inimigos e do boss: ondas direcionais com aviso prévio.
 
 O conjurador escolhe a direção pelo alvo. Se nenhum inimigo estiver dentro do

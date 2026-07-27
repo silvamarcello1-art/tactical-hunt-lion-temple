@@ -1,0 +1,30 @@
+export const RENDER_CONFIG = {
+  canvas:{
+    width:960,
+    height:576,
+    maxResolution:2,
+  },
+  entity:{
+    heroScale:.17,
+    bossScale:1.12,
+    spawnDuration:220,
+    attackDuration:320,
+    deathDuration:340,
+    defaultMoveDuration:220,
+  },
+  effects:{
+    tileDuration:820,
+    projectileDuration:180,
+    aggroDuration:420,
+    spellLabelDuration:900,
+    floatingTextDuration:600,
+  },
+  vitals:{
+    dangerThreshold:.3,
+    warningThreshold:.6,
+    healthyColor:0x43c965,
+    warningColor:0xe2c245,
+    dangerColor:0xdf4848,
+    manaColor:0x438ce1,
+  },
+} as const;

@@ -3,6 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <title>Lion Temple — Tactical Hunt</title>
   </head>
   <body>
@@ -17,8 +18,11 @@
           <span>◆ <b>28</b></span>
         </div>
         <nav aria-label="Navegação principal">
-          <button>Helper</button><button>Bestiário</button><button>Progressão</button>
-          <button>Armazém</button><button>Social</button>
+          <button data-module="helper">Helper</button>
+          <button data-module="bestiary">Bestiário</button>
+          <button data-module="progression">Progressão</button>
+          <button data-module="storage">Armazém</button>
+          <button data-module="social">Social</button>
         </nav>
         <div class="account-chip">MONK 803</div>
       </header>
@@ -30,16 +34,16 @@
             <div class="meter"><i style="width:94%"></i></div>
           </section>
           <section class="panel compact-panel">
-            <header><h2>Boosts</h2><button class="collapse">−</button></header>
-            <dl><dt>XP</dt><dd>+50%</dd><dt>Dano</dt><dd>Inativo</dd><dt>Loot</dt><dd>Inativo</dd></dl>
+            <header><h2>Boosts</h2><button class="collapse" data-collapse aria-expanded="true">−</button></header>
+            <dl class="collapsible-content"><dt>XP</dt><dd>+50%</dd><dt>Dano</dt><dd>Inativo</dd><dt>Loot</dt><dd>Inativo</dd></dl>
           </section>
           <section class="panel analyzer">
             <header><h2>Hunt Analyzer</h2><span>↻</span></header>
             <div id="analyzer"></div>
           </section>
           <section class="panel compact-panel">
-            <header><h2>Dano por personagem</h2><button class="collapse">+</button></header>
-            <div id="damage-breakdown" class="mini-list">Aguardando combate.</div>
+            <header><h2>Dano por personagem</h2><button class="collapse" data-collapse aria-expanded="true">−</button></header>
+            <div id="damage-breakdown" class="mini-list collapsible-content">Aguardando combate.</div>
           </section>
           <section class="panel log-panel">
             <header><h2>Registro</h2><span>ao vivo</span></header>
@@ -64,12 +68,15 @@
           </div>
           <div id="game" aria-label="Mapa tático da hunt"></div>
           <div class="center-tabs">
-            <button class="active">Geral</button><button>Combate</button><button>Loot</button>
+            <button class="active" data-view="general">Geral</button>
+            <button data-view="combat">Combate</button>
+            <button data-view="loot">Loot</button>
             <span id="session-state">Pronto para iniciar</span>
           </div>
+          <div id="view-summary" class="view-summary" hidden aria-live="polite"></div>
           <div class="action-dock">
             <div class="controls">
-              <button id="start" class="primary">▶ Iniciar</button>
+              <button id="start" class="primary" disabled>▶ Iniciar</button>
               <button id="pause" disabled>Ⅱ Pausar</button>
               <button id="restart">↺ Reiniciar</button>
               <div class="speed" aria-label="Velocidade">
@@ -97,7 +104,7 @@
             <div id="loot" class="loot">Nenhum item ainda.</div>
           </section>
           <section class="panel compact-panel">
-            <header><h2>Supply Pouch</h2><button class="collapse">Config</button></header>
+            <header><h2>Supply Pouch</h2><button id="supply-config" class="collapse">Config</button></header>
             <dl><dt>Mana Potion</dt><dd>420</dd><dt>Health Potion</dt><dd>180</dd></dl>
           </section>
         </aside>
@@ -123,6 +130,17 @@
         <div class="dialog-actions">
           <button id="close-result">Fechar</button>
           <button id="repeat" class="primary">Repetir hunt</button>
+        </div>
+      </dialog>
+
+      <dialog id="future-modal">
+        <div class="future-content">
+          <span class="eyebrow">ROADMAP</span>
+          <h2 id="future-title">Próximo MVP</h2>
+          <p id="future-description"></p>
+          <div class="dialog-actions">
+            <button id="close-future" class="primary">Entendi</button>
+          </div>
         </div>
       </dialog>
     </main>

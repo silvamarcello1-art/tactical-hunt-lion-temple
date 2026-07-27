@@ -10,6 +10,7 @@ import {
   Text,
   TextStyle,
   Texture,
+  type Ticker,
 } from 'pixi.js';
 import { CombatEngine } from '../combat/CombatEngine';
 import { TILE_SIZE } from '../combat/tiles';
@@ -21,6 +22,7 @@ import type {
   HuntResult,
   Point,
 } from '../events/types';
+import { RENDER_CONFIG } from './renderConfig';
 
 type Unit = {
   body: Container;
@@ -61,6 +63,13 @@ export class PixiRenderer {
   private effectSheet!: Spritesheet;
   private heroAtlas!: Texture;
   private tileTextures = new Map<string, Texture>();
+  private parent?: HTMLElement;
+  private destroyed = false;
+  private readonly tickerHandler = (ticker: Ticker) => {
+    if (this.destroyed) return;
+    this.player.update(ticker.deltaMS);
+    this.updateTweens(ticker.deltaMS);
+  };
 
   constructor(preferences: AbilityPreferences) {
     this.result = new CombatEngine(803, preferences).run();
@@ -73,15 +82,21 @@ export class PixiRenderer {
   }
 
   async mount(parent: HTMLElement) {
+    this.parent = parent;
     await this.app.init({
-      width: 960,
-      height: 576,
+      width:RENDER_CONFIG.canvas.width,
+      height:RENDER_CONFIG.canvas.height,
       background:'#111611',
       antialias:false,
-      resolution:Math.min(window.devicePixelRatio, 2),
+      resolution:Math.min(
+        window.devicePixelRatio,
+        RENDER_CONFIG.canvas.maxResolution,
+      ),
       autoDensity:true,
     });
+    if (this.destroyed) return;
     await this.loadTibiaAssets();
+    if (this.destroyed) return;
     parent.replaceChildren(this.app.canvas);
     this.drawArena();
     this.floorText = this.label('PREPARAÇÃO', 13, '#f0d77a');
@@ -89,15 +104,28 @@ export class PixiRenderer {
     this.floorText.zIndex = 60;
     this.app.stage.addChild(this.floorText);
     this.app.stage.sortableChildren = true;
-    this.app.ticker.add((ticker) => {
-      this.player.update(ticker.deltaMS);
-      this.updateTweens(ticker.deltaMS);
-    });
+    this.app.ticker.add(this.tickerHandler);
+    this.syncDiagnostics();
     window.dispatchEvent(new CustomEvent('hunt-ready', { detail:this.result }));
   }
 
   destroy() {
-    this.app.destroy(true, { children:true });
+    if (this.destroyed) return;
+    this.destroyed = true;
+    this.player.dispose();
+    this.tweens = [];
+    this.units.clear();
+    this.bossFill = undefined;
+    this.app.ticker?.remove(this.tickerHandler);
+    try {
+      this.app.destroy(true, { children:true });
+    } catch {
+      // Pixi may not be fully initialized when a restart interrupts asset loading.
+    }
+    if (this.parent) {
+      this.parent.dataset.unitCount = '0';
+      this.parent.dataset.stageChildren = '0';
+    }
   }
 
   private async loadTibiaAssets() {
@@ -201,7 +229,9 @@ export class PixiRenderer {
 
   private spawn(event: CombatEvent) {
     const snapshot = event.data!.entity!;
-    this.units.get(snapshot.id)?.body.destroy({ children:true });
+    const previous = this.units.get(snapshot.id);
+    previous?.body.destroy({ children:true });
+    this.units.delete(snapshot.id);
     const position = event.data!.position!;
     const body = new Container();
     body.position.set(position.x, position.y);
@@ -248,8 +278,9 @@ export class PixiRenderer {
       hero,
     };
     this.units.set(snapshot.id, unit);
+    this.syncDiagnostics();
     this.drawVitals(unit);
-    this.tween(220, (progress) => {
+    this.tween(RENDER_CONFIG.entity.spawnDuration, (progress) => {
       body.alpha = progress;
       body.scale.set(.4 + progress * .6);
     });
@@ -292,7 +323,7 @@ export class PixiRenderer {
       const hero = new Sprite(texture);
       hero.anchor.set(.5);
       hero.position.y = -5;
-      hero.scale.set(.17);
+      hero.scale.set(RENDER_CONFIG.entity.heroScale);
       return hero;
     }
     const key = this.spriteKey(snapshot);
@@ -302,7 +333,9 @@ export class PixiRenderer {
     sprite.animationSpeed = .16;
     sprite.loop = true;
     sprite.gotoAndStop(0);
-    if (snapshot.role === 'boss') sprite.scale.set(1.12);
+    if (snapshot.role === 'boss') {
+      sprite.scale.set(RENDER_CONFIG.entity.bossScale);
+    }
     return sprite;
   }
 
@@ -320,13 +353,17 @@ export class PixiRenderer {
     if (unit.sprite instanceof AnimatedSprite) {
       const animated = unit.sprite;
       animated.play();
-      this.tween(320, () => undefined, () => animated.gotoAndStop(0));
+      this.tween(
+        RENDER_CONFIG.entity.attackDuration,
+        () => undefined,
+        () => animated.gotoAndStop(0),
+      );
       return;
     }
     const startY = unit.sprite.y;
     const startRotation = unit.sprite.rotation;
     this.tween(
-      320,
+      RENDER_CONFIG.entity.attackDuration,
       (progress) => {
         unit.sprite.y = startY - Math.sin(progress * Math.PI) * 5;
         unit.sprite.rotation =
@@ -363,32 +400,35 @@ export class PixiRenderer {
   }
 
   private healthColor(ratio: number) {
-    if (ratio <= .3) return 0xdf4848;
-    if (ratio <= .6) return 0xe2c245;
-    return 0x43c965;
+    if (ratio <= RENDER_CONFIG.vitals.dangerThreshold) {
+      return RENDER_CONFIG.vitals.dangerColor;
+    }
+    if (ratio <= RENDER_CONFIG.vitals.warningThreshold) {
+      return RENDER_CONFIG.vitals.warningColor;
+    }
+    return RENDER_CONFIG.vitals.healthyColor;
   }
 
   private drawVitals(unit: Unit) {
-    const hpRatio = Math.max(0, unit.currentHp / unit.maxHp);
+    const hpRatio = this.ratio(unit.currentHp, unit.maxHp);
     unit.hp
       .clear()
       .rect(-unit.hpWidth / 2, unit.hpY, unit.hpWidth * hpRatio, 5)
       .fill(this.healthColor(hpRatio));
     if (unit.mana && unit.manaY !== undefined) {
-      const manaRatio =
-        unit.maxMana > 0 ? Math.max(0, unit.currentMana / unit.maxMana) : 0;
+      const manaRatio = this.ratio(unit.currentMana, unit.maxMana);
       unit.mana
         .clear()
         .rect(-unit.hpWidth / 2, unit.manaY, unit.hpWidth * manaRatio, 4)
-        .fill(0x438ce1);
+        .fill(RENDER_CONFIG.vitals.manaColor);
     }
   }
 
   private drawBossHp(ratio: number) {
     this.bossFill
       ?.clear()
-      .roundRect(268, 40, 424 * Math.max(0, ratio), 9, 2)
-      .fill(this.healthColor(ratio));
+      .roundRect(268, 40, 424 * this.ratio(ratio, 1), 9, 2)
+      .fill(this.healthColor(this.ratio(ratio, 1)));
   }
 
   private applyEvent(event: CombatEvent) {
@@ -400,7 +440,7 @@ export class PixiRenderer {
         const target = event.data.position;
         this.face(unit, this.movementDirection(from, target), true);
         this.tween(
-          event.data.duration ?? 220,
+          event.data.duration ?? RENDER_CONFIG.entity.defaultMoveDuration,
           (progress) => {
             unit.body.position.set(
               from.x + (target.x - from.x) * progress,
@@ -427,7 +467,7 @@ export class PixiRenderer {
               event.data?.tiles ?? [],
               this.elementColor(event.data?.element),
               false,
-              820,
+              RENDER_CONFIG.effects.tileDuration,
               this.effectKey(event),
               { x:unit.body.x, y:unit.body.y },
             );
@@ -449,7 +489,7 @@ export class PixiRenderer {
         event.data?.tiles ?? [],
         this.elementColor(event.data?.element),
         false,
-        820,
+        RENDER_CONFIG.effects.tileDuration,
         this.effectKey(event),
         event.sourceId
           ? {
@@ -463,23 +503,25 @@ export class PixiRenderer {
     if (event.type === 'damage') {
       const unit = this.units.get(event.targetId!);
       if (unit) {
-        unit.currentHp = Math.max(0, unit.currentHp - event.data!.amount!);
+        const amount = this.safeAmount(event.data?.amount);
+        unit.currentHp = Math.max(0, unit.currentHp - amount);
         this.drawVitals(unit);
-        this.floatingText(event.targetId!, `-${event.data!.amount}`, '#ff746d');
+        this.floatingText(event.targetId!, `-${amount}`, '#ff746d');
         if (event.targetId === 'lion-king') {
-          this.drawBossHp(unit.currentHp / unit.maxHp);
+          this.drawBossHp(this.ratio(unit.currentHp, unit.maxHp));
         }
       }
     }
     if (event.type === 'heal') {
       const unit = this.units.get(event.targetId!);
       if (unit) {
+        const amount = this.safeAmount(event.data?.amount);
         unit.currentHp = Math.min(
           unit.maxHp,
-          unit.currentHp + event.data!.amount!,
+          unit.currentHp + amount,
         );
         this.drawVitals(unit);
-        this.floatingText(event.targetId!, `+${event.data!.amount}`, '#79eea5');
+        this.floatingText(event.targetId!, `+${amount}`, '#79eea5');
       }
     }
     if (event.type === 'critical') {
@@ -492,11 +534,21 @@ export class PixiRenderer {
       const unit = this.units.get(event.targetId!);
       if (unit) {
         const rotation = unit.body.rotation;
-        this.tween(340, (progress) => {
-          unit.body.alpha = 1 - progress;
-          unit.body.rotation = rotation + (Math.PI / 2) * progress;
-          unit.body.scale.set(1 - progress * .4);
-        });
+        this.tween(
+          RENDER_CONFIG.entity.deathDuration,
+          (progress) => {
+            unit.body.alpha = 1 - progress;
+            unit.body.rotation = rotation + (Math.PI / 2) * progress;
+            unit.body.scale.set(1 - progress * .4);
+          },
+          () => {
+            if (this.units.get(event.targetId!) === unit) {
+              this.units.delete(event.targetId!);
+              unit.body.destroy({ children:true });
+              this.syncDiagnostics();
+            }
+          },
+        );
       }
     }
     if (event.type === 'floor_complete') {
@@ -640,7 +692,7 @@ export class PixiRenderer {
     this.app.stage.addChild(projectile);
     const start = { x:projectile.x, y:projectile.y };
     this.tween(
-      180,
+      RENDER_CONFIG.effects.projectileDuration,
       (progress) =>
         projectile.position.set(
           start.x + (target.body.x - start.x) * progress,
@@ -665,7 +717,7 @@ export class PixiRenderer {
     text.zIndex = 90;
     this.app.stage.addChild(text);
     this.tween(
-      900,
+      RENDER_CONFIG.effects.spellLabelDuration,
       (progress) => {
         text.y = y - progress * 14;
         text.alpha =
@@ -706,7 +758,7 @@ export class PixiRenderer {
       this.app.stage.addChild(chain);
       const start = { x:target.body.x, y:target.body.y };
       this.tween(
-        420,
+        RENDER_CONFIG.effects.aggroDuration,
         (progress) => {
           line.alpha = 1 - progress;
           chain.position.set(
@@ -734,7 +786,7 @@ export class PixiRenderer {
     this.app.stage.addChild(text);
     const startY = text.y;
     this.tween(
-      600,
+      RENDER_CONFIG.effects.floatingTextDuration,
       (progress) => {
         text.y = startY - progress * 31;
         text.alpha = 1 - progress;
@@ -749,10 +801,12 @@ export class PixiRenderer {
     done?: Tween['done'],
     delay = 0,
   ) {
+    if (this.destroyed) return;
     this.tweens.push({ elapsed:-delay, duration, update, done });
   }
 
   private updateTweens(delta: number) {
+    if (!Number.isFinite(delta) || delta < 0 || this.destroyed) return;
     const active: Tween[] = [];
     for (const tween of this.tweens) {
       tween.elapsed += delta * this.player.speed;
@@ -766,5 +820,28 @@ export class PixiRenderer {
       else active.push(tween);
     }
     this.tweens = active;
+  }
+
+  private safeAmount(value: unknown) {
+    return typeof value === 'number' && Number.isFinite(value) && value > 0
+      ? value
+      : 0;
+  }
+
+  private ratio(value: number, maximum: number) {
+    if (
+      !Number.isFinite(value) ||
+      !Number.isFinite(maximum) ||
+      maximum <= 0
+    ) {
+      return 0;
+    }
+    return Math.max(0, Math.min(1, value / maximum));
+  }
+
+  private syncDiagnostics() {
+    if (!this.parent || this.destroyed) return;
+    this.parent.dataset.unitCount = String(this.units.size);
+    this.parent.dataset.stageChildren = String(this.app.stage.children.length);
   }
 }
