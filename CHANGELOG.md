@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.2.1 — 2026-07-27
+
+### Boss Token — Conclusão
+
+- `CurrencyService` consolidado como fonte persistente de `bossToken` com
+  idempotência garantida por `sessionId + bossId + rewardType`.
+- Recompensa por chefe configurável via `bossTokenReward` (padrão = 1).
+- Persistência entre reloads e resets; múltiplos bosses e loops legítimos suportados;
+  duplicação de recompensa evitada no mesmo `sessionId+bossId+rewardType`.
+- Integração com barra superior, notificação visual, relatório de resultado e
+  Hunt Analyzer.
+- Validação: `pnpm run typecheck` aprovado; `pnpm exec vitest run` — 37 testes unitários aprovados; `pnpm run build` aprovado; Playwright E2E — 12 testes aprovados, exit code 0.
+
+### Observações
+
+- Não foram feitas alterações no código relacionado ao Helper nesta entrega.
+- Documentação atualizada em `docs/CURRENT_STATE.md`, `docs/SESSION_CHECKPOINT.md` e `docs/NEXT_TASK.md`.
+
 ## 0.2.0 — 2026-07-27
 
 ### MVP 1A — fidelidade da área da hunt

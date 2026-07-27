@@ -101,6 +101,151 @@ test.describe.serial('MVP 0 + MVP 1A — fluxo completo', () => {
     expect(errors).toEqual([]);
   });
 
+  test('exibe saldo persistente de Boss Tokens ao carregar a página', async ({
+    page,
+  }) => {
+    await page.addInitScript(() => {
+      localStorage.setItem(
+        'tactical-hunt-currency',
+        JSON.stringify({ bossToken: 1, rewardKeys: [] }),
+      );
+    });
+    await openIdleHunt(page);
+    await expect(page.locator('#boss-token-balance')).toHaveText(
+      '★ 1 Boss Token',
+    );
+  });
+
+  test('concede Boss Token ao derrotar o boss e persiste o saldo após reload', async ({
+    page,
+  }) => {
+    const errors = collectRuntimeErrors(page);
+    await openIdleHunt(page);
+    await page.locator('#loop-toggle').click();
+    await expect(page.locator('#loop-toggle')).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    );
+    await expect(page.locator('#boss-token-balance')).toHaveText(
+      '★ 0 Boss Token',
+    );
+    await page.locator('[data-speed="4"]').click();
+    await page.locator('#start').click();
+    await expect(page.locator('html')).toHaveAttribute(
+      'data-session-state',
+      'completed',
+      { timeout: 100_000 },
+    );
+    await page.waitForFunction(() => {
+      const dialog = document.querySelector('#result') as HTMLDialogElement | null;
+      return dialog?.open === true;
+    });
+    await expect(page.locator('#boss-token-balance')).toHaveText(
+      '★ 1 Boss Token',
+    );
+    const balance = await page.locator('#boss-token-balance').innerText();
+    await page.locator('#close-result').click();
+    await expect(page.locator('#boss-token-balance')).toHaveText(balance);
+    await page.reload();
+    await openIdleHunt(page);
+    await expect(page.locator('#boss-token-balance')).toHaveText(balance);
+    expect(errors).toEqual([]);
+  });
+
+  test('abrir o relatório de resultado não altera o saldo de Boss Token', async ({
+    page,
+  }) => {
+    const errors = collectRuntimeErrors(page);
+    await openIdleHunt(page);
+    await page.locator('#loop-toggle').click();
+    await expect(page.locator('#loop-toggle')).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    );
+    await page.locator('[data-speed="4"]').click();
+    await page.locator('#start').click();
+    await expect(page.locator('html')).toHaveAttribute(
+      'data-session-state',
+      'completed',
+      { timeout: 100_000 },
+    );
+    await expect(page.locator('#boss-token-balance')).toHaveText(
+      '★ 1 Boss Token',
+    );
+    const balance = await page.locator('#boss-token-balance').innerText();
+    await expect(page.locator('#result')).toBeVisible();
+    await page.locator('#close-result').click();
+    await expect(page.locator('#boss-token-balance')).toHaveText(balance);
+    expect(errors).toEqual([]);
+  });
+
+  test('não concede Boss Token duas vezes para o mesmo boss_reward duplicado', async ({
+    page,
+  }) => {
+    const errors = collectRuntimeErrors(page);
+    await openIdleHunt(page);
+    await page.locator('[data-speed="4"]').click();
+    await page.locator('#start').click();
+    await expect(page.locator('html')).toHaveAttribute(
+      'data-session-state',
+      'completed',
+      { timeout: 100_000 },
+    );
+    const firstBalance = await page.locator('#boss-token-balance').innerText();
+    await page.evaluate(() => {
+      const event = {
+        type: 'boss_reward',
+        floor: 4,
+        targetId: 'lion-king',
+        data: { amount: 1, rewardType: 'bossToken' },
+      };
+      window.dispatchEvent(new CustomEvent('hunt-event', { detail: event }));
+      window.dispatchEvent(new CustomEvent('hunt-event', { detail: event }));
+    });
+    await expect(page.locator('#boss-token-balance')).toHaveText(firstBalance);
+    expect(errors).toEqual([]);
+  });
+
+  test('três loops legítimos concedem três Boss Tokens', async ({
+    page,
+  }) => {
+    const errors = collectRuntimeErrors(page);
+    await openIdleHunt(page);
+    await page.locator('[data-speed="4"]').click();
+    await page.locator('#start').click();
+    await expect(page.locator('html')).toHaveAttribute(
+      'data-completed-cycles',
+      '3',
+      { timeout: 100_000 },
+    );
+    await expect(page.locator('#boss-token-balance')).toHaveText(
+      '★ 3 Boss Token',
+    );
+    expect(errors).toEqual([]);
+  });
+
+  test('três bosses distintos concedem três Boss Tokens no mesmo ciclo', async ({
+    page,
+  }) => {
+    const errors = collectRuntimeErrors(page);
+    await openIdleHunt(page);
+    await page.evaluate(() => {
+      for (const bossId of ['boss-1', 'boss-2', 'boss-3']) {
+        const event = {
+          type: 'boss_reward',
+          floor: 4,
+          targetId: bossId,
+          data: { amount: 1, rewardType: 'bossToken' },
+        };
+        window.dispatchEvent(new CustomEvent('hunt-event', { detail: event }));
+      }
+    });
+    await expect(page.locator('#boss-token-balance')).toHaveText(
+      '★ 3 Boss Token',
+    );
+    expect(errors).toEqual([]);
+  });
+
   test('seleciona personagem e mantém o Helper funcional durante a hunt', async ({
     page,
   }) => {

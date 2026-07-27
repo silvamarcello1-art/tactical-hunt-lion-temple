@@ -95,7 +95,7 @@ export const floors: EntitySnapshot[][] = [
   ],
   [
     lion('guard-1','Royal Guard',620,75,HUNT_LAYOUT_CONFIG.enemySpawnPositions[3][0]),
-    { id:'lion-king',name:'Lion King',role:'boss',hp:3600,maxHp:3600,mana:800,maxMana:800,attack:105,defense:32,crit:.13,dodge:.06,position:HUNT_LAYOUT_CONFIG.bossPosition,color:0xe0a62f },
+    { id:'lion-king',name:'Lion King',role:'boss',hp:3600,maxHp:3600,mana:800,maxMana:800,attack:105,defense:32,crit:.13,dodge:.06,position:HUNT_LAYOUT_CONFIG.bossPosition,color:0xe0a62f,bossTokenReward:1 },
     lion('guard-2','Royal Guard',620,75,HUNT_LAYOUT_CONFIG.enemySpawnPositions[3][2]),
   ],
 ];

@@ -56,6 +56,12 @@ describe('LiveHuntState', () => {
     });
   });
 
+  it('não altera bossTokens ao receber boss_reward', () => {
+    const state = new LiveHuntState();
+    state.apply(event('boss_reward', { amount:1 }, undefined, 'lion-king'));
+    expect(state.bossTokens).toBe(0);
+  });
+
   it('ignora NaN, Infinity e quantidades negativas', () => {
     const state = new LiveHuntState();
     state.setTime(Number.NaN);

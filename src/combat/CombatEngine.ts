@@ -75,6 +75,7 @@ export class CombatEngine {
   private xp = 0;
   private gold = 0;
   private kills = 0;
+  private bossTokens = 0;
   private loot: Record<string, number> = {};
   private floorTimes: number[] = [];
   private floorStartedAt = 0;
@@ -233,7 +234,14 @@ export class CombatEngine {
       this.addLoot(boss ? 'Lion King fragment' : 'Lion fur', 1, floor, enemy.id);
     }
     if (boss) {
-      this.addLoot('Boss token', 1, floor, enemy.id);
+      const amount = Number.isFinite(enemy.bossTokenReward ?? 1)
+        ? Math.max(1, Math.round(enemy.bossTokenReward ?? 1))
+        : 1;
+      this.bossTokens += amount;
+      this.emit('boss_reward', floor, undefined, enemy.id, {
+        amount,
+        rewardType:'bossToken',
+      });
       if (this.random() < 0.3) this.addLoot('Rare gem', 1, floor, enemy.id);
     }
   }
@@ -903,6 +911,8 @@ export class CombatEngine {
       xp:this.xp,
       gold:this.gold,
       kills:this.kills,
+      bosses:this.events.filter((event) => event.type === 'death' && event.targetId === 'lion-king').length,
+      bossTokens:this.bossTokens,
       damage:this.damage,
       healing:this.healing,
       damageTaken:this.damageTaken,

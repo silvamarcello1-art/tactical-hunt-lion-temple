@@ -17,6 +17,7 @@ export type EventType =
   | 'death'
   | 'loot'
   | 'experience'
+  | 'boss_reward'
   | 'floor_complete'
   | 'hunt_complete';
 
@@ -61,6 +62,7 @@ export interface CombatEvent {
     hardMinTargets?: number;
     cooldownEndsAt?: number;
     cooldownDuration?: number;
+    rewardType?: string;
   };
 }
 
@@ -80,6 +82,7 @@ export interface EntitySnapshot {
   dodge: number;
   position: Point;
   color: number;
+  bossTokenReward?: number;
 }
 
 export interface HuntResult {
@@ -88,8 +91,8 @@ export interface HuntResult {
   victory: boolean;
   xp: number;
   gold: number;
-  kills: number;
-  damage: Record<string, number>;
+  kills: number;  bosses: number;
+  bossTokens: number;  damage: Record<string, number>;
   healing: number;
   damageTaken: number;
   loot: Record<string, number>;

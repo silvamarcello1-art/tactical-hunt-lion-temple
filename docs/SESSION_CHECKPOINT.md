@@ -18,10 +18,10 @@
 - **Efeitos Visuais**: Renderizados em subcamadas dedicadas com animação tween de fade e cleanup total após destruição.
 
 ## Validações Executadas
-1. **TypeScript Typecheck**: Executado via `pnpm run typecheck` — 0 erros.
-2. **Vitest Unit Tests**: Executado via `pnpm test` — 25 testes aprovados (100% pass).
-3. **Vite Production Build**: Executado via `pnpm run build` — compilação concluída em 4.97s, bundle gerado sem avisos críticos.
-4. **Playwright E2E**: Executado via `pnpm test:e2e` (6 cenários end-to-end em Edge/Chromium).
+1. **TypeScript Typecheck**: Executado via `pnpm run typecheck` — aprovado (tsc sem erros).
+2. **Vitest Unit Tests**: Executado via `pnpm test` — 37 testes unitários aprovados.
+3. **Vite Production Build**: Executado via `pnpm run build` — compilação concluída em 4.41s, bundle gerado sem avisos críticos.
+4. **Playwright E2E**: Executado via `pnpm test:e2e` — 12 cenários end-to-end aprovados; exit code 0.
 
 ## Classificação dos Sistemas (Fase 2)
 1. **Motor lógico da hunt**: IMPLEMENTADO E VALIDADO
@@ -41,8 +41,8 @@
 15. **Cooldowns**: IMPLEMENTADO E VALIDADO
 16. **Efeitos visuais**: IMPLEMENTADO E VALIDADO
 17. **Hunt Analyzer**: IMPLEMENTADO E VALIDADO
-18. **Boss Token**: PARCIAL / PENDENTE (Próxima etapa: moeda `bossToken` com recompensa idempotente `bossTokenReward = 1` por sessão)
-19. **Currencies**: PARCIAL (Gold implementado, Boss Token pendente)
+18. **Boss Token**: IMPLEMENTADO E VALIDADO (moeda `bossToken` idempotente com `sessionId + bossId + rewardType`)
+19. **Currencies**: IMPLEMENTADO E VALIDADO (Gold e Boss Token persistentes)
 20. **Persistência**: IMPLEMENTADO E VALIDADO (`localStorage` para preferências)
 21. **Testes**: IMPLEMENTADO E VALIDADO
 22. **Publicação**: IMPLEMENTADO E VALIDADO (Sites e scripts de build mantidos)

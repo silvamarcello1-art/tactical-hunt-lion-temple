@@ -30,6 +30,10 @@ multiplayer, market, economia e pathfinding avançado.
 - `docs/CURRENT_STATE.md`
 - `docs/ARCHITECTURE.md`
 
+## Observação
+
+- **Boss Token:** concluído e validado (persistência idempotente, integração UI, testes unitários e E2E). O próximo trabalho permanece focado na auditoria e conclusão do Helper individual conforme o escopo abaixo.
+
 ## Prompt curto
 
 > Leia `AGENTS.md` e `docs/NEXT_TASK.md`. Implemente somente o Helper individual

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { abilities, defaultAbilityPreferences } from '../data/abilities';
+import { floors } from '../data/config';
 import { CombatEngine } from './CombatEngine';
 import { TILE_SIZE, abilityOffsets } from './tiles';
 
@@ -23,6 +24,34 @@ describe('CombatEngine', () => {
     expect(result.floorTimes).toHaveLength(4);
   });
 
+  it('concede boss_reward apenas na morte confirmada do boss', () => {
+    const result = new CombatEngine(803).run();
+    const bossRewards = result.events.filter((event) => event.type === 'boss_reward');
+    expect(bossRewards.length).toBe(1);
+    expect(bossRewards[0].targetId).toBe('lion-king');
+    expect(bossRewards[0].data?.amount).toBe(1);
+  });
+
+  it('boss_reward ocorre após boss_spawn', () => {
+    const result = new CombatEngine(803).run();
+    const spawnIndex = result.events.findIndex((event) => event.type === 'boss_spawn');
+    const rewardIndex = result.events.findIndex((event) => event.type === 'boss_reward');
+    expect(spawnIndex).toBeGreaterThanOrEqual(0);
+    expect(rewardIndex).toBeGreaterThan(spawnIndex);
+  });
+
+  it('respeita bossTokenReward configurável', () => {
+    const originalReward = floors[3][1].bossTokenReward;
+    floors[3][1].bossTokenReward = 3;
+    const result = new CombatEngine(803).run();
+    floors[3][1].bossTokenReward = originalReward;
+
+    const bossRewards = result.events.filter((event) => event.type === 'boss_reward');
+    expect(bossRewards.length).toBe(1);
+    expect(bossRewards[0].data?.amount).toBe(3);
+    expect(result.bossTokens).toBe(3);
+  });
+
   it('emite todas as categorias essenciais', () => {
     const types = new Set(
       new CombatEngine().run().events.map((event) => event.type),
@@ -41,6 +70,7 @@ describe('CombatEngine', () => {
       'loot',
       'experience',
       'boss_spawn',
+      'boss_reward',
       'floor_complete',
       'hunt_complete',
     ]) {

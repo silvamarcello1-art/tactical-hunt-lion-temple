@@ -19,6 +19,7 @@ correção de manutenção.
 - Aggro, AOE, reposicionamento, dano, cura, mana, crítico e dodge.
 - Analyzer com XP, gold, loot, kills, bosses, dano por herói, dano recebido,
   cura e duração.
+- Boss Tokens exibidos e persistidos em `localStorage` entre recarregamentos.
 - Módulos futuros abrem aviso explícito e não alteram a sessão.
 - Fallback controlado se canvas ou assets falharem.
 
@@ -27,9 +28,9 @@ correção de manutenção.
 | Validação | Resultado |
 |---|---|
 | Instalação pelo lockfile | aprovada |
-| TypeScript | aprovado |
-| Vitest | 22 testes aprovados, 20 do baseline e 2 de configuração visual |
-| Playwright/Edge | 6 cenários aprovados |
+| TypeScript | aprovado (tsc sem erros) |
+| Vitest | 37 testes unitários aprovados |
+| Playwright/Edge | 12 cenários end-to-end aprovados |
 | Loop | 3 ciclos consecutivos |
 | Resoluções | 1366×768, 1600×900 e 1920×1080 |
 | Console | sem erros nos cenários |
@@ -64,7 +65,16 @@ correção de manutenção.
 | Loop | 3 ciclos consecutivos, sem duplicação |
 | Resoluções | uma hunt completa em 1366×768, 1600×900 e 1920×1080 |
 | Arena | nenhuma entidade fora dos limites |
-| Console | sem erros nos 6 cenários do Edge |
+| Console | sem erros nos cenários do Edge |
+
+### Observações de validação técnica
+
+- **CurrencyService** (`src/app/CurrencyService.ts`) é a fonte persistente de `bossToken` e mantém a lista de `rewardKeys` para idempotência.
+- **Idempotência**: a chave usada é `sessionId + bossId + rewardType`, garantindo que a mesma recompensa não seja concedida duas vezes por ciclo/sessão.
+- **Recompensa configurável**: cada chefe pode definir `bossTokenReward` (valor mínimo padrão = 1) em `src/data/config.ts`.
+- **Persistência**: saldos sobrevivem a reloads e resets da UI; a UI consome `CurrencyService.getBossToken()` para exibir o saldo persistente.
+- **Integração**: o fluxo inclui emissão de `boss_reward`, processamento por `CurrencyService`, atualização da barra superior, feedback visual (`.boss-token-feedback`), relatório de resultado e Hunt Analyzer.
+- **Testes e build**: 37 testes unitários (Vitest), 12 testes E2E (Playwright), `pnpm run typecheck` e `pnpm run build` aprovados.
 
 ### Parcial ou demonstrativo
 
