@@ -22,8 +22,10 @@ describe('LiveHuntState', () => {
     const state = new LiveHuntState();
     state.setTime(1200);
     state.apply(event('damage', { amount:125 }, 'knight', 'lion-1'));
+    state.apply(event('damage', { amount:45 }, 'lion-1', 'knight'));
     state.apply(event('heal', { amount:80 }, 'druid', 'knight'));
     state.apply(event('death', {}, 'knight', 'lion-1'));
+    state.apply(event('death', {}, 'knight', 'lion-king'));
     state.apply(event('experience', { amount:160 }, undefined, 'lion-1'));
     state.apply(
       event('loot', { item:'Gold coin', quantity:55 }, 'lion-1'),
@@ -32,10 +34,13 @@ describe('LiveHuntState', () => {
     expect(state.time).toBe(1200);
     expect(state.damage.knight).toBe(125);
     expect(state.healing).toBe(80);
-    expect(state.kills).toBe(1);
+    expect(state.damageTaken).toBe(45);
+    expect(state.kills).toBe(2);
+    expect(state.bosses).toBe(1);
     expect(state.xp).toBe(160);
     expect(state.gold).toBe(55);
     expect(state.loot['Gold coin']).toBe(55);
+    expect(state.occupiedLootSlots).toBe(1);
 
     state.reset();
     expect(state).toMatchObject({
@@ -43,7 +48,9 @@ describe('LiveHuntState', () => {
       xp:0,
       gold:0,
       kills:0,
+      bosses:0,
       healing:0,
+      damageTaken:0,
       damage:{ knight:0, druid:0, sorcerer:0 },
       loot:{},
     });

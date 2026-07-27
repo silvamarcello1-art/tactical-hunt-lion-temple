@@ -50,6 +50,10 @@ export class EventPlayer {
     return !this.running;
   }
 
+  get isRunning() {
+    return this.running;
+  }
+
   get completed() {
     return this.index >= this.events.length;
   }

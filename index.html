@@ -13,9 +13,9 @@
           <span class="brand-mark">LT</span>
           <div><strong>TACTICAL HUNT</strong><small>vertical slice • PixiJS</small></div>
         </div>
-        <div class="account-resources">
-          <span>🪙 <b>78.531.309</b></span>
-          <span>◆ <b>28</b></span>
+        <div class="account-resources" aria-label="Saldos demonstrativos">
+          <span>🪙 <b>78.531.309</b> <small class="demo-tag">DEMO</small></span>
+          <span>◆ <b>28</b> <small class="demo-tag">DEMO</small></span>
         </div>
         <nav aria-label="Navegação principal">
           <button data-module="helper">Helper</button>
@@ -30,11 +30,11 @@
       <section class="game-layout">
         <aside class="left-sidebar">
           <section class="panel stamina-panel">
-            <header><h2>Stamina</h2><b>39:24</b></header>
+            <header><h2>Stamina</h2><b>39:24 <small class="demo-tag">DEMO</small></b></header>
             <div class="meter"><i style="width:94%"></i></div>
           </section>
           <section class="panel compact-panel">
-            <header><h2>Boosts</h2><button class="collapse" data-collapse aria-expanded="true">−</button></header>
+            <header><h2>Boosts <small class="demo-tag">DEMO</small></h2><button class="collapse" data-collapse aria-expanded="true">−</button></header>
             <dl class="collapsible-content"><dt>XP</dt><dd>+50%</dd><dt>Dano</dt><dd>Inativo</dd><dt>Loot</dt><dd>Inativo</dd></dl>
           </section>
           <section class="panel analyzer">
@@ -96,16 +96,17 @@
             <div id="party" class="party"></div>
           </section>
           <section class="panel inventory-panel">
-            <header><h2>Backpack</h2><b>18 / 20</b></header>
+            <header><h2>Backpack</h2><b id="backpack-capacity">0 / 20 slots</b></header>
             <div class="inventory-slots" id="backpack-slots"></div>
           </section>
           <section class="panel inventory-panel loot-panel">
-            <header><h2>Loot Pouch</h2><b>55 / 64</b></header>
+            <header><h2>Loot Pouch</h2><b id="loot-capacity">0 / 64 slots</b></header>
             <div id="loot" class="loot">Nenhum item ainda.</div>
           </section>
           <section class="panel compact-panel">
-            <header><h2>Supply Pouch</h2><button id="supply-config" class="collapse">Config</button></header>
+            <header><h2>Supply Pouch <small class="demo-tag">DEMO</small></h2><button id="supply-config" class="collapse">Config</button></header>
             <dl><dt>Mana Potion</dt><dd>420</dd><dt>Health Potion</dt><dd>180</dd></dl>
+            <p class="demo-note">Valores demonstrativos; consumo disponível em um próximo MVP.</p>
           </section>
         </aside>
       </section>

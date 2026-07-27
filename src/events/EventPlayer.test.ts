@@ -43,6 +43,25 @@ describe('EventPlayer', () => {
     expect(player.play()).toBe(false);
   });
 
+  it.each([1,2,4])(
+    'preserva a ordem da timeline na velocidade %sx',
+    (speed) => {
+      const onEvent = vi.fn();
+      const player = new EventPlayer(events, onEvent, vi.fn());
+      player.speed = speed;
+      player.play();
+      player.update(300 / speed);
+
+      expect(player.time).toBe(300);
+      expect(onEvent.mock.calls.map(([item]) => item.id)).toEqual([
+        'one',
+        'two',
+        'three',
+      ]);
+      expect(player.completed).toBe(true);
+    },
+  );
+
   it('reinicia timeline e ignora deltas inválidos', () => {
     const onEvent = vi.fn();
     const player = new EventPlayer(events, onEvent, vi.fn());
@@ -61,5 +80,18 @@ describe('EventPlayer', () => {
     player.play();
     player.update(150);
     expect(onEvent).toHaveBeenCalledTimes(2);
+  });
+
+  it('descarta eventos pendentes e não aceita retomada após dispose', () => {
+    const onEvent = vi.fn();
+    const player = new EventPlayer(events, onEvent, vi.fn());
+    player.play();
+    player.update(150);
+    player.dispose();
+    player.update(1000);
+
+    expect(onEvent.mock.calls.map(([item]) => item.id)).toEqual(['one']);
+    expect(player.play()).toBe(false);
+    expect(player.isRunning).toBe(false);
   });
 });

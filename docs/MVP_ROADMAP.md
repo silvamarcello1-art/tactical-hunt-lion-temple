@@ -10,6 +10,7 @@
 - Limpeza explícita entre ciclos.
 - Testes unitários e smoke tests em navegador.
 - Build e publicação repetíveis.
+- Mocks visíveis e contadores coerentes.
 
 ## MVP 1 — fidelidade visual e mecânica da hunt
 

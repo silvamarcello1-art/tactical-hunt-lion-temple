@@ -67,8 +67,11 @@ export class PixiRenderer {
   private destroyed = false;
   private readonly tickerHandler = (ticker: Ticker) => {
     if (this.destroyed) return;
+    const timelineWasRunning = this.player.isRunning;
     this.player.update(ticker.deltaMS);
-    this.updateTweens(ticker.deltaMS);
+    if (timelineWasRunning || this.player.completed) {
+      this.updateTweens(ticker.deltaMS);
+    }
   };
 
   constructor(preferences: AbilityPreferences) {
@@ -125,6 +128,7 @@ export class PixiRenderer {
     if (this.parent) {
       this.parent.dataset.unitCount = '0';
       this.parent.dataset.stageChildren = '0';
+      this.parent.dataset.tweenCount = '0';
     }
   }
 
@@ -803,6 +807,7 @@ export class PixiRenderer {
   ) {
     if (this.destroyed) return;
     this.tweens.push({ elapsed:-delay, duration, update, done });
+    this.syncDiagnostics();
   }
 
   private updateTweens(delta: number) {
@@ -820,6 +825,7 @@ export class PixiRenderer {
       else active.push(tween);
     }
     this.tweens = active;
+    this.syncDiagnostics();
   }
 
   private safeAmount(value: unknown) {
@@ -843,5 +849,6 @@ export class PixiRenderer {
     if (!this.parent || this.destroyed) return;
     this.parent.dataset.unitCount = String(this.units.size);
     this.parent.dataset.stageChildren = String(this.app.stage.children.length);
+    this.parent.dataset.tweenCount = String(this.tweens.length);
   }
 }

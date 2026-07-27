@@ -81,6 +81,18 @@ h2 {
   letter-spacing: .06em; text-transform: uppercase;
 }
 .panel header > b, .panel header > span { color: #aab2ad; font-size: 10px; }
+.demo-tag {
+  display: inline-block;
+  margin-left: 3px;
+  padding: 1px 3px;
+  border: 1px solid #5c625e;
+  border-radius: 2px;
+  color: #929b95;
+  font: 700 7px Inter, sans-serif;
+  letter-spacing: .08em;
+  vertical-align: middle;
+}
+.demo-note { margin: 8px 0 0; color: #7f8982; font-size: 8px; line-height: 1.4; }
 .collapse, .party-panel header button {
   border: 0; background: transparent; color: #aeb5b0; font-size: 10px;
 }

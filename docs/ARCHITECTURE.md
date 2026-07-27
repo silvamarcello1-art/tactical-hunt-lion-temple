@@ -52,6 +52,7 @@ ela agrega os eventos emitidos e apresenta o `HuntResult` no encerramento.
 | Contratos de eventos e snapshots | `src/events/types.ts` |
 | Relógio, pausa, velocidade e descarte | `src/events/EventPlayer.ts` |
 | Agregação segura da sessão | `src/app/LiveHuntState.ts` |
+| Velocidades e repetição | `src/app/sessionConfig.ts` |
 | Heróis, monstros, boss e posições | `src/data/config.ts` |
 | Habilidades e preferências | `src/data/abilities.ts` |
 | PixiJS, mapa, unidades, efeitos e limpeza | `src/game/PixiRenderer.ts` |
@@ -65,12 +66,17 @@ ela agrega os eventos emitidos e apresenta o `HuntResult` no encerramento.
 1. `main.ts` cria uma única instância de `PixiRenderer`.
 2. `mount()` carrega assets, monta o canvas e registra um ticker nomeado.
 3. `EventPlayer` reproduz cada evento uma única vez.
-4. Reinício e loop descartam player, tweens, unidades e canvas antigos.
-5. A velocidade selecionada é reaplicada à nova instância.
-6. Erro de inicialização gera fallback controlado e permite nova tentativa.
+4. A máquina de estados distingue preparação, idle, execução, pausa, transição,
+   boss, conclusão, derrota, reset e erro.
+5. Pausa interrompe timeline e tweens; conclusão permite somente a limpeza dos
+   efeitos restantes.
+6. Reinício e loop descartam player, tweens, unidades e canvas antigos.
+7. A velocidade selecionada é reaplicada à nova instância.
+8. Erro de inicialização gera fallback controlado e permite nova tentativa.
 
-`data-session-state`, `data-completed-cycles`, `data-playback-speed` e os
-diagnósticos do `#game` existem para testes e suporte; não são estado de jogo.
+`data-session-state`, `data-completed-cycles`, `data-playback-speed`,
+`data-processed-events`, `data-boss-spawns` e os diagnósticos do `#game`
+existem para testes e suporte; não são autoridade de jogo.
 
 ## Restrições permanentes
 

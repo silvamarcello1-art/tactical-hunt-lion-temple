@@ -40,6 +40,7 @@ Não existe lint configurado.
 
 Leia antes de planejar:
 
+- `docs/MVP0_BASELINE.md`
 - `docs/CURRENT_STATE.md`
 - `docs/ARCHITECTURE.md`
 - `docs/FEATURE_PARITY_MATRIX.md`

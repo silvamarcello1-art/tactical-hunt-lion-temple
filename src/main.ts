@@ -1,5 +1,6 @@
 import './style.css';
 import { LiveHuntState } from './app/LiveHuntState';
+import { SESSION_CONFIG } from './app/sessionConfig';
 import {
   abilities,
   abilitiesByVocation,
@@ -11,11 +12,15 @@ import type { CombatEvent, HuntResult } from './events/types';
 import { PixiRenderer } from './game/PixiRenderer';
 
 type SessionPhase =
-  | 'booting'
-  | 'ready'
+  | 'preparing'
+  | 'idle'
   | 'running'
   | 'paused'
+  | 'floor_transition'
+  | 'boss'
   | 'completed'
+  | 'defeated'
+  | 'resetting'
   | 'error';
 
 const $ = <T extends HTMLElement>(selector: string) =>
@@ -27,8 +32,12 @@ const liveState = new LiveHuntState();
 
 let preferences = loadPreferences();
 let renderer: PixiRenderer | undefined;
-let sessionPhase: SessionPhase = 'booting';
-let selectedSpeed = 1;
+let sessionPhase: SessionPhase = 'preparing';
+let resumePhase: Extract<
+  SessionPhase,
+  'running' | 'floor_transition' | 'boss'
+> = 'running';
+let selectedSpeed: number = SESSION_CONFIG.defaultSpeed;
 let loopEnabled = true;
 let loopTimer: number | undefined;
 let restartInProgress = false;
@@ -66,17 +75,26 @@ function setSessionPhase(phase: SessionPhase, message?: string) {
   const pauseButton = $('#pause') as HTMLButtonElement;
   const restartButton = $('#restart') as HTMLButtonElement;
 
-  startButton.disabled = phase !== 'ready';
-  pauseButton.disabled = phase !== 'running' && phase !== 'paused';
-  restartButton.disabled = phase === 'booting';
+  const pausable =
+    phase === 'running' ||
+    phase === 'paused' ||
+    phase === 'floor_transition' ||
+    phase === 'boss';
+  startButton.disabled = phase !== 'idle';
+  pauseButton.disabled = !pausable;
+  restartButton.disabled = phase === 'preparing' || phase === 'resetting';
   pauseButton.textContent = phase === 'paused' ? '▶ Continuar' : 'Ⅱ Pausar';
 
   const defaults: Record<SessionPhase, string> = {
-    booting:'Preparando arena',
-    ready:'Pronto para iniciar',
+    preparing:'Preparando arena',
+    idle:'Pronto para iniciar',
     running:'Combate em andamento',
     paused:'Sessão pausada',
+    floor_transition:'Transição para a próxima etapa',
+    boss:'Boss em combate',
     completed:loopEnabled ? 'Próximo ciclo em 2 segundos' : 'Sessão encerrada',
+    defeated:loopEnabled ? 'Nova tentativa em 2 segundos' : 'Equipe derrotada',
+    resetting:'Limpando sessão anterior',
     error:'Falha ao carregar a arena',
   };
   $('#session-state').textContent = message ?? defaults[phase];
@@ -127,6 +145,7 @@ function renderInventory() {
     (_, index) =>
       `<span class="slot" data-slot="${index + 1}" aria-label="Slot ${index + 1}"></span>`,
   ).join('');
+  $('#backpack-capacity').textContent = '0 / 20 slots';
 }
 
 function healthBarColor(ratio: number) {
@@ -140,7 +159,9 @@ function renderAnalyzer(hunt?: HuntResult) {
     ? hunt.victory
       ? 'Concluída'
       : 'Derrota'
-    : sessionPhase === 'running'
+    : sessionPhase === 'running' ||
+        sessionPhase === 'floor_transition' ||
+        sessionPhase === 'boss'
       ? 'Em hunt'
       : sessionPhase === 'paused'
         ? 'Pausada'
@@ -152,14 +173,18 @@ function renderAnalyzer(hunt?: HuntResult) {
   );
   const duration = Math.max(1, hunt?.duration ?? liveState.time);
   const xp = hunt?.xp ?? liveState.xp;
+  const damageTaken = hunt?.damageTaken ?? liveState.damageTaken;
+  const bosses = hunt ? (hunt.victory ? 1 : 0) : liveState.bosses;
   $('#analyzer').innerHTML = `<div class="stat-grid">
     <div class="stat"><span>Sessão</span><b id="time">${formatTime(liveState.time)}</b></div>
     <div class="stat"><span>Status</span><b>${status}</b></div>
     <div class="stat highlight"><span>XP/h</span><b>${formatNumber((xp * 3600000) / duration)}</b></div>
     <div class="stat"><span>XP ganho</span><b>${formatNumber(xp)}</b></div>
     <div class="stat"><span>Kills</span><b>${hunt?.kills ?? liveState.kills}</b></div>
+    <div class="stat"><span>Bosses</span><b>${bosses}</b></div>
     <div class="stat"><span>Loot</span><b>${formatNumber(hunt?.gold ?? liveState.gold)}</b></div>
     <div class="stat"><span>Cura</span><b>${formatNumber(hunt?.healing ?? liveState.healing)}</b></div>
+    <div class="stat"><span>Dano recebido</span><b>${formatNumber(damageTaken)}</b></div>
     <div class="stat highlight"><span>Dano</span><b>${formatNumber(totalDamage)}</b></div>
   </div>`;
   $('#damage-breakdown').innerHTML = Object.entries(damage)
@@ -170,10 +195,13 @@ function renderAnalyzer(hunt?: HuntResult) {
 function resetInterface() {
   liveState.reset();
   lastResult = undefined;
+  document.documentElement.dataset.processedEvents = '0';
+  document.documentElement.dataset.bossSpawns = '0';
   renderParty();
   renderActionBar();
   $('#log').replaceChildren();
   $('#loot').textContent = 'Nenhum item ainda.';
+  $('#loot-capacity').textContent = '0 / 64 slots';
   $('#stage-fill').style.width = '0';
   $('#stage-label').textContent = 'Preparação';
   document.querySelectorAll('.phase').forEach((phase, index) => {
@@ -218,7 +246,7 @@ function labelEvent(event: CombatEvent) {
 }
 
 function start() {
-  if (sessionPhase !== 'ready' || !renderer?.player.play()) return;
+  if (sessionPhase !== 'idle' || !renderer?.player.play()) return;
   setSessionPhase('running');
   renderAnalyzer();
 }
@@ -246,11 +274,12 @@ async function restart(autoStart = false) {
   clearLoopTimer();
   const resultDialog = $('#result') as HTMLDialogElement;
   if (resultDialog.open) resultDialog.close();
-  setSessionPhase('booting');
+  setSessionPhase('resetting');
   resetInterface();
+  setSessionPhase('preparing');
   try {
     await createRenderer();
-    setSessionPhase('ready');
+    setSessionPhase('idle');
     renderAnalyzer();
     restartInProgress = false;
     if (autoStart) start();
@@ -291,7 +320,8 @@ function showAbilityModal() {
 
 function showFutureModule(title: string, description: string) {
   $('#future-title').textContent = title;
-  $('#future-description').textContent = description;
+  $('#future-description').textContent =
+    `Disponível em um próximo MVP. ${description}`;
   const dialog = $('#future-modal') as HTMLDialogElement;
   if (!dialog.open) dialog.showModal();
 }
@@ -308,8 +338,16 @@ function showResult(hunt: HuntResult) {
 
 function scheduleLoop() {
   clearLoopTimer();
-  if (!loopEnabled || sessionPhase !== 'completed') return;
-  loopTimer = window.setTimeout(() => void restart(true), 2000);
+  if (
+    !loopEnabled ||
+    (sessionPhase !== 'completed' && sessionPhase !== 'defeated')
+  ) {
+    return;
+  }
+  loopTimer = window.setTimeout(
+    () => void restart(true),
+    SESSION_CONFIG.loopDelayMs,
+  );
 }
 
 window.addEventListener('hunt-time', (rawEvent) => {
@@ -327,11 +365,31 @@ window.addEventListener('hunt-floor', (rawEvent) => {
     phase.classList.toggle('active', index === Math.min(floor, 3));
     phase.classList.toggle('done', index < floor);
   });
+  if (floor < 4 && sessionPhase !== 'paused') {
+    setSessionPhase('floor_transition');
+  }
 });
 
 window.addEventListener('hunt-event', (rawEvent) => {
   const event = (rawEvent as CustomEvent<CombatEvent>).detail;
   liveState.apply(event);
+  const processedEvents =
+    Number(document.documentElement.dataset.processedEvents ?? 0) + 1;
+  document.documentElement.dataset.processedEvents = String(processedEvents);
+
+  if (
+    event.type === 'spawn' &&
+    sessionPhase === 'floor_transition' &&
+    event.floor < 4
+  ) {
+    setSessionPhase('running');
+  }
+  if (event.type === 'boss_spawn' && sessionPhase !== 'paused') {
+    const bossSpawns =
+      Number(document.documentElement.dataset.bossSpawns ?? 0) + 1;
+    document.documentElement.dataset.bossSpawns = String(bossSpawns);
+    setSessionPhase('boss');
+  }
 
   if (event.type === 'spawn' && heroIds.has(event.targetId ?? '')) {
     const hp = document.querySelector<HTMLElement>(
@@ -393,6 +451,8 @@ window.addEventListener('hunt-event', (rawEvent) => {
     $('#loot').innerHTML = Object.entries(liveState.loot)
       .map(([item, quantity]) => `${quantity}× ${item}`)
       .join('<br>');
+    $('#loot-capacity').textContent =
+      `${liveState.occupiedLootSlots} / 64 slots`;
   }
 
   if (['damage','heal','death','experience','loot'].includes(event.type)) {
@@ -410,7 +470,7 @@ window.addEventListener('hunt-complete', (rawEvent) => {
   $('#stage-label').textContent = hunt.victory
     ? 'Hunt concluída'
     : 'Equipe derrotada';
-  setSessionPhase('completed');
+  setSessionPhase(hunt.victory ? 'completed' : 'defeated');
   if (loopEnabled) scheduleLoop();
   else showResult(hunt);
 });
@@ -419,8 +479,14 @@ $('#start').onclick = start;
 $('#pause').onclick = () => {
   if (!renderer) return;
   if (sessionPhase === 'paused') {
-    if (renderer.player.play()) setSessionPhase('running');
-  } else if (sessionPhase === 'running' && renderer.player.pause()) {
+    if (renderer.player.play()) setSessionPhase(resumePhase);
+  } else if (
+    (sessionPhase === 'running' ||
+      sessionPhase === 'floor_transition' ||
+      sessionPhase === 'boss') &&
+    renderer.player.pause()
+  ) {
+    resumePhase = sessionPhase;
     setSessionPhase('paused');
   }
   renderAnalyzer();
@@ -438,12 +504,15 @@ $('#loop-toggle').onclick = () => {
   button.innerHTML = `↻ Loop <span>${loopEnabled ? 'ON' : 'OFF'}</span>`;
   if (!loopEnabled) {
     clearLoopTimer();
-    if (sessionPhase === 'completed' && lastResult) {
-      setSessionPhase('completed');
+    if (
+      (sessionPhase === 'completed' || sessionPhase === 'defeated') &&
+      lastResult
+    ) {
+      setSessionPhase(sessionPhase);
       showResult(lastResult);
     }
-  } else if (sessionPhase === 'completed') {
-    setSessionPhase('completed');
+  } else if (sessionPhase === 'completed' || sessionPhase === 'defeated') {
+    setSessionPhase(sessionPhase);
     const resultDialog = $('#result') as HTMLDialogElement;
     if (resultDialog.open) resultDialog.close();
     scheduleLoop();
@@ -555,7 +624,7 @@ $('#close-future').onclick = () => {
 document.querySelectorAll<HTMLButtonElement>('[data-speed]').forEach((button) => {
   button.onclick = () => {
     const value = Number(button.dataset.speed);
-    if (![1,2,4].includes(value)) return;
+    if (!SESSION_CONFIG.allowedSpeeds.includes(value as 1 | 2 | 4)) return;
     selectedSpeed = value;
     document.documentElement.dataset.playbackSpeed = String(value);
     document.querySelectorAll('[data-speed]').forEach((item) => {
@@ -573,13 +642,15 @@ window.addEventListener('beforeunload', () => {
 async function initialize() {
   document.documentElement.dataset.completedCycles = '0';
   document.documentElement.dataset.playbackSpeed = String(selectedSpeed);
+  document.documentElement.dataset.processedEvents = '0';
+  document.documentElement.dataset.bossSpawns = '0';
   renderInventory();
   resetInterface();
-  setSessionPhase('booting');
+  setSessionPhase('preparing');
   renderAnalyzer();
   try {
     await createRenderer();
-    setSessionPhase('ready');
+    setSessionPhase('idle');
     renderAnalyzer();
   } catch (error) {
     showFatalError(error);

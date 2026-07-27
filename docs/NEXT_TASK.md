@@ -1,27 +1,25 @@
 # Próxima tarefa
 
-## MVP 1.1 — mapa data-driven e colisão mínima
+## MVP 1 — Fidelidade visual e mecânica da hunt
 
-Objetivo: iniciar a fidelidade mecânica sem ampliar o produto para inventário,
-progressões ou backend.
+O MVP 0 está encerrado. Não iniciar inventário, progressões ou backend.
 
-### Escopo
+Primeira entrega recomendada:
 
-1. Criar contrato de dados para mapa, tiles bloqueados, spawns, posições seguras
-   e saída.
-2. Migrar Lion Temple para esse contrato sem alterar o resultado de combate.
-3. Impedir que personagens e monstros terminem movimento em tile bloqueado.
-4. Implementar pathfinding simples para rotas curtas, com fallback explícito.
-5. Testar colisão, caminho possível, caminho impossível e preservação do aggro.
-6. Manter os 16 testes unitários e os 4 smoke tests verdes.
+1. contrato data-driven de mapa, tiles bloqueados, spawns e posições seguras;
+2. migração da Lion Temple sem mudar o balanceamento;
+3. colisão mínima e pathfinding curto com fallback explícito;
+4. threat/aggro configurável;
+5. formação, distância segura e reação a AOE;
+6. dez ciclos sem travar, atravessar obstáculos ou duplicar eventos.
 
 ### Fora do escopo
 
-Novos módulos do shell, inventário, itens, equipamentos, progressões, backend,
-multiplayer, market e mudança de renderer.
+Inventário, equipamentos, progressões, backend, multiplayer, market e mudança
+de renderer.
 
 ### Prompt curto
 
-> Leia `AGENTS.md` e `docs/NEXT_TASK.md`. Execute somente o MVP 1.1, preserve
-> PixiJS e as fronteiras arquiteturais, rode todas as validações e atualize os
-> documentos afetados.
+> Leia `AGENTS.md` e `docs/NEXT_TASK.md`. Execute somente a primeira entrega do
+> MVP 1, preserve PixiJS e as fronteiras arquiteturais, rode todas as validações
+> e atualize os documentos afetados.

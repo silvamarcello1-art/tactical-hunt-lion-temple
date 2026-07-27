@@ -3,3 +3,5 @@ dist/
 *.tgz
 .wrangler/
 .tibia-preview/
+test-results/
+.vite-*.log

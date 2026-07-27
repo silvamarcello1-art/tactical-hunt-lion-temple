@@ -1,51 +1,52 @@
 # Estado atual
 
-## Baseline fechado — MVP 0
+## MVP 0 — vertical slice estabilizada
 
 O protótipo entrega uma hunt automática completa em PixiJS com três personagens,
 três ondas, boss, timeline determinística, Analyzer e loop.
 
 ### Funcional
 
-- Iniciar, pausar, continuar, reiniciar e repetir.
-- Velocidades 1×, 2× e 4× preservadas entre reinícios e loops.
-- Loop opcional, cancelável inclusive durante a espera entre ciclos.
+- Estados explícitos: preparação, idle, execução, pausa, transição, boss,
+  conclusão, derrota, reset e erro.
+- Iniciar, pausar, continuar, reiniciar e repetir sem sessões paralelas.
+- Pausa congela timeline, relógio e tweens.
+- Velocidades 1×, 2× e 4× preservam a ordem dos eventos.
+- Loop opcional, cancelável entre ciclos.
 - Knight, Druid e Sorcerer com nove habilidades configuráveis.
 - Aggro, AOE, reposicionamento, dano, cura, mana, crítico e dodge.
-- HP em verde/amarelo/vermelho e mana azul.
-- XP, gold, loot, kills, cura e dano no Analyzer.
-- Modais do Helper e avisos explícitos para módulos de MVPs futuros.
-- Abas centrais e painéis recolhíveis com resposta visível.
-- Fallback controlado se o canvas ou os assets não carregarem.
+- Analyzer com XP, gold, loot, kills, bosses, dano por herói, dano recebido,
+  cura e duração.
+- Módulos futuros abrem aviso explícito e não alteram a sessão.
+- Fallback controlado se canvas ou assets falharem.
 
-### Validação em 27/07/2026
+### Validado em 27/07/2026
 
 | Validação | Resultado |
 |---|---|
+| Instalação pelo lockfile | aprovada |
 | TypeScript | aprovado |
-| Vitest | 16 testes aprovados |
+| Vitest | 20 testes aprovados |
 | Playwright/Edge | 4 cenários aprovados |
-| Loop | 3 ciclos consecutivos aprovados |
-| Resoluções | 1366×768, 1600×900 e 1920×1080 aprovadas |
-| Console | sem erros nos cenários automatizados |
-| Canvas | uma instância após reinício e loops |
-| Build de produção | aprovado |
+| Loop | 3 ciclos consecutivos |
+| Resoluções | 1366×768, 1600×900 e 1920×1080 |
+| Console | sem erros nos cenários |
+| Recursos finais | 1 canvas, 3 heróis, boss único e 0 tweens pendentes |
 
 ### Parcial ou demonstrativo
 
-- Backpack possui slots, mas não possui itens reais.
-- Loot Pouch apenas apresenta a recompensa.
-- Supply Pouch e dados de conta são estáticos.
-- Helper permite ativação e prioridade, mas ainda não possui regras completas.
-- Mapa é visualmente funcional, sem obstáculos sólidos.
+- Backpack: 20 slots vazios, contador coerente, sem itens reais.
+- Loot Pouch: lista e ocupação por tipos de item; sem filtros/capacidade real.
+- Supply Pouch, moedas, stamina e boosts: marcados como `DEMO`.
+- Helper: ativação e prioridade; regras condicionais ficam no MVP 1.
+- Mapa: funcional, sem obstáculos sólidos/pathfinding.
 
 ### Fora do MVP 0
 
-Inventário, equipamentos, drag-and-drop, progressões, Bestiário, Daily,
-Armazém, Arena, Social, Guild, market, pagamentos, login, backend e multiplayer.
+Equipamentos, drag-and-drop, progressões, Bestiário definitivo, Daily, Arena,
+Social, Guild, market, pagamentos, login, backend e multiplayer.
 
-## Referência pública
+## Publicação
 
-O projeto utiliza `.openai/hosting.json` e deve continuar sendo publicado no
-mesmo projeto Sites. O estado publicado só é considerado atualizado após o
-commit exato ser enviado, salvo como versão e implantado.
+O mesmo projeto Sites deve ser preservado. Uma publicação só é considerada
+válida após build, commit, versão implantada e smoke test público.

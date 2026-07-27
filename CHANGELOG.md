@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.1.1 — 2026-07-27
+
+### Encerramento do MVP 0
+
+- Máquina de estados ampliada com transição, boss, derrota e reset.
+- Pausa passa a congelar também os tweens do PixiJS.
+- Analyzer inclui boss e dano recebido.
+- Contadores de Backpack/Loot Pouch tornados coerentes.
+- Valores fixos do shell marcados como demonstração.
+- Módulos futuros usam mensagem explícita de próximo MVP.
+- Testes unitários ampliados de 16 para 20.
+- Smoke test ampliado para pausa visual, boss único, métricas e mocks.
+- Linha de base verificável criada em `docs/MVP0_BASELINE.md`.
+
 ## 0.1.0 — 2026-07-27
 
 ### Estabilizado

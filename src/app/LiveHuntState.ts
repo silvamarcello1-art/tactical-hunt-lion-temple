@@ -10,7 +10,9 @@ export class LiveHuntState {
   xp = 0;
   gold = 0;
   kills = 0;
+  bosses = 0;
   healing = 0;
+  damageTaken = 0;
   damage: Record<string, number> = {
     knight:0,
     druid:0,
@@ -23,7 +25,9 @@ export class LiveHuntState {
     this.xp = 0;
     this.gold = 0;
     this.kills = 0;
+    this.bosses = 0;
     this.healing = 0;
+    this.damageTaken = 0;
     this.damage = { knight:0, druid:0, sorcerer:0 };
     this.loot = {};
   }
@@ -42,6 +46,13 @@ export class LiveHuntState {
       this.damage[event.sourceId] =
         safeAmount(this.damage[event.sourceId]) + amount;
     }
+    if (
+      event.type === 'damage' &&
+      event.targetId &&
+      heroIds.has(event.targetId)
+    ) {
+      this.damageTaken += amount;
+    }
     if (event.type === 'heal') this.healing += amount;
     if (
       event.type === 'death' &&
@@ -49,6 +60,7 @@ export class LiveHuntState {
       !heroIds.has(event.targetId)
     ) {
       this.kills++;
+      if (event.targetId === 'lion-king') this.bosses++;
     }
     if (event.type === 'experience') this.xp += amount;
     if (event.type === 'loot' && event.data?.item) {
@@ -57,5 +69,9 @@ export class LiveHuntState {
         safeAmount(this.loot[event.data.item]) + quantity;
       if (event.data.item === 'Gold coin') this.gold += quantity;
     }
+  }
+
+  get occupiedLootSlots() {
+    return Object.values(this.loot).filter((quantity) => quantity > 0).length;
   }
 }
