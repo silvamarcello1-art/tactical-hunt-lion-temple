@@ -444,6 +444,7 @@ export class CombatEngine {
     floor: number,
     reposition = false,
     goalRange = 0,
+    allowBacktrack = true,
   ) {
     const from = this.tileOf(entity);
     const result = this.movement.step({
@@ -463,7 +464,7 @@ export class CombatEngine {
               ? 15
               : 10,
       tickOrder:this.movementOrder++,
-      allowBacktrack:true,
+      allowBacktrack,
     });
     if (result.recalculated) {
       this.emit('path_recalculated', floor, entity.id, undefined, {
@@ -492,6 +493,7 @@ export class CombatEngine {
       pathRevision:result.pending?.pathRevision,
       sessionId:this.sessionId,
       duration:220,
+      allowBacktrack,
     });
     this.emit('movement_started', floor, entity.id, undefined, {
       fromTile:from,
@@ -503,6 +505,7 @@ export class CombatEngine {
       completesAt:result.pending?.completesAt,
       pathRevision:result.pending?.pathRevision,
       sessionId:this.sessionId,
+      allowBacktrack,
     });
     this.emit(reposition ? 'reposition' : 'move', floor, entity.id, undefined, {
       position:gridToWorld(result.to),
@@ -540,6 +543,7 @@ export class CombatEngine {
           completesAt:movement.completesAt,
           pathRevision:movement.pathRevision,
           sessionId:movement.sessionId,
+          allowBacktrack:movement.allowBacktrack,
         }, movement.completesAt);
       } else {
         this.emit('movement_cancelled', floor, movement.entityId, undefined, {
@@ -1048,7 +1052,7 @@ export class CombatEngine {
       return false;
     }
     caster.safeTilePosition = cloneGridPosition(destination);
-    return this.move(caster, destination, floor, true);
+    return this.move(caster, destination, floor, true, 0, false);
   }
 
   private bestChallengePosition(
@@ -1060,9 +1064,18 @@ export class CombatEngine {
   ) {
     const bounds = HUNT_LAYOUT_CONFIG.walkableBounds;
     const candidates: Array<{ point: GridPosition; score: number }> = [];
+    const reachable = this.movement.reachableTiles(
+      knight.id,
+      this.tileOf(knight),
+      this.now,
+    );
     for (let column = bounds.minColumn; column <= bounds.maxColumn; column++) {
       for (let row = bounds.minRow; row <= bounds.maxRow; row++) {
         const point = { x:column,y:row };
+        if (!reachable.has(gridKey(point))) continue;
+        if (this.movement.isDestinationCoolingDown(knight.id, point, this.now)) {
+          continue;
+        }
         if (this.isOccupied(point, party, enemies, knight.id)) continue;
         const captured = backlineTargets.filter(
           (enemy) => gridDistance(point, this.tileOf(enemy)) <= range,
@@ -1172,7 +1185,9 @@ export class CombatEngine {
     if (knight.alive && !challenged) {
       const target = this.nearest(knight, aliveEnemies);
       if (target && this.distance(knight, target) > 1) {
-        this.move(knight, this.tileOf(target), floor, false, 1);
+        if (!this.move(knight, this.tileOf(target), floor, false, 1, true)) {
+          this.tryBestOffensiveAction(knight, aliveEnemies, floor);
+        }
       } else {
         const acted = this.tryBestOffensiveAction(
           knight,

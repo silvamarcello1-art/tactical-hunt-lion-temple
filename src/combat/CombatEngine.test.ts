@@ -389,4 +389,54 @@ describe('CombatEngine', () => {
       expect(related.some((event) => event.time === terminal.time)).toBe(true);
     }
   });
+
+  it('prevents unjustified mage A-B-A movement loops', () => {
+    const events = new CombatEngine(803).run().events;
+    for (const entityId of ['druid', 'sorcerer']) {
+      for (const floor of [1, 2, 3, 4]) {
+        const movements = events
+          .filter(
+            (event) =>
+              event.floor === floor &&
+              event.type === 'movement_completed' &&
+              event.sourceId === entityId &&
+              event.data?.toTile,
+          )
+          .map((event) => ({
+            tile:event.data!.toTile!,
+            allowBacktrack:event.data?.allowBacktrack ?? false,
+          }));
+        for (let index = 2; index < movements.length; index++) {
+          const returned = movements[index].tile;
+          const previous = movements[index - 2].tile;
+          if (returned.x === previous.x && returned.y === previous.y) {
+            expect(
+              movements[index].allowBacktrack || movements[index - 1].allowBacktrack,
+              `${entityId} unjustifiably oscillated on floor ${floor} at ${index}`,
+            ).toBe(true);
+          }
+        }
+      }
+    }
+  });
+
+  it('does not repeat the same no-route destination more than three times', () => {
+    const blocked = new CombatEngine(803)
+      .run()
+      .events.filter(
+        (event) =>
+          event.type === 'movement_blocked' &&
+          event.data?.blockedReason === 'no-route',
+      );
+    const streaks = new Map<string, number>();
+    let maximum = 0;
+    for (const event of blocked) {
+      const tile = event.data?.destinationTile;
+      const key = `${event.sourceId}:${tile?.x}:${tile?.y}`;
+      const streak = (streaks.get(key) ?? 0) + 1;
+      streaks.set(key, streak);
+      maximum = Math.max(maximum, streak);
+    }
+    expect(maximum).toBeLessThanOrEqual(3);
+  });
 });

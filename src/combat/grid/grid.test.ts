@@ -211,6 +211,68 @@ describe('authoritative grid systems', () => {
     expect(occupancy.reservedEntries()).toEqual([]);
   });
 
+  it('filters unreachable destinations and cools down repeated no-route attempts', () => {
+    const { map, occupancy } = setup([
+      { x:2,y:1 },{ x:1,y:2 },{ x:3,y:2 },{ x:2,y:3 },
+    ]);
+    const metrics = createGridMetrics();
+    occupancy.occupy('hero', { x:2,y:2 });
+    const movement = new MovementSystem(map, occupancy, metrics);
+    const reachable = movement.reachableTiles('hero', { x:2,y:2 }, 0);
+    expect(reachable.has('8:8')).toBe(false);
+    expect(movement.step({
+      entityId:'hero',from:{ x:2,y:2 },destination:{ x:8,y:8 },now:0,
+    })).toMatchObject({ moved:false,reason:'no-route',recalculated:true });
+    expect(movement.step({
+      entityId:'hero',from:{ x:2,y:2 },destination:{ x:8,y:8 },now:250,
+    })).toMatchObject({
+      moved:false,reason:'destination-cooldown',recalculated:false,
+    });
+    expect(metrics.pathRecalculations).toBe(1);
+    expect(metrics.destinationCooldowns).toBe(1);
+  });
+
+  it('prevents unjustified A-B-A while allowing an explicit legitimate return', () => {
+    const { map, occupancy } = setup();
+    const metrics = createGridMetrics();
+    occupancy.occupy('mage', { x:2,y:2 });
+    const movement = new MovementSystem(map, occupancy, metrics);
+    movement.step({
+      entityId:'mage',from:{ x:2,y:2 },destination:{ x:3,y:2 },now:0,
+      duration:100,sessionId:'s',allowBacktrack:false,
+    });
+    movement.completeDue(100, 's');
+    expect(movement.step({
+      entityId:'mage',from:{ x:3,y:2 },destination:{ x:2,y:2 },now:100,
+      duration:100,sessionId:'s',allowBacktrack:false,
+    })).toMatchObject({ moved:false,reason:'oscillation' });
+    expect(metrics.oscillationPrevented).toBe(1);
+    expect(movement.step({
+      entityId:'mage',from:{ x:3,y:2 },destination:{ x:2,y:2 },now:600,
+      duration:100,sessionId:'s',allowBacktrack:true,
+    })).toMatchObject({ moved:true });
+  });
+
+  it('caps repeated failures and recovers through a reachable fallback', () => {
+    const { map, occupancy } = setup(
+      Array.from({ length:8 }, (_, index) => ({ x:5,y:index + 1 })),
+    );
+    const metrics = createGridMetrics();
+    occupancy.occupy('hero', { x:2,y:2 });
+    const movement = new MovementSystem(map, occupancy, metrics);
+    for (const now of [0, 500, 1000]) {
+      expect(movement.step({
+        entityId:'hero',from:{ x:2,y:2 },destination:{ x:8,y:8 },now,
+      }).reason).toBe('no-route');
+    }
+    expect(metrics.consecutiveNoRoute).toBe(3);
+    expect(metrics.stuckRecoveries).toBe(1);
+    expect(movement.step({
+      entityId:'hero',from:{ x:2,y:2 },destination:{ x:2,y:4 },now:1000,
+      duration:100,sessionId:'s',
+    })).toMatchObject({ moved:true,to:{ x:2,y:3 } });
+  });
+
   it('recovers a colliding spawn on the nearest free tile', () => {
     const { occupancy } = setup();
     occupancy.occupy('first', { x: 5, y: 5 });

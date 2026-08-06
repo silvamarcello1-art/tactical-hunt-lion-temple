@@ -99,6 +99,7 @@ export interface CombatEvent {
     lineOfSightPolicy?: 'required' | 'ignored';
     blockedReason?: string;
     blockingEntityId?: string;
+    allowBacktrack?: boolean;
   };
 }
 

@@ -50,6 +50,7 @@ export interface PendingMovement {
   sessionId: string;
   tacticalPriority: number;
   tickOrder: number;
+  allowBacktrack: boolean;
 }
 
 export interface MovementResult {
@@ -213,6 +214,7 @@ export class MovementSystem {
       sessionId,
       tacticalPriority:request.tacticalPriority ?? 0,
       tickOrder:request.tickOrder ?? 0,
+      allowBacktrack:request.allowBacktrack ?? false,
     };
     this.pending.set(request.entityId, movement);
     this.metrics.maxPendingMovements = Math.max(
