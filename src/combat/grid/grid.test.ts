@@ -86,6 +86,40 @@ describe('authoritative grid systems', () => {
     ).toBe(false);
   });
 
+  it('uses supercover LoS for horizontal, vertical, diagonal, corners and endpoints', () => {
+    const open = setup();
+    const resolver = new LineOfSightResolver(open.map, open.occupancy);
+    expect(resolver.hasLineOfSight({ x:2,y:2 }, { x:8,y:2 })).toBe(true);
+    expect(resolver.hasLineOfSight({ x:2,y:2 }, { x:2,y:8 })).toBe(true);
+    expect(resolver.hasLineOfSight({ x:2,y:2 }, { x:6,y:6 })).toBe(true);
+    expect(resolver.trace({ x:2,y:2 }, { x:4,y:4 })).toEqual([
+      { x:2,y:2 },{ x:3,y:2 },{ x:2,y:3 },{ x:3,y:3 },
+      { x:4,y:3 },{ x:3,y:4 },{ x:4,y:4 },
+    ]);
+
+    const pinched = setup([{ x:3,y:2 },{ x:2,y:3 }]);
+    expect(
+      new LineOfSightResolver(pinched.map, pinched.occupancy)
+        .hasLineOfSight({ x:2,y:2 }, { x:4,y:4 }),
+    ).toBe(false);
+    const oneCorner = setup([{ x:3,y:2 }]);
+    expect(
+      new LineOfSightResolver(oneCorner.map, oneCorner.occupancy)
+        .hasLineOfSight({ x:2,y:2 }, { x:4,y:4 }),
+    ).toBe(false);
+    const blockedEndpoint = setup([{ x:4,y:4 }]);
+    const endpointResolver = new LineOfSightResolver(
+      blockedEndpoint.map,
+      blockedEndpoint.occupancy,
+    );
+    expect(endpointResolver.hasLineOfSight({ x:2,y:2 }, { x:4,y:4 })).toBe(false);
+    expect(endpointResolver.hasLineOfSight(
+      { x:2,y:2 },
+      { x:4,y:4 },
+      { allowBlockedEndpoint:true },
+    )).toBe(true);
+  });
+
   it('rotates, clips and deduplicates spell masks on logical tiles', () => {
     const { map, occupancy } = setup();
     const area = new SpellAreaResolver(

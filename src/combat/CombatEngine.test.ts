@@ -253,6 +253,22 @@ describe('CombatEngine', () => {
     ).toBe(false);
   });
 
+  it('never assigns more than two initial attackers to the backline', () => {
+    const initial = new CombatEngine(803)
+      .run()
+      .events.filter(
+        (event) =>
+          event.type === 'target_change' && event.data?.reason === 'spatial',
+      );
+    for (const floor of [1, 2, 3, 4]) {
+      expect(
+        initial.filter(
+          (event) => event.floor === floor && event.targetId !== 'knight',
+        ).length,
+      ).toBeLessThanOrEqual(2);
+    }
+  });
+
   it('mantém todas as entidades em tiles inteiros e sem sobreposição', () => {
     const events = new CombatEngine().run().events;
     const positions = new Map<string, { x: number; y: number }>();
@@ -378,12 +394,11 @@ describe('CombatEngine', () => {
       const projectileIndex = events.indexOf(projectile);
       const terminalIndex = events.indexOf(terminal);
       const related = events
-        .slice(projectileIndex + 1, terminalIndex)
+        .slice(projectileIndex + 1, terminalIndex + 1)
         .filter(
           (event) =>
             (event.type === 'damage' || event.type === 'dodge') &&
-            event.sourceId === projectile.sourceId &&
-            event.targetId === projectile.targetId,
+            event.data?.castId === projectile.data?.castId,
         );
       expect(related.every((event) => event.time >= terminal.time)).toBe(true);
       expect(related.some((event) => event.time === terminal.time)).toBe(true);

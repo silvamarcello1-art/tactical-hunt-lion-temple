@@ -2,6 +2,7 @@ import { tile } from '../combat/tiles';
 import type { EntitySnapshot } from '../events/types';
 
 export const HUNT_LAYOUT_CONFIG = {
+  maxInitialBacklineAttackers:2,
   arenaColumns:30,
   arenaRows:18,
   walkableBounds:{
