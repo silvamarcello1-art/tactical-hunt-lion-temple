@@ -24,8 +24,13 @@ export class OccupancyGrid {
   private readonly entityPositions = new Map<string, GridPosition>();
   private readonly entityReservations = new Map<string, GridPosition>();
   private readonly footprints = new Map<string, EntityFootprint>();
+  private revisionValue = 0;
 
   constructor(private readonly map: GridMap) {}
+
+  get revision() {
+    return this.revisionValue;
+  }
 
   occupy(
     entityId: string,
@@ -40,15 +45,18 @@ export class OccupancyGrid {
     for (const tile of this.map.footprintTiles(position, footprint)) {
       this.occupiedTiles.set(gridKey(tile), entityId);
     }
+    this.revisionValue++;
     return result;
   }
 
   release(entityId: string) {
+    const hadPosition = this.entityPositions.has(entityId);
     for (const [key, occupantId] of this.occupiedTiles) {
       if (occupantId === entityId) this.occupiedTiles.delete(key);
     }
     this.entityPositions.delete(entityId);
     this.cancelReservation(entityId);
+    if (hadPosition) this.revisionValue++;
   }
 
   reserve(
@@ -63,14 +71,17 @@ export class OccupancyGrid {
     for (const tile of this.map.footprintTiles(position, footprint)) {
       this.reservedTiles.set(gridKey(tile), entityId);
     }
+    this.revisionValue++;
     return result;
   }
 
   cancelReservation(entityId: string) {
+    const hadReservation = this.entityReservations.has(entityId);
     for (const [key, reservationId] of this.reservedTiles) {
       if (reservationId === entityId) this.reservedTiles.delete(key);
     }
     this.entityReservations.delete(entityId);
+    if (hadReservation) this.revisionValue++;
   }
 
   commitReservation(entityId: string) {
@@ -83,6 +94,7 @@ export class OccupancyGrid {
     for (const tile of this.map.footprintTiles(destination, footprint)) {
       this.occupiedTiles.set(gridKey(tile), entityId);
     }
+    this.revisionValue++;
     return true;
   }
 
@@ -172,9 +184,11 @@ export class OccupancyGrid {
   }
 
   private releaseOccupiedOnly(entityId: string) {
+    const hadPosition = this.entityPositions.has(entityId);
     for (const [key, occupantId] of this.occupiedTiles) {
       if (occupantId === entityId) this.occupiedTiles.delete(key);
     }
     this.entityPositions.delete(entityId);
+    if (hadPosition) this.revisionValue++;
   }
 }

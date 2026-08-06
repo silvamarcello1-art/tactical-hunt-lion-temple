@@ -99,6 +99,31 @@ export class Pathfinder {
     return [];
   }
 
+  reachableTiles(
+    start: GridPosition,
+    options: Pick<PathfindingOptions, 'entityId' | 'footprint'>,
+  ) {
+    const footprint = options.footprint ?? { width: 1, height: 1 };
+    const queue = [cloneGridPosition(start)];
+    const reachable = new Set([gridKey(start)]);
+    while (queue.length) {
+      const current = queue.shift()!;
+      for (const neighbor of this.map.neighbors(current, footprint)) {
+        const key = gridKey(neighbor);
+        if (reachable.has(key)) continue;
+        if (!this.canTraverseDiagonal(current, neighbor, options.entityId, footprint)) {
+          continue;
+        }
+        if (!this.occupancy.canEnter(options.entityId, neighbor, footprint).allowed) {
+          continue;
+        }
+        reachable.add(key);
+        queue.push(neighbor);
+      }
+    }
+    return reachable;
+  }
+
   private canTraverseDiagonal(
     from: GridPosition,
     to: GridPosition,

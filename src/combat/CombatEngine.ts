@@ -14,6 +14,7 @@ import type {
 } from '../events/types';
 import {
   TILE_SIZE,
+  abilityOffsets,
   gridDirectionTo,
   gridToWorld,
 } from './tiles';
@@ -89,6 +90,8 @@ export class CombatEngine {
   private floorTimes: number[] = [];
   private floorStartedAt = 0;
   private castSequence = 0;
+  private movementOrder = 0;
+  private readonly sessionId: string;
   private readonly gridMap = new GridMap(
     HUNT_LAYOUT_CONFIG.arenaColumns,
     HUNT_LAYOUT_CONFIG.arenaRows,
@@ -113,7 +116,9 @@ export class CombatEngine {
   constructor(
     private seed = 803,
     private preferences: AbilityPreferences = defaultAbilityPreferences(),
-  ) {}
+  ) {
+    this.sessionId = `hunt-${seed}`;
+  }
 
   private random() {
     this.seed = (this.seed * 1664525 + 1013904223) >>> 0;
@@ -126,10 +131,11 @@ export class CombatEngine {
     sourceId?: string,
     targetId?: string,
     data?: CombatEvent['data'],
+    at = this.now,
   ) {
     this.events.push({
       id: `e${++this.sequence}`,
-      time: this.now,
+      time:at,
       type,
       floor,
       sourceId,
@@ -247,25 +253,47 @@ export class CombatEngine {
       from,
       destination,
       goalRange,
+      now:this.now,
+      duration:220,
+      sessionId:this.sessionId,
+      tacticalPriority:
+        entity.role === 'knight'
+          ? 30
+          : isHero(entity)
+            ? 20
+            : entity.role === 'boss'
+              ? 15
+              : 10,
+      tickOrder:this.movementOrder++,
+      allowBacktrack:true,
     });
-    this.emit('path_recalculated', floor, entity.id, undefined, {
-      fromTile:from,
-      destinationTile:cloneGridPosition(destination),
-      path:clone(result.path),
-      blockedReason:result.reason,
-    });
+    if (result.recalculated) {
+      this.emit('path_recalculated', floor, entity.id, undefined, {
+        fromTile:from,
+        destinationTile:cloneGridPosition(destination),
+        path:clone(result.path),
+        blockedReason:result.reason,
+        sessionId:this.sessionId,
+      });
+    }
     if (!result.moved) {
       this.emit('movement_blocked', floor, entity.id, undefined, {
         fromTile:from,
         destinationTile:cloneGridPosition(destination),
         blockedReason:result.reason,
         blockingEntityId:result.blockingEntityId,
+        sessionId:this.sessionId,
       });
       return false;
     }
     this.emit('tile_reserved', floor, entity.id, undefined, {
       fromTile:from,
       toTile:result.to,
+      startedAt:result.pending?.startedAt,
+      completesAt:result.pending?.completesAt,
+      pathRevision:result.pending?.pathRevision,
+      sessionId:this.sessionId,
+      duration:220,
     });
     this.emit('movement_started', floor, entity.id, undefined, {
       fromTile:from,
@@ -273,22 +301,73 @@ export class CombatEngine {
       destinationTile:cloneGridPosition(destination),
       path:clone(result.path),
       duration:220,
+      startedAt:result.pending?.startedAt,
+      completesAt:result.pending?.completesAt,
+      pathRevision:result.pending?.pathRevision,
+      sessionId:this.sessionId,
     });
-    this.setTile(entity, result.to);
     this.emit(reposition ? 'reposition' : 'move', floor, entity.id, undefined, {
-      position: clone(entity.position),
+      position:gridToWorld(result.to),
       tile:cloneGridPosition(result.to),
       fromTile:from,
       toTile:cloneGridPosition(result.to),
       destinationTile:cloneGridPosition(destination),
       path:clone(result.path),
       duration: 220,
-    });
-    this.emit('movement_completed', floor, entity.id, undefined, {
-      fromTile:from,
-      toTile:cloneGridPosition(result.to),
+      startedAt:result.pending?.startedAt,
+      completesAt:result.pending?.completesAt,
+      sessionId:this.sessionId,
     });
     return true;
+  }
+
+  private resolvePendingMovements(
+    party: SimEntity[],
+    enemies: SimEntity[],
+    floor: number,
+  ) {
+    const entities = new Map(
+      [...party, ...enemies].map((entity) => [entity.id, entity]),
+    );
+    for (const resolution of this.movement.completeDue(this.now, this.sessionId)) {
+      const { movement } = resolution;
+      const entity = entities.get(movement.entityId);
+      if (resolution.status === 'completed' && entity?.alive) {
+        this.setTile(entity, movement.to);
+        this.emit('movement_completed', floor, entity.id, undefined, {
+          fromTile:movement.from,
+          toTile:movement.to,
+          destinationTile:movement.destination,
+          startedAt:movement.startedAt,
+          completesAt:movement.completesAt,
+          pathRevision:movement.pathRevision,
+          sessionId:movement.sessionId,
+        }, movement.completesAt);
+      } else {
+        this.emit('movement_cancelled', floor, movement.entityId, undefined, {
+          fromTile:movement.from,
+          toTile:movement.to,
+          startedAt:movement.startedAt,
+          completesAt:movement.completesAt,
+          reason:resolution.reason ?? 'entity-dead',
+          sessionId:movement.sessionId,
+        });
+      }
+    }
+  }
+
+  private cancelPendingMovements(floor: number, reason: 'floor-complete' | 'reset') {
+    for (const resolution of this.movement.cancelAll(reason, this.sessionId)) {
+      const movement = resolution.movement;
+      this.emit('movement_cancelled', floor, movement.entityId, undefined, {
+        fromTile:movement.from,
+        toTile:movement.to,
+        startedAt:movement.startedAt,
+        completesAt:movement.completesAt,
+        reason,
+        sessionId:movement.sessionId,
+      });
+    }
   }
 
   private applyDamage(
@@ -321,6 +400,18 @@ export class CombatEngine {
     }
     if (target.hp === 0) {
       target.alive = false;
+      const cancelledMovement = this.movement.cancel(target.id, 'entity-dead');
+      if (cancelledMovement) {
+        const movement = cancelledMovement.movement;
+        this.emit('movement_cancelled', floor, target.id, undefined, {
+          fromTile:movement.from,
+          toTile:movement.to,
+          startedAt:movement.startedAt,
+          completesAt:movement.completesAt,
+          reason:'entity-dead',
+          sessionId:movement.sessionId,
+        });
+      }
       this.occupancy.release(target.id);
       this.emit('death', floor, source.id, target.id);
     }
@@ -484,6 +575,7 @@ export class CombatEngine {
     return options.sort(
       (left, right) =>
         right.targets.length - left.targets.length ||
+        right.tiles.length - left.tiles.length ||
         (left.targets[0] ? this.distance(caster, left.targets[0]) : 0) -
           (right.targets[0] ? this.distance(caster, right.targets[0]) : 0),
     )[0];
@@ -634,6 +726,54 @@ export class CombatEngine {
     return score;
   }
 
+  private waveGeometryAt(caster: SimEntity, position: GridPosition) {
+    const waves = abilitiesByVocation(
+      caster.role as AbilityDefinition['vocation'],
+      this.preferences,
+    ).filter((ability) => ability.shape === 'wave');
+    let best = 0;
+    for (const ability of waves) {
+      for (const facing of ['up', 'down', 'left', 'right'] as Direction[]) {
+        best = Math.max(
+          best,
+          this.spellArea.resolve(position, ability.id, facing, {
+            requireLineOfSight:ability.requiresLineOfSight ?? true,
+            ignoreEntityIds:[caster.id],
+          }).length,
+        );
+      }
+    }
+    return best;
+  }
+
+  private fullWaveScoreAt(
+    caster: SimEntity,
+    position: GridPosition,
+    enemies: SimEntity[],
+  ) {
+    let best = 0;
+    for (const ability of abilitiesByVocation(
+      caster.role as AbilityDefinition['vocation'],
+      this.preferences,
+    ).filter((candidate) => candidate.shape === 'wave')) {
+      const fullGeometry = abilityOffsets(ability.id).length;
+      for (const target of enemies.filter((candidate) => candidate.alive)) {
+        const facing = gridDirectionTo(position, this.tileOf(target));
+        const tiles = this.spellArea.resolve(position, ability.id, facing, {
+          requireLineOfSight:ability.requiresLineOfSight ?? true,
+          ignoreEntityIds:[caster.id],
+        });
+        if (tiles.length < fullGeometry) continue;
+        const keys = new Set(tiles.map(gridKey));
+        const hits = enemies.filter(
+          (enemy) => enemy.alive && keys.has(gridKey(this.tileOf(enemy))),
+        ).length;
+        if (hits >= ability.hardMinTargets) best = Math.max(best, hits);
+      }
+    }
+    return best;
+  }
+
   private bestMagePosition(
     caster: SimEntity,
     knight: SimEntity,
@@ -641,10 +781,19 @@ export class CombatEngine {
     enemies: SimEntity[],
   ) {
     const candidates: Array<{ point: GridPosition; score: number }> = [];
+    const reachable = this.movement.reachableTiles(
+      caster.id,
+      this.tileOf(caster),
+      this.now,
+    );
     const bounds = HUNT_LAYOUT_CONFIG.walkableBounds;
     for (let column = bounds.minColumn; column <= bounds.maxColumn; column++) {
       for (let row = bounds.minRow; row <= bounds.maxRow; row++) {
         const point = { x:column,y:row };
+        if (!reachable.has(gridKey(point))) continue;
+        if (this.movement.isDestinationCoolingDown(caster.id, point, this.now)) {
+          continue;
+        }
         const knightDistance = gridDistance(point, this.tileOf(knight));
         if (knightDistance < 3 || knightDistance > 7) continue;
         if (this.isOccupied(point, party, enemies, caster.id)) continue;
@@ -654,8 +803,12 @@ export class CombatEngine {
             .map((enemy) => gridDistance(point, this.tileOf(enemy))),
         );
         if (closestEnemy <= 1) continue;
+        const fullWaveScore = this.fullWaveScoreAt(caster, point, enemies);
+        if (!fullWaveScore) continue;
+        const geometry = this.waveGeometryAt(caster, point);
         const score =
-          this.waveScoreAt(caster, point, enemies) * 100 +
+          fullWaveScore * 1000 +
+          geometry * 10 +
           Math.min(closestEnemy, 6) * 8 -
           gridDistance(this.tileOf(caster), point);
         candidates.push({ point, score });
@@ -672,10 +825,16 @@ export class CombatEngine {
     floor: number,
   ) {
     const box = this.boxedEnemies(knight, enemies);
-    if (box.length < 2) return false;
+    const currentScore = this.waveScoreAt(caster, this.tileOf(caster), enemies);
+    if (
+      box.length < 2 &&
+      currentScore > 0 &&
+      this.fullWaveScoreAt(caster, this.tileOf(caster), enemies) > 0
+    ) {
+      return false;
+    }
     const destination = this.bestMagePosition(caster, knight, party, enemies);
     if (!destination) return false;
-    const currentScore = this.waveScoreAt(caster, this.tileOf(caster), enemies);
     const destinationScore = this.waveScoreAt(caster, destination, enemies);
     const unsafe = enemies.some(
       (enemy) =>
@@ -1102,6 +1261,7 @@ export class CombatEngine {
         party.some((hero) => hero.alive) &&
         turn++ < 700
       ) {
+        this.resolvePendingMovements(party, enemies, floor);
         hazards = this.resolveHazards(hazards, party, enemies);
         this.heroActions(party, enemies, floor, turn);
         for (const enemy of enemies.filter((entity) => !entity.alive)) {
@@ -1110,6 +1270,8 @@ export class CombatEngine {
         this.monsterActions(enemies, party, hazards, floor, turn);
         this.now += 250;
       }
+      this.resolvePendingMovements(party, enemies, floor);
+      this.cancelPendingMovements(floor, 'floor-complete');
       hazards = this.resolveHazards(hazards, party, enemies);
       for (const enemy of enemies.filter((entity) => !entity.alive)) {
         this.reward(enemy, floor);

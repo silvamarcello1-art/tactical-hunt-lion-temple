@@ -21,6 +21,11 @@ export interface GridMetrics {
   totalPathLength: number;
   completedPaths: number;
   stuckRecoveries: number;
+  consecutiveNoRoute: number;
+  destinationCooldowns: number;
+  oscillationPrevented: number;
+  maxPendingMovements: number;
+  maxPendingProjectiles: number;
 }
 
 export const gridKey = (position: GridPosition) => `${position.x}:${position.y}`;
@@ -43,4 +48,9 @@ export const createGridMetrics = (): GridMetrics => ({
   totalPathLength:0,
   completedPaths:0,
   stuckRecoveries:0,
+  consecutiveNoRoute:0,
+  destinationCooldowns:0,
+  oscillationPrevented:0,
+  maxPendingMovements:0,
+  maxPendingProjectiles:0,
 });

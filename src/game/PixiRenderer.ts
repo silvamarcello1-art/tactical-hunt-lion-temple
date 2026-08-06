@@ -63,6 +63,7 @@ type Tween = {
   duration: number;
   update: (progress: number) => void;
   done?: () => void;
+  key?: string;
 };
 
 type RendererOptions = {
@@ -432,14 +433,15 @@ export class PixiRenderer {
       const tile = event.data?.tile;
       if (tile) this.debugEntityTiles.set(event.targetId, { ...tile });
     }
-    if ((event.type === 'move' || event.type === 'reposition') && event.sourceId) {
-      const tile = event.data?.toTile ?? event.data?.tile;
-      if (tile) this.debugEntityTiles.set(event.sourceId, { ...tile });
-    }
     if (event.type === 'tile_reserved' && event.sourceId && event.data?.toTile) {
       this.debugReservations.set(event.sourceId, { ...event.data.toTile });
     }
     if (event.type === 'movement_completed' && event.sourceId) {
+      const tile = event.data?.toTile;
+      if (tile) this.debugEntityTiles.set(event.sourceId, { ...tile });
+      this.debugReservations.delete(event.sourceId);
+    }
+    if (event.type === 'movement_cancelled' && event.sourceId) {
       this.debugReservations.delete(event.sourceId);
     }
     if (event.type === 'death' && event.targetId) {
@@ -858,8 +860,13 @@ export class PixiRenderer {
             this.face(unit, unit.facing, false);
             this.setUnitState(unit, 'idle');
           },
+          0,
+          `movement:${event.sourceId}`,
         );
       }
+    }
+    if (event.type === 'movement_cancelled' && event.sourceId) {
+      this.cancelTween(`movement:${event.sourceId}`);
     }
     if (event.type === 'basic_attack' || event.type === 'cast') {
       const unit = this.units.get(event.sourceId!);
@@ -1239,9 +1246,15 @@ export class PixiRenderer {
     update: Tween['update'],
     done?: Tween['done'],
     delay = 0,
+    key?: string,
   ) {
     if (this.destroyed) return;
-    this.tweens.push({ elapsed:-delay, duration, update, done });
+    this.tweens.push({ elapsed:-delay, duration, update, done, key });
+    this.syncDiagnostics();
+  }
+
+  private cancelTween(key: string) {
+    this.tweens = this.tweens.filter((tween) => tween.key !== key);
     this.syncDiagnostics();
   }
 

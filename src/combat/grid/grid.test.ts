@@ -100,7 +100,7 @@ describe('authoritative grid systems', () => {
     expect(up.some((tile) => tile.y < 4)).toBe(true);
   });
 
-  it('moves one reserved tile per logical step and records metrics', () => {
+  it('keeps origin occupied and destination reserved until logical completion', () => {
     const { map, occupancy } = setup();
     const metrics = createGridMetrics();
     occupancy.occupy('hero', { x: 2, y: 2 });
@@ -109,11 +109,105 @@ describe('authoritative grid systems', () => {
       entityId: 'hero',
       from: { x: 2, y: 2 },
       destination: { x: 6, y: 2 },
+      now:100,
+      duration:220,
+      sessionId:'session-a',
     });
     expect(result).toMatchObject({ moved: true, to: { x: 3, y: 2 } });
+    expect(result.pending).toMatchObject({ startedAt:100,completesAt:320 });
+    expect(occupancy.positionOf('hero')).toEqual({ x: 2, y: 2 });
+    expect(occupancy.reservationOf('hero')).toEqual({ x: 3, y: 2 });
+    expect(movement.completeDue(319, 'session-a')).toEqual([]);
+    expect(occupancy.positionOf('hero')).toEqual({ x: 2, y: 2 });
+    expect(movement.completeDue(320, 'session-a')).toMatchObject([
+      { status:'completed' },
+    ]);
     expect(occupancy.positionOf('hero')).toEqual({ x: 3, y: 2 });
+    expect(occupancy.reservationOf('hero')).toBeUndefined();
     expect(metrics.pathRecalculations).toBe(1);
     expect(metrics.totalPathLength).toBe(4);
+    expect(metrics.maxPendingMovements).toBe(1);
+  });
+
+  it('arbitrates same-tick movement intents deterministically', () => {
+    const { map, occupancy } = setup();
+    const metrics = createGridMetrics();
+    occupancy.occupy('low', { x: 2, y: 2 });
+    occupancy.occupy('high', { x: 4, y: 2 });
+    const movement = new MovementSystem(map, occupancy, metrics);
+    const results = movement.stepBatch([
+      {
+        entityId:'low',
+        from:{ x:2,y:2 },
+        destination:{ x:3,y:2 },
+        tacticalPriority:10,
+        tickOrder:0,
+        sessionId:'session-a',
+      },
+      {
+        entityId:'high',
+        from:{ x:4,y:2 },
+        destination:{ x:3,y:2 },
+        tacticalPriority:20,
+        tickOrder:1,
+        sessionId:'session-a',
+      },
+    ]);
+    expect(results[0]).toMatchObject({ entityId:'high',result:{ moved:true } });
+    expect(results[1]).toMatchObject({
+      entityId:'low',
+      result:{ moved:false,reason:'reserved',blockingEntityId:'high' },
+    });
+    expect(occupancy.reservedBy({ x:3,y:2 })).toBe('high');
+    expect(metrics.reservationConflicts).toBe(1);
+  });
+
+  it('blocks head-on swaps while both origins remain occupied', () => {
+    const { map, occupancy } = setup();
+    const movement = new MovementSystem(map, occupancy, createGridMetrics());
+    occupancy.occupy('a', { x:2,y:2 });
+    occupancy.occupy('b', { x:3,y:2 });
+    expect(movement.step({
+      entityId:'a',from:{ x:2,y:2 },destination:{ x:3,y:2 },sessionId:'s',
+    })).toMatchObject({ moved:false,reason:'occupied' });
+    expect(movement.step({
+      entityId:'b',from:{ x:3,y:2 },destination:{ x:2,y:2 },sessionId:'s',
+    })).toMatchObject({ moved:false,reason:'occupied' });
+    expect(occupancy.positionOf('a')).toEqual({ x:2,y:2 });
+    expect(occupancy.positionOf('b')).toEqual({ x:3,y:2 });
+  });
+
+  it('cancels movement on death, reset, or stale session without orphan reservations', () => {
+    const { map, occupancy } = setup();
+    const movement = new MovementSystem(map, occupancy, createGridMetrics());
+    occupancy.occupy('hero', { x:2,y:2 });
+    movement.step({
+      entityId:'hero',from:{ x:2,y:2 },destination:{ x:5,y:2 },
+      now:0,duration:220,sessionId:'session-a',
+    });
+    expect(movement.cancel('hero', 'entity-dead')).toMatchObject({
+      status:'cancelled',reason:'entity-dead',
+    });
+    occupancy.release('hero');
+    expect(occupancy.reservedEntries()).toEqual([]);
+    expect(occupancy.occupiedEntries()).toEqual([]);
+
+    occupancy.occupy('hero', { x:2,y:2 });
+    movement.step({
+      entityId:'hero',from:{ x:2,y:2 },destination:{ x:5,y:2 },
+      now:300,duration:220,sessionId:'session-a',
+    });
+    expect(movement.completeDue(520, 'session-b')).toMatchObject([
+      { status:'cancelled',reason:'stale-session' },
+    ]);
+    expect(occupancy.reservedEntries()).toEqual([]);
+
+    movement.step({
+      entityId:'hero',from:{ x:2,y:2 },destination:{ x:5,y:2 },
+      now:600,duration:220,sessionId:'session-a',
+    });
+    expect(movement.cancelAll('reset', 'session-a')).toHaveLength(1);
+    expect(occupancy.reservedEntries()).toEqual([]);
   });
 
   it('recovers a colliding spawn on the nearest free tile', () => {

@@ -4,6 +4,7 @@ export type EventType =
   | 'tile_reserved'
   | 'movement_started'
   | 'movement_completed'
+  | 'movement_cancelled'
   | 'movement_blocked'
   | 'path_recalculated'
   | 'move'
@@ -17,6 +18,9 @@ export type EventType =
   | 'basic_attack'
   | 'cast'
   | 'projectile'
+  | 'projectile_resolved'
+  | 'projectile_cancelled'
+  | 'spell_cancelled'
   | 'damage'
   | 'heal'
   | 'critical'
@@ -59,6 +63,9 @@ export interface CombatEvent {
     path?: GridPoint[];
     logicalTiles?: GridPoint[];
     lineOfSightTiles?: GridPoint[];
+    pathTiles?: GridPoint[];
+    originTile?: GridPoint;
+    targetTile?: GridPoint;
     facing?: Direction;
     ability?: string;
     abilityId?: string;
@@ -84,6 +91,12 @@ export interface CombatEvent {
     rewardType?: string;
     castId?: string;
     impactAt?: number;
+    startedAt?: number;
+    completesAt?: number;
+    sessionId?: string;
+    pathRevision?: number;
+    collisionPolicy?: 'walls' | 'walls-and-units' | 'none';
+    lineOfSightPolicy?: 'required' | 'ignored';
     blockedReason?: string;
     blockingEntityId?: string;
   };
@@ -129,5 +142,10 @@ export interface HuntResult {
     totalPathLength: number;
     completedPaths: number;
     stuckRecoveries: number;
+    consecutiveNoRoute: number;
+    destinationCooldowns: number;
+    oscillationPrevented: number;
+    maxPendingMovements: number;
+    maxPendingProjectiles: number;
   };
 }
