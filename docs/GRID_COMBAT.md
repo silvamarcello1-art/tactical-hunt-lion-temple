@@ -2,114 +2,100 @@
 
 ## Princípio
 
-O estado autoritativo de posição usa `tileX` e `tileY` inteiros. `position` existe
-somente como projeção visual compatível, calculada por `gridToWorld`. Nenhum
-cálculo de dano, alcance, target, colisão, pathfinding, linha de visão ou área de
-magia consulta a posição interpolada do sprite.
+O estado autoritativo usa `tileX` e `tileY` inteiros. `position` é somente uma
+projeção visual calculada por `gridToWorld`. Dano, alcance, alvo, colisão,
+pathfinding, linha de visão e áreas nunca consultam a interpolação do sprite.
 
-## Coordenadas e mapa
+## Mapa, ocupação e movimento em duas fases
 
-- A arena possui 30×18 tiles e área caminhável configurada em
-  `HUNT_LAYOUT_CONFIG.walkableBounds`.
-- Paredes e obstáculos estão em `HUNT_LAYOUT_CONFIG.blockedTiles`.
-- `GridMap` valida limites, terreno, custos e footprints.
-- Entidades atuais usam footprint 1×1; a API aceita footprints maiores.
-- `gridToWorld` e `worldToGrid` fazem a conversão determinística entre lógica e
-  apresentação.
+- A arena tem 30×18 tiles, área caminhável e obstáculos configurados em
+  `HUNT_LAYOUT_CONFIG`.
+- `GridMap` valida limites, terreno, custo e footprint.
+- `OccupancyGrid` mantém ocupação e reserva em índices distintos.
+- A* é determinístico em oito direções. Movimento diagonal exige os dois tiles
+  ortogonais livres; não há corte de quina.
 
-## Ocupação e reservas
+No tick `T`, `MovementSystem` cria uma intenção e a arbitra por prioridade
+tática, ordem estável e `entityId`. A vencedora cria `PendingMovement`, conserva
+a origem ocupada e reserva o destino por **220 ms lógicos**. A posição lógica
+continua na origem. Somente em `completesAt` a origem é liberada, o destino vira
+ocupação e `tileX`/`tileY` mudam.
 
-`OccupancyGrid` mantém índices separados para ocupação e reserva:
+Morte, fim de sala e reset cancelam o movimento, liberam a reserva e impedem
+`movement_completed` posterior. `sessionId` invalida conclusões antigas. Isso
+bloqueia duas reservas do mesmo destino, head-on swap, troca instantânea,
+atravessamento e reserva órfã. O renderer apenas interpola durante o intervalo.
 
-1. a entidade solicita um destino;
-2. terreno, ocupação e reserva são validados;
-3. somente uma entidade reserva o tile;
-4. a reserva é confirmada e o tile anterior é liberado;
-5. morte remove ocupação e reserva;
-6. spawn conflitante usa busca determinística pelo tile livre mais próximo.
+## Reachability, cooldown e anti-oscilação
 
-O tile ocupado por outra entidade nunca é atravessável. Isso também bloqueia
-trocas instantâneas de posição e empilhamento corpo a corpo.
+Destinos táticos são filtrados por reachability antes do score. O resultado usa
+cache curto por entidade, revisão da grade e janela lógica. Destinos sem rota
+recebem cooldown e não são selecionados imediatamente outra vez.
 
-## Pathfinding e movimento
-
-`Pathfinder` implementa A* determinístico em oito direções. O desempate usa
-custos, heurística, coordenadas e ordem estável. Diagonais exigem que os dois
-tiles ortogonais laterais estejam livres, impedindo corte de quina.
-
-`MovementSystem` solicita um caminho no tick lógico, reserva apenas o próximo
-tile e registra as métricas. `goalRange` permite terminar em alcance corpo a
-corpo, de cura ou magia sem entrar no tile do alvo. Falta de rota produz
-`movement_blocked`, sem teleporte ou fallback visual incorreto.
+O histórico curto impede A→B→A quando não houve mudança de alvo, grade ou risco.
+`allowBacktrack` mantém retornos legítimos para perseguição, Challenge e outras
+mudanças táticas. Na terceira falha consecutiva, o destino é excluído
+temporariamente, `stuckRecoveries` é incrementado e outra ação/fallback pode ser
+executada no turno.
 
 ## Linha de visão
 
-`LineOfSightResolver` usa raycast discreto determinístico. Terreno bloqueado
-interrompe a linha. Bloqueio por unidade é configurável por habilidade por meio
-de `projectileBlocksUnits`; `requiresLineOfSight` controla a regra de LoS.
+`LineOfSightResolver` usa supercover discreto e visita todos os tiles tocados
+pela linha. Horizontal, vertical, diagonal, quina única, pinça de duas paredes,
+origem e endpoint têm tratamento explícito. Endpoint bloqueado falha por padrão
+e só é aceito por opção. Bloqueio por unidade é configurável por habilidade.
 
-## Áreas e telegraphs
+Movimento diagonal e LoS diagonal são regras diferentes: movimento considera
+passagem do footprint; LoS considera todos os tiles tocados pelo raio.
 
-`SpellAreaResolver` transforma as máscaras cadastradas em `abilityOffsets` para
-a direção real do caster, remove tiles duplicados, limita ao mapa e aplica LoS
-quando configurado. Alvos são comparados por chave de tile lógico e uma entidade
-é afetada no máximo uma vez por cast.
+## Projéteis, spells e hazards
 
-Todo cast recebe `castId`. Magias avisadas por monstros emitem
-`spell_telegraph`, contendo `logicalTiles` e `impactAt`; a resolução posterior
-emite `spell_resolved` com o mesmo `castId` e exatamente a mesma máscara. Se o
-caster morrer antes do impacto, a resolução é registrada como cancelada e não
-causa dano.
+`ProjectileSystem` centraliza ataques ranged de personagens, monstros e boss.
+Cada `PendingProjectile` contém `castId`, `sessionId`, caster, alvo, origem,
+destino, `pathTiles`, `startedAt`, `impactAt`, dano e políticas de colisão, LoS,
+alvo e impacto.
+
+O dano não ocorre no disparo: é aplicado somente em `impactAt`, exatamente uma
+vez, e os eventos de dano/dodge levam o mesmo `castId`. Parede, unidade, alvo
+vivo, impacto no tile original e follow-target são políticas por ataque.
+
+`SpellAreaResolver` transforma máscaras de `abilityOffsets`, remove duplicatas,
+limita ao mapa e aplica LoS quando exigido. Hazards e telegraphs seguem
+`pending → resolved | cancelled`. Morte, fim de sala e reset cancelam
+explicitamente casts futuros; não há resolução antecipada nem dano tardio.
+
+## Aggro inicial da backline
+
+`InitialAggroResolver` classifica spawns como front, back ou neutral, ordena-os
+deterministicamente e aplica `maxInitialBacklineAttackers = 2`. Excedentes usam
+Knight/frontline. O limite vale apenas para o estado inicial; threat, morte e
+Challenge continuam livres para mudar alvos depois.
 
 ## Eventos autoritativos
 
-- `tile_reserved`
-- `movement_started`
-- `movement_completed`
-- `movement_blocked`
-- `path_recalculated`
-- `spell_telegraph`
-- `spell_resolved`
+- movimento: `tile_reserved`, `movement_started`, `movement_completed`,
+  `movement_cancelled`, `movement_blocked`, `path_recalculated`;
+- projétil: `projectile`, `projectile_resolved`, `projectile_cancelled`;
+- spell/hazard: `spell_telegraph`, `spell_resolved`, `spell_cancelled`.
 
-Os eventos antigos `move`, `reposition`, `area_warning` e `monster_aoe` foram
-preservados como contratos de apresentação e compatibilidade. Eles carregam
-posição visual derivada e, quando aplicável, `tile`, `fromTile`, `toTile`,
-`path`, `logicalTiles`, `castId` e `impactAt`.
+`move`, `reposition`, `area_warning` e `monster_aoe` permanecem como contratos
+de apresentação. Eles não confirmam posição nem impacto.
 
-## Renderer e debug
+## Renderer, debug e métricas
 
-O PixiRenderer interpola somente entre centros derivados dos tiles. Ele não
-decide caminhos, alcance, LoS ou impactos. Obstáculos recebem representação
-visual própria. O modo `?debug=1`, desligado por padrão, mostra:
+PixiJS possui camadas separadas de terreno, efeitos, entidades e overlay. O
+renderer não calcula caminhos, LoS, colisão ou dano. O modo `?debug=1` mostra
+grade, obstáculos, ocupação, reserva, caminhos e máscaras.
 
-- limites e grade;
-- obstáculos;
-- ocupação e reservas;
-- caminho recalculado;
-- máscaras lógicas de magia;
-- spawns e posições táticas.
+`HuntResult.gridMetrics` expõe `pathRecalculations`, `blockedMoves`,
+`reservationConflicts`, `totalPathLength`, `completedPaths`, `stuckRecoveries`,
+`consecutiveNoRoute` (maior sequência), `destinationCooldowns`,
+`oscillationPrevented`, `maxPendingMovements` e `maxPendingProjectiles`.
 
-Diagnósticos do `#game` expõem overlaps, posições lógicas e métricas apenas para
-testes e suporte. Eles não são estado de jogo.
+## Garantias validadas
 
-## Métricas
-
-`HuntResult.gridMetrics` registra:
-
-- `pathRecalculations`;
-- `blockedMoves`;
-- `reservationConflicts`;
-- `totalPathLength`;
-- `completedPaths`;
-- `stuckRecoveries`.
-
-Comprimento médio é derivado por `totalPathLength / pathRecalculations`.
-
-## Determinismo e testes
-
-A mesma seed e configuração produzem a mesma timeline. Os testes cobrem mapa,
-conversão, ocupação, reserva, footprints, conflitos, spawn, A*, alcance, ausência
-de rota, diagonais, LoS, máscaras, telegraph/impacto, overlaps e regressões de
-aggro, Challenge, conjuradores, cooldown, Boss Token e Analyzer. O Playwright
-mantém uma auditoria cumulativa durante três loops para detectar overlap,
-entrada em obstáculo, caminho inválido e divergência de telegraph.
+A mesma seed e configuração geram a mesma timeline. Vitest cobre movimento em
+duas fases, arbitragem, morte/reset, projéteis, políticas de colisão, lifecycle,
+reachability, cooldown, A→B→A, stuck recovery, supercover e cap da backline. O
+Playwright audita três loops, velocidades, reset em trânsito, impacto atrasado,
+cap inicial, overlap, limites, obstáculos, resíduos e console.

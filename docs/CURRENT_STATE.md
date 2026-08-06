@@ -5,12 +5,18 @@
 - Entidades possuem `tileX`/`tileY` inteiros e exclusivos.
 - `GridMap` contém limites, obstáculos, custos e footprints.
 - `OccupancyGrid` impede overlap, reserva conflitante e head-on swap.
+- Movimento ocorre em duas fases: origem ocupada e destino reservado por 220 ms
+  lógicos até `movement_completed`.
 - Spawn conflitante procura deterministicamente o tile livre mais próximo.
 - A* determinístico move em oito direções sem cortar quinas.
 - Knight, monstros e conjuradores usam o mesmo `MovementSystem`.
-- Morte libera imediatamente ocupação e reserva.
+- Morte, fim de sala e reset cancelam movimentos, projéteis e hazards pendentes.
 - Alcance corpo a corpo, de cura e magia é resolvido na grade.
-- LoS e trajetória de projectile usam raycast discreto.
+- LoS usa supercover; projéteis possuem trajetória, `castId`, `sessionId` e
+  `impactAt`, sem dano antes do impacto.
+- Reachability precede o score, destinos falhos recebem cooldown e A→B→A
+  injustificado é impedido.
+- O aggro inicial limita formalmente a backline a dois atacantes.
 - Waves, círculos e Challenge usam máscaras lógicas deduplicadas.
 - Magias de monstros unem telegraph e impacto por `castId` e máscara idêntica.
 - PixiJS apenas interpola e exibe eventos autoritativos.
@@ -27,13 +33,13 @@ Consulte `docs/GRID_COMBAT.md` para a especificação permanente.
 |---|---|
 | Instalação | lockfile aprovado |
 | TypeScript | zero erros |
-| Vitest | 55 testes aprovados |
-| Build | 735 módulos, aprovado |
-| Playwright/Edge | 12 cenários aprovados |
+| Vitest | 79 testes aprovados em 7 arquivos |
+| Build | 737 módulos, aprovado em 5,70 s |
+| Playwright/Edge | 13 cenários aprovados em 4,2 min |
 | Loop | 3 ciclos auditados |
-| Grade | zero overlaps e zero obstáculos atravessados |
-| Spells | telegraph e impacto idênticos por `castId` |
-| Debug manual | 2.029 eventos, zero erros de console |
+| Grade | zero overlaps, zero fora da arena e zero reservas órfãs |
+| Casts | zero impacto tardio e zero resíduos de projectile/telegraph |
+| Debug manual | boss derrotado, 17 kills e zero erros de console |
 | Publicação | não realizada |
 
 ## MVP 0 — concluído e reconciliado

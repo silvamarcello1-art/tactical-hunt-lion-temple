@@ -1,86 +1,74 @@
-# Session Checkpoint — MVP 1C Authoritative Grid Combat
+# Session Checkpoint — hardening do MVP 1C
 
 ## Identificação
 
 - Data: 06/08/2026
-- Base escolhida: `origin/feature/boss-token`
-- HEAD inicial: `ec8c380cef98c65cc42b6962a4a93679616d994b`
+- Base do PR: `origin/feature/boss-token`
 - Branch: `feature/grid-combat-pathfinding`
-- Remoto autorizado: `origin`
-- Publicação: não realizada
-- Helper individual: pausado; branch preservada e não utilizada
+- HEAD inicial revisado: `6b6c029d699354afd5d717c5154f046aafe4f841`
+- Remoto: `origin`
+- Publicação e merge: não realizados
+- Helper individual: pausado e intocado
 
 ## Concluído
 
-- Grade lógica 30×18 independente do canvas.
-- Coordenadas inteiras `tileX`/`tileY` em todos os snapshots.
-- Terreno caminhável, obstáculos, custos e footprints.
-- Ocupação e reserva exclusivas por tile.
-- Liberação em movimento e morte.
-- Recuperação de spawn conflitante.
-- A* determinístico em oito direções e sem corner cutting.
-- Movimento de Knight, conjuradores e monstros pelo mesmo sistema.
-- Alcance corpo a corpo e alcance de spell via `goalRange`.
-- Raycast discreto de linha de visão.
-- Máscaras de waves, círculos e pull deduplicadas e limitadas ao mapa.
-- `castId`, telegraph e resolução no mesmo conjunto lógico de tiles.
-- Projectiles com trajetória de tiles.
-- Regras anteriores de aggro, threat, Challenge, reposicionamento,
-  `preferredMinTargets` e `hardMinTargets` preservadas.
-- Obstáculos visuais e debug opt-in de ocupação, reserva, caminho e spell mask.
-- Diagnósticos de overlap e métricas de pathfinding.
-- Testes unitários e E2E ampliados.
-- Documentação permanente criada em `docs/GRID_COMBAT.md`.
+- Movimento autoritativo em duas fases com reserva real de 220 ms lógicos.
+- Origem ocupada e destino reservado durante a transição.
+- Arbitragem determinística de intenções concorrentes.
+- Cancelamento por morte, fim de sala, reset e sessão antiga.
+- Pipeline única para projéteis ranged de heróis, monstros e boss.
+- Dano somente em `impactAt`, correlacionado por `castId`.
+- Lifecycle explícito de projéteis, telegraphs e hazards.
+- Reachability antes do score, cache curto e destination cooldown.
+- Bloqueio de A→B→A injustificado e stuck recovery.
+- LoS supercover com quinas, pinça, endpoint e unidades configuráveis.
+- Cap determinístico de dois atacantes iniciais na backline.
+- Renderer PixiJS permanece apresentação; trajetórias visuais são retas entre a
+  origem e o destino autoritativos.
+- Telemetria ampliada no `HuntResult` e em atributos de diagnóstico.
 
-## Parcialmente concluído
+## Validação registrada
 
-- Cache/invalidação de caminhos: não necessário para a escala atual; cada ação
-  lógica recalcula A*, nunca cada frame visual.
-- Footprints maiores: suportados pelos módulos e testados, mas o boss permanece
-  1×1 nesta fase.
-- LoS por unidade: configurável no contrato; habilidades atuais usam as regras
-  compatíveis com a vertical slice.
+- Baseline: typecheck aprovado, 55 testes Vitest, build com 735 módulos.
+- Hardening: 79 testes Vitest em 7 arquivos.
+- Build: 737 módulos transformados em 5,70 s.
+- Playwright/Edge: 13 cenários aprovados em 4,2 min.
+- Navegador local `?debug=1`: boss derrotado, 17 kills, 3.760 XP, 1.497 gold,
+  duração lógica de 60.100 ms, zero overlap, zero fora da arena, zero reserva,
+  projectile, telegraph, tween ou efeito residual e zero erros no console.
+- Simulação prolongada: três ciclos determinísticos, 180.300 ms lógicos no
+  total, sem duplicação ou resíduo.
 
-## Não iniciado por escopo
+### Métricas antes e depois
 
-- Helper individual.
-- Inventário, equipamentos, loja, backend e progressão.
-- Arte definitiva.
-- Merge e publicação pública.
+| Métrica | Revisão anterior | Hardening |
+|---|---:|---:|
+| Path recalculations | 342 | 206 |
+| Blocked moves | 129 | 5 |
+| Maior sequência no-route | 39 | 1 |
+| A→B→A injustificado observado | 6 | 0 |
+| Oscilações impedidas | não registrado | 5 |
+| Destination cooldowns | não registrado | 5 |
+| Stuck recoveries | não registrado | 0 |
+| Reservation conflicts | não registrado | 0 |
+| Pending movements máximos | não registrado | 9 |
+| Pending projectiles máximos | não registrado | 4 |
 
-## Arquivos centrais alterados
+## Commits do hardening
 
-- `src/combat/grid/*`
-- `src/combat/CombatEngine.ts`
-- `src/combat/tiles.ts`
-- `src/events/types.ts`
-- `src/data/config.ts`
-- `src/data/abilities.ts`
-- `src/game/PixiRenderer.ts`
-- `tests/e2e/mvp0.spec.ts`
-- documentação canônica e changelog
-
-## Checkpoints Git
-
-- `68563a9` — `feat(grid): add authoritative navigation core`
-- `5f99669` — `feat(combat): run tactical hunt on authoritative grid`
-
-## Validação final
-
-- Instalação pelo lockfile: aprovada, dependências já atualizadas.
-- TypeScript: aprovado, zero erros.
-- Vitest: 55 testes aprovados em 6 arquivos.
-- Build completo: aprovado, 735 módulos transformados.
-- Playwright/Edge: 12 cenários aprovados em 3,6 minutos.
-- Auditoria prolongada: três loops sem overlap, obstáculo atravessado, path
-  inválido ou divergência entre telegraph e impacto.
-- Navegador com `?debug=1`: hunt completa, 2.029 eventos, 342 recálculos de
-  path, 129 movimentos bloqueados resolvidos, zero overlaps, zero unidades fora
-  da arena, zero efeitos residuais e zero erros/warnings no console.
-- `git diff --check`: aprovado.
+- `c1b9fd6` — `fix: make grid movement reservations authoritative`
+- `e013c4d` — `fix: make projectiles and hazards authoritative`
+- `94999fc` — `fix: prevent unreachable destination loops`
+- `3ac2db0` — `fix: harden line of sight and initial backline aggro`
+- `2d47c2d` — `test: cover grid combat hardening cases`
 
 ## Estado do gate
 
-MVP 1C concluído na branch de feature. Não houve merge nem publicação. A próxima
-ação deve ser revisão por outro responsável ou abertura de PR; o Helper continua
-pausado até esse aceite.
+Typecheck, 79 testes, build, 13 E2E, simulação prolongada, inspeção visual e
+`git diff --check` foram aprovados. A branch está pronta para nova revisão do PR;
+não houve merge nem publicação.
+
+## Fora do escopo
+
+Helper, inventário, equipamentos, loja, backend, progressão, arte definitiva,
+merge e publicação.

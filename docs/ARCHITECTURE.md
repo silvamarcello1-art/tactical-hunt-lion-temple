@@ -48,6 +48,7 @@ ela agrega os eventos emitidos e apresenta o `HuntResult` no encerramento.
 | Responsabilidade | Local |
 |---|---|
 | Orquestração, IA, threat, dano, cura, loot e fases | `src/combat/CombatEngine.ts` |
+| Regra determinística do aggro inicial | `src/combat/InitialAggroResolver.ts` |
 | Conversão visual e máscaras-base | `src/combat/tiles.ts` |
 | Mapa, ocupação, reservas, A*, movimento, LoS e spell masks | `src/combat/grid/` |
 | Contratos de eventos e snapshots | `src/events/types.ts` |
@@ -75,8 +76,16 @@ ela agrega os eventos emitidos e apresenta o `HuntResult` no encerramento.
 - `SimEntity.tileX/tileY` são a posição autoritativa. `position` é sempre
   derivada e serve apenas à apresentação.
 - Movimento em oito direções passa por `MovementSystem`, `OccupancyGrid` e A*.
-- `castId`, `logicalTiles` e `impactAt` conectam telegraph e resolução sem
-  consultar pixels.
+  A origem permanece ocupada e o destino reservado até `completesAt`.
+- `ProjectileSystem` agenda todos os ataques ranged e só entrega dano no
+  `impactAt`; `castId`, `sessionId` e políticas de colisão/LoS controlam o
+  lifecycle.
+- `castId`, `logicalTiles` e `impactAt` conectam telegraph, projectile, dano,
+  resolução ou cancelamento sem consultar pixels.
+- LoS usa supercover; reachability e destination cooldown precedem o score de
+  destinos táticos.
+- O aggro inicial aceita no máximo dois atacantes na backline; depois disso,
+  threat e Challenge seguem normalmente.
 
 ## Ciclo de vida
 
@@ -145,8 +154,9 @@ jogo.
 ## Riscos restantes
 
 1. A timeline ainda é pré-calculada e não suporta autoridade remota.
-2. O A* é recalculado por ação lógica; cache e orçamento por tick ficam para
-   otimização caso o número de entidades aumente significativamente.
+2. Reachability possui cache curto por revisão; o A* de movimento continua por
+   ação lógica. Priority queue ou cache permanente exigem benchmark com grupos
+   maiores.
 3. Heróis e parte dos assets são provisórios.
 4. Dados demonstrativos de conta, stamina, boost e supplies são fixos.
 5. O Helper individual ainda compartilha o mesmo conjunto de preferências por

@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.3.1 — 2026-08-06
+
+### Hardening do MVP 1C
+
+- Movimento passou a duas fases, mantendo origem ocupada e destino reservado
+  por 220 ms lógicos até `completesAt`.
+- Intenções concorrentes recebem arbitragem estável; morte, fim de sala e reset
+  cancelam movimentos sem reservas órfãs.
+- Todos os ataques ranged usam `ProjectileSystem`, com trajetória, `castId`,
+  `sessionId`, `impactAt`, políticas próprias e dano atrasado.
+- Hazards, telegraphs e projectiles possuem resolução ou cancelamento explícito,
+  sem dano ou efeitos de sessões antigas.
+- Reachability precede score; destination cooldown, histórico de tiles,
+  anti-oscilação e stuck recovery evitam repetição sem rota.
+- LoS foi substituída por supercover com tratamento de quinas e endpoints.
+- Aggro inicial aplica cap determinístico de dois atacantes na backline, sem
+  limitar mudanças posteriores por threat ou Challenge.
+- Telemetria e auditoria E2E cobrem reservas, projectiles, lifecycle, resíduos,
+  cap da backline e três loops.
+- Gate atualizado para 79 testes unitários e 13 cenários Playwright; merge e
+  publicação não foram realizados.
+
 ## 0.3.0 — 2026-08-06
 
 ### MVP 1C — Authoritative Grid Combat
