@@ -1,5 +1,26 @@
 # Changelog
 
+## 0.3.0 — 2026-08-06
+
+### MVP 1C — Authoritative Grid Combat
+
+- Posições autoritativas migradas para `tileX`/`tileY` inteiros.
+- Adicionados `GridMap`, `OccupancyGrid`, A*, `MovementSystem`, LoS e
+  `SpellAreaResolver` em módulos sem dependência de PixiJS.
+- Ocupação, reservas, spawn conflitante, morte, footprints, obstáculos e
+  diagonais sem corte de quina passaram a ter regras determinísticas.
+- Knight, casters e monstros preservam aggro, Challenge, threat,
+  reposicionamento, waves e fallbacks sobre a nova grade.
+- Projectiles e magias usam trajetória, máscara, LoS, `castId`, telegraph e
+  impacto lógicos.
+- PixiRenderer ganhou obstáculos, diagnóstico de overlap e debug opt-in para
+  caminhos, ocupação, reservas e spell masks.
+- Suítes unitária e E2E ampliadas para auditar overlaps, obstáculos, caminhos e
+  telegraphs durante três loops.
+- Helper individual permaneceu pausado e intocado; nenhuma publicação foi feita.
+- Gate final: 55 testes Vitest, build completo e 12 cenários Playwright
+  aprovados; inspeção manual com debug concluiu sem overlap ou erro de console.
+
 ## 0.2.1 — 2026-07-27
 
 ### Boss Token — Conclusão

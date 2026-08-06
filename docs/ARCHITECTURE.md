@@ -1,6 +1,6 @@
 # Arquitetura canônica
 
-Atualizada em 27 de julho de 2026 após o fechamento do MVP 1A.
+Atualizada em 6 de agosto de 2026 para o MVP 1C.
 
 ## Stack
 
@@ -47,8 +47,9 @@ ela agrega os eventos emitidos e apresenta o `HuntResult` no encerramento.
 
 | Responsabilidade | Local |
 |---|---|
-| Motor, IA, threat, dano, cura, loot e fases | `src/combat/CombatEngine.ts` |
-| Grade e áreas de habilidades | `src/combat/tiles.ts` |
+| Orquestração, IA, threat, dano, cura, loot e fases | `src/combat/CombatEngine.ts` |
+| Conversão visual e máscaras-base | `src/combat/tiles.ts` |
+| Mapa, ocupação, reservas, A*, movimento, LoS e spell masks | `src/combat/grid/` |
 | Contratos de eventos e snapshots | `src/events/types.ts` |
 | Relógio, pausa, velocidade e descarte | `src/events/EventPlayer.ts` |
 | Agregação segura da sessão | `src/app/LiveHuntState.ts` |
@@ -71,6 +72,11 @@ ela agrega os eventos emitidos e apresenta o `HuntResult` no encerramento.
 - O posicionamento tático dos magos é calculado no motor com candidatos em
   tiles. O renderer recebe somente eventos `move` e `reposition`.
 - Eventos `cast` carregam `cooldownEndsAt` e `cooldownDuration`.
+- `SimEntity.tileX/tileY` são a posição autoritativa. `position` é sempre
+  derivada e serve apenas à apresentação.
+- Movimento em oito direções passa por `MovementSystem`, `OccupancyGrid` e A*.
+- `castId`, `logicalTiles` e `impactAt` conectam telegraph e resolução sem
+  consultar pixels.
 
 ## Ciclo de vida
 
@@ -123,8 +129,9 @@ jogo.
   vitais, efeitos, limites da câmera e o padrão de debug.
 - `SESSION_CONFIG` continua sendo a única autoridade de velocidade e atraso do
   loop.
-- `?debug=1` habilita somente sobreposições: grid, limites, marcadores, IDs,
-  estados e hitboxes. A opção padrão e a publicação normal usam `false`.
+- `?debug=1` habilita somente sobreposições: grid, limites, obstáculos,
+  ocupação, reservas, caminhos, máscaras, marcadores, IDs, estados e hitboxes.
+  A opção padrão usa `false`.
 
 ## Restrições permanentes
 
@@ -138,7 +145,8 @@ jogo.
 ## Riscos restantes
 
 1. A timeline ainda é pré-calculada e não suporta autoridade remota.
-2. Movimento usa slots e deslocamentos curtos, sem pathfinding avançado.
+2. O A* é recalculado por ação lógica; cache e orçamento por tick ficam para
+   otimização caso o número de entidades aumente significativamente.
 3. Heróis e parte dos assets são provisórios.
 4. Dados demonstrativos de conta, stamina, boost e supplies são fixos.
 5. O Helper individual ainda compartilha o mesmo conjunto de preferências por

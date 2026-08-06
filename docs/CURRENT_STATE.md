@@ -1,4 +1,40 @@
-# Estado atual — MVP 0 + MVP 1A
+# Estado atual — MVP 0, MVP 1A, MVP 1B e MVP 1C
+
+## MVP 1C — Authoritative Grid Combat
+
+- Entidades possuem `tileX`/`tileY` inteiros e exclusivos.
+- `GridMap` contém limites, obstáculos, custos e footprints.
+- `OccupancyGrid` impede overlap, reserva conflitante e head-on swap.
+- Spawn conflitante procura deterministicamente o tile livre mais próximo.
+- A* determinístico move em oito direções sem cortar quinas.
+- Knight, monstros e conjuradores usam o mesmo `MovementSystem`.
+- Morte libera imediatamente ocupação e reserva.
+- Alcance corpo a corpo, de cura e magia é resolvido na grade.
+- LoS e trajetória de projectile usam raycast discreto.
+- Waves, círculos e Challenge usam máscaras lógicas deduplicadas.
+- Magias de monstros unem telegraph e impacto por `castId` e máscara idêntica.
+- PixiJS apenas interpola e exibe eventos autoritativos.
+- Obstáculos são visíveis; `?debug=1` mostra ocupação, reservas, caminhos e
+  máscaras.
+- `HuntResult` expõe métricas de pathfinding e recuperação.
+- Helper individual permanece pausado e sua branch foi preservada.
+
+Consulte `docs/GRID_COMBAT.md` para a especificação permanente.
+
+### Evidência do MVP 1C — 06/08/2026
+
+| Validação | Resultado |
+|---|---|
+| Instalação | lockfile aprovado |
+| TypeScript | zero erros |
+| Vitest | 55 testes aprovados |
+| Build | 735 módulos, aprovado |
+| Playwright/Edge | 12 cenários aprovados |
+| Loop | 3 ciclos auditados |
+| Grade | zero overlaps e zero obstáculos atravessados |
+| Spells | telegraph e impacto idênticos por `castId` |
+| Debug manual | 2.029 eventos, zero erros de console |
+| Publicação | não realizada |
 
 ## MVP 0 — concluído e reconciliado
 

@@ -5,6 +5,8 @@
 - Preserve TypeScript, Vite, PixiJS, Vitest e Playwright.
 - A interface usa HTML/CSS e TypeScript imperativo.
 - `src/combat/` calcula a hunt e não depende de PixiJS ou DOM.
+- `src/combat/grid/` é a autoridade de tiles, ocupação, reservas, A*, LoS e
+  máscaras; posições interpoladas nunca participam da lógica.
 - `src/events/` define e reproduz a timeline.
 - `src/game/` representa eventos; não decide dano, cura, loot ou progressão.
 - `src/app/` agrega estado independente de DOM.
@@ -35,6 +37,9 @@ Não existe lint configurado.
 - Mudança no motor/timeline exige teste determinístico.
 - Mudança no fluxo exige teste visual de navegador proporcional.
 - Debug visual é opt-in por `?debug=1` e deve permanecer desligado por padrão.
+- Toda entidade ocupável deve manter `tileX`/`tileY` inteiros e exclusivos.
+- Movimento novo deve usar `MovementSystem`; não reintroduza deslocamento
+  autoritativo por pixels ou `stepToward`.
 - Não copie marcas, código ou assets protegidos das referências.
 - Não refatore o projeto inteiro como efeito colateral.
 
@@ -47,6 +52,7 @@ Leia antes de planejar:
 - `docs/ARCHITECTURE.md`
 - `docs/THREAT_AND_AGGRO.md`
 - `docs/HELPER_RULES.md`
+- `docs/GRID_COMBAT.md`
 - `docs/FEATURE_PARITY_MATRIX.md`
 - `docs/MVP_ROADMAP.md`
 - `docs/ACCEPTANCE_MVP0.md`

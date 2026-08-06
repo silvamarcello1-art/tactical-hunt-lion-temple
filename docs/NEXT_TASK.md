@@ -1,5 +1,44 @@
 # Próxima tarefa
 
+## Bloqueio de sequência
+
+O Helper individual permanece pausado. A branch
+`feature/helper-individual` deve continuar preservada, sem cherry-pick ou
+alteração. Sua retomada só é permitida depois da validação completa e revisão do
+MVP 1C — Authoritative Grid Combat.
+
+## Próxima entrega recomendada após o gate do MVP 1C
+
+Executar revisão e estabilização do Grid Combat com foco em escala:
+
+1. medir pathfinding com grupos maiores;
+2. adicionar cache/invalidação de caminhos apenas se as métricas justificarem;
+3. definir prioridades de reserva por papel tático;
+4. ampliar cenários de obstáculos e corredores;
+5. avaliar footprints de boss maiores que 1×1;
+6. revisar visualmente trajetórias e máscaras com arte original definitiva;
+7. somente após esse aceite decidir se o Helper individual será retomado.
+
+Não implementar inventário, equipamentos, loja, backend ou progressão nessa
+revisão.
+
+## Leitura obrigatória
+
+- `AGENTS.md`
+- `docs/GRID_COMBAT.md`
+- `docs/CURRENT_STATE.md`
+- `docs/ARCHITECTURE.md`
+- `docs/THREAT_AND_AGGRO.md`
+- `docs/HELPER_RULES.md`
+
+## Prompt curto
+
+> Leia AGENTS.md, docs/GRID_COMBAT.md e docs/NEXT_TASK.md. Faça somente a revisão
+> de estabilidade e performance do Grid Combat, preserve PixiJS e todos os
+> contratos autoritativos, valide três loops e atualize o checkpoint.
+
+<!-- Histórico anterior preservado abaixo para rastreabilidade. -->
+
 ## MVP 1B — Helper individual e regras editáveis
 
 O aggro espacial, threat, Challenge, posicionamento tático, rotação com
