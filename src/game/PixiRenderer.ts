@@ -177,6 +177,24 @@ export class PixiRenderer {
     parent.dataset.reservationConflicts = String(
       this.result.gridMetrics.reservationConflicts,
     );
+    parent.dataset.consecutiveNoRoute = String(
+      this.result.gridMetrics.consecutiveNoRoute,
+    );
+    parent.dataset.destinationCooldowns = String(
+      this.result.gridMetrics.destinationCooldowns,
+    );
+    parent.dataset.oscillationPrevented = String(
+      this.result.gridMetrics.oscillationPrevented,
+    );
+    parent.dataset.stuckRecoveries = String(
+      this.result.gridMetrics.stuckRecoveries,
+    );
+    parent.dataset.maxPendingMovements = String(
+      this.result.gridMetrics.maxPendingMovements,
+    );
+    parent.dataset.maxPendingProjectiles = String(
+      this.result.gridMetrics.maxPendingProjectiles,
+    );
     this.syncDiagnostics();
     window.dispatchEvent(new CustomEvent('hunt-ready', { detail:this.result }));
   }
@@ -1159,9 +1177,10 @@ export class PixiRenderer {
     projectile.scale.set(.52);
     projectile.animationSpeed = .26;
     projectile.play();
-    const logicalPath = event.data?.pathTiles ?? [];
-    const points = logicalPath.length
-      ? logicalPath.map((tile) => ({ x:tile.x * TILE_SIZE,y:tile.y * TILE_SIZE }))
+    const originTile = event.data?.originTile;
+    const targetTile = event.data?.targetTile;
+    const points = originTile && targetTile
+      ? [originTile,targetTile].map((tile) => ({ x:tile.x * TILE_SIZE,y:tile.y * TILE_SIZE }))
       : [
           { x:source.body.x,y:source.body.y },
           { x:target.body.x,y:target.body.y },
@@ -1374,6 +1393,9 @@ export class PixiRenderer {
     this.parent.dataset.stageChildren = String(this.app.stage.children.length);
     this.parent.dataset.tweenCount = String(this.tweens.length);
     this.parent.dataset.effectCount = String(this.effectLayer.children.length);
+    this.parent.dataset.activeProjectiles = String(this.activeProjectiles.size);
+    this.parent.dataset.activeTelegraphs = String(this.activeTelegraphs.size);
+    this.parent.dataset.reservationCount = String(this.debugReservations.size);
     this.parent.dataset.entityCount = String(this.entityLayer.children.length);
     this.parent.dataset.outOfBounds = String(outOfBounds);
     this.parent.dataset.selectedHero = this.selectedHeroId;

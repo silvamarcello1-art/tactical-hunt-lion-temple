@@ -27,7 +27,14 @@ async function expectNoInvalidNumbers(page: Page) {
 async function installGridAudit(page: Page) {
   await page.addInitScript(() => {
     const positions = new Map<string, string>();
+    const reservations = new Map<string, {
+      tile:string;
+      startedAt:number;
+      completesAt:number;
+    }>();
+    const projectiles = new Map<string, { impactAt:number; terminals:number }>();
     const telegraphs = new Map<string, string>();
+    let currentInitialBackline = 0;
     const blocked = new Set([
       '12:5','12:6','12:12','12:13','17:7','17:8','17:10','17:11',
     ]);
@@ -39,6 +46,14 @@ async function installGridAudit(page: Page) {
       telegraphMismatch:false,
       pathEvents:0,
       spellTelegraphs:0,
+      reservationObserved:false,
+      invalidReservationLifecycle:false,
+      projectileObserved:false,
+      monsterProjectileObserved:false,
+      prematureProjectileDamage:false,
+      duplicateProjectileTerminal:false,
+      pendingAtFloorComplete:false,
+      maxInitialBacklineAttackers:0,
     };
     Object.assign(window, { __gridAudit:audit });
     window.addEventListener('hunt-event', (rawEvent) => {
@@ -52,17 +67,42 @@ async function installGridAudit(page: Page) {
       if (event.floor !== audit.floor) {
         audit.floor = event.floor;
         positions.clear();
+        currentInitialBackline = 0;
       }
       const tile = event.data?.tile as { x:number;y:number } | undefined;
       const toTile = event.data?.toTile as { x:number;y:number } | undefined;
       if ((event.type === 'spawn' || event.type === 'boss_spawn') && event.targetId && tile) {
         positions.set(event.targetId, `${tile.x}:${tile.y}`);
       }
-      if ((event.type === 'move' || event.type === 'reposition') && event.sourceId && toTile) {
+      if (event.type === 'tile_reserved' && event.sourceId && toTile) {
+        const startedAt = Number(event.data?.startedAt ?? event.time);
+        const completesAt = Number(event.data?.completesAt ?? event.time);
+        audit.reservationObserved = true;
+        if (completesAt <= startedAt || positions.get(event.sourceId) === `${toTile.x}:${toTile.y}`) {
+          audit.invalidReservationLifecycle = true;
+        }
+        reservations.set(event.sourceId, {
+          tile:`${toTile.x}:${toTile.y}`,
+          startedAt,
+          completesAt,
+        });
+      }
+      if (event.type === 'movement_completed' && event.sourceId && toTile) {
+        const reservation = reservations.get(event.sourceId);
+        if (!reservation || reservation.tile !== `${toTile.x}:${toTile.y}` || event.time < reservation.completesAt) {
+          audit.invalidReservationLifecycle = true;
+        }
         positions.set(event.sourceId, `${toTile.x}:${toTile.y}`);
         if (blocked.has(`${toTile.x}:${toTile.y}`)) audit.blockedTileEntered = true;
+        reservations.delete(event.sourceId);
       }
-      if (event.type === 'death' && event.targetId) positions.delete(event.targetId);
+      if (event.type === 'movement_cancelled' && event.sourceId) {
+        reservations.delete(event.sourceId);
+      }
+      if (event.type === 'death' && event.targetId) {
+        positions.delete(event.targetId);
+        reservations.delete(event.targetId);
+      }
       if (new Set(positions.values()).size !== positions.size) {
         audit.overlapDetected = true;
       }
@@ -82,15 +122,56 @@ async function installGridAudit(page: Page) {
         }
       }
       const castId = event.data?.castId as string | undefined;
+      if (event.type === 'projectile' && castId) {
+        audit.projectileObserved = true;
+        if (event.sourceId?.startsWith('lion-') || event.sourceId?.startsWith('mage-') || event.sourceId === 'lion-king') {
+          audit.monsterProjectileObserved = true;
+        }
+        const impactAt = Number(event.data?.impactAt ?? event.time);
+        if (impactAt <= event.time || !Array.isArray(event.data?.pathTiles) || event.data.pathTiles.length < 2) {
+          audit.prematureProjectileDamage = true;
+        }
+        projectiles.set(castId, { impactAt, terminals:0 });
+      }
+      if ((event.type === 'damage' || event.type === 'dodge') && castId) {
+        const projectile = projectiles.get(castId);
+        if (projectile && event.time < projectile.impactAt) {
+          audit.prematureProjectileDamage = true;
+        }
+      }
+      if ((event.type === 'projectile_resolved' || event.type === 'projectile_cancelled') && castId) {
+        const projectile = projectiles.get(castId);
+        if (projectile) {
+          projectile.terminals++;
+          if (projectile.terminals > 1 || event.time < projectile.impactAt && event.type === 'projectile_resolved') {
+            audit.duplicateProjectileTerminal = true;
+          }
+          projectiles.delete(castId);
+        }
+      }
       if (event.type === 'spell_telegraph' && castId) {
         audit.spellTelegraphs++;
         telegraphs.set(castId, JSON.stringify(event.data?.logicalTiles ?? []));
       }
-      if (event.type === 'spell_resolved' && castId && telegraphs.has(castId)) {
+      if ((event.type === 'spell_resolved' || event.type === 'spell_cancelled') && castId && telegraphs.has(castId)) {
         if (telegraphs.get(castId) !== JSON.stringify(event.data?.logicalTiles ?? [])) {
           audit.telegraphMismatch = true;
         }
         telegraphs.delete(castId);
+      }
+      if (event.type === 'floor_complete') {
+        if (reservations.size || projectiles.size || telegraphs.size) {
+          audit.pendingAtFloorComplete = true;
+        }
+      }
+      if (event.type === 'target_change' && event.data?.reason === 'spatial') {
+        if (event.targetId === 'druid' || event.targetId === 'sorcerer') {
+          currentInitialBackline++;
+          audit.maxInitialBacklineAttackers = Math.max(
+            audit.maxInitialBacklineAttackers,
+            currentInitialBackline,
+          );
+        }
       }
     });
   });
@@ -515,6 +596,34 @@ test.describe.serial('MVP 0 + MVP 1A — fluxo completo', () => {
     expect(errors).toEqual([]);
   });
 
+  test('remove reservas, projéteis e telegraphs ao reiniciar durante a hunt', async ({
+    page,
+  }) => {
+    const errors = collectRuntimeErrors(page);
+    await openIdleHunt(page);
+    await page.locator('#start').click();
+    await expect
+      .poll(async () => Number(await page.locator('#game').getAttribute(
+        'data-active-projectiles',
+      )))
+      .toBeGreaterThan(0);
+    await expect
+      .poll(async () => Number(await page.locator('#game').getAttribute(
+        'data-reservation-count',
+      )))
+      .toBeGreaterThan(0);
+    await page.locator('#restart').click();
+    await expect(page.locator('html')).toHaveAttribute('data-session-state', 'idle');
+    await expect(page.locator('#game')).toHaveAttribute('data-active-projectiles', '0');
+    await expect(page.locator('#game')).toHaveAttribute('data-active-telegraphs', '0');
+    await expect(page.locator('#game')).toHaveAttribute('data-reservation-count', '0');
+    await expect(page.locator('#game')).toHaveAttribute('data-tween-count', '0');
+    await expect(page.locator('#game')).toHaveAttribute('data-effect-count', '0');
+    await page.waitForTimeout(500);
+    await expect(page.locator('html')).toHaveAttribute('data-processed-events', '0');
+    expect(errors).toEqual([]);
+  });
+
   test('chega ao boss e conclui três loops sem duplicações', async ({ page }) => {
     const errors = collectRuntimeErrors(page);
     await installGridAudit(page);
@@ -567,9 +676,30 @@ test.describe.serial('MVP 0 + MVP 1A — fluxo completo', () => {
       blockedTileEntered:false,
       invalidPath:false,
       telegraphMismatch:false,
+      reservationObserved:true,
+      invalidReservationLifecycle:false,
+      projectileObserved:true,
+      monsterProjectileObserved:true,
+      prematureProjectileDamage:false,
+      duplicateProjectileTerminal:false,
+      pendingAtFloorComplete:false,
     });
+    expect(Number(gridAudit?.maxInitialBacklineAttackers ?? Infinity))
+      .toBeLessThanOrEqual(2);
     expect(Number(gridAudit?.pathEvents ?? 0)).toBeGreaterThan(0);
     expect(Number(gridAudit?.spellTelegraphs ?? 0)).toBeGreaterThan(0);
+    await expect(page.locator('#game')).toHaveAttribute('data-active-projectiles', '0');
+    await expect(page.locator('#game')).toHaveAttribute('data-active-telegraphs', '0');
+    await expect(page.locator('#game')).toHaveAttribute('data-reservation-count', '0');
+    expect(Number(await page.locator('#game').getAttribute(
+      'data-consecutive-no-route',
+    ))).toBeLessThanOrEqual(3);
+    expect(Number(await page.locator('#game').getAttribute(
+      'data-max-pending-movements',
+    ))).toBeGreaterThan(0);
+    expect(Number(await page.locator('#game').getAttribute(
+      'data-max-pending-projectiles',
+    ))).toBeGreaterThan(0);
     expect(errors).toEqual([]);
   });
 

@@ -405,6 +405,39 @@ describe('CombatEngine', () => {
     }
   });
 
+  it('closes every projectile and hazard lifecycle before leaving a floor', () => {
+    const events = new CombatEngine(803).run().events;
+    const pendingProjectiles = new Map<string, number>();
+    const pendingSpells = new Map<string, number>();
+    const cancelledAt = new Map<string, number>();
+    for (const event of events) {
+      const castId = event.data?.castId;
+      if (event.type === 'projectile' && castId) {
+        pendingProjectiles.set(castId,event.floor);
+      }
+      if (event.type === 'spell_telegraph' && castId) {
+        pendingSpells.set(castId,event.floor);
+      }
+      if ((event.type === 'projectile_resolved' || event.type === 'projectile_cancelled') && castId) {
+        if (pendingProjectiles.has(castId)) pendingProjectiles.delete(castId);
+        if (event.type === 'projectile_cancelled') cancelledAt.set(castId,event.time);
+      }
+      if ((event.type === 'spell_resolved' || event.type === 'spell_cancelled') && castId) {
+        if (pendingSpells.has(castId)) pendingSpells.delete(castId);
+        if (event.type === 'spell_cancelled') cancelledAt.set(castId,event.time);
+      }
+      if ((event.type === 'damage' || event.type === 'dodge') && castId) {
+        expect(event.time).toBeLessThanOrEqual(cancelledAt.get(castId) ?? Infinity);
+      }
+      if (event.type === 'floor_complete') {
+        expect([...pendingProjectiles.values()]).not.toContain(event.floor);
+        expect([...pendingSpells.values()]).not.toContain(event.floor);
+      }
+    }
+    expect(pendingProjectiles.size).toBe(0);
+    expect(pendingSpells.size).toBe(0);
+  });
+
   it('prevents unjustified mage A-B-A movement loops', () => {
     const events = new CombatEngine(803).run().events;
     for (const entityId of ['druid', 'sorcerer']) {

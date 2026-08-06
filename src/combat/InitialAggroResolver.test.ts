@@ -57,4 +57,22 @@ describe('initial aggro cap', () => {
       enemyId:'neutral',targetId:'knight',zone:'neutral',
     });
   });
+
+  it('applies the cap independently to newly spawned waves', () => {
+    const firstWave = resolveInitialAggro(
+      backlineEnemies(6),
+      party,
+      2,
+    );
+    const secondWave = resolveInitialAggro(
+      backlineEnemies(6).map((enemy) => ({ ...enemy,id:`reinforcement-${enemy.id}` })),
+      party,
+      2,
+    );
+    for (const assignments of [firstWave,secondWave]) {
+      expect(assignments.filter(
+        (assignment) => assignment.targetId === 'druid' || assignment.targetId === 'sorcerer',
+      )).toHaveLength(2);
+    }
+  });
 });
