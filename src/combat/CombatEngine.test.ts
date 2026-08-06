@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { abilities, defaultAbilityPreferences } from '../data/abilities';
-import { floors } from '../data/config';
+import { floors, HUNT_LAYOUT_CONFIG } from '../data/config';
 import { CombatEngine } from './CombatEngine';
 import { TILE_SIZE, abilityOffsets } from './tiles';
 
@@ -251,5 +251,93 @@ describe('CombatEngine', () => {
     expect(
       casts.some((event) => event.data?.abilityId === 'energy_wave'),
     ).toBe(false);
+  });
+
+  it('mantém todas as entidades em tiles inteiros e sem sobreposição', () => {
+    const events = new CombatEngine().run().events;
+    const positions = new Map<string, { x: number; y: number }>();
+    let floor = 0;
+    for (const event of events) {
+      if (event.floor !== floor) {
+        floor = event.floor;
+        positions.clear();
+      }
+      if (
+        (event.type === 'spawn' || event.type === 'boss_spawn') &&
+        event.targetId &&
+        event.data?.tile
+      ) {
+        positions.set(event.targetId, event.data.tile);
+      }
+      if (
+        (event.type === 'move' || event.type === 'reposition') &&
+        event.sourceId &&
+        event.data?.toTile
+      ) {
+        positions.set(event.sourceId, event.data.toTile);
+      }
+      if (event.type === 'death' && event.targetId) positions.delete(event.targetId);
+      const keys = [...positions.values()].map((position) => {
+        expect(Number.isInteger(position.x)).toBe(true);
+        expect(Number.isInteger(position.y)).toBe(true);
+        return `${position.x}:${position.y}`;
+      });
+      expect(new Set(keys).size).toBe(keys.length);
+    }
+  });
+
+  it('emite caminhos adjacentes, dentro da arena e sem atravessar obstáculos', () => {
+    const result = new CombatEngine().run();
+    const blocked = new Set(
+      HUNT_LAYOUT_CONFIG.blockedTiles.map((tile) => `${tile.x}:${tile.y}`),
+    );
+    const paths = result.events.filter(
+      (event) => event.type === 'path_recalculated' && event.data?.path?.length,
+    );
+    expect(paths.length).toBeGreaterThan(0);
+    for (const event of paths) {
+      let previous = event.data!.fromTile!;
+      for (const tile of event.data!.path!) {
+        expect(
+          Math.max(
+            Math.abs(tile.x - previous.x),
+            Math.abs(tile.y - previous.y),
+          ),
+        ).toBe(1);
+        expect(blocked.has(`${tile.x}:${tile.y}`)).toBe(false);
+        expect(tile.x).toBeGreaterThanOrEqual(
+          HUNT_LAYOUT_CONFIG.walkableBounds.minColumn,
+        );
+        expect(tile.x).toBeLessThanOrEqual(
+          HUNT_LAYOUT_CONFIG.walkableBounds.maxColumn,
+        );
+        expect(tile.y).toBeGreaterThanOrEqual(
+          HUNT_LAYOUT_CONFIG.walkableBounds.minRow,
+        );
+        expect(tile.y).toBeLessThanOrEqual(
+          HUNT_LAYOUT_CONFIG.walkableBounds.maxRow,
+        );
+        previous = tile;
+      }
+    }
+    expect(result.gridMetrics.pathRecalculations).toBe(
+      result.events.filter((event) => event.type === 'path_recalculated').length,
+    );
+  });
+
+  it('resolve cada telegraph exatamente no mesmo conjunto lógico de tiles', () => {
+    const events = new CombatEngine().run().events;
+    const telegraphs = events.filter((event) => event.type === 'spell_telegraph');
+    expect(telegraphs.length).toBeGreaterThan(0);
+    for (const telegraph of telegraphs) {
+      const resolved = events.find(
+        (event) =>
+          event.type === 'spell_resolved' &&
+          event.data?.castId === telegraph.data?.castId,
+      );
+      expect(resolved).toBeDefined();
+      expect(resolved?.data?.logicalTiles).toEqual(telegraph.data?.logicalTiles);
+      expect(resolved!.time).toBe(telegraph.data?.impactAt);
+    }
   });
 });

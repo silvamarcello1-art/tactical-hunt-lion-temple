@@ -1,10 +1,17 @@
 export type EventType =
   | 'spawn'
   | 'boss_spawn'
+  | 'tile_reserved'
+  | 'movement_started'
+  | 'movement_completed'
+  | 'movement_blocked'
+  | 'path_recalculated'
   | 'move'
   | 'reposition'
   | 'target_change'
   | 'aggro'
+  | 'spell_telegraph'
+  | 'spell_resolved'
   | 'area_warning'
   | 'monster_aoe'
   | 'basic_attack'
@@ -26,6 +33,11 @@ export interface Point {
   y: number;
 }
 
+export interface GridPoint {
+  x: number;
+  y: number;
+}
+
 export type Direction = 'up' | 'down' | 'left' | 'right';
 
 export interface CombatEvent {
@@ -40,6 +52,13 @@ export interface CombatEvent {
     element?: string;
     position?: Point;
     tiles?: Point[];
+    tile?: GridPoint;
+    fromTile?: GridPoint;
+    toTile?: GridPoint;
+    destinationTile?: GridPoint;
+    path?: GridPoint[];
+    logicalTiles?: GridPoint[];
+    lineOfSightTiles?: GridPoint[];
     facing?: Direction;
     ability?: string;
     abilityId?: string;
@@ -63,6 +82,10 @@ export interface CombatEvent {
     cooldownEndsAt?: number;
     cooldownDuration?: number;
     rewardType?: string;
+    castId?: string;
+    impactAt?: number;
+    blockedReason?: string;
+    blockingEntityId?: string;
   };
 }
 
@@ -80,6 +103,8 @@ export interface EntitySnapshot {
   defense: number;
   crit: number;
   dodge: number;
+  tileX: number;
+  tileY: number;
   position: Point;
   color: number;
   bossTokenReward?: number;
@@ -97,4 +122,12 @@ export interface HuntResult {
   damageTaken: number;
   loot: Record<string, number>;
   floorTimes: number[];
+  gridMetrics: {
+    pathRecalculations: number;
+    blockedMoves: number;
+    reservationConflicts: number;
+    totalPathLength: number;
+    completedPaths: number;
+    stuckRecoveries: number;
+  };
 }

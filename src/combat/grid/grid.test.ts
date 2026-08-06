@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { gridToWorld, worldToGrid } from '../tiles';
 import { GridMap } from './GridMap';
 import { LineOfSightResolver } from './LineOfSightResolver';
 import { MovementSystem } from './MovementSystem';
@@ -123,5 +124,112 @@ describe('authoritative grid systems', () => {
       x: 5,
       y: 4,
     });
+  });
+
+  it('converts logical tiles to visual coordinates without losing integers', () => {
+    const logical = { x: 8, y: 9 };
+    expect(worldToGrid(gridToWorld(logical))).toEqual(logical);
+  });
+
+  it('reports walkable and blocked terrain explicitly', () => {
+    const { map } = setup([{ x: 4, y: 4 }]);
+    expect(map.tile({ x: 3, y: 4 })).toMatchObject({ walkable: true });
+    expect(map.tile({ x: 4, y: 4 })).toMatchObject({ walkable: false });
+    expect(map.tile({ x: 0, y: 0 })).toMatchObject({ walkable: false });
+  });
+
+  it('releases occupancy and reservations when an entity leaves the grid', () => {
+    const { occupancy } = setup();
+    occupancy.occupy('monster', { x: 4, y: 4 });
+    occupancy.reserve('monster', { x: 5, y: 4 });
+    occupancy.release('monster');
+    expect(occupancy.occupantAt({ x: 4, y: 4 })).toBeUndefined();
+    expect(occupancy.reservedBy({ x: 5, y: 4 })).toBeUndefined();
+  });
+
+  it('returns the same direct path for the same inputs', () => {
+    const { map, occupancy } = setup();
+    occupancy.occupy('hero', { x: 2, y: 2 });
+    const pathfinder = new Pathfinder(map, occupancy);
+    const first = pathfinder.findPath(
+      { x: 2, y: 2 },
+      { x: 7, y: 2 },
+      { entityId: 'hero' },
+    );
+    const second = pathfinder.findPath(
+      { x: 2, y: 2 },
+      { x: 7, y: 2 },
+      { entityId: 'hero' },
+    );
+    expect(first).toEqual(second);
+    expect(first).toEqual([
+      { x: 3, y: 2 },
+      { x: 4, y: 2 },
+      { x: 5, y: 2 },
+      { x: 6, y: 2 },
+      { x: 7, y: 2 },
+    ]);
+  });
+
+  it('rejects occupied and reserved destinations without a valid range', () => {
+    const { map, occupancy } = setup();
+    occupancy.occupy('hero', { x: 2, y: 2 });
+    occupancy.occupy('occupied', { x: 5, y: 2 });
+    occupancy.occupy('reserver', { x: 7, y: 3 });
+    occupancy.reserve('reserver', { x: 7, y: 2 });
+    const pathfinder = new Pathfinder(map, occupancy);
+    expect(
+      pathfinder.findPath(
+        { x: 2, y: 2 },
+        { x: 5, y: 2 },
+        { entityId: 'hero' },
+      ),
+    ).toEqual([]);
+    expect(
+      pathfinder.findPath(
+        { x: 2, y: 2 },
+        { x: 7, y: 2 },
+        { entityId: 'hero' },
+      ),
+    ).toEqual([]);
+  });
+
+  it('finds a casting position at the configured spell range', () => {
+    const { map, occupancy } = setup();
+    occupancy.occupy('caster', { x: 2, y: 4 });
+    occupancy.occupy('target', { x: 9, y: 4 });
+    const path = new Pathfinder(map, occupancy).findPath(
+      { x: 2, y: 4 },
+      { x: 9, y: 4 },
+      { entityId: 'caster', goalRange: 4 },
+    );
+    expect(path.at(-1)).toEqual({ x: 5, y: 4 });
+  });
+
+  it('returns a safe empty path when no route exists', () => {
+    const { map, occupancy } = setup([
+      { x: 2, y: 1 },
+      { x: 1, y: 2 },
+      { x: 3, y: 2 },
+      { x: 2, y: 3 },
+    ]);
+    occupancy.occupy('hero', { x: 2, y: 2 });
+    expect(
+      new Pathfinder(map, occupancy).findPath(
+        { x: 2, y: 2 },
+        { x: 8, y: 8 },
+        { entityId: 'hero' },
+      ),
+    ).toEqual([]);
+  });
+
+  it('supports larger footprints without entering partially blocked space', () => {
+    const { map, occupancy } = setup([{ x: 5, y: 5 }]);
+    expect(
+      occupancy.occupy('boss', { x: 4, y: 4 }, { width: 2, height: 2 }),
+    ).toMatchObject({ allowed: false, reason: 'blocked-terrain' });
+    expect(
+      occupancy.occupy('boss', { x: 6, y: 4 }, { width: 2, height: 2 }),
+    ).toMatchObject({ allowed: true });
   });
 });

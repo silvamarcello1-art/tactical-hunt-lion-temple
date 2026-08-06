@@ -24,6 +24,78 @@ async function expectNoInvalidNumbers(page: Page) {
   expect(text).not.toContain('Infinity');
 }
 
+async function installGridAudit(page: Page) {
+  await page.addInitScript(() => {
+    const positions = new Map<string, string>();
+    const telegraphs = new Map<string, string>();
+    const blocked = new Set([
+      '12:5','12:6','12:12','12:13','17:7','17:8','17:10','17:11',
+    ]);
+    const audit = {
+      floor:0,
+      overlapDetected:false,
+      blockedTileEntered:false,
+      invalidPath:false,
+      telegraphMismatch:false,
+      pathEvents:0,
+      spellTelegraphs:0,
+    };
+    Object.assign(window, { __gridAudit:audit });
+    window.addEventListener('hunt-event', (rawEvent) => {
+      const event = (rawEvent as CustomEvent<{
+        floor:number;
+        type:string;
+        sourceId?:string;
+        targetId?:string;
+        data?:Record<string, unknown>;
+      }>).detail;
+      if (event.floor !== audit.floor) {
+        audit.floor = event.floor;
+        positions.clear();
+      }
+      const tile = event.data?.tile as { x:number;y:number } | undefined;
+      const toTile = event.data?.toTile as { x:number;y:number } | undefined;
+      if ((event.type === 'spawn' || event.type === 'boss_spawn') && event.targetId && tile) {
+        positions.set(event.targetId, `${tile.x}:${tile.y}`);
+      }
+      if ((event.type === 'move' || event.type === 'reposition') && event.sourceId && toTile) {
+        positions.set(event.sourceId, `${toTile.x}:${toTile.y}`);
+        if (blocked.has(`${toTile.x}:${toTile.y}`)) audit.blockedTileEntered = true;
+      }
+      if (event.type === 'death' && event.targetId) positions.delete(event.targetId);
+      if (new Set(positions.values()).size !== positions.size) {
+        audit.overlapDetected = true;
+      }
+      if (event.type === 'path_recalculated') {
+        audit.pathEvents++;
+        const path = (event.data?.path ?? []) as Array<{ x:number;y:number }>;
+        let previous = event.data?.fromTile as { x:number;y:number } | undefined;
+        for (const step of path) {
+          if (
+            !previous ||
+            Math.max(Math.abs(step.x - previous.x), Math.abs(step.y - previous.y)) !== 1 ||
+            blocked.has(`${step.x}:${step.y}`)
+          ) {
+            audit.invalidPath = true;
+          }
+          previous = step;
+        }
+      }
+      const castId = event.data?.castId as string | undefined;
+      if (event.type === 'spell_telegraph' && castId) {
+        audit.spellTelegraphs++;
+        telegraphs.set(castId, JSON.stringify(event.data?.logicalTiles ?? []));
+      }
+      if (event.type === 'spell_resolved' && castId && telegraphs.has(castId)) {
+        if (telegraphs.get(castId) !== JSON.stringify(event.data?.logicalTiles ?? [])) {
+          audit.telegraphMismatch = true;
+        }
+        telegraphs.delete(castId);
+      }
+    });
+  });
+}
+
 test.describe.serial('MVP 0 + MVP 1A — fluxo completo', () => {
   test('carrega sem erros e todo controle visível dá retorno', async ({
     page,
@@ -445,6 +517,7 @@ test.describe.serial('MVP 0 + MVP 1A — fluxo completo', () => {
 
   test('chega ao boss e conclui três loops sem duplicações', async ({ page }) => {
     const errors = collectRuntimeErrors(page);
+    await installGridAudit(page);
     await openIdleHunt(page);
     await page.locator('[data-speed="4"]').click();
     await page.locator('#start').click();
@@ -464,6 +537,12 @@ test.describe.serial('MVP 0 + MVP 1A — fluxo completo', () => {
     await expect(page.locator('#game')).toHaveAttribute('data-effect-count', '0');
     await expect(page.locator('#game')).toHaveAttribute('data-entity-count', '3');
     await expect(page.locator('#game')).toHaveAttribute('data-out-of-bounds', '0');
+    await expect(page.locator('#game')).toHaveAttribute('data-logical-overlaps', '0');
+    await expect
+      .poll(async () => Number(await page.locator('#game').getAttribute(
+        'data-path-recalculations',
+      )))
+      .toBeGreaterThan(0);
     await expect(page.locator('.hero-card')).toHaveCount(3);
     await expect(page.locator('#analyzer')).toContainText('Bosses');
     await expect(page.locator('#analyzer')).toContainText('Dano recebido');
@@ -480,6 +559,17 @@ test.describe.serial('MVP 0 + MVP 1A — fluxo completo', () => {
       '3',
     );
     await expectNoInvalidNumbers(page);
+    const gridAudit = await page.evaluate(() =>
+      (window as typeof window & { __gridAudit?:Record<string, unknown> }).__gridAudit,
+    );
+    expect(gridAudit).toMatchObject({
+      overlapDetected:false,
+      blockedTileEntered:false,
+      invalidPath:false,
+      telegraphMismatch:false,
+    });
+    expect(Number(gridAudit?.pathEvents ?? 0)).toBeGreaterThan(0);
+    expect(Number(gridAudit?.spellTelegraphs ?? 0)).toBeGreaterThan(0);
     expect(errors).toEqual([]);
   });
 
