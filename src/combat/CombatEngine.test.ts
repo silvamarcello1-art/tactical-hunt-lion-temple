@@ -330,14 +330,63 @@ describe('CombatEngine', () => {
     const telegraphs = events.filter((event) => event.type === 'spell_telegraph');
     expect(telegraphs.length).toBeGreaterThan(0);
     for (const telegraph of telegraphs) {
-      const resolved = events.find(
+      const terminal = events.filter(
         (event) =>
-          event.type === 'spell_resolved' &&
+          (event.type === 'spell_resolved' || event.type === 'spell_cancelled') &&
           event.data?.castId === telegraph.data?.castId,
       );
-      expect(resolved).toBeDefined();
-      expect(resolved?.data?.logicalTiles).toEqual(telegraph.data?.logicalTiles);
-      expect(resolved!.time).toBe(telegraph.data?.impactAt);
+      expect(terminal).toHaveLength(1);
+      expect(terminal[0].data?.logicalTiles).toEqual(telegraph.data?.logicalTiles);
+      if (terminal[0].type === 'spell_resolved') {
+        expect(terminal[0].time).toBe(telegraph.data?.impactAt);
+      } else {
+        expect(terminal[0].data?.reason).toBeTruthy();
+        expect(terminal[0].time).toBeLessThan(telegraph.data?.impactAt ?? Infinity);
+      }
+    }
+  });
+
+  it('resolves every basic projectile through the authoritative impact pipeline', () => {
+    const events = new CombatEngine(803).run().events;
+    const projectiles = events.filter((event) => event.type === 'projectile');
+    expect(projectiles.length).toBeGreaterThan(0);
+    for (const projectile of projectiles) {
+      expect(projectile.data?.castId).toBeTruthy();
+      expect(projectile.data?.pathTiles?.length).toBeGreaterThan(1);
+      expect(projectile.data?.impactAt).toBeGreaterThan(projectile.time);
+      const terminals = events.filter(
+        (event) =>
+          (event.type === 'projectile_resolved' ||
+            event.type === 'projectile_cancelled') &&
+          event.data?.castId === projectile.data?.castId,
+      );
+      expect(terminals).toHaveLength(1);
+      expect(terminals[0].time).toBeGreaterThanOrEqual(projectile.time);
+    }
+  });
+
+  it('never applies projectile damage before its impact timestamp', () => {
+    const events = new CombatEngine(803).run().events;
+    for (const projectile of events.filter((event) => event.type === 'projectile')) {
+      const terminal = events.find(
+        (event) =>
+          event.type === 'projectile_resolved' &&
+          event.data?.castId === projectile.data?.castId,
+      );
+      if (!terminal) continue;
+      expect(terminal.time).toBe(projectile.data?.impactAt);
+      const projectileIndex = events.indexOf(projectile);
+      const terminalIndex = events.indexOf(terminal);
+      const related = events
+        .slice(projectileIndex + 1, terminalIndex)
+        .filter(
+          (event) =>
+            (event.type === 'damage' || event.type === 'dodge') &&
+            event.sourceId === projectile.sourceId &&
+            event.targetId === projectile.targetId,
+        );
+      expect(related.every((event) => event.time >= terminal.time)).toBe(true);
+      expect(related.some((event) => event.time === terminal.time)).toBe(true);
     }
   });
 });

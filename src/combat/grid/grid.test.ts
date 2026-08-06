@@ -5,6 +5,7 @@ import { LineOfSightResolver } from './LineOfSightResolver';
 import { MovementSystem } from './MovementSystem';
 import { OccupancyGrid } from './OccupancyGrid';
 import { Pathfinder } from './Pathfinder';
+import { ProjectileSystem } from './ProjectileSystem';
 import { SpellAreaResolver } from './SpellAreaResolver';
 import { createGridMetrics, gridKey } from './GridTypes';
 
@@ -325,5 +326,103 @@ describe('authoritative grid systems', () => {
     expect(
       occupancy.occupy('boss', { x: 6, y: 4 }, { width: 2, height: 2 }),
     ).toMatchObject({ allowed: true });
+  });
+
+  it('schedules authoritative projectiles with a future single impact', () => {
+    const { map, occupancy } = setup();
+    const metrics = createGridMetrics();
+    occupancy.occupy('caster', { x:2,y:4 });
+    occupancy.occupy('target', { x:8,y:4 });
+    const projectiles = new ProjectileSystem(
+      new LineOfSightResolver(map, occupancy),
+      metrics,
+    );
+    const scheduled = projectiles.schedule({
+      castId:'cast-1',sessionId:'session-a',casterId:'caster',targetId:'target',
+      originTile:{ x:2,y:4 },targetTile:{ x:8,y:4 },startedAt:100,travelTime:400,
+      damage:120,spellId:'test-bolt',collisionPolicy:'walls',
+      lineOfSightPolicy:'required',targetPolicy:'requires-alive',
+      impactPolicy:'follow-target',floor:1,element:'energy',logicalTiles:[{ x:8,y:4 }],
+      ignoreEntityIds:['caster','target'],
+    });
+    expect(scheduled).toMatchObject({
+      accepted:true,
+      projectile:{ castId:'cast-1',startedAt:100,impactAt:500 },
+    });
+    expect(scheduled.projectile?.pathTiles.length).toBeGreaterThan(2);
+    expect(projectiles.resolveDue(499, 'session-a')).toEqual([]);
+    expect(projectiles.resolveDue(500, 'session-a')).toMatchObject([
+      { status:'ready',projectile:{ castId:'cast-1' } },
+    ]);
+    expect(projectiles.resolveDue(900, 'session-a')).toEqual([]);
+    expect(metrics.maxPendingProjectiles).toBe(1);
+  });
+
+  it('applies configurable wall and unit collision policies to projectiles', () => {
+    const blocked = setup([{ x:5,y:4 }]);
+    blocked.occupancy.occupy('caster', { x:2,y:4 });
+    blocked.occupancy.occupy('target', { x:8,y:4 });
+    const wallSystem = new ProjectileSystem(
+      new LineOfSightResolver(blocked.map, blocked.occupancy),
+      createGridMetrics(),
+    );
+    const base = {
+      castId:'wall',sessionId:'s',casterId:'caster',targetId:'target',
+      originTile:{ x:2,y:4 },targetTile:{ x:8,y:4 },startedAt:0,travelTime:400,
+      damage:1,spellId:'bolt',targetPolicy:'requires-alive' as const,
+      impactPolicy:'follow-target' as const,floor:1,element:'energy',
+      logicalTiles:[{ x:8,y:4 }],ignoreEntityIds:['caster','target'],
+    };
+    expect(wallSystem.schedule({
+      ...base,collisionPolicy:'walls',lineOfSightPolicy:'required',
+    })).toMatchObject({ accepted:false,reason:'blocked-line-of-sight' });
+    expect(wallSystem.schedule({
+      ...base,castId:'wall-pass',collisionPolicy:'none',lineOfSightPolicy:'ignored',
+    })).toMatchObject({ accepted:true });
+
+    const units = setup();
+    units.occupancy.occupy('caster', { x:2,y:3 });
+    units.occupancy.occupy('blocker', { x:5,y:3 });
+    units.occupancy.occupy('target', { x:8,y:3 });
+    const unitSystem = new ProjectileSystem(
+      new LineOfSightResolver(units.map, units.occupancy),
+      createGridMetrics(),
+    );
+    expect(unitSystem.schedule({
+      ...base,castId:'unit-block',originTile:{ x:2,y:3 },targetTile:{ x:8,y:3 },
+      logicalTiles:[{ x:8,y:3 }],collisionPolicy:'walls-and-units',
+      lineOfSightPolicy:'required',
+    })).toMatchObject({ accepted:false });
+    expect(unitSystem.schedule({
+      ...base,castId:'unit-pass',originTile:{ x:2,y:3 },targetTile:{ x:8,y:3 },
+      logicalTiles:[{ x:8,y:3 }],collisionPolicy:'walls',lineOfSightPolicy:'required',
+    })).toMatchObject({ accepted:true });
+  });
+
+  it('cancels pending projectiles on reset and rejects stale-session resolution', () => {
+    const { map, occupancy } = setup();
+    occupancy.occupy('caster', { x:2,y:4 });
+    occupancy.occupy('target', { x:8,y:4 });
+    const projectiles = new ProjectileSystem(
+      new LineOfSightResolver(map, occupancy),
+      createGridMetrics(),
+    );
+    const request = {
+      castId:'cast-reset',sessionId:'session-a',casterId:'caster',targetId:'target',
+      originTile:{ x:2,y:4 },targetTile:{ x:8,y:4 },startedAt:0,travelTime:400,
+      damage:1,spellId:'bolt',collisionPolicy:'walls' as const,
+      lineOfSightPolicy:'required' as const,targetPolicy:'requires-alive' as const,
+      impactPolicy:'follow-target' as const,floor:1,element:'energy',
+      logicalTiles:[{ x:8,y:4 }],ignoreEntityIds:['caster','target'],
+    };
+    projectiles.schedule(request);
+    expect(projectiles.cancelAll('reset', 'session-a')).toMatchObject([
+      { status:'cancelled',reason:'reset' },
+    ]);
+    expect(projectiles.pendingEntries()).toEqual([]);
+    projectiles.schedule({ ...request,castId:'cast-stale' });
+    expect(projectiles.resolveDue(400, 'session-b')).toMatchObject([
+      { status:'cancelled',reason:'stale-session' },
+    ]);
   });
 });

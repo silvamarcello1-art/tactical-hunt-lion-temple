@@ -22,6 +22,9 @@ import { GridMap } from './grid/GridMap';
 import { LineOfSightResolver } from './grid/LineOfSightResolver';
 import { MovementSystem } from './grid/MovementSystem';
 import { OccupancyGrid } from './grid/OccupancyGrid';
+import {
+  ProjectileSystem,
+} from './grid/ProjectileSystem';
 import { SpellAreaResolver } from './grid/SpellAreaResolver';
 import {
   cloneGridPosition,
@@ -112,6 +115,7 @@ export class CombatEngine {
   );
   private lineOfSight = new LineOfSightResolver(this.gridMap, this.occupancy);
   private spellArea = new SpellAreaResolver(this.gridMap, this.lineOfSight);
+  private projectiles = new ProjectileSystem(this.lineOfSight, this.gridMetrics);
 
   constructor(
     private seed = 803,
@@ -183,6 +187,7 @@ export class CombatEngine {
     );
     this.lineOfSight = new LineOfSightResolver(this.gridMap, this.occupancy);
     this.spellArea = new SpellAreaResolver(this.gridMap, this.lineOfSight);
+    this.projectiles = new ProjectileSystem(this.lineOfSight, this.gridMetrics);
   }
 
   private ability(id: string) {
@@ -238,6 +243,199 @@ export class CombatEngine {
       castId,
     });
     return castId;
+  }
+
+  private queueProjectile(
+    caster: SimEntity,
+    target: SimEntity,
+    floor: number,
+    options: {
+      castId: string;
+      attackId: string;
+      damage: number;
+      element: string;
+      ability?: string;
+      logicalTiles?: GridPosition[];
+      collisionPolicy?: 'walls' | 'walls-and-units' | 'none';
+      lineOfSightPolicy?: 'required' | 'ignored';
+      impactPolicy?: 'original-tile' | 'follow-target';
+      travelTime?: number;
+    },
+  ) {
+    const scheduled = this.projectiles.schedule({
+      castId:options.castId,
+      sessionId:this.sessionId,
+      casterId:caster.id,
+      targetId:target.id,
+      originTile:this.tileOf(caster),
+      targetTile:this.tileOf(target),
+      startedAt:this.now,
+      travelTime:options.travelTime ?? 400,
+      damage:options.damage,
+      spellId:options.attackId,
+      collisionPolicy:options.collisionPolicy ?? 'walls',
+      lineOfSightPolicy:options.lineOfSightPolicy ?? 'required',
+      targetPolicy:'requires-alive',
+      impactPolicy:options.impactPolicy ?? 'follow-target',
+      floor,
+      ability:options.ability,
+      element:options.element,
+      logicalTiles:options.logicalTiles ?? [this.tileOf(target)],
+      ignoreEntityIds:[caster.id,target.id],
+    });
+    if (!scheduled.accepted || !scheduled.projectile) {
+      this.emit('projectile_cancelled', floor, caster.id, target.id, {
+        castId:options.castId,
+        abilityId:options.attackId,
+        reason:scheduled.reason,
+        sessionId:this.sessionId,
+      });
+      if (options.ability) {
+        this.emit('spell_cancelled', floor, caster.id, target.id, {
+          castId:options.castId,
+          ability:options.ability,
+          abilityId:options.attackId,
+          logicalTiles:clone(options.logicalTiles ?? []),
+          reason:scheduled.reason,
+          sessionId:this.sessionId,
+        });
+      }
+      return false;
+    }
+    const projectile = scheduled.projectile;
+    this.emit('projectile', floor, caster.id, target.id, {
+      ability:options.ability,
+      abilityId:options.attackId,
+      element:options.element,
+      castId:projectile.castId,
+      originTile:projectile.originTile,
+      targetTile:projectile.targetTile,
+      pathTiles:projectile.pathTiles,
+      lineOfSightTiles:projectile.pathTiles,
+      startedAt:projectile.startedAt,
+      impactAt:projectile.impactAt,
+      duration:projectile.impactAt - projectile.startedAt,
+      collisionPolicy:projectile.collisionPolicy,
+      lineOfSightPolicy:projectile.lineOfSightPolicy,
+      sessionId:projectile.sessionId,
+    });
+    return true;
+  }
+
+  private withLogicalTime<T>(time: number, operation: () => T) {
+    const current = this.now;
+    this.now = time;
+    try {
+      return operation();
+    } finally {
+      this.now = current;
+    }
+  }
+
+  private resolvePendingProjectiles(
+    party: SimEntity[],
+    enemies: SimEntity[],
+  ) {
+    const entities = new Map(
+      [...party, ...enemies].map((entity) => [entity.id, entity]),
+    );
+    for (const resolution of this.projectiles.resolveDue(this.now, this.sessionId)) {
+      const projectile = resolution.projectile;
+      const source = entities.get(projectile.casterId);
+      const target = projectile.targetId
+        ? entities.get(projectile.targetId)
+        : undefined;
+      let reason = resolution.reason;
+      if (!source?.alive) reason = 'source-dead';
+      else if (projectile.targetPolicy === 'requires-alive' && !target?.alive) {
+        reason = 'target-dead';
+      } else if (
+        projectile.impactPolicy === 'original-tile' &&
+        target &&
+        gridKey(this.tileOf(target)) !== gridKey(projectile.targetTile)
+      ) {
+        reason = 'target-moved';
+      }
+      if (resolution.status === 'cancelled' || reason || !source || !target) {
+        this.emit('projectile_cancelled', projectile.floor, projectile.casterId, projectile.targetId, {
+          castId:projectile.castId,
+          abilityId:projectile.spellId,
+          originTile:projectile.originTile,
+          targetTile:projectile.targetTile,
+          pathTiles:projectile.pathTiles,
+          impactAt:projectile.impactAt,
+          reason:reason ?? 'invalid-target',
+          sessionId:projectile.sessionId,
+        }, projectile.impactAt);
+        if (projectile.ability) {
+          this.emit('spell_cancelled', projectile.floor, projectile.casterId, projectile.targetId, {
+            castId:projectile.castId,
+            ability:projectile.ability,
+            abilityId:projectile.spellId,
+            logicalTiles:projectile.logicalTiles,
+            reason:reason ?? 'invalid-target',
+            sessionId:projectile.sessionId,
+          }, projectile.impactAt);
+        }
+        continue;
+      }
+      this.withLogicalTime(projectile.impactAt, () => {
+        this.applyDamage(
+          source,
+          target,
+          projectile.damage,
+          projectile.floor,
+          projectile.element,
+        );
+        this.emit('projectile_resolved', projectile.floor, source.id, target.id, {
+          castId:projectile.castId,
+          abilityId:projectile.spellId,
+          originTile:projectile.originTile,
+          targetTile:projectile.targetTile,
+          pathTiles:projectile.pathTiles,
+          impactAt:projectile.impactAt,
+          sessionId:projectile.sessionId,
+        });
+        if (projectile.ability) {
+          this.emit('spell_resolved', projectile.floor, source.id, target.id, {
+            ability:projectile.ability,
+            abilityId:projectile.spellId,
+            castId:projectile.castId,
+            logicalTiles:projectile.logicalTiles,
+            tiles:projectile.logicalTiles.map(gridToWorld),
+            targets:[target.id],
+            targetCount:1,
+            sessionId:projectile.sessionId,
+          });
+        }
+      });
+    }
+  }
+
+  private cancelPendingProjectiles(floor: number, reason: string) {
+    for (const resolution of this.projectiles.cancelAll(reason, this.sessionId)) {
+      const projectile = resolution.projectile;
+      this.emit('projectile_cancelled', floor, projectile.casterId, projectile.targetId, {
+        castId:projectile.castId,
+        abilityId:projectile.spellId,
+        originTile:projectile.originTile,
+        targetTile:projectile.targetTile,
+        pathTiles:projectile.pathTiles,
+        impactAt:projectile.impactAt,
+        reason,
+        sessionId:projectile.sessionId,
+      });
+      if (projectile.ability) {
+        this.emit('spell_cancelled', floor, projectile.casterId, projectile.targetId, {
+          castId:projectile.castId,
+          ability:projectile.ability,
+          abilityId:projectile.spellId,
+          logicalTiles:projectile.logicalTiles,
+          reason,
+          sessionId:projectile.sessionId,
+        });
+      }
+    }
   }
 
   private move(
@@ -630,17 +828,22 @@ export class CombatEngine {
       castEvent.data.hardMinTargets = ability.hardMinTargets;
     }
     if (ability.shape === 'single') {
-      const lineOfSightTiles = this.lineOfSight.trace(
-        this.tileOf(caster),
-        this.tileOf(targeting.targets[0]),
-      );
-      this.emit('projectile', floor, caster.id, targeting.targets[0].id, {
-        ability: ability.name,
-        abilityId: ability.id,
-        element: this.element(ability),
+      this.queueProjectile(caster, targeting.targets[0], floor, {
         castId,
-        lineOfSightTiles,
+        attackId:ability.id,
+        damage:caster.attack * ability.power,
+        element:this.element(ability),
+        ability:ability.name,
+        logicalTiles:targeting.tiles,
+        collisionPolicy:ability.projectileBlocksUnits
+          ? 'walls-and-units'
+          : 'walls',
+        lineOfSightPolicy:ability.requiresLineOfSight === false
+          ? 'ignored'
+          : 'required',
+        impactPolicy:'follow-target',
       });
+      return;
     }
     for (const affected of targeting.targets) {
       this.applyDamage(
@@ -1054,10 +1257,15 @@ export class CombatEngine {
           )
         ) {
           this.emit('basic_attack', floor, sorcerer.id, target.id);
-          this.emit('projectile', floor, sorcerer.id, target.id, {
-            element: 'energy',
+          this.queueProjectile(sorcerer, target, floor, {
+            castId:`cast-${++this.castSequence}`,
+            attackId:'sorcerer-basic',
+            damage:sorcerer.attack * 0.55,
+            element:'energy',
+            collisionPolicy:'walls',
+            lineOfSightPolicy:'required',
+            impactPolicy:'follow-target',
           });
-          this.applyDamage(sorcerer, target, sorcerer.attack * 0.55, floor, 'energy');
         }
       }
     }
@@ -1127,17 +1335,18 @@ export class CombatEngine {
       } else if (turn % 4 === 0) {
         this.emit('basic_attack', floor, enemy.id, target.id);
         if (ranged) {
-          this.emit('projectile', floor, enemy.id, target.id, {
-            element: enemy.role === 'boss' ? 'holy' : 'earth',
+          this.queueProjectile(enemy, target, floor, {
+            castId:`cast-${++this.castSequence}`,
+            attackId:enemy.role === 'boss' ? 'boss-basic' : 'monster-ranged-basic',
+            damage:enemy.attack,
+            element:enemy.role === 'boss' ? 'holy' : 'earth',
+            collisionPolicy:'walls',
+            lineOfSightPolicy:'required',
+            impactPolicy:'follow-target',
           });
+        } else {
+          this.applyDamage(enemy, target, enemy.attack, floor, 'physical');
         }
-        this.applyDamage(
-          enemy,
-          target,
-          enemy.attack,
-          floor,
-          enemy.role === 'boss' ? 'holy' : 'physical',
-        );
       }
     }
   }
@@ -1151,7 +1360,7 @@ export class CombatEngine {
       const source = enemies.find((enemy) => enemy.id === hazard.sourceId);
       if (!source) continue;
       if (!source.alive) {
-        this.emit('spell_resolved', hazard.floor, source.id, undefined, {
+        this.emit('spell_cancelled', hazard.floor, source.id, undefined, {
           tiles:hazard.tiles.map(gridToWorld),
           logicalTiles:clone(hazard.tiles),
           ability:hazard.ability,
@@ -1159,6 +1368,7 @@ export class CombatEngine {
           castId:hazard.castId,
           targets:[],
           reason:'source_dead',
+          sessionId:this.sessionId,
         });
         continue;
       }
@@ -1175,6 +1385,7 @@ export class CombatEngine {
         ability:hazard.ability,
         element:hazard.element,
         castId:hazard.castId,
+        sessionId:this.sessionId,
         targets:party
           .filter(
             (entity) =>
@@ -1202,6 +1413,23 @@ export class CombatEngine {
       }
     }
     return hazards.filter((item) => item.detonateAt > this.now);
+  }
+
+  private cancelHazards(hazards: Hazard[], reason: string) {
+    for (const hazard of hazards) {
+      this.emit('spell_cancelled', hazard.floor, hazard.sourceId, undefined, {
+        tiles:hazard.tiles.map(gridToWorld),
+        logicalTiles:clone(hazard.tiles),
+        ability:hazard.ability,
+        element:hazard.element,
+        castId:hazard.castId,
+        impactAt:hazard.detonateAt,
+        targets:[],
+        reason,
+        sessionId:this.sessionId,
+      });
+    }
+    return [] as Hazard[];
   }
 
   run(): HuntResult {
@@ -1262,6 +1490,7 @@ export class CombatEngine {
         turn++ < 700
       ) {
         this.resolvePendingMovements(party, enemies, floor);
+        this.resolvePendingProjectiles(party, enemies);
         hazards = this.resolveHazards(hazards, party, enemies);
         this.heroActions(party, enemies, floor, turn);
         for (const enemy of enemies.filter((entity) => !entity.alive)) {
@@ -1272,7 +1501,10 @@ export class CombatEngine {
       }
       this.resolvePendingMovements(party, enemies, floor);
       this.cancelPendingMovements(floor, 'floor-complete');
+      this.resolvePendingProjectiles(party, enemies);
+      this.cancelPendingProjectiles(floor, 'floor-complete');
       hazards = this.resolveHazards(hazards, party, enemies);
+      hazards = this.cancelHazards(hazards, 'floor-complete');
       for (const enemy of enemies.filter((entity) => !entity.alive)) {
         this.reward(enemy, floor);
       }

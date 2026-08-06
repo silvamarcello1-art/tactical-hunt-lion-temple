@@ -92,6 +92,8 @@ export class PixiRenderer {
   private readonly debugPathLayer = new Container();
   private readonly debugEntityTiles = new Map<string, GridPoint>();
   private readonly debugReservations = new Map<string, GridPoint>();
+  private readonly activeProjectiles = new Map<string, AnimatedSprite>();
+  private readonly activeTelegraphs = new Map<string, Graphics>();
   private parent?: HTMLElement;
   private destroyed = false;
   private selectedHeroId: string;
@@ -187,6 +189,8 @@ export class PixiRenderer {
     this.units.clear();
     this.debugEntityTiles.clear();
     this.debugReservations.clear();
+    this.activeProjectiles.clear();
+    this.activeTelegraphs.clear();
     this.bossFill = undefined;
     this.app.ticker?.remove(this.tickerHandler);
     try {
@@ -906,7 +910,17 @@ export class PixiRenderer {
     }
     if (event.type === 'aggro') this.aggroEffect(event);
     if (event.type === 'area_warning') {
-      this.tileEffect(event.data?.tiles ?? [], 0xf36b53, true, event.data?.duration);
+      const castId = event.data?.castId;
+      const warning = this.tileEffect(
+        event.data?.tiles ?? [],
+        0xf36b53,
+        true,
+        event.data?.duration,
+        undefined,
+        undefined,
+        castId ? `telegraph:${castId}` : undefined,
+      );
+      if (castId && warning) this.activeTelegraphs.set(castId, warning);
     }
     if (event.type === 'monster_aoe') {
       this.tileEffect(
@@ -924,6 +938,18 @@ export class PixiRenderer {
       );
     }
     if (event.type === 'projectile') this.projectile(event);
+    if (
+      (event.type === 'projectile_resolved' || event.type === 'projectile_cancelled') &&
+      event.data?.castId
+    ) {
+      this.cleanupProjectile(event.data.castId);
+    }
+    if (
+      (event.type === 'spell_resolved' || event.type === 'spell_cancelled') &&
+      event.data?.castId
+    ) {
+      this.cleanupTelegraph(event.data.castId);
+    }
     if (event.type === 'damage') {
       const unit = this.units.get(event.targetId!);
       if (unit) {
@@ -1004,6 +1030,7 @@ export class PixiRenderer {
     duration: number = RENDER_CONFIG.effects.tileDuration,
     effectKey?: string,
     origin?: Point,
+    tweenKey?: string,
   ) {
     if (!tiles.length) return;
     const graphics = new Graphics();
@@ -1027,9 +1054,16 @@ export class PixiRenderer {
         (progress) => {
           graphics.alpha = .35 + Math.abs(Math.sin(progress * Math.PI * 6)) * .65;
         },
-        () => graphics.destroy(),
+        () => {
+          graphics.destroy();
+          if (tweenKey?.startsWith('telegraph:')) {
+            this.activeTelegraphs.delete(tweenKey.slice('telegraph:'.length));
+          }
+        },
+        0,
+        tweenKey,
       );
-      return;
+      return graphics;
     }
 
     let maxDelay = 0;
@@ -1088,6 +1122,7 @@ export class PixiRenderer {
       },
       () => graphics.destroy(),
     );
+    return graphics;
   }
 
   private effectKey(event: CombatEvent) {
@@ -1124,19 +1159,51 @@ export class PixiRenderer {
     projectile.scale.set(.52);
     projectile.animationSpeed = .26;
     projectile.play();
-    projectile.position.copyFrom(source.body.position);
+    const logicalPath = event.data?.pathTiles ?? [];
+    const points = logicalPath.length
+      ? logicalPath.map((tile) => ({ x:tile.x * TILE_SIZE,y:tile.y * TILE_SIZE }))
+      : [
+          { x:source.body.x,y:source.body.y },
+          { x:target.body.x,y:target.body.y },
+        ];
+    projectile.position.set(points[0].x, points[0].y);
     projectile.zIndex = 50;
     this.effectLayer.addChild(projectile);
-    const start = { x:projectile.x, y:projectile.y };
+    const castId = event.data?.castId ?? event.id;
+    this.activeProjectiles.set(castId, projectile);
     this.tween(
-      RENDER_CONFIG.effects.projectileDuration,
-      (progress) =>
+      event.data?.duration ?? RENDER_CONFIG.effects.projectileDuration,
+      (progress) => {
+        const segmentCount = Math.max(1, points.length - 1);
+        const scaled = progress * segmentCount;
+        const index = Math.min(segmentCount - 1, Math.floor(scaled));
+        const local = Math.min(1, scaled - index);
+        const from = points[index];
+        const to = points[index + 1] ?? points[index];
         projectile.position.set(
-          start.x + (target.body.x - start.x) * progress,
-          start.y + (target.body.y - start.y) * progress,
-        ),
-      () => projectile.destroy(),
+          from.x + (to.x - from.x) * local,
+          from.y + (to.y - from.y) * local,
+        );
+      },
+      () => {
+        projectile.destroy();
+        this.activeProjectiles.delete(castId);
+      },
+      0,
+      `projectile:${castId}`,
     );
+  }
+
+  private cleanupProjectile(castId: string) {
+    this.cancelTween(`projectile:${castId}`);
+    this.activeProjectiles.get(castId)?.destroy();
+    this.activeProjectiles.delete(castId);
+  }
+
+  private cleanupTelegraph(castId: string) {
+    this.cancelTween(`telegraph:${castId}`);
+    this.activeTelegraphs.get(castId)?.destroy();
+    this.activeTelegraphs.delete(castId);
   }
 
   private castPulse(unit: Unit) {
