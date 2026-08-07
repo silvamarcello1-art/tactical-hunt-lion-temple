@@ -29,7 +29,7 @@ export class OccupancyGrid {
   constructor(private readonly map: GridMap) {}
 
   get revision() {
-    return this.revisionValue;
+    return this.revisionValue + this.map.revision;
   }
 
   occupy(
@@ -88,6 +88,7 @@ export class OccupancyGrid {
     const destination = this.entityReservations.get(entityId);
     if (!destination) return false;
     const footprint = this.footprints.get(entityId) ?? { width: 1, height: 1 };
+    if (!this.canEnter(entityId, destination, footprint).allowed) return false;
     this.cancelReservation(entityId);
     this.releaseOccupiedOnly(entityId);
     this.entityPositions.set(entityId, cloneGridPosition(destination));

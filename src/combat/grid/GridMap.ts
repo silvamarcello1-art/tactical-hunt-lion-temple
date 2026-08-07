@@ -9,6 +9,7 @@ import {
 export class GridMap {
   private readonly blocked = new Set<string>();
   private readonly terrainCosts = new Map<string, number>();
+  private revisionValue = 0;
 
   constructor(
     readonly width: number,
@@ -17,6 +18,10 @@ export class GridMap {
     blocked: GridPosition[] = [],
   ) {
     for (const position of blocked) this.setBlocked(position, true);
+  }
+
+  get revision() {
+    return this.revisionValue;
   }
 
   isInside(position: GridPosition, footprint: EntityFootprint = { width:1, height:1 }) {
@@ -51,12 +56,19 @@ export class GridMap {
 
   setBlocked(position: GridPosition, blocked: boolean) {
     const key = gridKey(position);
+    const changed = blocked ? !this.blocked.has(key) : this.blocked.has(key);
+    if (!changed) return;
     if (blocked) this.blocked.add(key);
     else this.blocked.delete(key);
+    this.revisionValue++;
   }
 
   setTerrainCost(position: GridPosition, cost: number) {
-    this.terrainCosts.set(gridKey(position), Math.max(1, Math.round(cost)));
+    const key = gridKey(position);
+    const normalized = Math.max(1, Math.round(cost));
+    if ((this.terrainCosts.get(key) ?? 1) === normalized) return;
+    this.terrainCosts.set(key, normalized);
+    this.revisionValue++;
   }
 
   tile(position: GridPosition): GridTile {
