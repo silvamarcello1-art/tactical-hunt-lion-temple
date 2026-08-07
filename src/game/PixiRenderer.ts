@@ -27,14 +27,17 @@ import type {
 import { RENDER_CONFIG } from './renderConfig';
 import {
   CombatPresentationSystem,
+  type FeedbackKind,
   type VisualAnimationState,
   visualSortKey,
 } from './presentation/CombatPresentationSystem';
+import { DisplayObjectPool } from './presentation/DisplayObjectPool';
 
 export type EntityVisualState = VisualAnimationState;
 
 type Unit = {
   body: Container;
+  ui: Container;
   shadow: Graphics;
   sprite: Sprite | AnimatedSprite;
   spriteKey: string;
@@ -91,9 +94,11 @@ export class PixiRenderer {
   private readonly effectLayer = new Container();
   private readonly entityLayer = new Container();
   private readonly projectileLayer = new Container();
+  private readonly unitUiLayer = new Container();
   private readonly overlayLayer = new Container();
   private readonly debugOccupancyLayer = new Container();
   private readonly debugPathLayer = new Container();
+  private readonly debugSyncLayer = new Container();
   private readonly debugEntityTiles = new Map<string, GridPoint>();
   private readonly debugReservations = new Map<string, GridPoint>();
   private readonly activeProjectiles = new Map<string, AnimatedSprite>();
@@ -103,6 +108,18 @@ export class PixiRenderer {
   private selectedHeroId: string;
   private readonly debugEnabled: boolean;
   private maskMismatchCount = 0;
+  private maxActiveVisualObjects = 0;
+  private readonly floatingTextPool = new DisplayObjectPool<Text>(
+    () => this.label('', 14, '#ffffff'),
+    (text) => {
+      text.removeFromParent();
+      text.text = '';
+      text.alpha = 1;
+      text.scale.set(1);
+      text.rotation = 0;
+    },
+    48,
+  );
   private readonly tickerHandler = (ticker: Ticker) => {
     if (this.destroyed) return;
     const timelineWasRunning = this.player.isRunning;
@@ -152,6 +169,7 @@ export class PixiRenderer {
     this.effectLayer.label = 'effects';
     this.entityLayer.label = 'entities';
     this.projectileLayer.label = 'projectiles';
+    this.unitUiLayer.label = 'unit-ui';
     this.overlayLayer.label = 'overlay';
     this.terrainLayer.zIndex = 0;
     this.telegraphLayer.zIndex = 8;
@@ -159,10 +177,13 @@ export class PixiRenderer {
     this.entityLayer.zIndex = 20;
     this.effectLayer.zIndex = 30;
     this.projectileLayer.zIndex = 40;
-    this.overlayLayer.zIndex = 50;
+    this.unitUiLayer.zIndex = 50;
+    this.overlayLayer.zIndex = 60;
     this.debugPathLayer.zIndex = 70;
     this.debugOccupancyLayer.zIndex = 71;
+    this.debugSyncLayer.zIndex = 72;
     this.entityLayer.sortableChildren = true;
+    this.unitUiLayer.sortableChildren = true;
     this.overlayLayer.sortableChildren = true;
     this.app.stage.addChild(
       this.terrainLayer,
@@ -171,6 +192,7 @@ export class PixiRenderer {
       this.entityLayer,
       this.effectLayer,
       this.projectileLayer,
+      this.unitUiLayer,
       this.overlayLayer,
     );
     this.drawArena();
@@ -179,6 +201,7 @@ export class PixiRenderer {
       this.overlayLayer.addChild(
         this.debugPathLayer,
         this.debugOccupancyLayer,
+        this.debugSyncLayer,
       );
     }
     this.floorText = this.label('PREPARAÇÃO', 13, '#f0d77a');
@@ -236,6 +259,7 @@ export class PixiRenderer {
     this.activeProjectiles.clear();
     this.activeTelegraphs.clear();
     this.presentation.reset();
+    this.floatingTextPool.clear((text) => text.destroy());
     this.bossFill = undefined;
     this.app.ticker?.remove(this.tickerHandler);
     try {
@@ -251,6 +275,8 @@ export class PixiRenderer {
       this.parent.dataset.effectCount = '0';
       this.parent.dataset.entityCount = '0';
       this.parent.dataset.logicalOverlaps = '0';
+      this.parent.dataset.activeFloatingTexts = '0';
+      this.parent.dataset.residualVisualObjects = '0';
     }
   }
 
@@ -534,6 +560,24 @@ export class PixiRenderer {
     this.debugOccupancyLayer.addChildAt(graphics, 0);
   }
 
+  private drawSyncDebug() {
+    this.debugSyncLayer.removeChildren().forEach((child) => child.destroy());
+    const graphics = new Graphics();
+    for (const state of this.presentation.entities.values()) {
+      if (!state.alive) continue;
+      const expected = gridToWorld(state.tile);
+      graphics
+        .moveTo(expected.x, expected.y)
+        .lineTo(state.position.x, state.position.y)
+        .stroke({ width:1,color:0xff66dd,alpha:.75 })
+        .circle(expected.x, expected.y, 3)
+        .stroke({ width:1,color:0x55f08b,alpha:.9 })
+        .circle(state.position.x, state.position.y, 2)
+        .fill({ color:0xff66dd,alpha:.85 });
+    }
+    this.debugSyncLayer.addChild(graphics);
+  }
+
   private drawDebugPath(event: CombatEvent) {
     this.debugPathLayer.removeChildren().forEach((child) => child.destroy());
     const path = event.data?.path ?? [];
@@ -582,6 +626,7 @@ export class PixiRenderer {
     const snapshot = event.data!.entity!;
     const previous = this.units.get(snapshot.id);
     previous?.body.destroy({ children:true });
+    previous?.ui.destroy({ children:true });
     previous?.shadow.destroy();
     this.units.delete(snapshot.id);
     const position = event.data!.position!;
@@ -590,6 +635,10 @@ export class PixiRenderer {
     body.alpha = 0;
     body.scale.set(.4 * RENDER_CONFIG.entity.scale);
     body.zIndex = 10 + position.y;
+    const ui = new Container();
+    ui.position.set(position.x, position.y);
+    ui.alpha = 0;
+    ui.zIndex = body.zIndex;
 
     const hero = this.isHero(snapshot);
     const boss = snapshot.role === 'boss';
@@ -630,8 +679,9 @@ export class PixiRenderer {
           .stroke({ width:2,color:0xe4c65a,alpha:.9 })
       : undefined;
     if (selection) selection.visible = snapshot.id === this.selectedHeroId;
-    body.addChild(sprite, name, hpBackground, hp);
-    if (manaBackground && mana) body.addChild(manaBackground, mana);
+    body.addChild(sprite);
+    ui.addChild(name, hpBackground, hp);
+    if (manaBackground && mana) ui.addChild(manaBackground, mana);
     if (selection) body.addChildAt(selection, 0);
 
     const debugLabel = this.debugEnabled
@@ -643,7 +693,8 @@ export class PixiRenderer {
       const hitbox = new Graphics()
         .rect(-24, -44, 48, 76)
         .stroke({ width:1,color:0x7de9ff,alpha:.8 });
-      body.addChild(hitbox, debugLabel);
+      body.addChild(hitbox);
+      ui.addChild(debugLabel);
     }
 
     if (hero) {
@@ -657,9 +708,11 @@ export class PixiRenderer {
       });
     }
     this.entityLayer.addChild(body);
+    this.unitUiLayer.addChild(ui);
 
     const unit = {
       body,
+      ui,
       shadow,
       sprite,
       spriteKey:this.spriteKey(snapshot),
@@ -684,6 +737,7 @@ export class PixiRenderer {
     this.drawVitals(unit);
     this.tween(RENDER_CONFIG.entity.spawnDuration, (progress) => {
       body.alpha = progress;
+      ui.alpha = progress;
       body.scale.set(
         (.4 + progress * .6) * RENDER_CONFIG.entity.scale,
       );
@@ -987,7 +1041,7 @@ export class PixiRenderer {
         unit.currentHp = Math.max(0, unit.currentHp - amount);
         this.drawVitals(unit);
         this.animateHurt(unit);
-        this.floatingText(event.targetId!, `-${amount}`, '#ff746d');
+        this.floatingText(event.targetId!, `-${amount}`, '#ff746d', 'damage');
         if (event.targetId === 'lion-king') {
           this.drawBossHp(this.ratio(unit.currentHp, unit.maxHp));
         }
@@ -1002,14 +1056,14 @@ export class PixiRenderer {
           unit.currentHp + amount,
         );
         this.drawVitals(unit);
-        this.floatingText(event.targetId!, `+${amount}`, '#79eea5');
+        this.floatingText(event.targetId!, `+${amount}`, '#79eea5', 'heal');
       }
     }
     if (event.type === 'critical') {
-      this.floatingText(event.targetId!, 'CRITICAL!', '#ffd45b');
+      this.floatingText(event.targetId!, 'CRITICAL!', '#ffd45b', 'critical');
     }
     if (event.type === 'dodge') {
-      this.floatingText(event.targetId!, 'DODGE', '#d7d7ff');
+      this.floatingText(event.targetId!, 'DODGE', '#d7d7ff', 'dodge');
     }
     if (event.type === 'death') {
       const unit = this.units.get(event.targetId!);
@@ -1023,12 +1077,14 @@ export class PixiRenderer {
             unit.body.alpha = 1 - progress;
             unit.body.rotation = rotation + (Math.PI / 2) * progress;
             unit.body.scale.set(1 - progress * .4);
+            unit.ui.alpha = 1 - progress;
             unit.shadow.alpha = shadowAlpha * (1 - progress);
           },
           () => {
             if (this.units.get(event.targetId!) === unit) {
               this.units.delete(event.targetId!);
               unit.shadow.destroy();
+              unit.ui.destroy({ children:true });
               unit.body.destroy({ children:true });
               this.syncDiagnostics();
             }
@@ -1326,23 +1382,44 @@ export class PixiRenderer {
     }
   }
 
-  private floatingText(id: string, value: string, color: string) {
+  private floatingText(
+    id: string,
+    value: string,
+    color: string,
+    kind: FeedbackKind,
+  ) {
     const unit = this.units.get(id);
     if (!unit) return;
-    const text = this.label(value, 14, color);
+    const text = this.floatingTextPool.acquire();
+    text.text = value;
+    text.style.fill = color;
+    text.style.fontSize = kind === 'critical' ? 17 : 14;
     text.style.fontWeight = '700';
     text.anchor.set(.5);
-    text.position.set(unit.body.x, unit.body.y - (unit.hero ? 76 : 44));
+    const stackIndex = Math.max(
+      0,
+      ...[...this.presentation.feedback.values()]
+        .filter((feedback) => feedback.targetId === id)
+        .map((feedback) => feedback.stackIndex),
+    );
+    const direction = kind === 'dodge' ? 1 : kind === 'critical' ? -1 : 0;
+    text.position.set(
+      unit.body.x + direction * 8,
+      unit.body.y - (unit.hero ? 76 : 44) - stackIndex * 14,
+    );
     text.zIndex = 100;
     this.overlayLayer.addChild(text);
     const startY = text.y;
+    const startX = text.x;
     this.tween(
       RENDER_CONFIG.effects.floatingTextDuration,
       (progress) => {
-        text.y = startY - progress * 31;
+        text.y = startY - progress * (kind === 'dodge' ? 18 : 31);
+        text.x = startX + direction * progress * 12;
+        if (kind === 'critical') text.scale.set(1 + Math.sin(progress * Math.PI) * .35);
         text.alpha = 1 - progress;
       },
-      () => text.destroy(),
+      () => this.floatingTextPool.release(text),
     );
   }
 
@@ -1402,11 +1479,14 @@ export class PixiRenderer {
       const unit = this.units.get(id);
       if (!unit) continue;
       unit.body.position.set(state.position.x, state.position.y);
+      unit.ui.position.set(state.position.x, state.position.y);
       unit.shadow.position.set(state.position.x, state.position.y + 11);
-      unit.body.zIndex = visualSortKey(
+      const sortKey = visualSortKey(
         { x:state.position.x / TILE_SIZE,y:state.position.y / TILE_SIZE },
         id,
       );
+      unit.body.zIndex = sortKey;
+      unit.ui.zIndex = sortKey;
       this.face(unit, state.facing as DirectionName, state.animation === 'moving');
       this.setUnitState(unit, state.animation, state.targetId);
     }
@@ -1426,6 +1506,7 @@ export class PixiRenderer {
       telegraph.alpha =
         .34 + state.intensity * .28 + Math.abs(Math.sin(state.intensity * Math.PI * 6)) * .28;
     }
+    if (this.debugEnabled) this.drawSyncDebug();
   }
 
   private cancelTween(key: string) {
@@ -1478,6 +1559,16 @@ export class PixiRenderer {
         unit.body.x > bounds.x + bounds.width ||
         unit.body.y > bounds.y + bounds.height,
     ).length;
+    const poolMetrics = this.floatingTextPool.metrics;
+    const activeVisualObjects =
+      this.effectLayer.children.length +
+      this.projectileLayer.children.length +
+      this.telegraphLayer.children.length +
+      poolMetrics.active;
+    this.maxActiveVisualObjects = Math.max(
+      this.maxActiveVisualObjects,
+      activeVisualObjects,
+    );
     this.parent.dataset.unitCount = String(this.units.size);
     this.parent.dataset.stageChildren = String(this.app.stage.children.length);
     this.parent.dataset.tweenCount = String(this.tweens.length);
@@ -1485,6 +1576,7 @@ export class PixiRenderer {
     this.parent.dataset.telegraphLayerCount = String(this.telegraphLayer.children.length);
     this.parent.dataset.projectileLayerCount = String(this.projectileLayer.children.length);
     this.parent.dataset.shadowLayerCount = String(this.shadowLayer.children.length);
+    this.parent.dataset.unitUiLayerCount = String(this.unitUiLayer.children.length);
     this.parent.dataset.activeProjectiles = String(this.activeProjectiles.size);
     this.parent.dataset.activeTelegraphs = String(this.activeTelegraphs.size);
     this.parent.dataset.reservationCount = String(this.debugReservations.size);
@@ -1516,6 +1608,15 @@ export class PixiRenderer {
       this.presentation.metrics.maxActiveEffects,
     );
     this.parent.dataset.maskMismatchCount = String(this.maskMismatchCount);
+    this.parent.dataset.activeFloatingTexts = String(poolMetrics.active);
+    this.parent.dataset.pooledEffects = String(poolMetrics.pooled);
+    this.parent.dataset.createdFloatingTexts = String(poolMetrics.created);
+    this.parent.dataset.maxActiveVisualObjects = String(this.maxActiveVisualObjects);
+    this.parent.dataset.residualVisualObjects = String(
+      this.activeProjectiles.size +
+      this.activeTelegraphs.size +
+      poolMetrics.active,
+    );
     this.parent.dataset.presentationStates = [...this.presentation.entities.values()]
       .map((entity) => `${entity.id}:${entity.animation}`)
       .join(',');
