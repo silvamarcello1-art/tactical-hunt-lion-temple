@@ -25,15 +25,13 @@ import type {
   Point,
 } from '../events/types';
 import { RENDER_CONFIG } from './renderConfig';
+import {
+  CombatPresentationSystem,
+  type VisualAnimationState,
+  visualSortKey,
+} from './presentation/CombatPresentationSystem';
 
-export type EntityVisualState =
-  | 'idle'
-  | 'moving'
-  | 'attacking'
-  | 'casting'
-  | 'healing'
-  | 'hurt'
-  | 'dead';
+export type EntityVisualState = VisualAnimationState;
 
 type Unit = {
   body: Container;
@@ -84,6 +82,7 @@ export class PixiRenderer {
   private effectSheet!: Spritesheet;
   private heroAtlas!: Texture;
   private tileTextures = new Map<string, Texture>();
+  private readonly presentation = new CombatPresentationSystem();
   private readonly terrainLayer = new Container();
   private readonly effectLayer = new Container();
   private readonly entityLayer = new Container();
@@ -102,6 +101,7 @@ export class PixiRenderer {
     if (this.destroyed) return;
     const timelineWasRunning = this.player.isRunning;
     this.player.update(ticker.deltaMS);
+    this.syncPresentation();
     if (timelineWasRunning || this.player.completed) {
       this.updateTweens(ticker.deltaMS);
     }
@@ -115,8 +115,10 @@ export class PixiRenderer {
     this.player = new EventPlayer(
       this.result.events,
       (event) => this.applyEvent(event),
-      (ms) =>
-        window.dispatchEvent(new CustomEvent('hunt-time', { detail: ms })),
+      (ms) => {
+        this.presentation.setTime(ms);
+        window.dispatchEvent(new CustomEvent('hunt-time', { detail: ms }));
+      },
     );
   }
 
@@ -218,6 +220,7 @@ export class PixiRenderer {
     this.debugReservations.clear();
     this.activeProjectiles.clear();
     this.activeTelegraphs.clear();
+    this.presentation.reset();
     this.bossFill = undefined;
     this.app.ticker?.remove(this.tickerHandler);
     try {
@@ -719,9 +722,10 @@ export class PixiRenderer {
   }
 
   private face(unit: Unit, direction: DirectionName, walking = false) {
+    const changed = unit.facing !== direction;
+    unit.facing = direction;
     if (!(unit.sprite instanceof AnimatedSprite)) return;
-    if (unit.facing !== direction) {
-      unit.facing = direction;
+    if (changed) {
       unit.sprite.textures = this.directionTextures(unit.spriteKey, direction);
     }
     if (walking) unit.sprite.play();
@@ -734,6 +738,7 @@ export class PixiRenderer {
     targetId?: string,
   ) {
     if (unit.state === 'dead' && state !== 'dead') return;
+    if (unit.state === state && unit.targetId === targetId) return;
     unit.state = state;
     unit.targetId = targetId;
     if (unit.debugLabel) {
@@ -788,7 +793,7 @@ export class PixiRenderer {
 
   private animateHurt(unit: Unit) {
     if (unit.state === 'dead') return;
-    this.setUnitState(unit, 'hurt', unit.targetId);
+    this.setUnitState(unit, 'hit_reaction', unit.targetId);
     const startX = unit.sprite.x;
     this.tween(
       RENDER_CONFIG.entity.hurtDuration,
@@ -866,39 +871,17 @@ export class PixiRenderer {
 
   private applyEvent(event: CombatEvent) {
     this.applyDebugEvent(event);
+    this.presentation.handle(event);
     if (event.type === 'spawn' || event.type === 'boss_spawn') this.spawn(event);
     if (event.type === 'target_change') {
       const unit = this.units.get(event.sourceId!);
       if (unit) this.setUnitState(unit, unit.state, event.targetId);
     }
-    if (event.type === 'move' || event.type === 'reposition') {
-      const unit = this.units.get(event.sourceId!);
-      if (unit && event.data?.position) {
-        const from = { x:unit.body.x, y:unit.body.y };
-        const target = event.data.position;
-        this.setUnitState(unit, 'moving', event.targetId);
-        this.face(unit, this.movementDirection(from, target), true);
-        this.tween(
-          event.data.duration ?? RENDER_CONFIG.entity.movementDuration,
-          (progress) => {
-            unit.body.position.set(
-              from.x + (target.x - from.x) * progress,
-              from.y + (target.y - from.y) * progress,
-            );
-            unit.body.zIndex = 10 + unit.body.y;
-          },
-          () => {
-            this.face(unit, unit.facing, false);
-            this.setUnitState(unit, 'idle');
-          },
-          0,
-          `movement:${event.sourceId}`,
-        );
-      }
-    }
-    if (event.type === 'movement_cancelled' && event.sourceId) {
-      this.cancelTween(`movement:${event.sourceId}`);
-    }
+    if (
+      event.type === 'movement_started' ||
+      event.type === 'movement_completed' ||
+      event.type === 'movement_cancelled'
+    ) this.syncPresentation();
     if (event.type === 'basic_attack' || event.type === 'cast') {
       const unit = this.units.get(event.sourceId!);
       if (unit) {
@@ -1047,6 +1030,7 @@ export class PixiRenderer {
     if (event.type === 'hunt_complete') {
       window.dispatchEvent(new CustomEvent('hunt-complete', { detail:this.result }));
     }
+    this.syncPresentation();
     window.dispatchEvent(new CustomEvent('hunt-event', { detail:event }));
   }
 
@@ -1348,6 +1332,20 @@ export class PixiRenderer {
     this.syncDiagnostics();
   }
 
+  private syncPresentation() {
+    for (const [id, state] of this.presentation.entities) {
+      const unit = this.units.get(id);
+      if (!unit) continue;
+      unit.body.position.set(state.position.x, state.position.y);
+      unit.body.zIndex = visualSortKey(
+        { x:state.position.x / TILE_SIZE,y:state.position.y / TILE_SIZE },
+        id,
+      );
+      this.face(unit, state.facing as DirectionName, state.animation === 'moving');
+      this.setUnitState(unit, state.animation, state.targetId);
+    }
+  }
+
   private cancelTween(key: string) {
     this.tweens = this.tweens.filter((tween) => tween.key !== key);
     this.syncDiagnostics();
@@ -1419,6 +1417,15 @@ export class PixiRenderer {
       .join(',');
     this.parent.dataset.unitStates = [...this.units.entries()]
       .map(([id, unit]) => `${id}:${unit.state}`)
+      .join(',');
+    this.parent.dataset.visualFacings = [...this.units.entries()]
+      .map(([id, unit]) => `${id}:${unit.facing}`)
+      .join(',');
+    this.parent.dataset.maxVisualSyncError = String(
+      this.presentation.metrics.maxVisualSyncError,
+    );
+    this.parent.dataset.presentationStates = [...this.presentation.entities.values()]
+      .map((entity) => `${entity.id}:${entity.animation}`)
       .join(',');
   }
 }
