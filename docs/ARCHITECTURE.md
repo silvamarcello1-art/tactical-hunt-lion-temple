@@ -1,6 +1,6 @@
 # Arquitetura canônica
 
-Atualizada em 27 de julho de 2026 após o fechamento do MVP 1A.
+Atualizada em 6 de agosto de 2026 para o MVP 1C.
 
 ## Stack
 
@@ -47,8 +47,12 @@ ela agrega os eventos emitidos e apresenta o `HuntResult` no encerramento.
 
 | Responsabilidade | Local |
 |---|---|
-| Motor, IA, threat, dano, cura, loot e fases | `src/combat/CombatEngine.ts` |
-| Grade e áreas de habilidades | `src/combat/tiles.ts` |
+| Orquestração, IA, threat, dano, cura, loot e fases | `src/combat/CombatEngine.ts` |
+| Regra determinística do aggro inicial | `src/combat/InitialAggroResolver.ts` |
+| Resultado explícito de cada andar | `src/combat/FloorCompletion.ts` |
+| Conversão visual e máscaras-base | `src/combat/tiles.ts` |
+| Mapa, ocupação, reservas, A*, movimento, LoS e spell masks | `src/combat/grid/` |
+| Seleção pura de tile de disparo alcançável | `src/combat/grid/FiringPositionResolver.ts` |
 | Contratos de eventos e snapshots | `src/events/types.ts` |
 | Relógio, pausa, velocidade e descarte | `src/events/EventPlayer.ts` |
 | Agregação segura da sessão | `src/app/LiveHuntState.ts` |
@@ -71,6 +75,26 @@ ela agrega os eventos emitidos e apresenta o `HuntResult` no encerramento.
 - O posicionamento tático dos magos é calculado no motor com candidatos em
   tiles. O renderer recebe somente eventos `move` e `reposition`.
 - Eventos `cast` carregam `cooldownEndsAt` e `cooldownDuration`.
+- `SimEntity.tileX/tileY` são a posição autoritativa. `position` é sempre
+  derivada e serve apenas à apresentação.
+- Movimento em oito direções passa por `MovementSystem`, `OccupancyGrid` e A*.
+  A origem permanece ocupada e o destino reservado até `completesAt`.
+- `ProjectileSystem` agenda todos os ataques ranged e só entrega dano no
+  `impactAt`; `castId`, `sessionId` e políticas de colisão/LoS controlam o
+  lifecycle.
+- `castId`, `logicalTiles` e `impactAt` conectam telegraph, projectile, dano,
+  resolução ou cancelamento sem consultar pixels.
+- LoS usa supercover; reachability e destination cooldown precedem o score de
+  destinos táticos.
+- O aggro inicial aceita no máximo dois atacantes na backline; depois disso,
+  threat e Challenge seguem normalmente.
+- Se um conjurador não produzir progresso por bloqueio de LoS, o motor consulta
+  tiles alcançáveis e agenda um `reposition` para uma posição de disparo válida.
+  A escolha não usa coordenadas interpoladas nem altera o renderer.
+- Cada sala termina por uma razão explícita. O limite de turnos e stalemate são
+  falhas observáveis, nunca vitórias implícitas.
+- A revisão de navegação combina mapa e ocupação; o commit de movimento sempre
+  revalida o tile reservado contra a revisão atual.
 
 ## Ciclo de vida
 
@@ -123,8 +147,9 @@ jogo.
   vitais, efeitos, limites da câmera e o padrão de debug.
 - `SESSION_CONFIG` continua sendo a única autoridade de velocidade e atraso do
   loop.
-- `?debug=1` habilita somente sobreposições: grid, limites, marcadores, IDs,
-  estados e hitboxes. A opção padrão e a publicação normal usam `false`.
+- `?debug=1` habilita somente sobreposições: grid, limites, obstáculos,
+  ocupação, reservas, caminhos, máscaras, marcadores, IDs, estados e hitboxes.
+  A opção padrão usa `false`.
 
 ## Restrições permanentes
 
@@ -138,7 +163,9 @@ jogo.
 ## Riscos restantes
 
 1. A timeline ainda é pré-calculada e não suporta autoridade remota.
-2. Movimento usa slots e deslocamentos curtos, sem pathfinding avançado.
+2. Reachability possui cache curto por revisão; o A* de movimento continua por
+   ação lógica. Priority queue ou cache permanente exigem benchmark com grupos
+   maiores.
 3. Heróis e parte dos assets são provisórios.
 4. Dados demonstrativos de conta, stamina, boost e supplies são fixos.
 5. O Helper individual ainda compartilha o mesmo conjunto de preferências por

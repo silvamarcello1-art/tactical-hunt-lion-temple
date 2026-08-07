@@ -16,6 +16,8 @@ export interface AbilityDefinition {
   preferredMinTargets: number;
   hardMinTargets: number;
   reserveForBoss?: boolean;
+  requiresLineOfSight?: boolean;
+  projectileBlocksUnits?: boolean;
   color: number;
   icon: string;
 }

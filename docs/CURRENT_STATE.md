@@ -1,4 +1,70 @@
-# Estado atual — MVP 0 + MVP 1A
+# Estado atual — MVP 0, MVP 1A, MVP 1B e MVP 1C
+
+## MVP 1C — Authoritative Grid Combat
+
+- Entidades possuem `tileX`/`tileY` inteiros e exclusivos.
+- `GridMap` contém limites, obstáculos, custos e footprints.
+- `OccupancyGrid` impede overlap, reserva conflitante e head-on swap.
+- Movimento ocorre em duas fases: origem ocupada e destino reservado por 220 ms
+  lógicos até `movement_completed`.
+- Spawn conflitante procura deterministicamente o tile livre mais próximo.
+- A* determinístico move em oito direções sem cortar quinas.
+- Knight, monstros e conjuradores usam o mesmo `MovementSystem`.
+- Morte, fim de sala e reset cancelam movimentos, projéteis e hazards pendentes.
+- Alcance corpo a corpo, de cura e magia é resolvido na grade.
+- LoS usa supercover; projéteis possuem trajetória, `castId`, `sessionId` e
+  `impactAt`, sem dano antes do impacto.
+- Reachability precede o score, destinos falhos recebem cooldown e A→B→A
+  injustificado é impedido.
+- O aggro inicial limita formalmente a backline a dois atacantes.
+- Waves, círculos e Challenge usam máscaras lógicas deduplicadas.
+- Magias de monstros unem telegraph e impacto por `castId` e máscara idêntica.
+- PixiJS apenas interpola e exibe eventos autoritativos.
+- Obstáculos são visíveis; `?debug=1` mostra ocupação, reservas, caminhos e
+  máscaras.
+- `HuntResult` expõe métricas de pathfinding e recuperação.
+- Helper individual permanece pausado e sua branch foi preservada.
+
+Consulte `docs/GRID_COMBAT.md` para a especificação permanente.
+
+### Correção final pontual — 07/08/2026
+
+- Conjuradores deixam um tile sem LoS por meio de firing-position resolver
+  determinístico e alcançável.
+- Ausência de progresso possui tentativa de recuperação e encerramento
+  explícito por stalemate; não existe mais sucesso implícito ao atingir o cap.
+- `floor_complete` diferencia `victory`, `party_defeated`, `stalemate` e
+  `turn_limit`.
+- Movimentos pendentes revalidam terreno, ocupação e reserva antes do commit.
+- Revisão da grade inclui mudanças do mapa e da ocupação.
+- Métricas separam falhas gerais, sequência geral, sequência exclusivamente
+  `no-route` e recuperações de firing position.
+
+| Validação final | Resultado |
+|---|---|
+| TypeScript | zero erros |
+| Vitest | 91 testes aprovados em 8 arquivos |
+| Build | 739 módulos, aprovado |
+| Playwright/Edge | 13 cenários aprovados em 4,9 min |
+| Stress | 24 hunts; seeds 803–814; duas configurações |
+| Seed 811 sem energy wave | vitória, 274 turnos, 71.100 ms, 2 recuperações |
+| Integridade | zero deadlock, overlap, out-of-bounds, stale ou resíduo |
+| Publicação/merge | não realizados |
+
+### Evidência do MVP 1C — 06/08/2026
+
+| Validação | Resultado |
+|---|---|
+| Instalação | lockfile aprovado |
+| TypeScript | zero erros |
+| Vitest | 79 testes aprovados em 7 arquivos |
+| Build | 737 módulos, aprovado em 5,70 s |
+| Playwright/Edge | 13 cenários aprovados em 4,2 min |
+| Loop | 3 ciclos auditados |
+| Grade | zero overlaps, zero fora da arena e zero reservas órfãs |
+| Casts | zero impacto tardio e zero resíduos de projectile/telegraph |
+| Debug manual | boss derrotado, 17 kills e zero erros de console |
+| Publicação | não realizada |
 
 ## MVP 0 — concluído e reconciliado
 
@@ -19,6 +85,7 @@ correção de manutenção.
 - Aggro, AOE, reposicionamento, dano, cura, mana, crítico e dodge.
 - Analyzer com XP, gold, loot, kills, bosses, dano por herói, dano recebido,
   cura e duração.
+- Boss Tokens exibidos e persistidos em `localStorage` entre recarregamentos.
 - Módulos futuros abrem aviso explícito e não alteram a sessão.
 - Fallback controlado se canvas ou assets falharem.
 
@@ -27,9 +94,9 @@ correção de manutenção.
 | Validação | Resultado |
 |---|---|
 | Instalação pelo lockfile | aprovada |
-| TypeScript | aprovado |
-| Vitest | 22 testes aprovados, 20 do baseline e 2 de configuração visual |
-| Playwright/Edge | 6 cenários aprovados |
+| TypeScript | aprovado (tsc sem erros) |
+| Vitest | 37 testes unitários aprovados |
+| Playwright/Edge | 12 cenários end-to-end aprovados |
 | Loop | 3 ciclos consecutivos |
 | Resoluções | 1366×768, 1600×900 e 1920×1080 |
 | Console | sem erros nos cenários |
@@ -64,7 +131,16 @@ correção de manutenção.
 | Loop | 3 ciclos consecutivos, sem duplicação |
 | Resoluções | uma hunt completa em 1366×768, 1600×900 e 1920×1080 |
 | Arena | nenhuma entidade fora dos limites |
-| Console | sem erros nos 6 cenários do Edge |
+| Console | sem erros nos cenários do Edge |
+
+### Observações de validação técnica
+
+- **CurrencyService** (`src/app/CurrencyService.ts`) é a fonte persistente de `bossToken` e mantém a lista de `rewardKeys` para idempotência.
+- **Idempotência**: a chave usada é `sessionId + bossId + rewardType`, garantindo que a mesma recompensa não seja concedida duas vezes por ciclo/sessão.
+- **Recompensa configurável**: cada chefe pode definir `bossTokenReward` (valor mínimo padrão = 1) em `src/data/config.ts`.
+- **Persistência**: saldos sobrevivem a reloads e resets da UI; a UI consome `CurrencyService.getBossToken()` para exibir o saldo persistente.
+- **Integração**: o fluxo inclui emissão de `boss_reward`, processamento por `CurrencyService`, atualização da barra superior, feedback visual (`.boss-token-feedback`), relatório de resultado e Hunt Analyzer.
+- **Testes e build**: 37 testes unitários (Vitest), 12 testes E2E (Playwright), `pnpm run typecheck` e `pnpm run build` aprovados.
 
 ### Parcial ou demonstrativo
 

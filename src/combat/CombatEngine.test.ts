@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { abilities, defaultAbilityPreferences } from '../data/abilities';
+import { floors, HUNT_LAYOUT_CONFIG } from '../data/config';
 import { CombatEngine } from './CombatEngine';
 import { TILE_SIZE, abilityOffsets } from './tiles';
 
@@ -23,6 +24,34 @@ describe('CombatEngine', () => {
     expect(result.floorTimes).toHaveLength(4);
   });
 
+  it('concede boss_reward apenas na morte confirmada do boss', () => {
+    const result = new CombatEngine(803).run();
+    const bossRewards = result.events.filter((event) => event.type === 'boss_reward');
+    expect(bossRewards.length).toBe(1);
+    expect(bossRewards[0].targetId).toBe('lion-king');
+    expect(bossRewards[0].data?.amount).toBe(1);
+  });
+
+  it('boss_reward ocorre após boss_spawn', () => {
+    const result = new CombatEngine(803).run();
+    const spawnIndex = result.events.findIndex((event) => event.type === 'boss_spawn');
+    const rewardIndex = result.events.findIndex((event) => event.type === 'boss_reward');
+    expect(spawnIndex).toBeGreaterThanOrEqual(0);
+    expect(rewardIndex).toBeGreaterThan(spawnIndex);
+  });
+
+  it('respeita bossTokenReward configurável', () => {
+    const originalReward = floors[3][1].bossTokenReward;
+    floors[3][1].bossTokenReward = 3;
+    const result = new CombatEngine(803).run();
+    floors[3][1].bossTokenReward = originalReward;
+
+    const bossRewards = result.events.filter((event) => event.type === 'boss_reward');
+    expect(bossRewards.length).toBe(1);
+    expect(bossRewards[0].data?.amount).toBe(3);
+    expect(result.bossTokens).toBe(3);
+  });
+
   it('emite todas as categorias essenciais', () => {
     const types = new Set(
       new CombatEngine().run().events.map((event) => event.type),
@@ -41,6 +70,7 @@ describe('CombatEngine', () => {
       'loot',
       'experience',
       'boss_spawn',
+      'boss_reward',
       'floor_complete',
       'hunt_complete',
     ]) {
@@ -221,5 +251,294 @@ describe('CombatEngine', () => {
     expect(
       casts.some((event) => event.data?.abilityId === 'energy_wave'),
     ).toBe(false);
+  });
+
+  it('recovers a caster firing position on seed 811 without energy wave', () => {
+    const preferences = defaultAbilityPreferences();
+    preferences.energy_wave.enabled = false;
+    const result = new CombatEngine(811, preferences).run();
+    const bossFloor = result.events.filter((event) => event.floor === 4);
+    const completion = bossFloor.find((event) => event.type === 'floor_complete');
+    const bossDeath = bossFloor.find(
+      (event) => event.type === 'death' && event.targetId === 'lion-king',
+    );
+
+    expect(result.floorTurns[3]).toBeLessThan(700);
+    expect(completion?.data?.completionReason).not.toBe('turn_limit');
+    expect(completion?.data?.victory).toBe(Boolean(bossDeath));
+    expect(result.gridMetrics.firingPositionRecoveries).toBeGreaterThan(0);
+
+    const recovery = bossFloor.find(
+      (event) =>
+        event.type === 'reposition' &&
+        (event.sourceId === 'druid' || event.sourceId === 'sorcerer') &&
+        event.data?.reason === 'firing-position',
+    );
+    expect(recovery).toBeDefined();
+    expect(bossFloor.some(
+      (event) =>
+        event.time > recovery!.time &&
+        event.type === 'cast' &&
+        event.sourceId === recovery!.sourceId,
+    )).toBe(true);
+  });
+
+  it('never emits floor victory while a floor enemy remains alive', () => {
+    const events = new CombatEngine(811).run().events;
+    for (const floor of [1, 2, 3, 4]) {
+      const floorEvents = events.filter((event) => event.floor === floor);
+      const spawned = new Set(
+        floorEvents
+          .filter((event) => event.type === 'spawn' || event.type === 'boss_spawn')
+          .map((event) => event.targetId)
+          .filter((id): id is string =>
+            Boolean(id) && !['knight','druid','sorcerer'].includes(id!),
+          ),
+      );
+      const dead = new Set(
+        floorEvents
+          .filter((event) => event.type === 'death')
+          .map((event) => event.targetId),
+      );
+      const completion = floorEvents.find((event) => event.type === 'floor_complete');
+      if (completion?.data?.victory) {
+        expect([...spawned].every((id) => dead.has(id))).toBe(true);
+      }
+    }
+  });
+
+  it('never assigns more than two initial attackers to the backline', () => {
+    const initial = new CombatEngine(803)
+      .run()
+      .events.filter(
+        (event) =>
+          event.type === 'target_change' && event.data?.reason === 'spatial',
+      );
+    for (const floor of [1, 2, 3, 4]) {
+      expect(
+        initial.filter(
+          (event) => event.floor === floor && event.targetId !== 'knight',
+        ).length,
+      ).toBeLessThanOrEqual(2);
+    }
+  });
+
+  it('mantém todas as entidades em tiles inteiros e sem sobreposição', () => {
+    const events = new CombatEngine().run().events;
+    const positions = new Map<string, { x: number; y: number }>();
+    let floor = 0;
+    for (const event of events) {
+      if (event.floor !== floor) {
+        floor = event.floor;
+        positions.clear();
+      }
+      if (
+        (event.type === 'spawn' || event.type === 'boss_spawn') &&
+        event.targetId &&
+        event.data?.tile
+      ) {
+        positions.set(event.targetId, event.data.tile);
+      }
+      if (
+        (event.type === 'move' || event.type === 'reposition') &&
+        event.sourceId &&
+        event.data?.toTile
+      ) {
+        positions.set(event.sourceId, event.data.toTile);
+      }
+      if (event.type === 'death' && event.targetId) positions.delete(event.targetId);
+      const keys = [...positions.values()].map((position) => {
+        expect(Number.isInteger(position.x)).toBe(true);
+        expect(Number.isInteger(position.y)).toBe(true);
+        return `${position.x}:${position.y}`;
+      });
+      expect(new Set(keys).size).toBe(keys.length);
+    }
+  });
+
+  it('emite caminhos adjacentes, dentro da arena e sem atravessar obstáculos', () => {
+    const result = new CombatEngine().run();
+    const blocked = new Set(
+      HUNT_LAYOUT_CONFIG.blockedTiles.map((tile) => `${tile.x}:${tile.y}`),
+    );
+    const paths = result.events.filter(
+      (event) => event.type === 'path_recalculated' && event.data?.path?.length,
+    );
+    expect(paths.length).toBeGreaterThan(0);
+    for (const event of paths) {
+      let previous = event.data!.fromTile!;
+      for (const tile of event.data!.path!) {
+        expect(
+          Math.max(
+            Math.abs(tile.x - previous.x),
+            Math.abs(tile.y - previous.y),
+          ),
+        ).toBe(1);
+        expect(blocked.has(`${tile.x}:${tile.y}`)).toBe(false);
+        expect(tile.x).toBeGreaterThanOrEqual(
+          HUNT_LAYOUT_CONFIG.walkableBounds.minColumn,
+        );
+        expect(tile.x).toBeLessThanOrEqual(
+          HUNT_LAYOUT_CONFIG.walkableBounds.maxColumn,
+        );
+        expect(tile.y).toBeGreaterThanOrEqual(
+          HUNT_LAYOUT_CONFIG.walkableBounds.minRow,
+        );
+        expect(tile.y).toBeLessThanOrEqual(
+          HUNT_LAYOUT_CONFIG.walkableBounds.maxRow,
+        );
+        previous = tile;
+      }
+    }
+    expect(result.gridMetrics.pathRecalculations).toBe(
+      result.events.filter((event) => event.type === 'path_recalculated').length,
+    );
+  });
+
+  it('resolve cada telegraph exatamente no mesmo conjunto lógico de tiles', () => {
+    const events = new CombatEngine().run().events;
+    const telegraphs = events.filter((event) => event.type === 'spell_telegraph');
+    expect(telegraphs.length).toBeGreaterThan(0);
+    for (const telegraph of telegraphs) {
+      const terminal = events.filter(
+        (event) =>
+          (event.type === 'spell_resolved' || event.type === 'spell_cancelled') &&
+          event.data?.castId === telegraph.data?.castId,
+      );
+      expect(terminal).toHaveLength(1);
+      expect(terminal[0].data?.logicalTiles).toEqual(telegraph.data?.logicalTiles);
+      if (terminal[0].type === 'spell_resolved') {
+        expect(terminal[0].time).toBe(telegraph.data?.impactAt);
+      } else {
+        expect(terminal[0].data?.reason).toBeTruthy();
+        expect(terminal[0].time).toBeLessThan(telegraph.data?.impactAt ?? Infinity);
+      }
+    }
+  });
+
+  it('resolves every basic projectile through the authoritative impact pipeline', () => {
+    const events = new CombatEngine(803).run().events;
+    const projectiles = events.filter((event) => event.type === 'projectile');
+    expect(projectiles.length).toBeGreaterThan(0);
+    for (const projectile of projectiles) {
+      expect(projectile.data?.castId).toBeTruthy();
+      expect(projectile.data?.pathTiles?.length).toBeGreaterThan(1);
+      expect(projectile.data?.impactAt).toBeGreaterThan(projectile.time);
+      const terminals = events.filter(
+        (event) =>
+          (event.type === 'projectile_resolved' ||
+            event.type === 'projectile_cancelled') &&
+          event.data?.castId === projectile.data?.castId,
+      );
+      expect(terminals).toHaveLength(1);
+      expect(terminals[0].time).toBeGreaterThanOrEqual(projectile.time);
+    }
+  });
+
+  it('never applies projectile damage before its impact timestamp', () => {
+    const events = new CombatEngine(803).run().events;
+    for (const projectile of events.filter((event) => event.type === 'projectile')) {
+      const terminal = events.find(
+        (event) =>
+          event.type === 'projectile_resolved' &&
+          event.data?.castId === projectile.data?.castId,
+      );
+      if (!terminal) continue;
+      expect(terminal.time).toBe(projectile.data?.impactAt);
+      const projectileIndex = events.indexOf(projectile);
+      const terminalIndex = events.indexOf(terminal);
+      const related = events
+        .slice(projectileIndex + 1, terminalIndex + 1)
+        .filter(
+          (event) =>
+            (event.type === 'damage' || event.type === 'dodge') &&
+            event.data?.castId === projectile.data?.castId,
+        );
+      expect(related.every((event) => event.time >= terminal.time)).toBe(true);
+      expect(related.some((event) => event.time === terminal.time)).toBe(true);
+    }
+  });
+
+  it('closes every projectile and hazard lifecycle before leaving a floor', () => {
+    const events = new CombatEngine(803).run().events;
+    const pendingProjectiles = new Map<string, number>();
+    const pendingSpells = new Map<string, number>();
+    const cancelledAt = new Map<string, number>();
+    for (const event of events) {
+      const castId = event.data?.castId;
+      if (event.type === 'projectile' && castId) {
+        pendingProjectiles.set(castId,event.floor);
+      }
+      if (event.type === 'spell_telegraph' && castId) {
+        pendingSpells.set(castId,event.floor);
+      }
+      if ((event.type === 'projectile_resolved' || event.type === 'projectile_cancelled') && castId) {
+        if (pendingProjectiles.has(castId)) pendingProjectiles.delete(castId);
+        if (event.type === 'projectile_cancelled') cancelledAt.set(castId,event.time);
+      }
+      if ((event.type === 'spell_resolved' || event.type === 'spell_cancelled') && castId) {
+        if (pendingSpells.has(castId)) pendingSpells.delete(castId);
+        if (event.type === 'spell_cancelled') cancelledAt.set(castId,event.time);
+      }
+      if ((event.type === 'damage' || event.type === 'dodge') && castId) {
+        expect(event.time).toBeLessThanOrEqual(cancelledAt.get(castId) ?? Infinity);
+      }
+      if (event.type === 'floor_complete') {
+        expect([...pendingProjectiles.values()]).not.toContain(event.floor);
+        expect([...pendingSpells.values()]).not.toContain(event.floor);
+      }
+    }
+    expect(pendingProjectiles.size).toBe(0);
+    expect(pendingSpells.size).toBe(0);
+  });
+
+  it('prevents unjustified mage A-B-A movement loops', () => {
+    const events = new CombatEngine(803).run().events;
+    for (const entityId of ['druid', 'sorcerer']) {
+      for (const floor of [1, 2, 3, 4]) {
+        const movements = events
+          .filter(
+            (event) =>
+              event.floor === floor &&
+              event.type === 'movement_completed' &&
+              event.sourceId === entityId &&
+              event.data?.toTile,
+          )
+          .map((event) => ({
+            tile:event.data!.toTile!,
+            allowBacktrack:event.data?.allowBacktrack ?? false,
+          }));
+        for (let index = 2; index < movements.length; index++) {
+          const returned = movements[index].tile;
+          const previous = movements[index - 2].tile;
+          if (returned.x === previous.x && returned.y === previous.y) {
+            expect(
+              movements[index].allowBacktrack || movements[index - 1].allowBacktrack,
+              `${entityId} unjustifiably oscillated on floor ${floor} at ${index}`,
+            ).toBe(true);
+          }
+        }
+      }
+    }
+  });
+
+  it('does not repeat the same no-route destination more than three times', () => {
+    const blocked = new CombatEngine(803)
+      .run()
+      .events.filter(
+        (event) =>
+          event.type === 'movement_blocked' &&
+          event.data?.blockedReason === 'no-route',
+      );
+    const streaks = new Map<string, number>();
+    let maximum = 0;
+    for (const event of blocked) {
+      const tile = event.data?.destinationTile;
+      const key = `${event.sourceId}:${tile?.x}:${tile?.y}`;
+      const streak = (streaks.get(key) ?? 0) + 1;
+      streaks.set(key, streak);
+      maximum = Math.max(maximum, streak);
+    }
+    expect(maximum).toBeLessThanOrEqual(3);
   });
 });

@@ -24,6 +24,7 @@ button:focus-visible, select:focus-visible {
 }
 
 .topbar {
+  position: relative;
   height: 64px;
   display: grid;
   grid-template-columns: 280px 230px 1fr 120px;
@@ -49,6 +50,26 @@ button:focus-visible, select:focus-visible {
   padding: 10px 12px; border: 1px solid #303633; border-radius: 5px; background: #191d1b; font-size: 12px;
 }
 .account-resources span:first-child { color: #f2d862; }
+.boss-token-feedback {
+  position: absolute;
+  right: 18px;
+  top: 72px;
+  padding: 10px 14px;
+  border-radius: 6px;
+  background: rgba(34, 87, 50, 0.95);
+  color: #d3f0c4;
+  font-weight: 700;
+  font-size: 13px;
+  border: 1px solid #51794f;
+  opacity: 0;
+  transform: translateY(-6px);
+  transition: opacity 180ms ease, transform 180ms ease;
+  z-index: 999;
+}
+.boss-token-feedback.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
 .topbar nav { display: flex; justify-content: center; gap: 8px; }
 .topbar nav button {
   border: 0; color: #bfc6c1; background: transparent; padding: 12px 10px; font-size: 10px;

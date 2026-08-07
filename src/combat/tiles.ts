@@ -1,4 +1,5 @@
 import type { Direction, Point } from '../events/types';
+import type { GridPosition } from './grid/GridTypes';
 
 export const TILE_SIZE = 32;
 export const MAP_TILES = { width: 30, height: 18 };
@@ -6,6 +7,16 @@ export const MAP_TILES = { width: 30, height: 18 };
 export const tile = (x: number, y: number): Point => ({
   x: x * TILE_SIZE,
   y: y * TILE_SIZE,
+});
+
+export const gridToWorld = (position: GridPosition): Point => ({
+  x: position.x * TILE_SIZE,
+  y: position.y * TILE_SIZE,
+});
+
+export const worldToGrid = (position: Point): GridPosition => ({
+  x: Math.round(position.x / TILE_SIZE),
+  y: Math.round(position.y / TILE_SIZE),
 });
 
 export const tileKey = (point: Point) => `${point.x}:${point.y}`;
@@ -26,6 +37,10 @@ export function directionTo(from: Point, to: Point): Direction {
   const dy = to.y - from.y;
   if (Math.abs(dx) >= Math.abs(dy)) return dx >= 0 ? 'right' : 'left';
   return dy >= 0 ? 'down' : 'up';
+}
+
+export function gridDirectionTo(from: GridPosition, to: GridPosition): Direction {
+  return directionTo(gridToWorld(from), gridToWorld(to));
 }
 
 export function stepToward(from: Point, to: Point): Point {

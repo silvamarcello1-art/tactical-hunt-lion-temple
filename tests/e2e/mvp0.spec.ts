@@ -24,6 +24,159 @@ async function expectNoInvalidNumbers(page: Page) {
   expect(text).not.toContain('Infinity');
 }
 
+async function installGridAudit(page: Page) {
+  await page.addInitScript(() => {
+    const positions = new Map<string, string>();
+    const reservations = new Map<string, {
+      tile:string;
+      startedAt:number;
+      completesAt:number;
+    }>();
+    const projectiles = new Map<string, { impactAt:number; terminals:number }>();
+    const telegraphs = new Map<string, string>();
+    let currentInitialBackline = 0;
+    const blocked = new Set([
+      '12:5','12:6','12:12','12:13','17:7','17:8','17:10','17:11',
+    ]);
+    const audit = {
+      floor:0,
+      overlapDetected:false,
+      blockedTileEntered:false,
+      invalidPath:false,
+      telegraphMismatch:false,
+      pathEvents:0,
+      spellTelegraphs:0,
+      reservationObserved:false,
+      invalidReservationLifecycle:false,
+      projectileObserved:false,
+      monsterProjectileObserved:false,
+      prematureProjectileDamage:false,
+      duplicateProjectileTerminal:false,
+      pendingAtFloorComplete:false,
+      maxInitialBacklineAttackers:0,
+    };
+    Object.assign(window, { __gridAudit:audit });
+    window.addEventListener('hunt-event', (rawEvent) => {
+      const event = (rawEvent as CustomEvent<{
+        floor:number;
+        type:string;
+        sourceId?:string;
+        targetId?:string;
+        data?:Record<string, unknown>;
+      }>).detail;
+      if (event.floor !== audit.floor) {
+        audit.floor = event.floor;
+        positions.clear();
+        currentInitialBackline = 0;
+      }
+      const tile = event.data?.tile as { x:number;y:number } | undefined;
+      const toTile = event.data?.toTile as { x:number;y:number } | undefined;
+      if ((event.type === 'spawn' || event.type === 'boss_spawn') && event.targetId && tile) {
+        positions.set(event.targetId, `${tile.x}:${tile.y}`);
+      }
+      if (event.type === 'tile_reserved' && event.sourceId && toTile) {
+        const startedAt = Number(event.data?.startedAt ?? event.time);
+        const completesAt = Number(event.data?.completesAt ?? event.time);
+        audit.reservationObserved = true;
+        if (completesAt <= startedAt || positions.get(event.sourceId) === `${toTile.x}:${toTile.y}`) {
+          audit.invalidReservationLifecycle = true;
+        }
+        reservations.set(event.sourceId, {
+          tile:`${toTile.x}:${toTile.y}`,
+          startedAt,
+          completesAt,
+        });
+      }
+      if (event.type === 'movement_completed' && event.sourceId && toTile) {
+        const reservation = reservations.get(event.sourceId);
+        if (!reservation || reservation.tile !== `${toTile.x}:${toTile.y}` || event.time < reservation.completesAt) {
+          audit.invalidReservationLifecycle = true;
+        }
+        positions.set(event.sourceId, `${toTile.x}:${toTile.y}`);
+        if (blocked.has(`${toTile.x}:${toTile.y}`)) audit.blockedTileEntered = true;
+        reservations.delete(event.sourceId);
+      }
+      if (event.type === 'movement_cancelled' && event.sourceId) {
+        reservations.delete(event.sourceId);
+      }
+      if (event.type === 'death' && event.targetId) {
+        positions.delete(event.targetId);
+        reservations.delete(event.targetId);
+      }
+      if (new Set(positions.values()).size !== positions.size) {
+        audit.overlapDetected = true;
+      }
+      if (event.type === 'path_recalculated') {
+        audit.pathEvents++;
+        const path = (event.data?.path ?? []) as Array<{ x:number;y:number }>;
+        let previous = event.data?.fromTile as { x:number;y:number } | undefined;
+        for (const step of path) {
+          if (
+            !previous ||
+            Math.max(Math.abs(step.x - previous.x), Math.abs(step.y - previous.y)) !== 1 ||
+            blocked.has(`${step.x}:${step.y}`)
+          ) {
+            audit.invalidPath = true;
+          }
+          previous = step;
+        }
+      }
+      const castId = event.data?.castId as string | undefined;
+      if (event.type === 'projectile' && castId) {
+        audit.projectileObserved = true;
+        if (event.sourceId?.startsWith('lion-') || event.sourceId?.startsWith('mage-') || event.sourceId === 'lion-king') {
+          audit.monsterProjectileObserved = true;
+        }
+        const impactAt = Number(event.data?.impactAt ?? event.time);
+        if (impactAt <= event.time || !Array.isArray(event.data?.pathTiles) || event.data.pathTiles.length < 2) {
+          audit.prematureProjectileDamage = true;
+        }
+        projectiles.set(castId, { impactAt, terminals:0 });
+      }
+      if ((event.type === 'damage' || event.type === 'dodge') && castId) {
+        const projectile = projectiles.get(castId);
+        if (projectile && event.time < projectile.impactAt) {
+          audit.prematureProjectileDamage = true;
+        }
+      }
+      if ((event.type === 'projectile_resolved' || event.type === 'projectile_cancelled') && castId) {
+        const projectile = projectiles.get(castId);
+        if (projectile) {
+          projectile.terminals++;
+          if (projectile.terminals > 1 || event.time < projectile.impactAt && event.type === 'projectile_resolved') {
+            audit.duplicateProjectileTerminal = true;
+          }
+          projectiles.delete(castId);
+        }
+      }
+      if (event.type === 'spell_telegraph' && castId) {
+        audit.spellTelegraphs++;
+        telegraphs.set(castId, JSON.stringify(event.data?.logicalTiles ?? []));
+      }
+      if ((event.type === 'spell_resolved' || event.type === 'spell_cancelled') && castId && telegraphs.has(castId)) {
+        if (telegraphs.get(castId) !== JSON.stringify(event.data?.logicalTiles ?? [])) {
+          audit.telegraphMismatch = true;
+        }
+        telegraphs.delete(castId);
+      }
+      if (event.type === 'floor_complete') {
+        if (reservations.size || projectiles.size || telegraphs.size) {
+          audit.pendingAtFloorComplete = true;
+        }
+      }
+      if (event.type === 'target_change' && event.data?.reason === 'spatial') {
+        if (event.targetId === 'druid' || event.targetId === 'sorcerer') {
+          currentInitialBackline++;
+          audit.maxInitialBacklineAttackers = Math.max(
+            audit.maxInitialBacklineAttackers,
+            currentInitialBackline,
+          );
+        }
+      }
+    });
+  });
+}
+
 test.describe.serial('MVP 0 + MVP 1A — fluxo completo', () => {
   test('carrega sem erros e todo controle visível dá retorno', async ({
     page,
@@ -98,6 +251,151 @@ test.describe.serial('MVP 0 + MVP 1A — fluxo completo', () => {
       'true',
     );
     await expectNoInvalidNumbers(page);
+    expect(errors).toEqual([]);
+  });
+
+  test('exibe saldo persistente de Boss Tokens ao carregar a página', async ({
+    page,
+  }) => {
+    await page.addInitScript(() => {
+      localStorage.setItem(
+        'tactical-hunt-currency',
+        JSON.stringify({ bossToken: 1, rewardKeys: [] }),
+      );
+    });
+    await openIdleHunt(page);
+    await expect(page.locator('#boss-token-balance')).toHaveText(
+      '★ 1 Boss Token',
+    );
+  });
+
+  test('concede Boss Token ao derrotar o boss e persiste o saldo após reload', async ({
+    page,
+  }) => {
+    const errors = collectRuntimeErrors(page);
+    await openIdleHunt(page);
+    await page.locator('#loop-toggle').click();
+    await expect(page.locator('#loop-toggle')).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    );
+    await expect(page.locator('#boss-token-balance')).toHaveText(
+      '★ 0 Boss Token',
+    );
+    await page.locator('[data-speed="4"]').click();
+    await page.locator('#start').click();
+    await expect(page.locator('html')).toHaveAttribute(
+      'data-session-state',
+      'completed',
+      { timeout: 100_000 },
+    );
+    await page.waitForFunction(() => {
+      const dialog = document.querySelector('#result') as HTMLDialogElement | null;
+      return dialog?.open === true;
+    });
+    await expect(page.locator('#boss-token-balance')).toHaveText(
+      '★ 1 Boss Token',
+    );
+    const balance = await page.locator('#boss-token-balance').innerText();
+    await page.locator('#close-result').click();
+    await expect(page.locator('#boss-token-balance')).toHaveText(balance);
+    await page.reload();
+    await openIdleHunt(page);
+    await expect(page.locator('#boss-token-balance')).toHaveText(balance);
+    expect(errors).toEqual([]);
+  });
+
+  test('abrir o relatório de resultado não altera o saldo de Boss Token', async ({
+    page,
+  }) => {
+    const errors = collectRuntimeErrors(page);
+    await openIdleHunt(page);
+    await page.locator('#loop-toggle').click();
+    await expect(page.locator('#loop-toggle')).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    );
+    await page.locator('[data-speed="4"]').click();
+    await page.locator('#start').click();
+    await expect(page.locator('html')).toHaveAttribute(
+      'data-session-state',
+      'completed',
+      { timeout: 100_000 },
+    );
+    await expect(page.locator('#boss-token-balance')).toHaveText(
+      '★ 1 Boss Token',
+    );
+    const balance = await page.locator('#boss-token-balance').innerText();
+    await expect(page.locator('#result')).toBeVisible();
+    await page.locator('#close-result').click();
+    await expect(page.locator('#boss-token-balance')).toHaveText(balance);
+    expect(errors).toEqual([]);
+  });
+
+  test('não concede Boss Token duas vezes para o mesmo boss_reward duplicado', async ({
+    page,
+  }) => {
+    const errors = collectRuntimeErrors(page);
+    await openIdleHunt(page);
+    await page.locator('[data-speed="4"]').click();
+    await page.locator('#start').click();
+    await expect(page.locator('html')).toHaveAttribute(
+      'data-session-state',
+      'completed',
+      { timeout: 100_000 },
+    );
+    const firstBalance = await page.locator('#boss-token-balance').innerText();
+    await page.evaluate(() => {
+      const event = {
+        type: 'boss_reward',
+        floor: 4,
+        targetId: 'lion-king',
+        data: { amount: 1, rewardType: 'bossToken' },
+      };
+      window.dispatchEvent(new CustomEvent('hunt-event', { detail: event }));
+      window.dispatchEvent(new CustomEvent('hunt-event', { detail: event }));
+    });
+    await expect(page.locator('#boss-token-balance')).toHaveText(firstBalance);
+    expect(errors).toEqual([]);
+  });
+
+  test('três loops legítimos concedem três Boss Tokens', async ({
+    page,
+  }) => {
+    const errors = collectRuntimeErrors(page);
+    await openIdleHunt(page);
+    await page.locator('[data-speed="4"]').click();
+    await page.locator('#start').click();
+    await expect(page.locator('html')).toHaveAttribute(
+      'data-completed-cycles',
+      '3',
+      { timeout: 100_000 },
+    );
+    await expect(page.locator('#boss-token-balance')).toHaveText(
+      '★ 3 Boss Token',
+    );
+    expect(errors).toEqual([]);
+  });
+
+  test('três bosses distintos concedem três Boss Tokens no mesmo ciclo', async ({
+    page,
+  }) => {
+    const errors = collectRuntimeErrors(page);
+    await openIdleHunt(page);
+    await page.evaluate(() => {
+      for (const bossId of ['boss-1', 'boss-2', 'boss-3']) {
+        const event = {
+          type: 'boss_reward',
+          floor: 4,
+          targetId: bossId,
+          data: { amount: 1, rewardType: 'bossToken' },
+        };
+        window.dispatchEvent(new CustomEvent('hunt-event', { detail: event }));
+      }
+    });
+    await expect(page.locator('#boss-token-balance')).toHaveText(
+      '★ 3 Boss Token',
+    );
     expect(errors).toEqual([]);
   });
 
@@ -298,8 +596,37 @@ test.describe.serial('MVP 0 + MVP 1A — fluxo completo', () => {
     expect(errors).toEqual([]);
   });
 
+  test('remove reservas, projéteis e telegraphs ao reiniciar durante a hunt', async ({
+    page,
+  }) => {
+    const errors = collectRuntimeErrors(page);
+    await openIdleHunt(page);
+    await page.locator('#start').click();
+    await expect
+      .poll(async () => Number(await page.locator('#game').getAttribute(
+        'data-active-projectiles',
+      )))
+      .toBeGreaterThan(0);
+    await expect
+      .poll(async () => Number(await page.locator('#game').getAttribute(
+        'data-reservation-count',
+      )))
+      .toBeGreaterThan(0);
+    await page.locator('#restart').click();
+    await expect(page.locator('html')).toHaveAttribute('data-session-state', 'idle');
+    await expect(page.locator('#game')).toHaveAttribute('data-active-projectiles', '0');
+    await expect(page.locator('#game')).toHaveAttribute('data-active-telegraphs', '0');
+    await expect(page.locator('#game')).toHaveAttribute('data-reservation-count', '0');
+    await expect(page.locator('#game')).toHaveAttribute('data-tween-count', '0');
+    await expect(page.locator('#game')).toHaveAttribute('data-effect-count', '0');
+    await page.waitForTimeout(500);
+    await expect(page.locator('html')).toHaveAttribute('data-processed-events', '0');
+    expect(errors).toEqual([]);
+  });
+
   test('chega ao boss e conclui três loops sem duplicações', async ({ page }) => {
     const errors = collectRuntimeErrors(page);
+    await installGridAudit(page);
     await openIdleHunt(page);
     await page.locator('[data-speed="4"]').click();
     await page.locator('#start').click();
@@ -319,6 +646,12 @@ test.describe.serial('MVP 0 + MVP 1A — fluxo completo', () => {
     await expect(page.locator('#game')).toHaveAttribute('data-effect-count', '0');
     await expect(page.locator('#game')).toHaveAttribute('data-entity-count', '3');
     await expect(page.locator('#game')).toHaveAttribute('data-out-of-bounds', '0');
+    await expect(page.locator('#game')).toHaveAttribute('data-logical-overlaps', '0');
+    await expect
+      .poll(async () => Number(await page.locator('#game').getAttribute(
+        'data-path-recalculations',
+      )))
+      .toBeGreaterThan(0);
     await expect(page.locator('.hero-card')).toHaveCount(3);
     await expect(page.locator('#analyzer')).toContainText('Bosses');
     await expect(page.locator('#analyzer')).toContainText('Dano recebido');
@@ -335,6 +668,38 @@ test.describe.serial('MVP 0 + MVP 1A — fluxo completo', () => {
       '3',
     );
     await expectNoInvalidNumbers(page);
+    const gridAudit = await page.evaluate(() =>
+      (window as typeof window & { __gridAudit?:Record<string, unknown> }).__gridAudit,
+    );
+    expect(gridAudit).toMatchObject({
+      overlapDetected:false,
+      blockedTileEntered:false,
+      invalidPath:false,
+      telegraphMismatch:false,
+      reservationObserved:true,
+      invalidReservationLifecycle:false,
+      projectileObserved:true,
+      monsterProjectileObserved:true,
+      prematureProjectileDamage:false,
+      duplicateProjectileTerminal:false,
+      pendingAtFloorComplete:false,
+    });
+    expect(Number(gridAudit?.maxInitialBacklineAttackers ?? Infinity))
+      .toBeLessThanOrEqual(2);
+    expect(Number(gridAudit?.pathEvents ?? 0)).toBeGreaterThan(0);
+    expect(Number(gridAudit?.spellTelegraphs ?? 0)).toBeGreaterThan(0);
+    await expect(page.locator('#game')).toHaveAttribute('data-active-projectiles', '0');
+    await expect(page.locator('#game')).toHaveAttribute('data-active-telegraphs', '0');
+    await expect(page.locator('#game')).toHaveAttribute('data-reservation-count', '0');
+    expect(Number(await page.locator('#game').getAttribute(
+      'data-consecutive-no-route',
+    ))).toBeLessThanOrEqual(3);
+    expect(Number(await page.locator('#game').getAttribute(
+      'data-max-pending-movements',
+    ))).toBeGreaterThan(0);
+    expect(Number(await page.locator('#game').getAttribute(
+      'data-max-pending-projectiles',
+    ))).toBeGreaterThan(0);
     expect(errors).toEqual([]);
   });
 

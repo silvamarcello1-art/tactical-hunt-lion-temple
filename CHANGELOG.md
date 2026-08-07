@@ -1,5 +1,86 @@
 # Changelog
 
+## 0.3.2 — 2026-08-07
+
+### Correção final pontual do MVP 1C
+
+- Recupera conjuradores presos em alcance sem linha de visão por meio de um
+  firing-position resolver determinístico e alcançável.
+- Detecta ausência de progresso, tenta recuperação e encerra stalemates de forma
+  explícita.
+- Corrige `floor_complete` para nunca registrar vitória com inimigos vivos.
+- Revalida movimentos pendentes antes de transformar reserva em ocupação.
+- Inclui mudanças de terreno na revisão da grade.
+- Separa falhas gerais de movimento, sequências gerais, sequências `no-route` e
+  recuperações de firing position.
+- Adiciona regressões determinísticas para LoS, seed 811, conclusão de andar,
+  revisão da grade, ocupação concorrente e semântica das métricas.
+- Gate: 91 testes unitários, build, 13 E2E e 24 hunts de stress aprovados.
+
+Helper, inventário, equipamentos, progressões, merge e publicação não foram
+alterados.
+
+## 0.3.1 — 2026-08-06
+
+### Hardening do MVP 1C
+
+- Movimento passou a duas fases, mantendo origem ocupada e destino reservado
+  por 220 ms lógicos até `completesAt`.
+- Intenções concorrentes recebem arbitragem estável; morte, fim de sala e reset
+  cancelam movimentos sem reservas órfãs.
+- Todos os ataques ranged usam `ProjectileSystem`, com trajetória, `castId`,
+  `sessionId`, `impactAt`, políticas próprias e dano atrasado.
+- Hazards, telegraphs e projectiles possuem resolução ou cancelamento explícito,
+  sem dano ou efeitos de sessões antigas.
+- Reachability precede score; destination cooldown, histórico de tiles,
+  anti-oscilação e stuck recovery evitam repetição sem rota.
+- LoS foi substituída por supercover com tratamento de quinas e endpoints.
+- Aggro inicial aplica cap determinístico de dois atacantes na backline, sem
+  limitar mudanças posteriores por threat ou Challenge.
+- Telemetria e auditoria E2E cobrem reservas, projectiles, lifecycle, resíduos,
+  cap da backline e três loops.
+- Gate atualizado para 79 testes unitários e 13 cenários Playwright; merge e
+  publicação não foram realizados.
+
+## 0.3.0 — 2026-08-06
+
+### MVP 1C — Authoritative Grid Combat
+
+- Posições autoritativas migradas para `tileX`/`tileY` inteiros.
+- Adicionados `GridMap`, `OccupancyGrid`, A*, `MovementSystem`, LoS e
+  `SpellAreaResolver` em módulos sem dependência de PixiJS.
+- Ocupação, reservas, spawn conflitante, morte, footprints, obstáculos e
+  diagonais sem corte de quina passaram a ter regras determinísticas.
+- Knight, casters e monstros preservam aggro, Challenge, threat,
+  reposicionamento, waves e fallbacks sobre a nova grade.
+- Projectiles e magias usam trajetória, máscara, LoS, `castId`, telegraph e
+  impacto lógicos.
+- PixiRenderer ganhou obstáculos, diagnóstico de overlap e debug opt-in para
+  caminhos, ocupação, reservas e spell masks.
+- Suítes unitária e E2E ampliadas para auditar overlaps, obstáculos, caminhos e
+  telegraphs durante três loops.
+- Helper individual permaneceu pausado e intocado; nenhuma publicação foi feita.
+- Gate final: 55 testes Vitest, build completo e 12 cenários Playwright
+  aprovados; inspeção manual com debug concluiu sem overlap ou erro de console.
+
+## 0.2.1 — 2026-07-27
+
+### Boss Token — Conclusão
+
+- `CurrencyService` consolidado como fonte persistente de `bossToken` com
+  idempotência garantida por `sessionId + bossId + rewardType`.
+- Recompensa por chefe configurável via `bossTokenReward` (padrão = 1).
+- Persistência entre reloads e resets; múltiplos bosses e loops legítimos suportados;
+  duplicação de recompensa evitada no mesmo `sessionId+bossId+rewardType`.
+- Integração com barra superior, notificação visual, relatório de resultado e
+  Hunt Analyzer.
+- Validação: `pnpm run typecheck` aprovado; `pnpm exec vitest run` — 37 testes unitários aprovados; `pnpm run build` aprovado; Playwright E2E — 12 testes aprovados, exit code 0.
+
+### Observações
+
+- Não foram feitas alterações no código relacionado ao Helper nesta entrega.
+- Documentação atualizada em `docs/CURRENT_STATE.md`, `docs/SESSION_CHECKPOINT.md` e `docs/NEXT_TASK.md`.
+
 ## 0.2.0 — 2026-07-27
 
 ### MVP 1A — fidelidade da área da hunt

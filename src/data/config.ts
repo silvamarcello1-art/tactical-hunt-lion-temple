@@ -2,6 +2,7 @@ import { tile } from '../combat/tiles';
 import type { EntitySnapshot } from '../events/types';
 
 export const HUNT_LAYOUT_CONFIG = {
+  maxInitialBacklineAttackers:2,
   arenaColumns:30,
   arenaRows:18,
   walkableBounds:{
@@ -14,6 +15,16 @@ export const HUNT_LAYOUT_CONFIG = {
     minColumn:14,
     maxColumn:15,
   },
+  blockedTiles:[
+    { x:12,y:5 },
+    { x:12,y:6 },
+    { x:12,y:12 },
+    { x:12,y:13 },
+    { x:17,y:7 },
+    { x:17,y:8 },
+    { x:17,y:10 },
+    { x:17,y:11 },
+  ],
   partyPositions:{
     knight:tile(8,9),
     druid:tile(5,6),
@@ -44,9 +55,9 @@ export const HUNT_LAYOUT_CONFIG = {
 } as const;
 
 export const heroes: EntitySnapshot[] = [
-  { id:'knight',name:'Aldric',role:'knight',hp:1650,maxHp:1650,mana:720,maxMana:720,attack:128,defense:42,crit:.12,dodge:.04,position:HUNT_LAYOUT_CONFIG.partyPositions.knight,color:0xd8ad51 },
-  { id:'druid',name:'Lyra',role:'druid',hp:920,maxHp:920,mana:1600,maxMana:1600,attack:96,defense:17,crit:.1,dodge:.09,position:HUNT_LAYOUT_CONFIG.partyPositions.druid,color:0x67c891 },
-  { id:'sorcerer',name:'Orin',role:'sorcerer',hp:840,maxHp:840,mana:1350,maxMana:1350,attack:152,defense:14,crit:.18,dodge:.08,position:HUNT_LAYOUT_CONFIG.partyPositions.sorcerer,color:0x8d7ce4 },
+  { id:'knight',name:'Aldric',role:'knight',hp:1650,maxHp:1650,mana:720,maxMana:720,attack:128,defense:42,crit:.12,dodge:.04,tileX:8,tileY:9,position:HUNT_LAYOUT_CONFIG.partyPositions.knight,color:0xd8ad51 },
+  { id:'druid',name:'Lyra',role:'druid',hp:920,maxHp:920,mana:1600,maxMana:1600,attack:96,defense:17,crit:.1,dodge:.09,tileX:5,tileY:6,position:HUNT_LAYOUT_CONFIG.partyPositions.druid,color:0x67c891 },
+  { id:'sorcerer',name:'Orin',role:'sorcerer',hp:840,maxHp:840,mana:1350,maxMana:1350,attack:152,defense:14,crit:.18,dodge:.08,tileX:5,tileY:12,position:HUNT_LAYOUT_CONFIG.partyPositions.sorcerer,color:0x8d7ce4 },
 ];
 
 const lion = (
@@ -68,6 +79,8 @@ const lion = (
   defense:mage ? 12 : 20,
   crit:.05,
   dodge:.04,
+  tileX:Math.round(position.x / 32),
+  tileY:Math.round(position.y / 32),
   position,
   color:mage ? 0xb46fc4 : 0xb8843f,
 });
@@ -95,7 +108,7 @@ export const floors: EntitySnapshot[][] = [
   ],
   [
     lion('guard-1','Royal Guard',620,75,HUNT_LAYOUT_CONFIG.enemySpawnPositions[3][0]),
-    { id:'lion-king',name:'Lion King',role:'boss',hp:3600,maxHp:3600,mana:800,maxMana:800,attack:105,defense:32,crit:.13,dodge:.06,position:HUNT_LAYOUT_CONFIG.bossPosition,color:0xe0a62f },
+    { id:'lion-king',name:'Lion King',role:'boss',hp:3600,maxHp:3600,mana:800,maxMana:800,attack:105,defense:32,crit:.13,dodge:.06,tileX:25,tileY:9,position:HUNT_LAYOUT_CONFIG.bossPosition,color:0xe0a62f,bossTokenReward:1 },
     lion('guard-2','Royal Guard',620,75,HUNT_LAYOUT_CONFIG.enemySpawnPositions[3][2]),
   ],
 ];

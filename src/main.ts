@@ -1,4 +1,5 @@
 import './style.css';
+import { CurrencyService } from './app/CurrencyService';
 import { LiveHuntState } from './app/LiveHuntState';
 import { SESSION_CONFIG } from './app/sessionConfig';
 import {
@@ -47,6 +48,9 @@ let restartInProgress = false;
 let completedCycles = 0;
 let lastResult: HuntResult | undefined;
 let logicalTime = 0;
+let huntSessionId = createNewHuntSessionId();
+const currencyService = new CurrencyService();
+const BOSS_TOKEN_REWARD_TYPE = 'bossToken';
 const abilityCooldowns = new Map<
   string,
   { endsAt: number; duration: number }
@@ -65,6 +69,19 @@ function loadPreferences(): AbilityPreferences {
 
 const safeNumber = (value: number) =>
   Number.isFinite(value) && value >= 0 ? value : 0;
+
+function createNewHuntSessionId() {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  return `hunt-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
+function formatBossToken(amount: number) {
+  return new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 0 }).format(
+    Math.max(0, Math.round(amount)),
+  );
+}
 
 const formatNumber = (value: number) =>
   new Intl.NumberFormat('pt-BR').format(Math.round(safeNumber(value)));
@@ -233,6 +250,7 @@ function renderAnalyzer(hunt?: HuntResult) {
     <div class="stat"><span>XP ganho</span><b>${formatNumber(xp)}</b></div>
     <div class="stat"><span>Kills</span><b>${hunt?.kills ?? liveState.kills}</b></div>
     <div class="stat"><span>Bosses</span><b>${bosses}</b></div>
+    <div class="stat"><span>Boss Tokens</span><b>${formatBossToken(hunt?.bossTokens ?? currencyService.getBossToken())}</b></div>
     <div class="stat"><span>Loot</span><b>${formatNumber(hunt?.gold ?? liveState.gold)}</b></div>
     <div class="stat"><span>Cura</span><b>${formatNumber(hunt?.healing ?? liveState.healing)}</b></div>
     <div class="stat"><span>Dano recebido</span><b>${formatNumber(damageTaken)}</b></div>
@@ -261,6 +279,7 @@ function resetInterface() {
     phase.classList.toggle('active', index === 0);
     phase.classList.remove('done');
   });
+  renderCurrencyBar();
 }
 
 async function createRenderer() {
@@ -278,27 +297,6 @@ async function createRenderer() {
     nextRenderer.destroy();
     throw error;
   }
-}
-
-function labelEvent(event: CombatEvent) {
-  if (event.type === 'boss_spawn') return 'O chefe entrou na arena.';
-  if (event.type === 'floor_complete') return `Andar ${event.floor} concluído.`;
-  if (event.type === 'critical') return `${event.sourceId}: crítico.`;
-  if (event.type === 'dodge') return `${event.targetId}: esquiva.`;
-  if (event.type === 'death') return `${event.targetId} foi derrotado.`;
-  if (event.type === 'aggro') {
-    return 'Aldric desafiou os inimigos com exeta res.';
-  }
-  if (event.type === 'reposition') {
-    return `${event.sourceId} reposicionou-se.`;
-  }
-  if (event.type === 'monster_aoe') {
-    return `${event.data?.ability} atingiu os tiles.`;
-  }
-  if (event.type === 'loot') {
-    return `${event.data?.quantity}× ${event.data?.item}`;
-  }
-  return event.type;
 }
 
 function start() {
@@ -332,6 +330,7 @@ async function restart(autoStart = false) {
   if (resultDialog.open) resultDialog.close();
   setSessionPhase('resetting');
   resetInterface();
+  huntSessionId = createNewHuntSessionId();
   setSessionPhase('preparing');
   try {
     await createRenderer();
@@ -410,6 +409,7 @@ function showResult(hunt: HuntResult) {
   $('#result-content').innerHTML = `<h2>${hunt.victory ? 'Vitória no templo' : 'A expedição falhou'}</h2>
     <div class="result-list">Duração: ${formatTime(hunt.duration)}<br>
     XP total: ${formatNumber(hunt.xp)}<br>Gold: ${formatNumber(hunt.gold)}<br>
+    Boss Tokens: ${formatBossToken(hunt.bossTokens)}<br>
     Monstros derrotados: ${hunt.kills}<br>Cura de Lyra: ${formatNumber(hunt.healing)}<br>
     Recompensa: ${hunt.loot['Lion King fragment'] ? 'Lion King fragment' : '—'}</div>`;
   const dialog = $('#result') as HTMLDialogElement;
@@ -472,6 +472,20 @@ window.addEventListener('hunt-event', (rawEvent) => {
     setSessionPhase('boss');
   }
 
+  if (event.type === 'boss_reward') {
+    const amount = safeNumber(event.data?.amount ?? 0) || 1;
+    const awarded = currencyService.awardBossToken(
+      huntSessionId,
+      event.targetId ?? 'unknown',
+      event.data?.rewardType ?? BOSS_TOKEN_REWARD_TYPE,
+      amount,
+    );
+    if (awarded) {
+      renderCurrencyBar();
+      showBossTokenNotification(amount);
+    }
+  }
+
   if (event.type === 'spawn' && heroIds.has(event.targetId ?? '')) {
     const hp = document.querySelector<HTMLElement>(
       `#card-${event.targetId} .hp i`,
@@ -516,6 +530,7 @@ window.addEventListener('hunt-event', (rawEvent) => {
       'critical',
       'dodge',
       'loot',
+      'boss_reward',
       'floor_complete',
       'boss_spawn',
       'aggro',
@@ -537,10 +552,65 @@ window.addEventListener('hunt-event', (rawEvent) => {
       `${liveState.occupiedLootSlots} / 64 slots`;
   }
 
-  if (['damage','heal','death','experience','loot'].includes(event.type)) {
+  if (['damage','heal','death','experience','loot','boss_reward'].includes(event.type)) {
     renderAnalyzer();
   }
 });
+
+function renderCurrencyBar() {
+  const accountResources = document.querySelector('.account-resources');
+  if (!accountResources) return;
+  const bossTokenItemId = 'boss-token-balance';
+  let item = document.getElementById(bossTokenItemId);
+  if (!item) {
+    item = document.createElement('span');
+    item.id = bossTokenItemId;
+    accountResources.appendChild(item);
+  }
+  item.innerHTML = `★ <b>${formatBossToken(currencyService.getBossToken())}</b> <small>Boss Token</small>`;
+  item.title = 'Saldo persistente de Boss Tokens obtidos em hunts completas';
+}
+
+function labelEvent(event: CombatEvent) {
+  if (event.type === 'boss_spawn') return 'O chefe entrou na arena.';
+  if (event.type === 'boss_reward') return `+${formatBossToken(safeNumber(event.data?.amount ?? 1))} Boss Token concedido.`;
+  if (event.type === 'floor_complete') return `Andar ${event.floor} concluído.`;
+  if (event.type === 'critical') return `${event.sourceId}: crítico.`;
+  if (event.type === 'dodge') return `${event.targetId}: esquiva.`;
+  if (event.type === 'death') return `${event.targetId} foi derrotado.`;
+  if (event.type === 'aggro') {
+    return 'Aldric desafiou os inimigos com exeta res.';
+  }
+  if (event.type === 'reposition') {
+    return `${event.sourceId} reposicionou-se.`;
+  }
+  if (event.type === 'monster_aoe') {
+    return `${event.data?.ability} atingiu os tiles.`;
+  }
+  if (event.type === 'loot') {
+    return `${event.data?.quantity}× ${event.data?.item}`;
+  }
+  return event.type;
+}
+
+function createLogLine(event: CombatEvent) {
+  const line = document.createElement('div');
+  line.className = 'log-line';
+  line.textContent = labelEvent(event);
+  return line;
+}
+
+function showBossTokenNotification(amount: number) {
+  const notification = document.createElement('div');
+  notification.className = 'boss-token-feedback';
+  notification.textContent = `+${formatBossToken(amount)} Boss Token`;
+  const container = document.querySelector('.topbar');
+  if (!container) return;
+  container.appendChild(notification);
+  window.setTimeout(() => notification.classList.add('visible'), 20);
+  window.setTimeout(() => notification.classList.remove('visible'), 1720);
+  window.setTimeout(() => notification.remove(), 1920);
+}
 
 window.addEventListener('hunt-complete', (rawEvent) => {
   const hunt = (rawEvent as CustomEvent<HuntResult>).detail;
@@ -751,6 +821,7 @@ async function initialize() {
   document.documentElement.dataset.debugEnabled = String(debugEnabled);
   renderInventory();
   resetInterface();
+  renderCurrencyBar();
   setSessionPhase('preparing');
   renderAnalyzer();
   try {

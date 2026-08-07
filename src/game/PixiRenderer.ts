@@ -20,6 +20,7 @@ import { EventPlayer } from '../events/EventPlayer';
 import type {
   CombatEvent,
   EntitySnapshot,
+  GridPoint,
   HuntResult,
   Point,
 } from '../events/types';
@@ -62,6 +63,7 @@ type Tween = {
   duration: number;
   update: (progress: number) => void;
   done?: () => void;
+  key?: string;
 };
 
 type RendererOptions = {
@@ -86,6 +88,12 @@ export class PixiRenderer {
   private readonly effectLayer = new Container();
   private readonly entityLayer = new Container();
   private readonly overlayLayer = new Container();
+  private readonly debugOccupancyLayer = new Container();
+  private readonly debugPathLayer = new Container();
+  private readonly debugEntityTiles = new Map<string, GridPoint>();
+  private readonly debugReservations = new Map<string, GridPoint>();
+  private readonly activeProjectiles = new Map<string, AnimatedSprite>();
+  private readonly activeTelegraphs = new Map<string, Graphics>();
   private parent?: HTMLElement;
   private destroyed = false;
   private selectedHeroId: string;
@@ -138,6 +146,8 @@ export class PixiRenderer {
     this.effectLayer.zIndex = 10;
     this.entityLayer.zIndex = 20;
     this.overlayLayer.zIndex = 30;
+    this.debugPathLayer.zIndex = 70;
+    this.debugOccupancyLayer.zIndex = 71;
     this.entityLayer.sortableChildren = true;
     this.overlayLayer.sortableChildren = true;
     this.app.stage.addChild(
@@ -147,13 +157,53 @@ export class PixiRenderer {
       this.overlayLayer,
     );
     this.drawArena();
-    if (this.debugEnabled) this.drawDebugOverlay();
+    if (this.debugEnabled) {
+      this.drawDebugOverlay();
+      this.overlayLayer.addChild(
+        this.debugPathLayer,
+        this.debugOccupancyLayer,
+      );
+    }
     this.floorText = this.label('PREPARAÇÃO', 13, '#f0d77a');
     this.floorText.position.set(18, 14);
     this.floorText.zIndex = 60;
     this.overlayLayer.addChild(this.floorText);
     this.app.ticker.add(this.tickerHandler);
     parent.dataset.debugEnabled = String(this.debugEnabled);
+    parent.dataset.pathRecalculations = String(
+      this.result.gridMetrics.pathRecalculations,
+    );
+    parent.dataset.blockedMoves = String(this.result.gridMetrics.blockedMoves);
+    parent.dataset.reservationConflicts = String(
+      this.result.gridMetrics.reservationConflicts,
+    );
+    parent.dataset.consecutiveNoRoute = String(
+      this.result.gridMetrics.consecutiveNoRoute,
+    );
+    parent.dataset.destinationCooldowns = String(
+      this.result.gridMetrics.destinationCooldowns,
+    );
+    parent.dataset.oscillationPrevented = String(
+      this.result.gridMetrics.oscillationPrevented,
+    );
+    parent.dataset.stuckRecoveries = String(
+      this.result.gridMetrics.stuckRecoveries,
+    );
+    parent.dataset.movementFailures = String(
+      this.result.gridMetrics.movementFailures,
+    );
+    parent.dataset.consecutiveMovementFailures = String(
+      this.result.gridMetrics.consecutiveMovementFailures,
+    );
+    parent.dataset.firingPositionRecoveries = String(
+      this.result.gridMetrics.firingPositionRecoveries,
+    );
+    parent.dataset.maxPendingMovements = String(
+      this.result.gridMetrics.maxPendingMovements,
+    );
+    parent.dataset.maxPendingProjectiles = String(
+      this.result.gridMetrics.maxPendingProjectiles,
+    );
     this.syncDiagnostics();
     window.dispatchEvent(new CustomEvent('hunt-ready', { detail:this.result }));
   }
@@ -164,6 +214,10 @@ export class PixiRenderer {
     this.player.dispose();
     this.tweens = [];
     this.units.clear();
+    this.debugEntityTiles.clear();
+    this.debugReservations.clear();
+    this.activeProjectiles.clear();
+    this.activeTelegraphs.clear();
     this.bossFill = undefined;
     this.app.ticker?.remove(this.tickerHandler);
     try {
@@ -178,6 +232,7 @@ export class PixiRenderer {
       this.parent.dataset.outOfBounds = '0';
       this.parent.dataset.effectCount = '0';
       this.parent.dataset.entityCount = '0';
+      this.parent.dataset.logicalOverlaps = '0';
     }
   }
 
@@ -323,7 +378,21 @@ export class PixiRenderer {
       )
       .fill({ color:0xf2c55b, alpha:.045 });
     atmosphere.zIndex = 3;
-    this.terrainLayer.addChild(terrain, frame, grid, atmosphere);
+    const obstacles = new Graphics();
+    for (const blocked of HUNT_LAYOUT_CONFIG.blockedTiles) {
+      obstacles
+        .roundRect(
+          blocked.x * TILE_SIZE - TILE_SIZE / 2 + 3,
+          blocked.y * TILE_SIZE - TILE_SIZE / 2 + 3,
+          TILE_SIZE - 6,
+          TILE_SIZE - 6,
+          5,
+        )
+        .fill({ color:0x493c2c,alpha:.98 })
+        .stroke({ width:2,color:0x91754c,alpha:.92 });
+    }
+    obstacles.zIndex = 4;
+    this.terrainLayer.addChild(terrain, frame, grid, atmosphere, obstacles);
   }
 
   private drawDebugOverlay() {
@@ -365,8 +434,117 @@ export class PixiRenderer {
     HUNT_LAYOUT_CONFIG.enemyCombatPositions.forEach((point, index) =>
       addMarker(point, 0xf0bd57, `combat:${index + 1}`, 5),
     );
+    for (const blocked of HUNT_LAYOUT_CONFIG.blockedTiles) {
+      const point = { x:blocked.x * TILE_SIZE,y:blocked.y * TILE_SIZE };
+      overlay.addChild(
+        new Graphics()
+          .rect(
+            point.x - TILE_SIZE / 2 + 1,
+            point.y - TILE_SIZE / 2 + 1,
+            TILE_SIZE - 2,
+            TILE_SIZE - 2,
+          )
+          .fill({ color:0xff4b45,alpha:.16 })
+          .stroke({ width:2,color:0xff4b45,alpha:.9 }),
+      );
+    }
     addMarker(HUNT_LAYOUT_CONFIG.bossPosition, 0xd77aff, 'boss', 10);
+    const legend = this.label(
+      'DEBUG  cyan=path  green=occupied  yellow=reserved  red=blocked  purple=spell',
+      9,
+      '#d9f7ff',
+    );
+    legend.position.set(68, RENDER_CONFIG.arena.height - 30);
+    overlay.addChild(legend);
     this.terrainLayer.addChild(overlay);
+  }
+
+  private applyDebugEvent(event: CombatEvent) {
+    if ((event.type === 'spawn' || event.type === 'boss_spawn') && event.targetId) {
+      const tile = event.data?.tile;
+      if (tile) this.debugEntityTiles.set(event.targetId, { ...tile });
+    }
+    if (event.type === 'tile_reserved' && event.sourceId && event.data?.toTile) {
+      this.debugReservations.set(event.sourceId, { ...event.data.toTile });
+    }
+    if (event.type === 'movement_completed' && event.sourceId) {
+      const tile = event.data?.toTile;
+      if (tile) this.debugEntityTiles.set(event.sourceId, { ...tile });
+      this.debugReservations.delete(event.sourceId);
+    }
+    if (event.type === 'movement_cancelled' && event.sourceId) {
+      this.debugReservations.delete(event.sourceId);
+    }
+    if (event.type === 'death' && event.targetId) {
+      this.debugEntityTiles.delete(event.targetId);
+      this.debugReservations.delete(event.targetId);
+    }
+    if (!this.debugEnabled) return;
+    if (event.type === 'path_recalculated') this.drawDebugPath(event);
+    if (event.type === 'spell_telegraph' || event.type === 'spell_resolved') {
+      this.drawDebugSpellMask(event);
+    }
+    this.refreshDebugOccupancy();
+  }
+
+  private refreshDebugOccupancy() {
+    this.debugOccupancyLayer.removeChildren().forEach((child) => child.destroy());
+    const graphics = new Graphics();
+    for (const [entityId, tile] of this.debugEntityTiles) {
+      graphics
+        .rect(
+          tile.x * TILE_SIZE - TILE_SIZE / 2 + 4,
+          tile.y * TILE_SIZE - TILE_SIZE / 2 + 4,
+          TILE_SIZE - 8,
+          TILE_SIZE - 8,
+        )
+        .stroke({ width:2,color:0x55f08b,alpha:.9 });
+      const label = this.label(entityId, 7, '#72ff9e');
+      label.position.set(tile.x * TILE_SIZE - 14, tile.y * TILE_SIZE + 10);
+      this.debugOccupancyLayer.addChild(label);
+    }
+    for (const tile of this.debugReservations.values()) {
+      graphics
+        .rect(
+          tile.x * TILE_SIZE - TILE_SIZE / 2 + 2,
+          tile.y * TILE_SIZE - TILE_SIZE / 2 + 2,
+          TILE_SIZE - 4,
+          TILE_SIZE - 4,
+        )
+        .stroke({ width:2,color:0xffd84a,alpha:.95 });
+    }
+    this.debugOccupancyLayer.addChildAt(graphics, 0);
+  }
+
+  private drawDebugPath(event: CombatEvent) {
+    this.debugPathLayer.removeChildren().forEach((child) => child.destroy());
+    const path = event.data?.path ?? [];
+    const from = event.data?.fromTile;
+    if (!from || !path.length) return;
+    const graphics = new Graphics()
+      .moveTo(from.x * TILE_SIZE, from.y * TILE_SIZE);
+    for (const tile of path) {
+      graphics.lineTo(tile.x * TILE_SIZE, tile.y * TILE_SIZE);
+    }
+    graphics.stroke({ width:3,color:0x57dcff,alpha:.88 });
+    this.debugPathLayer.addChild(graphics);
+  }
+
+  private drawDebugSpellMask(event: CombatEvent) {
+    const tiles = event.data?.logicalTiles ?? [];
+    if (!tiles.length) return;
+    const graphics = new Graphics();
+    for (const tile of tiles) {
+      graphics
+        .rect(
+          tile.x * TILE_SIZE - TILE_SIZE / 2 + 3,
+          tile.y * TILE_SIZE - TILE_SIZE / 2 + 3,
+          TILE_SIZE - 6,
+          TILE_SIZE - 6,
+        )
+        .stroke({ width:2,color:0xc77dff,alpha:.9 });
+    }
+    this.debugPathLayer.addChild(graphics);
   }
 
   private label(text: string, size: number, color: string) {
@@ -687,6 +865,7 @@ export class PixiRenderer {
   }
 
   private applyEvent(event: CombatEvent) {
+    this.applyDebugEvent(event);
     if (event.type === 'spawn' || event.type === 'boss_spawn') this.spawn(event);
     if (event.type === 'target_change') {
       const unit = this.units.get(event.sourceId!);
@@ -712,8 +891,13 @@ export class PixiRenderer {
             this.face(unit, unit.facing, false);
             this.setUnitState(unit, 'idle');
           },
+          0,
+          `movement:${event.sourceId}`,
         );
       }
+    }
+    if (event.type === 'movement_cancelled' && event.sourceId) {
+      this.cancelTween(`movement:${event.sourceId}`);
     }
     if (event.type === 'basic_attack' || event.type === 'cast') {
       const unit = this.units.get(event.sourceId!);
@@ -753,7 +937,17 @@ export class PixiRenderer {
     }
     if (event.type === 'aggro') this.aggroEffect(event);
     if (event.type === 'area_warning') {
-      this.tileEffect(event.data?.tiles ?? [], 0xf36b53, true, event.data?.duration);
+      const castId = event.data?.castId;
+      const warning = this.tileEffect(
+        event.data?.tiles ?? [],
+        0xf36b53,
+        true,
+        event.data?.duration,
+        undefined,
+        undefined,
+        castId ? `telegraph:${castId}` : undefined,
+      );
+      if (castId && warning) this.activeTelegraphs.set(castId, warning);
     }
     if (event.type === 'monster_aoe') {
       this.tileEffect(
@@ -771,6 +965,18 @@ export class PixiRenderer {
       );
     }
     if (event.type === 'projectile') this.projectile(event);
+    if (
+      (event.type === 'projectile_resolved' || event.type === 'projectile_cancelled') &&
+      event.data?.castId
+    ) {
+      this.cleanupProjectile(event.data.castId);
+    }
+    if (
+      (event.type === 'spell_resolved' || event.type === 'spell_cancelled') &&
+      event.data?.castId
+    ) {
+      this.cleanupTelegraph(event.data.castId);
+    }
     if (event.type === 'damage') {
       const unit = this.units.get(event.targetId!);
       if (unit) {
@@ -851,6 +1057,7 @@ export class PixiRenderer {
     duration: number = RENDER_CONFIG.effects.tileDuration,
     effectKey?: string,
     origin?: Point,
+    tweenKey?: string,
   ) {
     if (!tiles.length) return;
     const graphics = new Graphics();
@@ -874,9 +1081,16 @@ export class PixiRenderer {
         (progress) => {
           graphics.alpha = .35 + Math.abs(Math.sin(progress * Math.PI * 6)) * .65;
         },
-        () => graphics.destroy(),
+        () => {
+          graphics.destroy();
+          if (tweenKey?.startsWith('telegraph:')) {
+            this.activeTelegraphs.delete(tweenKey.slice('telegraph:'.length));
+          }
+        },
+        0,
+        tweenKey,
       );
-      return;
+      return graphics;
     }
 
     let maxDelay = 0;
@@ -935,6 +1149,7 @@ export class PixiRenderer {
       },
       () => graphics.destroy(),
     );
+    return graphics;
   }
 
   private effectKey(event: CombatEvent) {
@@ -971,19 +1186,52 @@ export class PixiRenderer {
     projectile.scale.set(.52);
     projectile.animationSpeed = .26;
     projectile.play();
-    projectile.position.copyFrom(source.body.position);
+    const originTile = event.data?.originTile;
+    const targetTile = event.data?.targetTile;
+    const points = originTile && targetTile
+      ? [originTile,targetTile].map((tile) => ({ x:tile.x * TILE_SIZE,y:tile.y * TILE_SIZE }))
+      : [
+          { x:source.body.x,y:source.body.y },
+          { x:target.body.x,y:target.body.y },
+        ];
+    projectile.position.set(points[0].x, points[0].y);
     projectile.zIndex = 50;
     this.effectLayer.addChild(projectile);
-    const start = { x:projectile.x, y:projectile.y };
+    const castId = event.data?.castId ?? event.id;
+    this.activeProjectiles.set(castId, projectile);
     this.tween(
-      RENDER_CONFIG.effects.projectileDuration,
-      (progress) =>
+      event.data?.duration ?? RENDER_CONFIG.effects.projectileDuration,
+      (progress) => {
+        const segmentCount = Math.max(1, points.length - 1);
+        const scaled = progress * segmentCount;
+        const index = Math.min(segmentCount - 1, Math.floor(scaled));
+        const local = Math.min(1, scaled - index);
+        const from = points[index];
+        const to = points[index + 1] ?? points[index];
         projectile.position.set(
-          start.x + (target.body.x - start.x) * progress,
-          start.y + (target.body.y - start.y) * progress,
-        ),
-      () => projectile.destroy(),
+          from.x + (to.x - from.x) * local,
+          from.y + (to.y - from.y) * local,
+        );
+      },
+      () => {
+        projectile.destroy();
+        this.activeProjectiles.delete(castId);
+      },
+      0,
+      `projectile:${castId}`,
     );
+  }
+
+  private cleanupProjectile(castId: string) {
+    this.cancelTween(`projectile:${castId}`);
+    this.activeProjectiles.get(castId)?.destroy();
+    this.activeProjectiles.delete(castId);
+  }
+
+  private cleanupTelegraph(castId: string) {
+    this.cancelTween(`telegraph:${castId}`);
+    this.activeTelegraphs.get(castId)?.destroy();
+    this.activeTelegraphs.delete(castId);
   }
 
   private castPulse(unit: Unit) {
@@ -1093,9 +1341,15 @@ export class PixiRenderer {
     update: Tween['update'],
     done?: Tween['done'],
     delay = 0,
+    key?: string,
   ) {
     if (this.destroyed) return;
-    this.tweens.push({ elapsed:-delay, duration, update, done });
+    this.tweens.push({ elapsed:-delay, duration, update, done, key });
+    this.syncDiagnostics();
+  }
+
+  private cancelTween(key: string) {
+    this.tweens = this.tweens.filter((tween) => tween.key !== key);
     this.syncDiagnostics();
   }
 
@@ -1148,9 +1402,21 @@ export class PixiRenderer {
     this.parent.dataset.stageChildren = String(this.app.stage.children.length);
     this.parent.dataset.tweenCount = String(this.tweens.length);
     this.parent.dataset.effectCount = String(this.effectLayer.children.length);
+    this.parent.dataset.activeProjectiles = String(this.activeProjectiles.size);
+    this.parent.dataset.activeTelegraphs = String(this.activeTelegraphs.size);
+    this.parent.dataset.reservationCount = String(this.debugReservations.size);
     this.parent.dataset.entityCount = String(this.entityLayer.children.length);
     this.parent.dataset.outOfBounds = String(outOfBounds);
     this.parent.dataset.selectedHero = this.selectedHeroId;
+    const logicalTileKeys = [...this.debugEntityTiles.values()].map(
+      (tile) => `${tile.x}:${tile.y}`,
+    );
+    this.parent.dataset.logicalOverlaps = String(
+      logicalTileKeys.length - new Set(logicalTileKeys).size,
+    );
+    this.parent.dataset.logicalPositions = [...this.debugEntityTiles.entries()]
+      .map(([id, tile]) => `${id}:${tile.x}:${tile.y}`)
+      .join(',');
     this.parent.dataset.unitStates = [...this.units.entries()]
       .map(([id, unit]) => `${id}:${unit.state}`)
       .join(',');

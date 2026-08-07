@@ -11,6 +11,7 @@ export class LiveHuntState {
   gold = 0;
   kills = 0;
   bosses = 0;
+  bossTokens = 0;
   healing = 0;
   damageTaken = 0;
   damage: Record<string, number> = {
@@ -26,6 +27,7 @@ export class LiveHuntState {
     this.gold = 0;
     this.kills = 0;
     this.bosses = 0;
+    this.bossTokens = 0;
     this.healing = 0;
     this.damageTaken = 0;
     this.damage = { knight:0, druid:0, sorcerer:0 };
