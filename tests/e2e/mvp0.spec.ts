@@ -617,6 +617,13 @@ test.describe.serial('MVP 0 + MVP 1A — fluxo completo', () => {
     await expect(page.locator('#game')).toHaveAttribute('data-active-projectiles', '0');
     await expect(page.locator('#game')).toHaveAttribute('data-active-telegraphs', '0');
     await expect(page.locator('#game')).toHaveAttribute('data-reservation-count', '0');
+    await expect(page.locator('#game')).toHaveAttribute('data-residual-visual-objects', '0');
+    await expect(page.locator('#game')).toHaveAttribute('data-max-visual-sync-error', '0');
+    await expect(page.locator('#game')).toHaveAttribute('data-visual-overlap-warnings', '0');
+    await expect(page.locator('#game')).toHaveAttribute('data-mask-mismatch-count', '0');
+    expect(Number(await page.locator('#game').getAttribute(
+      'data-created-floating-texts',
+    ))).toBeLessThanOrEqual(48);
     await expect(page.locator('#game')).toHaveAttribute('data-tween-count', '0');
     await expect(page.locator('#game')).toHaveAttribute('data-effect-count', '0');
     await page.waitForTimeout(500);

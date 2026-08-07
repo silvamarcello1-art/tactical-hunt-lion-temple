@@ -1620,5 +1620,9 @@ export class PixiRenderer {
     this.parent.dataset.presentationStates = [...this.presentation.entities.values()]
       .map((entity) => `${entity.id}:${entity.animation}`)
       .join(',');
+    this.parent.dataset.visualPositions = [...this.units.entries()]
+      .map(([id, unit]) => `${id}:${unit.body.x.toFixed(2)}:${unit.body.y.toFixed(2)}`)
+      .join(',');
+    this.parent.dataset.logicalTime = this.presentation.time.toFixed(2);
   }
 }
