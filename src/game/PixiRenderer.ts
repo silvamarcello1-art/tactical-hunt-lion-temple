@@ -189,6 +189,15 @@ export class PixiRenderer {
     parent.dataset.stuckRecoveries = String(
       this.result.gridMetrics.stuckRecoveries,
     );
+    parent.dataset.movementFailures = String(
+      this.result.gridMetrics.movementFailures,
+    );
+    parent.dataset.consecutiveMovementFailures = String(
+      this.result.gridMetrics.consecutiveMovementFailures,
+    );
+    parent.dataset.firingPositionRecoveries = String(
+      this.result.gridMetrics.firingPositionRecoveries,
+    );
     parent.dataset.maxPendingMovements = String(
       this.result.gridMetrics.maxPendingMovements,
     );

@@ -253,6 +253,60 @@ describe('CombatEngine', () => {
     ).toBe(false);
   });
 
+  it('recovers a caster firing position on seed 811 without energy wave', () => {
+    const preferences = defaultAbilityPreferences();
+    preferences.energy_wave.enabled = false;
+    const result = new CombatEngine(811, preferences).run();
+    const bossFloor = result.events.filter((event) => event.floor === 4);
+    const completion = bossFloor.find((event) => event.type === 'floor_complete');
+    const bossDeath = bossFloor.find(
+      (event) => event.type === 'death' && event.targetId === 'lion-king',
+    );
+
+    expect(result.floorTurns[3]).toBeLessThan(700);
+    expect(completion?.data?.completionReason).not.toBe('turn_limit');
+    expect(completion?.data?.victory).toBe(Boolean(bossDeath));
+    expect(result.gridMetrics.firingPositionRecoveries).toBeGreaterThan(0);
+
+    const recovery = bossFloor.find(
+      (event) =>
+        event.type === 'reposition' &&
+        (event.sourceId === 'druid' || event.sourceId === 'sorcerer') &&
+        event.data?.reason === 'firing-position',
+    );
+    expect(recovery).toBeDefined();
+    expect(bossFloor.some(
+      (event) =>
+        event.time > recovery!.time &&
+        event.type === 'cast' &&
+        event.sourceId === recovery!.sourceId,
+    )).toBe(true);
+  });
+
+  it('never emits floor victory while a floor enemy remains alive', () => {
+    const events = new CombatEngine(811).run().events;
+    for (const floor of [1, 2, 3, 4]) {
+      const floorEvents = events.filter((event) => event.floor === floor);
+      const spawned = new Set(
+        floorEvents
+          .filter((event) => event.type === 'spawn' || event.type === 'boss_spawn')
+          .map((event) => event.targetId)
+          .filter((id): id is string =>
+            Boolean(id) && !['knight','druid','sorcerer'].includes(id!),
+          ),
+      );
+      const dead = new Set(
+        floorEvents
+          .filter((event) => event.type === 'death')
+          .map((event) => event.targetId),
+      );
+      const completion = floorEvents.find((event) => event.type === 'floor_complete');
+      if (completion?.data?.victory) {
+        expect([...spawned].every((id) => dead.has(id))).toBe(true);
+      }
+    }
+  });
+
   it('never assigns more than two initial attackers to the backline', () => {
     const initial = new CombatEngine(803)
       .run()

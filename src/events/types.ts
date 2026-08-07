@@ -76,6 +76,8 @@ export interface CombatEvent {
     quantity?: number;
     entity?: EntitySnapshot;
     victory?: boolean;
+    completionReason?: 'victory' | 'party_defeated' | 'stalemate' | 'turn_limit';
+    turns?: number;
     radius?: number;
     duration?: number;
     targets?: string[];
@@ -144,9 +146,16 @@ export interface HuntResult {
     completedPaths: number;
     stuckRecoveries: number;
     consecutiveNoRoute: number;
+    movementFailures: number;
+    consecutiveMovementFailures: number;
+    firingPositionRecoveries: number;
     destinationCooldowns: number;
     oscillationPrevented: number;
     maxPendingMovements: number;
     maxPendingProjectiles: number;
   };
+  floorTurns: number[];
+  floorCompletionReasons: Array<
+    'victory' | 'party_defeated' | 'stalemate' | 'turn_limit'
+  >;
 }

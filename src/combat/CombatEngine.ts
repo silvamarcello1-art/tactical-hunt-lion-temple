@@ -20,6 +20,11 @@ import {
 } from './tiles';
 import { GridMap } from './grid/GridMap';
 import { resolveInitialAggro } from './InitialAggroResolver';
+import {
+  resolveFloorCompletion,
+  type FloorCompletionReason,
+} from './FloorCompletion';
+import { findReachableFiringTile } from './grid/FiringPositionResolver';
 import { LineOfSightResolver } from './grid/LineOfSightResolver';
 import { MovementSystem } from './grid/MovementSystem';
 import { OccupancyGrid } from './grid/OccupancyGrid';
@@ -70,6 +75,9 @@ type Hazard = {
 };
 
 const clone = <T>(value: T): T => structuredClone(value);
+const MAX_TURNS_PER_FLOOR = 700;
+const NO_PROGRESS_RECOVERY_TURNS = 40;
+const NO_PROGRESS_STALEMATE_TURNS = 80;
 const isHero = (entity: SimEntity) =>
   entity.role === 'knight' ||
   entity.role === 'druid' ||
@@ -92,6 +100,8 @@ export class CombatEngine {
   private bossTokens = 0;
   private loot: Record<string, number> = {};
   private floorTimes: number[] = [];
+  private floorTurns: number[] = [];
+  private floorCompletionReasons: FloorCompletionReason[] = [];
   private floorStartedAt = 0;
   private castSequence = 0;
   private movementOrder = 0;
@@ -447,6 +457,7 @@ export class CombatEngine {
     reposition = false,
     goalRange = 0,
     allowBacktrack = true,
+    reason?: string,
   ) {
     const from = this.tileOf(entity);
     const result = this.movement.step({
@@ -520,6 +531,7 @@ export class CombatEngine {
       startedAt:result.pending?.startedAt,
       completesAt:result.pending?.completesAt,
       sessionId:this.sessionId,
+      reason,
     });
     return true;
   }
@@ -745,13 +757,13 @@ export class CombatEngine {
     target: SimEntity,
     ability: AbilityDefinition,
     candidates: SimEntity[],
+    casterTile = this.tileOf(caster),
   ) {
-    const casterTile = this.tileOf(caster);
     const targetTile = this.tileOf(target);
     const facing = gridDirectionTo(casterTile, targetTile);
     if (ability.shape === 'single') {
       const inRange =
-        this.distance(caster, target) <= ability.rangeTiles &&
+        gridDistance(casterTile, targetTile) <= ability.rangeTiles &&
         this.lineOfSight.hasLineOfSight(casterTile, targetTile, {
           blockUnits:ability.projectileBlocksUnits ?? false,
           ignoreEntityIds:[caster.id,target.id],
@@ -1069,6 +1081,150 @@ export class CombatEngine {
     return this.move(caster, destination, floor, true, 0, false);
   }
 
+  private firingActionsAt(
+    caster: SimEntity,
+    position: GridPosition,
+    target: SimEntity,
+    enemies: SimEntity[],
+    floor: number,
+  ) {
+    return abilitiesByVocation(
+      caster.role as AbilityDefinition['vocation'],
+      this.preferences,
+    )
+      .filter((ability) => ability.group !== 'healing' && ability.group !== 'support')
+      .filter((ability) => caster.mana >= ability.manaCost)
+      .filter((ability) => !(ability.reserveForBoss && floor < 4))
+      .map((ability) => ({
+        ability,
+        targeting:this.abilityTargets(caster, target, ability, enemies, position),
+      }))
+      .filter(
+        ({ ability,targeting }) =>
+          targeting.targets.some((candidate) => candidate.id === target.id) &&
+          targeting.targets.length >= ability.hardMinTargets,
+      );
+  }
+
+  private canUseRangedBasicAt(
+    caster: SimEntity,
+    position: GridPosition,
+    target: SimEntity,
+  ) {
+    return (
+      caster.role === 'sorcerer' &&
+      gridDistance(position, this.tileOf(target)) <= 7 &&
+      this.lineOfSight.hasLineOfSight(position, this.tileOf(target), {
+        ignoreEntityIds:[caster.id,target.id],
+      })
+    );
+  }
+
+  private hasFiringOptionAt(
+    caster: SimEntity,
+    position: GridPosition,
+    target: SimEntity,
+    enemies: SimEntity[],
+    floor: number,
+  ) {
+    return (
+      this.canUseRangedBasicAt(caster, position, target) ||
+      this.firingActionsAt(caster, position, target, enemies, floor).length > 0
+    );
+  }
+
+  private tryMoveToFiringPosition(
+    caster: SimEntity,
+    target: SimEntity,
+    party: SimEntity[],
+    enemies: SimEntity[],
+    floor: number,
+  ) {
+    const origin = this.tileOf(caster);
+    const reachableTiles = this.movement.reachableTiles(
+      caster.id,
+      origin,
+      this.now,
+    );
+    const knight = party.find(
+      (candidate) => candidate.role === 'knight' && candidate.alive,
+    );
+    const aliveEnemies = enemies.filter((candidate) => candidate.alive);
+    const targetTile = this.tileOf(target);
+    const firingTile = findReachableFiringTile({
+      entityId:caster.id,
+      origin,
+      reachableTiles,
+      map:this.gridMap,
+      occupancy:this.occupancy,
+      isCandidateAllowed:(position) => {
+        if (this.movement.isDestinationCoolingDown(caster.id, position, this.now)) {
+          return false;
+        }
+        const closestEnemy = Math.min(
+          ...aliveEnemies.map((enemy) => gridDistance(position, this.tileOf(enemy))),
+        );
+        if (closestEnemy <= 1) return false;
+        if (knight) {
+          const knightDistance = gridDistance(position, this.tileOf(knight));
+          if (knightDistance < 2 || knightDistance > 7) return false;
+        }
+        return true;
+      },
+      isValidFiringTile:(position) =>
+        this.hasFiringOptionAt(caster, position, target, aliveEnemies, floor),
+      tacticalScore:(position) => {
+        const actions = this.firingActionsAt(
+          caster,
+          position,
+          target,
+          aliveEnemies,
+          floor,
+        );
+        const bestTargets = Math.max(
+          this.canUseRangedBasicAt(caster, position, target) ? 1 : 0,
+          ...actions.map(({ targeting }) => targeting.targets.length),
+        );
+        const waveQuality = Math.max(
+          0,
+          ...actions.map(({ ability,targeting }) =>
+            ability.shape === 'wave' ? targeting.targets.length : 0,
+          ),
+        );
+        const targetDistance = gridDistance(position, targetTile);
+        const healingCoverage = caster.role === 'druid'
+          ? party.filter(
+              (hero) =>
+                hero.alive &&
+                gridDistance(position, this.tileOf(hero)) <= 7 &&
+                this.lineOfSight.hasLineOfSight(position, this.tileOf(hero), {
+                  ignoreEntityIds:[caster.id,hero.id],
+                }),
+            ).length
+          : 0;
+        return (
+          bestTargets * 1000 +
+          waveQuality * 120 +
+          healingCoverage * 40 +
+          Math.min(targetDistance, 7) * 12
+        );
+      },
+    });
+    if (!firingTile) return false;
+    caster.safeTilePosition = cloneGridPosition(firingTile);
+    const moved = this.move(
+      caster,
+      firingTile,
+      floor,
+      true,
+      0,
+      false,
+      'firing-position',
+    );
+    if (moved) this.gridMetrics.firingPositionRecoveries++;
+    return moved;
+  }
+
   private bestChallengePosition(
     knight: SimEntity,
     backlineTargets: SimEntity[],
@@ -1256,7 +1412,10 @@ export class CombatEngine {
         const acted = this.tryBestOffensiveAction(druid, aliveEnemies, floor);
         if (!acted) {
           const target = this.nearest(druid, aliveEnemies);
-          if (target) {
+          if (
+            target &&
+            this.distance(druid, target) > 5
+          ) {
             this.move(druid, this.tileOf(target), floor, true, 5);
           }
         }
@@ -1296,8 +1455,11 @@ export class CombatEngine {
             lineOfSightPolicy:'required',
             impactPolicy:'follow-target',
           });
-        } else if (target) {
-          this.move(sorcerer, this.tileOf(target), floor, true, 5);
+        } else if (
+          target &&
+          this.distance(sorcerer, target) > 7
+        ) {
+          this.move(sorcerer, this.tileOf(target), floor, true, 7);
         }
       }
     }
@@ -1381,6 +1543,52 @@ export class CombatEngine {
         }
       }
     }
+  }
+
+  private recoverFromNoProgress(
+    party: SimEntity[],
+    enemies: SimEntity[],
+    floor: number,
+  ) {
+    const aliveEnemies = enemies.filter((enemy) => enemy.alive);
+    let recovered = false;
+    for (const hero of party.filter((candidate) => candidate.alive)) {
+      this.movement.clearFailure(hero.id);
+      if (hero.role !== 'druid' && hero.role !== 'sorcerer') continue;
+      const target = this.nearest(hero, aliveEnemies);
+      if (
+        target &&
+        !this.hasFiringOptionAt(
+          hero,
+          this.tileOf(hero),
+          target,
+          aliveEnemies,
+          floor,
+        )
+      ) {
+        recovered =
+          this.tryMoveToFiringPosition(
+            hero,
+            target,
+            party,
+            aliveEnemies,
+            floor,
+          ) || recovered;
+      }
+    }
+    return recovered;
+  }
+
+  private hasProgressSince(eventIndex: number) {
+    const progressEvents = new Set<CombatEvent['type']>([
+      'damage',
+      'heal',
+      'death',
+      'target_change',
+      'movement_completed',
+      'cast',
+    ]);
+    return this.events.slice(eventIndex).some((event) => progressEvents.has(event.type));
   }
 
   private resolveHazards(
@@ -1517,11 +1725,15 @@ export class CombatEngine {
       this.initializeSpatialAggro(enemies, party, floor);
       let hazards: Hazard[] = [];
       let turn = 0;
+      let noProgressTurns = 0;
+      let interruptedByStalemate = false;
       while (
         enemies.some((enemy) => enemy.alive) &&
         party.some((hero) => hero.alive) &&
-        turn++ < 700
+        turn < MAX_TURNS_PER_FLOOR
       ) {
+        turn++;
+        const progressEventIndex = this.events.length;
         this.resolvePendingMovements(party, enemies, floor);
         this.resolvePendingProjectiles(party, enemies);
         hazards = this.resolveHazards(hazards, party, enemies);
@@ -1531,6 +1743,16 @@ export class CombatEngine {
         }
         this.monsterActions(enemies, party, hazards, floor, turn);
         this.now += 250;
+        noProgressTurns = this.hasProgressSince(progressEventIndex)
+          ? 0
+          : noProgressTurns + 1;
+        if (noProgressTurns === NO_PROGRESS_RECOVERY_TURNS) {
+          this.recoverFromNoProgress(party, enemies, floor);
+        }
+        if (noProgressTurns >= NO_PROGRESS_STALEMATE_TURNS) {
+          interruptedByStalemate = true;
+          break;
+        }
       }
       this.resolvePendingMovements(party, enemies, floor);
       this.cancelPendingMovements(floor, 'floor-complete');
@@ -1543,8 +1765,18 @@ export class CombatEngine {
       }
       this.now += 650;
       this.floorTimes.push(this.now - start);
+      this.floorTurns.push(turn);
+      const completion = resolveFloorCompletion(
+        party.some((hero) => hero.alive),
+        enemies.some((enemy) => enemy.alive),
+        interruptedByStalemate,
+        turn >= MAX_TURNS_PER_FLOOR,
+      );
+      this.floorCompletionReasons.push(completion.completionReason);
       this.emit('floor_complete', floor, undefined, undefined, {
-        victory: party.some((hero) => hero.alive),
+        victory:completion.victory,
+        completionReason:completion.completionReason,
+        turns:turn,
       });
       for (const hero of party) {
         if (hero.alive) {
@@ -1552,6 +1784,7 @@ export class CombatEngine {
           hero.mana = hero.maxMana;
         }
       }
+      if (!completion.victory) break;
     }
     const victory = this.events.some(
       (event) => event.type === 'death' && event.targetId === 'lion-king',
@@ -1572,6 +1805,8 @@ export class CombatEngine {
       loot:this.loot,
       floorTimes:this.floorTimes,
       gridMetrics:clone(this.gridMetrics),
+      floorTurns:this.floorTurns,
+      floorCompletionReasons:this.floorCompletionReasons,
     };
   }
 }

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { gridToWorld, worldToGrid } from '../tiles';
+import { findReachableFiringTile } from './FiringPositionResolver';
 import { GridMap } from './GridMap';
 import { LineOfSightResolver } from './LineOfSightResolver';
 import { MovementSystem } from './MovementSystem';
@@ -164,6 +165,48 @@ describe('authoritative grid systems', () => {
     expect(metrics.maxPendingMovements).toBe(1);
   });
 
+  it('cancels a pending movement when its reserved destination becomes blocked', () => {
+    const { map, occupancy } = setup();
+    occupancy.occupy('hero', { x:2,y:2 });
+    const movement = new MovementSystem(map, occupancy, createGridMetrics());
+    movement.step({ entityId:'hero',from:{ x:2,y:2 },destination:{ x:5,y:2 },
+      now:0,duration:100,sessionId:'s' });
+    map.setBlocked({ x:3,y:2 }, true);
+    expect(movement.completeDue(100, 's')).toMatchObject([
+      { status:'cancelled',reason:'invalidated' },
+    ]);
+    expect(occupancy.positionOf('hero')).toEqual({ x:2,y:2 });
+    expect(occupancy.reservationOf('hero')).toBeUndefined();
+  });
+
+  it('completes a pending movement after an unrelated grid revision', () => {
+    const { map, occupancy } = setup();
+    occupancy.occupy('hero', { x:2,y:2 });
+    const movement = new MovementSystem(map, occupancy, createGridMetrics());
+    movement.step({ entityId:'hero',from:{ x:2,y:2 },destination:{ x:5,y:2 },
+      now:0,duration:100,sessionId:'s' });
+    map.setBlocked({ x:9,y:7 }, true);
+    expect(movement.completeDue(100, 's')).toMatchObject([
+      { status:'completed' },
+    ]);
+    expect(occupancy.positionOf('hero')).toEqual({ x:3,y:2 });
+  });
+
+  it('revalidates a pending movement when another entity occupies its tile', () => {
+    const { map, occupancy } = setup();
+    occupancy.occupy('hero', { x:2,y:2 });
+    const movement = new MovementSystem(map, occupancy, createGridMetrics());
+    movement.step({ entityId:'hero',from:{ x:2,y:2 },destination:{ x:5,y:2 },
+      now:0,duration:100,sessionId:'s' });
+    occupancy.cancelReservation('hero');
+    occupancy.occupy('intruder', { x:3,y:2 });
+    expect(movement.completeDue(100, 's')).toMatchObject([
+      { status:'cancelled',reason:'invalidated' },
+    ]);
+    expect(occupancy.positionOf('hero')).toEqual({ x:2,y:2 });
+    expect(occupancy.positionOf('intruder')).toEqual({ x:3,y:2 });
+  });
+
   it('arbitrates same-tick movement intents deterministically', () => {
     const { map, occupancy } = setup();
     const metrics = createGridMetrics();
@@ -305,6 +348,67 @@ describe('authoritative grid systems', () => {
       entityId:'hero',from:{ x:2,y:2 },destination:{ x:2,y:4 },now:1000,
       duration:100,sessionId:'s',
     })).toMatchObject({ moved:true,to:{ x:2,y:3 } });
+  });
+
+  it('counts consecutive no-route separately from other movement failures', () => {
+    const { map, occupancy } = setup(
+      Array.from({ length:8 }, (_, index) => ({ x:5,y:index + 1 })),
+    );
+    const metrics = createGridMetrics();
+    occupancy.occupy('hero', { x:2,y:2 });
+    occupancy.occupy('blocker', { x:3,y:2 });
+    const movement = new MovementSystem(map, occupancy, metrics);
+    movement.step({ entityId:'hero',from:{ x:2,y:2 },destination:{ x:3,y:2 },now:0 });
+    expect(metrics.movementFailures).toBe(1);
+    expect(metrics.consecutiveNoRoute).toBe(0);
+    occupancy.release('blocker');
+    for (const now of [500, 1000]) {
+      expect(movement.step({
+        entityId:'hero',from:{ x:2,y:2 },destination:{ x:8,y:8 },now,
+      }).reason).toBe('no-route');
+    }
+    expect(metrics.consecutiveNoRoute).toBe(2);
+    expect(metrics.consecutiveMovementFailures).toBe(2);
+    expect(movement.step({ entityId:'hero',from:{ x:2,y:2 },destination:{ x:2,y:4 },
+      now:1500,duration:100,sessionId:'s' }).moved).toBe(true);
+    movement.completeDue(1600, 's');
+    expect(movement.step({
+      entityId:'hero',from:{ x:2,y:3 },destination:{ x:8,y:8 },now:1700,
+    }).reason).toBe('no-route');
+    expect(metrics.consecutiveMovementFailures).toBe(2);
+    expect(metrics.stuckRecoveries).toBe(0);
+  });
+
+  it('finds a reachable firing tile when current line of sight is blocked', () => {
+    const { map, occupancy } = setup([{ x:5,y:4 }]);
+    occupancy.occupy('caster', { x:2,y:4 });
+    occupancy.occupy('target', { x:8,y:4 });
+    const movement = new MovementSystem(map, occupancy, createGridMetrics());
+    const lineOfSight = new LineOfSightResolver(map, occupancy);
+    const firingTile = findReachableFiringTile({
+      entityId:'caster',origin:{ x:2,y:4 },
+      reachableTiles:movement.reachableTiles('caster', { x:2,y:4 }),
+      map,occupancy,
+      isValidFiringTile:(position) => lineOfSight.hasLineOfSight(position, { x:8,y:4 }),
+    });
+    expect(firingTile).toBeDefined();
+    expect(lineOfSight.hasLineOfSight(firingTile!, { x:8,y:4 })).toBe(true);
+  });
+
+  it('returns no firing tile when every reachable candidate lacks line of sight', () => {
+    const { map, occupancy } = setup(
+      Array.from({ length:8 }, (_, index) => ({ x:5,y:index + 1 })),
+    );
+    occupancy.occupy('caster', { x:2,y:4 });
+    occupancy.occupy('target', { x:8,y:4 });
+    const movement = new MovementSystem(map, occupancy, createGridMetrics());
+    const lineOfSight = new LineOfSightResolver(map, occupancy);
+    expect(findReachableFiringTile({
+      entityId:'caster',origin:{ x:2,y:4 },
+      reachableTiles:movement.reachableTiles('caster', { x:2,y:4 }),
+      map,occupancy,
+      isValidFiringTile:(position) => lineOfSight.hasLineOfSight(position, { x:8,y:4 }),
+    })).toBeUndefined();
   });
 
   it('recovers a colliding spawn on the nearest free tile', () => {
