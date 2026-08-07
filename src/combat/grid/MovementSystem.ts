@@ -74,8 +74,10 @@ export interface MovementResolution {
 type FailureState = {
   destinationKey: string;
   consecutive: number;
+  consecutiveNoRoute: number;
   cooldownUntil: number;
   revision: number;
+  reason: MovementBlockReason;
 };
 
 type ReachabilityCache = {
@@ -134,7 +136,7 @@ export class MovementSystem {
   isDestinationCoolingDown(entityId: string, destination: GridPosition, now = 0) {
     const failure = this.failures.get(entityId);
     if (!failure) return false;
-    if (failure.revision !== this.occupancy.revision && failure.cooldownUntil <= now) {
+    if (failure.revision !== this.occupancy.revision) {
       this.failures.delete(entityId);
       return false;
     }
@@ -158,10 +160,12 @@ export class MovementSystem {
       const reserver = this.occupancy.reservedBy(request.destination);
       if (reserver && reserver !== request.entityId) {
         this.metrics.reservationConflicts++;
+        this.recordFailure(request.entityId, request.destination, now, 'reserved');
         return this.blocked(request, 'reserved', true, reserver);
       }
       const occupant = this.occupancy.occupantAt(request.destination);
       if (occupant && occupant !== request.entityId) {
+        this.recordFailure(request.entityId, request.destination, now, 'occupied');
         return this.blocked(request, 'occupied', true, occupant);
       }
     }
@@ -173,14 +177,14 @@ export class MovementSystem {
       goalRange: request.goalRange,
     });
     if (!path.length) {
-      this.recordFailure(request.entityId, request.destination, now);
+      this.recordFailure(request.entityId, request.destination, now, 'no-route');
       return this.blocked(request, 'no-route', true, undefined, [], true);
     }
 
     const next = path[0];
     if (!request.allowBacktrack && this.isImmediateBacktrack(request.entityId, request.from, next)) {
       this.metrics.oscillationPrevented++;
-      this.recordFailure(request.entityId, request.destination, now);
+      this.recordFailure(request.entityId, request.destination, now, 'oscillation');
       return this.blocked(request, 'oscillation', true, undefined, path, true);
     }
 
@@ -191,7 +195,12 @@ export class MovementSystem {
     );
     if (!reserved.allowed) {
       if (reserved.reason === 'reserved') this.metrics.reservationConflicts++;
-      this.recordFailure(request.entityId, request.destination, now);
+      this.recordFailure(
+        request.entityId,
+        request.destination,
+        now,
+        reserved.reason ?? 'invalidated',
+      );
       return this.blocked(
         request,
         reserved.reason ?? 'invalidated',
@@ -273,7 +282,10 @@ export class MovementSystem {
         resolved.push(this.cancel(movement.entityId, 'invalidated')!);
         continue;
       }
-      this.occupancy.commitReservation(movement.entityId);
+      if (!this.occupancy.commitReservation(movement.entityId)) {
+        resolved.push(this.cancel(movement.entityId, 'invalidated')!);
+        continue;
+      }
       this.pending.delete(movement.entityId);
       this.recordTile(movement.entityId, movement.from);
       this.recordTile(movement.entityId, movement.to);
@@ -305,6 +317,10 @@ export class MovementSystem {
     return [...this.pending.values()].map(clonePending);
   }
 
+  clearFailure(entityId: string) {
+    this.failures.delete(entityId);
+  }
+
   private blocked(
     request: MovementRequest,
     reason: MovementBlockReason,
@@ -326,23 +342,43 @@ export class MovementSystem {
     };
   }
 
-  private recordFailure(entityId: string, destination: GridPosition, now: number) {
+  private recordFailure(
+    entityId: string,
+    destination: GridPosition,
+    now: number,
+    reason: MovementBlockReason,
+  ) {
     const destinationKey = gridKey(destination);
     const previous = this.failures.get(entityId);
-    const consecutive = previous?.destinationKey === destinationKey
+    const sameDestination = previous?.destinationKey === destinationKey;
+    const consecutive = sameDestination
       ? previous.consecutive + 1
       : 1;
+    const consecutiveNoRoute = reason === 'no-route'
+      ? sameDestination && previous?.reason === 'no-route'
+        ? previous.consecutiveNoRoute + 1
+        : 1
+      : 0;
     const cooldownUntil = now + (consecutive >= 3 ? 1000 : 500);
     this.failures.set(entityId, {
       destinationKey,
       consecutive,
+      consecutiveNoRoute,
       cooldownUntil,
       revision:this.occupancy.revision,
+      reason,
     });
-    this.metrics.consecutiveNoRoute = Math.max(
-      this.metrics.consecutiveNoRoute,
+    this.metrics.movementFailures++;
+    this.metrics.consecutiveMovementFailures = Math.max(
+      this.metrics.consecutiveMovementFailures,
       consecutive,
     );
+    if (reason === 'no-route') {
+      this.metrics.consecutiveNoRoute = Math.max(
+        this.metrics.consecutiveNoRoute,
+        consecutiveNoRoute,
+      );
+    }
     this.metrics.destinationCooldowns++;
     if (consecutive === 3) this.metrics.stuckRecoveries++;
   }

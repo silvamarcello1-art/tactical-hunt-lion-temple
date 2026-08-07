@@ -22,6 +22,9 @@ export interface GridMetrics {
   completedPaths: number;
   stuckRecoveries: number;
   consecutiveNoRoute: number;
+  movementFailures: number;
+  consecutiveMovementFailures: number;
+  firingPositionRecoveries: number;
   destinationCooldowns: number;
   oscillationPrevented: number;
   maxPendingMovements: number;
@@ -49,6 +52,9 @@ export const createGridMetrics = (): GridMetrics => ({
   completedPaths:0,
   stuckRecoveries:0,
   consecutiveNoRoute:0,
+  movementFailures:0,
+  consecutiveMovementFailures:0,
+  firingPositionRecoveries:0,
   destinationCooldowns:0,
   oscillationPrevented:0,
   maxPendingMovements:0,
