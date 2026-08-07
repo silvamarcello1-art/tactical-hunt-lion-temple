@@ -52,6 +52,7 @@ type Unit = {
   maxMana: number;
   currentMana: number;
   hero: boolean;
+  baseSpriteScaleX: number;
 };
 
 type DirectionName = 'south' | 'east' | 'north' | 'west';
@@ -654,6 +655,7 @@ export class PixiRenderer {
       maxMana:snapshot.maxMana,
       currentMana:snapshot.mana,
       hero,
+      baseSpriteScaleX:Math.abs(sprite.scale.x),
     };
     this.units.set(snapshot.id, unit);
     this.syncDiagnostics();
@@ -724,7 +726,11 @@ export class PixiRenderer {
   private face(unit: Unit, direction: DirectionName, walking = false) {
     const changed = unit.facing !== direction;
     unit.facing = direction;
-    if (!(unit.sprite instanceof AnimatedSprite)) return;
+    if (!(unit.sprite instanceof AnimatedSprite)) {
+      if (direction === 'east') unit.sprite.scale.x = unit.baseSpriteScaleX;
+      if (direction === 'west') unit.sprite.scale.x = -unit.baseSpriteScaleX;
+      return;
+    }
     if (changed) {
       unit.sprite.textures = this.directionTextures(unit.spriteKey, direction);
     }
@@ -761,31 +767,30 @@ export class PixiRenderer {
       state === 'attacking'
         ? RENDER_CONFIG.entity.attackDuration
         : RENDER_CONFIG.entity.castDuration;
-    if (unit.sprite instanceof AnimatedSprite) {
-      const animated = unit.sprite;
-      animated.play();
-      this.tween(
-        duration,
-        () => undefined,
-        () => {
-          animated.gotoAndStop(0);
-          this.setUnitState(unit, 'idle');
-        },
-      );
-      return;
-    }
+    const target = unit.targetId ? this.units.get(unit.targetId) : undefined;
+    if (target) this.face(unit, this.movementDirection(unit.body.position, target.body.position));
     const startY = unit.sprite.y;
+    const startX = unit.sprite.x;
     const startRotation = unit.sprite.rotation;
+    const deltaX = target ? target.body.x - unit.body.x : 0;
+    const deltaY = target ? target.body.y - unit.body.y : -1;
+    const distance = Math.max(1, Math.hypot(deltaX, deltaY));
+    const lunge = state === 'attacking' ? 7 : 2;
+    if (unit.sprite instanceof AnimatedSprite) unit.sprite.play();
     this.tween(
       duration,
       (progress) => {
-        unit.sprite.y = startY - Math.sin(progress * Math.PI) * 5;
+        const arc = Math.sin(progress * Math.PI);
+        unit.sprite.x = startX + (deltaX / distance) * lunge * arc;
+        unit.sprite.y = startY + (deltaY / distance) * lunge * arc - (state === 'attacking' ? 0 : arc * 3);
         unit.sprite.rotation =
           startRotation + Math.sin(progress * Math.PI * 2) * .025;
       },
       () => {
+        unit.sprite.x = startX;
         unit.sprite.y = startY;
         unit.sprite.rotation = startRotation;
+        if (unit.sprite instanceof AnimatedSprite) unit.sprite.gotoAndStop(0);
         this.setUnitState(unit, 'idle');
       },
     );
@@ -895,6 +900,9 @@ export class PixiRenderer {
               ? 'healing'
               : 'casting',
         );
+        if (event.type === 'basic_attack' && event.targetId) {
+          this.meleeTrace(event.sourceId!, event.targetId);
+        }
         if (event.type === 'cast') {
           if (event.data?.mana !== undefined) {
             unit.currentMana = event.data.mana;
@@ -952,6 +960,9 @@ export class PixiRenderer {
       (event.type === 'projectile_resolved' || event.type === 'projectile_cancelled') &&
       event.data?.castId
     ) {
+      if (event.type === 'projectile_resolved' && event.targetId) {
+        this.impactSpark(event.targetId, this.elementColor(event.data?.element));
+      }
       this.cleanupProjectile(event.data.castId);
     }
     if (
@@ -1156,54 +1167,26 @@ export class PixiRenderer {
   }
 
   private projectile(event: CombatEvent) {
-    const source = this.units.get(event.sourceId!);
-    const target = this.units.get(event.targetId!);
-    if (!source || !target) return;
     const key = this.effectKey(event);
-    const projectile = new AnimatedSprite(
-      Array.from(
-        { length:4 },
-        (_, frame) => this.effectSheet.textures[`${key}-${frame}`],
-      ),
-    );
+    const textures = Array.from(
+      { length:4 },
+      (_, frame) => this.effectSheet.textures[`${key}-${frame}`],
+    ).filter(Boolean);
+    if (!textures.length) return;
+    const projectile = new AnimatedSprite(textures);
     projectile.anchor.set(.5);
     projectile.scale.set(.52);
     projectile.animationSpeed = .26;
     projectile.play();
-    const originTile = event.data?.originTile;
-    const targetTile = event.data?.targetTile;
-    const points = originTile && targetTile
-      ? [originTile,targetTile].map((tile) => ({ x:tile.x * TILE_SIZE,y:tile.y * TILE_SIZE }))
-      : [
-          { x:source.body.x,y:source.body.y },
-          { x:target.body.x,y:target.body.y },
-        ];
-    projectile.position.set(points[0].x, points[0].y);
+    const state = this.presentation.projectiles.get(event.data?.castId ?? event.id);
+    const origin = state?.position ?? event.data?.position ?? { x:0,y:0 };
+    projectile.position.set(origin.x, origin.y);
     projectile.zIndex = 50;
     this.effectLayer.addChild(projectile);
     const castId = event.data?.castId ?? event.id;
+    this.cleanupProjectile(castId);
     this.activeProjectiles.set(castId, projectile);
-    this.tween(
-      event.data?.duration ?? RENDER_CONFIG.effects.projectileDuration,
-      (progress) => {
-        const segmentCount = Math.max(1, points.length - 1);
-        const scaled = progress * segmentCount;
-        const index = Math.min(segmentCount - 1, Math.floor(scaled));
-        const local = Math.min(1, scaled - index);
-        const from = points[index];
-        const to = points[index + 1] ?? points[index];
-        projectile.position.set(
-          from.x + (to.x - from.x) * local,
-          from.y + (to.y - from.y) * local,
-        );
-      },
-      () => {
-        projectile.destroy();
-        this.activeProjectiles.delete(castId);
-      },
-      0,
-      `projectile:${castId}`,
-    );
+    this.syncPresentation();
   }
 
   private cleanupProjectile(castId: string) {
@@ -1332,6 +1315,45 @@ export class PixiRenderer {
     this.syncDiagnostics();
   }
 
+  private meleeTrace(sourceId: string, targetId: string) {
+    const source = this.units.get(sourceId);
+    const target = this.units.get(targetId);
+    if (!source || !target) return;
+    if (Math.hypot(target.body.x - source.body.x, target.body.y - source.body.y) > TILE_SIZE * 1.6) return;
+    const trace = new Graphics()
+      .moveTo(-10, 8)
+      .quadraticCurveTo(0, -13, 12, -4)
+      .stroke({ width:3,color:0xffe7a0,alpha:.95 });
+    trace.position.set(target.body.x, target.body.y - 4);
+    trace.rotation = Math.atan2(target.body.y - source.body.y, target.body.x - source.body.x);
+    trace.zIndex = 58;
+    this.effectLayer.addChild(trace);
+    this.tween(180, (progress) => {
+      trace.alpha = 1 - progress;
+      trace.scale.set(.75 + progress * .45);
+    }, () => trace.destroy());
+  }
+
+  private impactSpark(targetId: string, color: number) {
+    const target = this.units.get(targetId);
+    if (!target) return;
+    const spark = new Graphics();
+    for (let index = 0; index < 6; index++) {
+      const angle = index * (Math.PI / 3);
+      spark
+        .moveTo(Math.cos(angle) * 3, Math.sin(angle) * 3)
+        .lineTo(Math.cos(angle) * 13, Math.sin(angle) * 13)
+        .stroke({ width:2,color,alpha:.9 });
+    }
+    spark.position.copyFrom(target.body.position);
+    spark.zIndex = 60;
+    this.effectLayer.addChild(spark);
+    this.tween(220, (progress) => {
+      spark.alpha = 1 - progress;
+      spark.scale.set(.6 + progress * .7);
+    }, () => spark.destroy());
+  }
+
   private syncPresentation() {
     for (const [id, state] of this.presentation.entities) {
       const unit = this.units.get(id);
@@ -1343,6 +1365,16 @@ export class PixiRenderer {
       );
       this.face(unit, state.facing as DirectionName, state.animation === 'moving');
       this.setUnitState(unit, state.animation, state.targetId);
+    }
+    for (const [castId, state] of this.presentation.projectiles) {
+      const projectile = this.activeProjectiles.get(castId);
+      if (!projectile) continue;
+      const previousX = projectile.x;
+      const previousY = projectile.y;
+      projectile.position.set(state.position.x, state.position.y);
+      const dx = state.position.x - previousX;
+      const dy = state.position.y - previousY;
+      if (Math.abs(dx) + Math.abs(dy) > .01) projectile.rotation = Math.atan2(dy, dx);
     }
   }
 
