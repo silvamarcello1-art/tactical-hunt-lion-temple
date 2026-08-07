@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.3.2 — 2026-08-07
+
+### Correção final pontual do MVP 1C
+
+- Recupera conjuradores presos em alcance sem linha de visão por meio de um
+  firing-position resolver determinístico e alcançável.
+- Detecta ausência de progresso, tenta recuperação e encerra stalemates de forma
+  explícita.
+- Corrige `floor_complete` para nunca registrar vitória com inimigos vivos.
+- Revalida movimentos pendentes antes de transformar reserva em ocupação.
+- Inclui mudanças de terreno na revisão da grade.
+- Separa falhas gerais de movimento, sequências gerais, sequências `no-route` e
+  recuperações de firing position.
+- Adiciona regressões determinísticas para LoS, seed 811, conclusão de andar,
+  revisão da grade, ocupação concorrente e semântica das métricas.
+- Gate: 91 testes unitários, build, 13 E2E e 24 hunts de stress aprovados.
+
+Helper, inventário, equipamentos, progressões, merge e publicação não foram
+alterados.
+
 ## 0.3.1 — 2026-08-06
 
 ### Hardening do MVP 1C

@@ -72,3 +72,32 @@ não houve merge nem publicação.
 
 Helper, inventário, equipamentos, loja, backend, progressão, arte definitiva,
 merge e publicação.
+
+## Correção final pontual — 07/08/2026
+
+- HEAD inicial: `dd927821c07da0b4b09ce6f8a68fac9fbdb92fde`.
+- Branch e base preservadas: `feature/grid-combat-pathfinding` contra
+  `origin/feature/boss-token`.
+- Adicionado resolver puro de firing position para alcance sem LoS, integrado
+  à recuperação de ausência de progresso.
+- Adicionado encerramento explícito `victory | party_defeated | stalemate |
+  turn_limit`; `floor_complete.victory` não é mais inferido pelo fim do loop.
+- Movimento pendente é revalidado no instante do commit; mudança relevante de
+  mapa/ocupação invalida o destino sem deslocar a entidade.
+- `consecutiveNoRoute` mede somente `no-route`; falhas gerais e recuperações de
+  disparo possuem métricas próprias.
+
+### Gates finais
+
+- TypeScript: aprovado.
+- Vitest: 91/91 em 8 arquivos.
+- Build: aprovado, 739 módulos.
+- Playwright/Edge: 13/13 em 4,9 min.
+- Stress: 24/24 hunts, seeds 803–814, configuração padrão e energy wave
+  desativada.
+- Seed 811 sem `energy_wave`: vitória, 274 turnos, 71.100 ms lógicos, duas
+  recuperações de firing position.
+- Integridade: zero deadlock, vitória falsa, overlap, out-of-bounds, reserva
+  órfã, movimento stale, projétil stale ou erro de console.
+- Helper, inventário, equipamentos, progressões, merge e publicação continuam
+  fora do escopo.

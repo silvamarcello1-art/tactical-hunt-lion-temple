@@ -99,3 +99,35 @@ duas fases, arbitragem, morte/reset, projéteis, políticas de colisão, lifecyc
 reachability, cooldown, A→B→A, stuck recovery, supercover e cap da backline. O
 Playwright audita três loops, velocidades, reset em trânsito, impacto atrasado,
 cap inicial, overlap, limites, obstáculos, resíduos e console.
+
+## Salvaguardas finais de posicionamento e encerramento
+
+- `FiringPositionResolver` escolhe deterministicamente um tile alcançável que
+  restaure geometria e linha de visão para uma ação ofensiva válida. O score
+  preserva segurança, cobertura de wave e suporte do Druid; o renderer apenas
+  reproduz o `reposition` com motivo `firing-position`.
+- O fallback LoS-aware é acionado somente após ausência prolongada de progresso.
+  Aos 40 turnos ele tenta uma recuperação; aos 80, se nada puder progredir, a
+  sala encerra explicitamente como `stalemate`, nunca como vitória.
+- `floor_complete` informa `victory`, `completionReason` e `turns`. Vitória
+  exige party viva e zero inimigos vivos; derrota, stalemate e limite de turnos
+  possuem estados separados.
+- `GridMap.revision` e `OccupancyGrid.revision` formam uma revisão monotônica da
+  navegação. Antes de promover uma reserva a ocupação, `completeDue` revalida o
+  destino; terreno ou ocupação alterados cancelam a conclusão como
+  `invalidated` e preservam a origem.
+- `movementFailures` contabiliza falhas reais de movimento;
+  `consecutiveMovementFailures` mede a maior sequência geral;
+  `consecutiveNoRoute` considera exclusivamente falhas consecutivas
+  `no-route`; `firingPositionRecoveries` contabiliza reposicionamentos LoS-aware.
+
+### Gate final de 07/08/2026
+
+- 91 testes Vitest aprovados em 8 arquivos;
+- build de produção aprovado com 739 módulos;
+- 13 cenários Playwright aprovados;
+- stress de 24 hunts, seeds 803–814 em duas configurações;
+- zero deadlock, vitória falsa, overlap, out-of-bounds, reserva órfã, movimento
+  ou projétil stale;
+- seed 811 com `energy_wave.enabled = false`: vitória em 274 turnos, 71.100 ms
+  lógicos e duas recuperações de firing position.

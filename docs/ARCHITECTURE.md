@@ -49,8 +49,10 @@ ela agrega os eventos emitidos e apresenta o `HuntResult` no encerramento.
 |---|---|
 | Orquestração, IA, threat, dano, cura, loot e fases | `src/combat/CombatEngine.ts` |
 | Regra determinística do aggro inicial | `src/combat/InitialAggroResolver.ts` |
+| Resultado explícito de cada andar | `src/combat/FloorCompletion.ts` |
 | Conversão visual e máscaras-base | `src/combat/tiles.ts` |
 | Mapa, ocupação, reservas, A*, movimento, LoS e spell masks | `src/combat/grid/` |
+| Seleção pura de tile de disparo alcançável | `src/combat/grid/FiringPositionResolver.ts` |
 | Contratos de eventos e snapshots | `src/events/types.ts` |
 | Relógio, pausa, velocidade e descarte | `src/events/EventPlayer.ts` |
 | Agregação segura da sessão | `src/app/LiveHuntState.ts` |
@@ -86,6 +88,13 @@ ela agrega os eventos emitidos e apresenta o `HuntResult` no encerramento.
   destinos táticos.
 - O aggro inicial aceita no máximo dois atacantes na backline; depois disso,
   threat e Challenge seguem normalmente.
+- Se um conjurador não produzir progresso por bloqueio de LoS, o motor consulta
+  tiles alcançáveis e agenda um `reposition` para uma posição de disparo válida.
+  A escolha não usa coordenadas interpoladas nem altera o renderer.
+- Cada sala termina por uma razão explícita. O limite de turnos e stalemate são
+  falhas observáveis, nunca vitórias implícitas.
+- A revisão de navegação combina mapa e ocupação; o commit de movimento sempre
+  revalida o tile reservado contra a revisão atual.
 
 ## Ciclo de vida
 

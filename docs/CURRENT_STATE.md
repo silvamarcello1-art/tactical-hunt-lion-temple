@@ -27,6 +27,30 @@
 
 Consulte `docs/GRID_COMBAT.md` para a especificação permanente.
 
+### Correção final pontual — 07/08/2026
+
+- Conjuradores deixam um tile sem LoS por meio de firing-position resolver
+  determinístico e alcançável.
+- Ausência de progresso possui tentativa de recuperação e encerramento
+  explícito por stalemate; não existe mais sucesso implícito ao atingir o cap.
+- `floor_complete` diferencia `victory`, `party_defeated`, `stalemate` e
+  `turn_limit`.
+- Movimentos pendentes revalidam terreno, ocupação e reserva antes do commit.
+- Revisão da grade inclui mudanças do mapa e da ocupação.
+- Métricas separam falhas gerais, sequência geral, sequência exclusivamente
+  `no-route` e recuperações de firing position.
+
+| Validação final | Resultado |
+|---|---|
+| TypeScript | zero erros |
+| Vitest | 91 testes aprovados em 8 arquivos |
+| Build | 739 módulos, aprovado |
+| Playwright/Edge | 13 cenários aprovados em 4,9 min |
+| Stress | 24 hunts; seeds 803–814; duas configurações |
+| Seed 811 sem energy wave | vitória, 274 turnos, 71.100 ms, 2 recuperações |
+| Integridade | zero deadlock, overlap, out-of-bounds, stale ou resíduo |
+| Publicação/merge | não realizados |
+
 ### Evidência do MVP 1C — 06/08/2026
 
 | Validação | Resultado |
