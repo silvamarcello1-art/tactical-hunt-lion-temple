@@ -281,8 +281,9 @@ export class CombatPresentationSystem {
     this.metrics.maxActiveTelegraphs = Math.max(this.metrics.maxActiveTelegraphs, this.telegraphs.size);
     this.metrics.maxActiveFeedback = Math.max(this.metrics.maxActiveFeedback, this.feedback.size);
     this.metrics.maxActiveEffects = Math.max(this.metrics.maxActiveEffects, this.projectiles.size + this.telegraphs.size + this.feedback.size);
-    const footpoints = [...this.entities.values()].filter((entity) => entity.alive)
-      .map((entity) => `${Math.round(entity.position.x)}:${Math.round(entity.position.y)}`);
+    const footpoints = [...this.entities.values()]
+      .filter((entity) => entity.alive && !entity.movement)
+      .map((entity) => `${entity.tile.x}:${entity.tile.y}`);
     if (new Set(footpoints).size !== footpoints.length) this.metrics.visualOverlapWarnings++;
     for (const entity of this.entities.values()) this.syncError(entity.id);
   }

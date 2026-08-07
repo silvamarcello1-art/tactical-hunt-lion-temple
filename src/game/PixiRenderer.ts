@@ -13,7 +13,7 @@ import {
   type Ticker,
 } from 'pixi.js';
 import { CombatEngine } from '../combat/CombatEngine';
-import { TILE_SIZE } from '../combat/tiles';
+import { gridToWorld, TILE_SIZE } from '../combat/tiles';
 import type { AbilityPreferences } from '../data/abilities';
 import { HUNT_LAYOUT_CONFIG } from '../data/config';
 import { EventPlayer } from '../events/EventPlayer';
@@ -35,6 +35,7 @@ export type EntityVisualState = VisualAnimationState;
 
 type Unit = {
   body: Container;
+  shadow: Graphics;
   sprite: Sprite | AnimatedSprite;
   spriteKey: string;
   facing: DirectionName;
@@ -85,8 +86,11 @@ export class PixiRenderer {
   private tileTextures = new Map<string, Texture>();
   private readonly presentation = new CombatPresentationSystem();
   private readonly terrainLayer = new Container();
+  private readonly telegraphLayer = new Container();
+  private readonly shadowLayer = new Container();
   private readonly effectLayer = new Container();
   private readonly entityLayer = new Container();
+  private readonly projectileLayer = new Container();
   private readonly overlayLayer = new Container();
   private readonly debugOccupancyLayer = new Container();
   private readonly debugPathLayer = new Container();
@@ -98,6 +102,7 @@ export class PixiRenderer {
   private destroyed = false;
   private selectedHeroId: string;
   private readonly debugEnabled: boolean;
+  private maskMismatchCount = 0;
   private readonly tickerHandler = (ticker: Ticker) => {
     if (this.destroyed) return;
     const timelineWasRunning = this.player.isRunning;
@@ -142,21 +147,30 @@ export class PixiRenderer {
     parent.replaceChildren(this.app.canvas);
     this.app.stage.sortableChildren = true;
     this.terrainLayer.label = 'terrain';
+    this.telegraphLayer.label = 'telegraphs';
+    this.shadowLayer.label = 'shadows';
     this.effectLayer.label = 'effects';
     this.entityLayer.label = 'entities';
+    this.projectileLayer.label = 'projectiles';
     this.overlayLayer.label = 'overlay';
     this.terrainLayer.zIndex = 0;
-    this.effectLayer.zIndex = 10;
+    this.telegraphLayer.zIndex = 8;
+    this.shadowLayer.zIndex = 12;
     this.entityLayer.zIndex = 20;
-    this.overlayLayer.zIndex = 30;
+    this.effectLayer.zIndex = 30;
+    this.projectileLayer.zIndex = 40;
+    this.overlayLayer.zIndex = 50;
     this.debugPathLayer.zIndex = 70;
     this.debugOccupancyLayer.zIndex = 71;
     this.entityLayer.sortableChildren = true;
     this.overlayLayer.sortableChildren = true;
     this.app.stage.addChild(
       this.terrainLayer,
-      this.effectLayer,
+      this.telegraphLayer,
+      this.shadowLayer,
       this.entityLayer,
+      this.effectLayer,
+      this.projectileLayer,
       this.overlayLayer,
     );
     this.drawArena();
@@ -568,6 +582,7 @@ export class PixiRenderer {
     const snapshot = event.data!.entity!;
     const previous = this.units.get(snapshot.id);
     previous?.body.destroy({ children:true });
+    previous?.shadow.destroy();
     this.units.delete(snapshot.id);
     const position = event.data!.position!;
     const body = new Container();
@@ -578,6 +593,12 @@ export class PixiRenderer {
 
     const hero = this.isHero(snapshot);
     const boss = snapshot.role === 'boss';
+    const shadow = new Graphics()
+      .ellipse(0, 0, boss ? 25 : hero ? 19 : 17, boss ? 8 : 6)
+      .fill({ color:0x000000,alpha:boss ? .36 : .28 });
+    shadow.position.set(position.x, position.y + 11);
+    shadow.zIndex = 1;
+    this.shadowLayer.addChild(shadow);
     const hpWidth = hero ? 58 : boss ? 56 : 48;
     const hpY = hero
       ? RENDER_CONFIG.entity.healthBarOffset.hero
@@ -639,6 +660,7 @@ export class PixiRenderer {
 
     const unit = {
       body,
+      shadow,
       sprite,
       spriteKey:this.spriteKey(snapshot),
       facing:'south' as DirectionName,
@@ -908,16 +930,15 @@ export class PixiRenderer {
             unit.currentMana = event.data.mana;
             this.drawVitals(unit);
           }
-          if (event.data?.abilityId !== 'challenge') {
-            this.tileEffect(
-              event.data?.tiles ?? [],
-              this.elementColor(event.data?.element),
-              false,
-              RENDER_CONFIG.effects.tileDuration,
-              this.effectKey(event),
-              { x:unit.body.x, y:unit.body.y },
-            );
-          }
+          const challenge = event.data?.abilityId === 'challenge';
+          this.tileEffect(
+            event.data?.tiles ?? [],
+            challenge ? 0xf3c65b : this.elementColor(event.data?.element),
+            false,
+            RENDER_CONFIG.effects.tileDuration,
+            challenge ? undefined : this.effectKey(event),
+            { x:unit.body.x, y:unit.body.y },
+          );
           this.spellLabel(
             unit.body.x,
             unit.body.y - (unit.hero ? 72 : 52),
@@ -927,19 +948,7 @@ export class PixiRenderer {
       }
     }
     if (event.type === 'aggro') this.aggroEffect(event);
-    if (event.type === 'area_warning') {
-      const castId = event.data?.castId;
-      const warning = this.tileEffect(
-        event.data?.tiles ?? [],
-        0xf36b53,
-        true,
-        event.data?.duration,
-        undefined,
-        undefined,
-        castId ? `telegraph:${castId}` : undefined,
-      );
-      if (castId && warning) this.activeTelegraphs.set(castId, warning);
-    }
+    if (event.type === 'spell_telegraph') this.telegraph(event);
     if (event.type === 'monster_aoe') {
       this.tileEffect(
         event.data?.tiles ?? [],
@@ -1007,16 +1016,19 @@ export class PixiRenderer {
       if (unit) {
         this.setUnitState(unit, 'dead', event.sourceId);
         const rotation = unit.body.rotation;
+        const shadowAlpha = unit.shadow.alpha;
         this.tween(
           RENDER_CONFIG.entity.deathDuration,
           (progress) => {
             unit.body.alpha = 1 - progress;
             unit.body.rotation = rotation + (Math.PI / 2) * progress;
             unit.body.scale.set(1 - progress * .4);
+            unit.shadow.alpha = shadowAlpha * (1 - progress);
           },
           () => {
             if (this.units.get(event.targetId!) === unit) {
               this.units.delete(event.targetId!);
+              unit.shadow.destroy();
               unit.body.destroy({ children:true });
               this.syncDiagnostics();
             }
@@ -1043,6 +1055,37 @@ export class PixiRenderer {
     }
     this.syncPresentation();
     window.dispatchEvent(new CustomEvent('hunt-event', { detail:event }));
+  }
+
+  private telegraph(event: CombatEvent) {
+    const castId = event.data?.castId ?? event.id;
+    this.cleanupTelegraph(castId);
+    const logicalTiles = event.data?.logicalTiles ?? [];
+    const worldTiles = logicalTiles.map(gridToWorld);
+    const declaredWorldTiles = event.data?.tiles ?? [];
+    const declared = new Set(declaredWorldTiles.map((tile) => `${tile.x}:${tile.y}`));
+    const derived = new Set(worldTiles.map((tile) => `${tile.x}:${tile.y}`));
+    if (
+      declared.size !== derived.size ||
+      [...declared].some((tile) => !derived.has(tile))
+    ) this.maskMismatchCount++;
+    if (!worldTiles.length) return;
+    const warning = new Graphics();
+    for (const point of worldTiles) {
+      warning
+        .rect(
+          point.x - TILE_SIZE / 2 + 1,
+          point.y - TILE_SIZE / 2 + 1,
+          TILE_SIZE - 2,
+          TILE_SIZE - 2,
+        )
+        .fill({ color:0xf36b53,alpha:.18 })
+        .stroke({ width:2,color:0xff816d,alpha:.9 });
+    }
+    warning.zIndex = 5;
+    warning.alpha = .4;
+    this.telegraphLayer.addChild(warning);
+    this.activeTelegraphs.set(castId, warning);
   }
 
   private tileEffect(
@@ -1182,7 +1225,7 @@ export class PixiRenderer {
     const origin = state?.position ?? event.data?.position ?? { x:0,y:0 };
     projectile.position.set(origin.x, origin.y);
     projectile.zIndex = 50;
-    this.effectLayer.addChild(projectile);
+    this.projectileLayer.addChild(projectile);
     const castId = event.data?.castId ?? event.id;
     this.cleanupProjectile(castId);
     this.activeProjectiles.set(castId, projectile);
@@ -1359,6 +1402,7 @@ export class PixiRenderer {
       const unit = this.units.get(id);
       if (!unit) continue;
       unit.body.position.set(state.position.x, state.position.y);
+      unit.shadow.position.set(state.position.x, state.position.y + 11);
       unit.body.zIndex = visualSortKey(
         { x:state.position.x / TILE_SIZE,y:state.position.y / TILE_SIZE },
         id,
@@ -1375,6 +1419,12 @@ export class PixiRenderer {
       const dx = state.position.x - previousX;
       const dy = state.position.y - previousY;
       if (Math.abs(dx) + Math.abs(dy) > .01) projectile.rotation = Math.atan2(dy, dx);
+    }
+    for (const [castId, state] of this.presentation.telegraphs) {
+      const telegraph = this.activeTelegraphs.get(castId);
+      if (!telegraph) continue;
+      telegraph.alpha =
+        .34 + state.intensity * .28 + Math.abs(Math.sin(state.intensity * Math.PI * 6)) * .28;
     }
   }
 
@@ -1432,6 +1482,9 @@ export class PixiRenderer {
     this.parent.dataset.stageChildren = String(this.app.stage.children.length);
     this.parent.dataset.tweenCount = String(this.tweens.length);
     this.parent.dataset.effectCount = String(this.effectLayer.children.length);
+    this.parent.dataset.telegraphLayerCount = String(this.telegraphLayer.children.length);
+    this.parent.dataset.projectileLayerCount = String(this.projectileLayer.children.length);
+    this.parent.dataset.shadowLayerCount = String(this.shadowLayer.children.length);
     this.parent.dataset.activeProjectiles = String(this.activeProjectiles.size);
     this.parent.dataset.activeTelegraphs = String(this.activeTelegraphs.size);
     this.parent.dataset.reservationCount = String(this.debugReservations.size);
@@ -1456,6 +1509,13 @@ export class PixiRenderer {
     this.parent.dataset.maxVisualSyncError = String(
       this.presentation.metrics.maxVisualSyncError,
     );
+    this.parent.dataset.visualOverlapWarnings = String(
+      this.presentation.metrics.visualOverlapWarnings,
+    );
+    this.parent.dataset.maxActiveEffects = String(
+      this.presentation.metrics.maxActiveEffects,
+    );
+    this.parent.dataset.maskMismatchCount = String(this.maskMismatchCount);
     this.parent.dataset.presentationStates = [...this.presentation.entities.values()]
       .map((entity) => `${entity.id}:${entity.animation}`)
       .join(',');
