@@ -120,6 +120,41 @@ export class PixiRenderer {
     },
     48,
   );
+  private readonly projectilePool = new DisplayObjectPool<AnimatedSprite>(
+    () => new AnimatedSprite([Texture.EMPTY]),
+    (sprite) => {
+      sprite.stop();
+      sprite.removeFromParent();
+      sprite.textures = [Texture.EMPTY];
+      sprite.alpha = 1;
+      sprite.rotation = 0;
+      sprite.scale.set(1);
+      sprite.position.set(0, 0);
+    },
+    24,
+  );
+  private readonly telegraphPool = new DisplayObjectPool<Graphics>(
+    () => new Graphics(),
+    (graphics) => {
+      graphics.removeFromParent();
+      graphics.clear();
+      graphics.alpha = 1;
+      graphics.scale.set(1);
+    },
+    16,
+  );
+  private readonly impactPool = new DisplayObjectPool<Graphics>(
+    () => new Graphics(),
+    (graphics) => {
+      graphics.removeFromParent();
+      graphics.clear();
+      graphics.alpha = 1;
+      graphics.rotation = 0;
+      graphics.scale.set(1);
+      graphics.position.set(0, 0);
+    },
+    32,
+  );
   private readonly tickerHandler = (ticker: Ticker) => {
     if (this.destroyed) return;
     const timelineWasRunning = this.player.isRunning;
@@ -260,6 +295,9 @@ export class PixiRenderer {
     this.activeTelegraphs.clear();
     this.presentation.reset();
     this.floatingTextPool.clear((text) => text.destroy());
+    this.projectilePool.clear((sprite) => sprite.destroy());
+    this.telegraphPool.clear((graphics) => graphics.destroy());
+    this.impactPool.clear((graphics) => graphics.destroy());
     this.bossFill = undefined;
     this.app.ticker?.remove(this.tickerHandler);
     try {
@@ -1126,7 +1164,7 @@ export class PixiRenderer {
       [...declared].some((tile) => !derived.has(tile))
     ) this.maskMismatchCount++;
     if (!worldTiles.length) return;
-    const warning = new Graphics();
+    const warning = this.telegraphPool.acquire();
     for (const point of worldTiles) {
       warning
         .rect(
@@ -1272,7 +1310,8 @@ export class PixiRenderer {
       (_, frame) => this.effectSheet.textures[`${key}-${frame}`],
     ).filter(Boolean);
     if (!textures.length) return;
-    const projectile = new AnimatedSprite(textures);
+    const projectile = this.projectilePool.acquire();
+    projectile.textures = textures;
     projectile.anchor.set(.5);
     projectile.scale.set(.52);
     projectile.animationSpeed = .26;
@@ -1290,14 +1329,16 @@ export class PixiRenderer {
 
   private cleanupProjectile(castId: string) {
     this.cancelTween(`projectile:${castId}`);
-    this.activeProjectiles.get(castId)?.destroy();
+    const projectile = this.activeProjectiles.get(castId);
     this.activeProjectiles.delete(castId);
+    if (projectile) this.projectilePool.release(projectile);
   }
 
   private cleanupTelegraph(castId: string) {
     this.cancelTween(`telegraph:${castId}`);
-    this.activeTelegraphs.get(castId)?.destroy();
+    const telegraph = this.activeTelegraphs.get(castId);
     this.activeTelegraphs.delete(castId);
+    if (telegraph) this.telegraphPool.release(telegraph);
   }
 
   private castPulse(unit: Unit) {
@@ -1440,7 +1481,8 @@ export class PixiRenderer {
     const target = this.units.get(targetId);
     if (!source || !target) return;
     if (Math.hypot(target.body.x - source.body.x, target.body.y - source.body.y) > TILE_SIZE * 1.6) return;
-    const trace = new Graphics()
+    const trace = this.impactPool.acquire();
+    trace
       .moveTo(-10, 8)
       .quadraticCurveTo(0, -13, 12, -4)
       .stroke({ width:3,color:0xffe7a0,alpha:.95 });
@@ -1451,13 +1493,13 @@ export class PixiRenderer {
     this.tween(180, (progress) => {
       trace.alpha = 1 - progress;
       trace.scale.set(.75 + progress * .45);
-    }, () => trace.destroy());
+    }, () => this.impactPool.release(trace));
   }
 
   private impactSpark(targetId: string, color: number) {
     const target = this.units.get(targetId);
     if (!target) return;
-    const spark = new Graphics();
+    const spark = this.impactPool.acquire();
     for (let index = 0; index < 6; index++) {
       const angle = index * (Math.PI / 3);
       spark
@@ -1471,7 +1513,7 @@ export class PixiRenderer {
     this.tween(220, (progress) => {
       spark.alpha = 1 - progress;
       spark.scale.set(.6 + progress * .7);
-    }, () => spark.destroy());
+    }, () => this.impactPool.release(spark));
   }
 
   private syncPresentation() {
@@ -1560,6 +1602,9 @@ export class PixiRenderer {
         unit.body.y > bounds.y + bounds.height,
     ).length;
     const poolMetrics = this.floatingTextPool.metrics;
+    const projectilePoolMetrics = this.projectilePool.metrics;
+    const telegraphPoolMetrics = this.telegraphPool.metrics;
+    const impactPoolMetrics = this.impactPool.metrics;
     const activeVisualObjects =
       this.effectLayer.children.length +
       this.projectileLayer.children.length +
@@ -1609,12 +1654,21 @@ export class PixiRenderer {
     );
     this.parent.dataset.maskMismatchCount = String(this.maskMismatchCount);
     this.parent.dataset.activeFloatingTexts = String(poolMetrics.active);
-    this.parent.dataset.pooledEffects = String(poolMetrics.pooled);
+    this.parent.dataset.pooledEffects = String(
+      poolMetrics.pooled +
+      projectilePoolMetrics.pooled +
+      telegraphPoolMetrics.pooled +
+      impactPoolMetrics.pooled,
+    );
     this.parent.dataset.createdFloatingTexts = String(poolMetrics.created);
+    this.parent.dataset.createdProjectiles = String(projectilePoolMetrics.created);
+    this.parent.dataset.createdTelegraphs = String(telegraphPoolMetrics.created);
+    this.parent.dataset.createdImpacts = String(impactPoolMetrics.created);
     this.parent.dataset.maxActiveVisualObjects = String(this.maxActiveVisualObjects);
     this.parent.dataset.residualVisualObjects = String(
-      this.activeProjectiles.size +
-      this.activeTelegraphs.size +
+      this.effectLayer.children.length +
+      this.projectileLayer.children.length +
+      this.telegraphLayer.children.length +
       poolMetrics.active,
     );
     this.parent.dataset.presentationStates = [...this.presentation.entities.values()]
