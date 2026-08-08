@@ -1,4 +1,42 @@
-# Estado atual — MVP 0, MVP 1A, MVP 1B e MVP 1C
+# Estado atual — MVP 0 até MVP 1D
+
+## MVP 1D — Combat Presentation & Visual Fidelity
+
+- `CombatPresentationSystem` separa estado visual temporário do motor lógico.
+- Movimento usa `movement_started/completed/cancelled`, durações lógicas e
+  termina exatamente no centro do tile, sem drift.
+- Facing cardinal acompanha movimento, alvo, cast e ataque.
+- Estados visuais cobrem windup, ataque, cast, reação, cura, morte e idle.
+- Melee possui lean, trace, impact e recovery sem invadir outro tile.
+- Projectiles percorrem exatamente `pathTiles` entre `startedAt` e `impactAt`.
+- Waves e telegraphs usam somente as máscaras lógicas emitidas pelo MVP 1C.
+- Damage, critical, heal e dodge possuem feedback distinto e stacking.
+- Footpoint, sombras e y-sort determinístico mantêm box, frontline e backline
+  legíveis.
+- Nomes, HP e mana ficam em uma camada acima dos efeitos.
+- Pause, 1x, 2x e 4x usam o mesmo relógio lógico.
+- Pools reutilizam floating texts, projectiles, telegraphs e impactos simples.
+- Debug compara tile lógico, footpoint visual, facing, estado e máscaras.
+- `AnimationSet` prepara a troca futura por sprite sheets próprios.
+- Helper individual permaneceu pausado; motor, inventário, equipamentos,
+  backend, merge e publicação não foram alterados.
+
+Consulte `docs/COMBAT_PRESENTATION.md` para a especificação permanente.
+
+### Evidência do MVP 1D — 07/08/2026
+
+| Validação | Resultado |
+|---|---|
+| TypeScript | zero erros |
+| Vitest | 121 testes em 9 arquivos |
+| Apresentação isolada | 30 casos aprovados |
+| Build | 741 módulos, aprovado |
+| Playwright/Edge | 15 cenários aprovados em 4,7 min no gate final |
+| Manual | uma hunt completa em 1x, 2x e 4x |
+| Loop | 3 ciclos sem duplicação |
+| Integridade visual | sync 0 px, masks 0, overlap 0, resíduos 0 |
+| Console | zero erros e warnings |
+| Merge/publicação | não realizados |
 
 ## MVP 1C — Authoritative Grid Combat
 

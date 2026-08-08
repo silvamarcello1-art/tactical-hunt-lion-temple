@@ -1,6 +1,6 @@
 # Arquitetura canônica
 
-Atualizada em 6 de agosto de 2026 para o MVP 1C.
+Atualizada em 7 de agosto de 2026 para o MVP 1D.
 
 ## Stack
 
@@ -27,7 +27,9 @@ HuntResult + CombatEvent[]
         ↓
 EventPlayer
         ↓
-PixiRenderer.applyEvent()
+CombatPresentationSystem
+        ↓
+PixiRenderer.applyEvent() / syncPresentation()
         ├─ canvas PixiJS
         └─ CustomEvent
                 ↓
@@ -59,6 +61,9 @@ ela agrega os eventos emitidos e apresenta o `HuntResult` no encerramento.
 | Velocidades e repetição | `src/app/sessionConfig.ts` |
 | Heróis, monstros, boss, formação e spawns | `src/data/config.ts` |
 | Habilidades e preferências | `src/data/abilities.ts` |
+| Estado visual temporário, facing, interpolação e métricas | `src/game/presentation/CombatPresentationSystem.ts` |
+| Contrato futuro de sprite sheets por estado e direção | `src/game/presentation/AnimationSet.ts` |
+| Reuso de display objects | `src/game/presentation/DisplayObjectPool.ts` |
 | PixiJS, mapa, unidades, efeitos e limpeza | `src/game/PixiRenderer.ts` |
 | Escala, durações, offsets, câmera e debug | `src/game/renderConfig.ts` |
 | Estado da tela e integração DOM | `src/main.ts` |
@@ -115,17 +120,22 @@ ela agrega os eventos emitidos e apresenta o `HuntResult` no encerramento.
 
 ## Camadas PixiJS
 
-O stage possui quatro contêineres permanentes nesta ordem:
+O stage possui oito contêineres permanentes nesta ordem:
 
-1. `terrain`: mapa, molduras, grid e debug;
-2. `effects`: AOE, projéteis, avisos, pulsos e linhas de aggro;
-3. `entities`: personagens, monstros, nomes e barras;
-4. `overlay`: mensagens, números flutuantes, texto de magia e barra do boss.
+1. `terrain`: mapa, molduras e grid;
+2. `telegraphs`: máscaras hostis abaixo das entidades;
+3. `shadows`: sombras de contato ancoradas ao footpoint;
+4. `entities`: sprites com y-sort por footpoint;
+5. `effects`: AOE, pulsos, aggro e impactos;
+6. `projectiles`: trajetórias interpoladas por `pathTiles`;
+7. `unit-ui`: nomes, HP, mana e debug por unidade;
+8. `overlay`: floating texts, palavras de magia, boss bar e debug global.
 
 Efeitos criam objetos próprios. Nenhum efeito recebe o contêiner de uma entidade
-para alterar `scale`, `position`, `alpha`, `anchor` ou parentalidade. Tweens de
-efeito terminam com `destroy()`. As animações próprias de movimento, dano e morte
-continuam limitadas à entidade correspondente.
+para alterar `scale`, `position`, `alpha`, `anchor` ou parentalidade. Floating
+texts, projectiles, telegraphs e impactos simples usam pools. Os demais tweens
+terminam com cleanup explícito. Recoil fica no sprite filho; o footpoint lógico
+permanece imutável.
 
 ## Cooldown visual
 
@@ -141,6 +151,8 @@ jogo.
 
 ## Configuração visual
 
+- `docs/COMBAT_PRESENTATION.md` é a especificação canônica da apresentação,
+  sincronização, estados, layers, pooling e diagnósticos do MVP 1D.
 - `HUNT_LAYOUT_CONFIG` contém dimensões da grade, área caminhável, formação,
   spawns, posições de combate e boss.
 - `RENDER_CONFIG` contém dimensões do canvas, escalas, offsets, tempos visuais,

@@ -1,103 +1,75 @@
-# Session Checkpoint — hardening do MVP 1C
+# Session Checkpoint — MVP 1D
 
 ## Identificação
 
-- Data: 06/08/2026
-- Base do PR: `origin/feature/boss-token`
-- Branch: `feature/grid-combat-pathfinding`
-- HEAD inicial revisado: `6b6c029d699354afd5d717c5154f046aafe4f841`
-- Remoto: `origin`
-- Publicação e merge: não realizados
+- Data: 07/08/2026
+- Base estável: `origin/recovery/antigravity-mvp1b`
+- Base integrada do MVP 1C: merge `004e42a271823993f9661ea7e3a41e040d396ace`
+- Branch: `feature/combat-presentation`
+- HEAD inicial: `004e42a271823993f9661ea7e3a41e040d396ace`
 - Helper individual: pausado e intocado
+- Merge e publicação: não realizados
 
 ## Concluído
 
-- Movimento autoritativo em duas fases com reserva real de 220 ms lógicos.
-- Origem ocupada e destino reservado durante a transição.
-- Arbitragem determinística de intenções concorrentes.
-- Cancelamento por morte, fim de sala, reset e sessão antiga.
-- Pipeline única para projéteis ranged de heróis, monstros e boss.
-- Dano somente em `impactAt`, correlacionado por `castId`.
-- Lifecycle explícito de projéteis, telegraphs e hazards.
-- Reachability antes do score, cache curto e destination cooldown.
-- Bloqueio de A→B→A injustificado e stuck recovery.
-- LoS supercover com quinas, pinça, endpoint e unidades configuráveis.
-- Cap determinístico de dois atacantes iniciais na backline.
-- Renderer PixiJS permanece apresentação; trajetórias visuais são retas entre a
-  origem e o destino autoritativos.
-- Telemetria ampliada no `HuntResult` e em atributos de diagnóstico.
+- Camada `CombatPresentationSystem` entre eventos e PixiJS.
+- Timeline visual baseada no relógio lógico do `EventPlayer`.
+- Movimento tile a tile, sem drift, com snap seguro em conclusão/cancelamento.
+- Facing cardinal e state machine visual por entidade.
+- Melee com windup, lunge interno ao tile, trace, impacto e recovery.
+- Projectiles interpolados por toda a sequência autoritativa de `pathTiles`.
+- Waves e telegraphs baseados nas máscaras lógicas, correlacionados por `castId`.
+- Challenge com footprint real e feedback de aggro existente.
+- Feedback próprio de damage, critical, heal e dodge, com stacking.
+- Footpoint, sombra de contato, y-sort e separação de UI das entidades.
+- Layers dedicadas a telegraphs, shadows, entities, effects, projectiles e UI.
+- Pools para floating texts, projectiles, telegraphs e impactos simples.
+- Sync debug e atributos E2E de posição, facing, estado, masks, pools e resíduos.
+- Abstração `AnimationSet` para futuros sprite sheets próprios.
+- 30 testes unitários específicos e 2 novos cenários E2E.
 
 ## Validação registrada
 
-- Baseline: typecheck aprovado, 55 testes Vitest, build com 735 módulos.
-- Hardening: 79 testes Vitest em 7 arquivos.
-- Build: 737 módulos transformados em 5,70 s.
-- Playwright/Edge: 13 cenários aprovados em 4,2 min.
-- Navegador local `?debug=1`: boss derrotado, 17 kills, 3.760 XP, 1.497 gold,
-  duração lógica de 60.100 ms, zero overlap, zero fora da arena, zero reserva,
-  projectile, telegraph, tween ou efeito residual e zero erros no console.
-- Simulação prolongada: três ciclos determinísticos, 180.300 ms lógicos no
-  total, sem duplicação ou resíduo.
+| Gate | Resultado |
+|---|---|
+| `pnpm run typecheck` | aprovado |
+| `pnpm exec vitest run` | 121/121, 9 arquivos |
+| `pnpm run build` | aprovado, 741 módulos |
+| Playwright/Edge | 15/15, 1 worker, 4,7 min no gate final |
+| Hunt manual 1x | vitória, 60.106 ms lógicos |
+| Hunt manual 2x | vitória, 60.113 ms lógicos |
+| Hunt manual 4x | vitória, 60.114 ms lógicos |
+| Três loops | aprovados, sem duplicação |
+| Erro máximo de sync | 0 px |
+| Divergência de masks | 0 |
+| Logical overlaps | 0 |
+| Visual overlap warnings | 0 |
+| Projectiles/telegraphs órfãos | 0 |
+| Display objects residuais | 0 |
+| Máximo visual observado manualmente | 73 objetos ativos |
+| Pool manual observado | 13 floating texts criados e reutilizados |
+| Console do navegador | 0 erros, 0 warnings |
 
-### Métricas antes e depois
+## Commits
 
-| Métrica | Revisão anterior | Hardening |
-|---|---:|---:|
-| Path recalculations | 342 | 206 |
-| Blocked moves | 129 | 5 |
-| Maior sequência no-route | 39 | 1 |
-| A→B→A injustificado observado | 6 | 0 |
-| Oscilações impedidas | não registrado | 5 |
-| Destination cooldowns | não registrado | 5 |
-| Stuck recoveries | não registrado | 0 |
-| Reservation conflicts | não registrado | 0 |
-| Pending movements máximos | não registrado | 9 |
-| Pending projectiles máximos | não registrado | 4 |
+- `1c10ac4` — `refactor: introduce combat presentation timeline`
+- `da9ff5c` — `feat: render tile movement facing and unit states`
+- `22fed3a` — `feat: present melee ranged and spell actions`
+- `7421cc5` — `feat: render directional waves and telegraphs from logical masks`
+- `02e642d` — `perf: stabilize combat feedback layering and pooling`
+- `78ea4a0` — `test: cover combat presentation invariants`
+- `e44e999` — `perf: pool combat projectiles telegraphs and impacts`
 
-## Commits do hardening
+## Não iniciado / fora do escopo
 
-- `c1b9fd6` — `fix: make grid movement reservations authoritative`
-- `e013c4d` — `fix: make projectiles and hazards authoritative`
-- `94999fc` — `fix: prevent unreachable destination loops`
-- `3ac2db0` — `fix: harden line of sight and initial backline aggro`
-- `2d47c2d` — `test: cover grid combat hardening cases`
+- Arte definitiva e sprite sheets próprios completos.
+- Animações cardinais completas dos três heróis.
+- Áudio, camera shake e particles complexos.
+- Helper individual, inventário, equipamentos, progressões, backend e market.
+- Merge e publicação.
 
-## Estado do gate
+## Estado para revisão
 
-Typecheck, 79 testes, build, 13 E2E, simulação prolongada, inspeção visual e
-`git diff --check` foram aprovados. A branch está pronta para nova revisão do PR;
-não houve merge nem publicação.
-
-## Fora do escopo
-
-Helper, inventário, equipamentos, loja, backend, progressão, arte definitiva,
-merge e publicação.
-
-## Correção final pontual — 07/08/2026
-
-- HEAD inicial: `dd927821c07da0b4b09ce6f8a68fac9fbdb92fde`.
-- Branch e base preservadas: `feature/grid-combat-pathfinding` contra
-  `origin/feature/boss-token`.
-- Adicionado resolver puro de firing position para alcance sem LoS, integrado
-  à recuperação de ausência de progresso.
-- Adicionado encerramento explícito `victory | party_defeated | stalemate |
-  turn_limit`; `floor_complete.victory` não é mais inferido pelo fim do loop.
-- Movimento pendente é revalidado no instante do commit; mudança relevante de
-  mapa/ocupação invalida o destino sem deslocar a entidade.
-- `consecutiveNoRoute` mede somente `no-route`; falhas gerais e recuperações de
-  disparo possuem métricas próprias.
-
-### Gates finais
-
-- TypeScript: aprovado.
-- Vitest: 91/91 em 8 arquivos.
-- Build: aprovado, 739 módulos.
-- Playwright/Edge: 13/13 em 4,9 min.
-- Stress: 24/24 hunts, seeds 803–814, configuração padrão e energy wave
-  desativada.
-- Seed 811 sem `energy_wave`: vitória, 274 turnos, 71.100 ms lógicos, duas
-  recuperações de firing position.
-- Integridade: zero deadlock, vitória falsa, overlap, out-of-bounds, reserva
-  órfã, movimento stale, projétil stale ou erro de console.
-- Helper, inventário, equipamentos, progressões, merge e publicação continuam
-  fora do escopo.
+O MVP 1D está funcional e os gates foram aprovados. A branch deve passar por
+revisão independente antes de qualquer merge. O Helper continua pausado até a
+aprovação humana do MVP 1D.

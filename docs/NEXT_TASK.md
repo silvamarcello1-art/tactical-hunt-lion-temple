@@ -2,49 +2,52 @@
 
 ## Estado de entrada
 
-O hardening dos seis achados do MVP 1C está implementado na branch
-`feature/grid-combat-pathfinding`. O Helper individual permanece pausado. Não
-fazer merge ou publicação automaticamente.
+O MVP 1D está implementado na branch `feature/combat-presentation`, criada a
+partir da base estável que contém o MVP 1C aprovado. TypeScript, 121 testes
+unitários, build, 15 E2E, três loops e hunts manuais em 1x, 2x e 4x passaram.
+
+Não fazer merge ou publicação automaticamente. O Helper individual permanece
+pausado.
 
 ## Próxima ação recomendada
 
-Fazer uma nova revisão independente do Pull Request contra
-`origin/feature/boss-token`, confirmando:
+Executar uma revisão independente do MVP 1D, comparando a branch com
+`origin/recovery/antigravity-mvp1b` e confirmando:
 
-1. movimento em duas fases e reserva de 220 ms lógicos;
-2. arbitragem concorrente, morte e reset em trânsito;
-3. projéteis/hazards autoritativos e dano somente em `impactAt`;
-4. cancelamento sem eventos antigos ou resíduos;
-5. reachability, destination cooldown, anti-oscilação e stuck recovery;
-6. LoS supercover e políticas por habilidade;
-7. cap de dois atacantes iniciais na backline sem bloquear threat posterior;
-8. 79 testes unitários, 13 E2E, build e três loops;
-9. métricas e alegações de `docs/SESSION_CHECKPOINT.md`;
-10. ausência de alterações em Helper, inventário, equipamentos e publicação.
+1. nenhum cálculo de combate foi movido para a apresentação;
+2. movimento termina em erro visual 0 px;
+3. facing e estados não sobrevivem à morte/reset;
+4. projectiles usam exatamente os `pathTiles` e `impactAt` autoritativos;
+5. waves e telegraphs possuem diferença zero contra `logicalTiles`;
+6. nomes e vitais permanecem acima dos efeitos;
+7. box, frontline e backline são legíveis em 1x, 2x e 4x;
+8. pausa congela toda a apresentação;
+9. pools não deixam objetos ativos ou residuais;
+10. os 121 unit tests, 15 E2E, build e três loops continuam verdes.
 
-Após aprovação humana, decidir entre merge do MVP 1C ou uma tarefa separada de
-benchmark com grupos maiores. Priority queue, cache permanente e footprints de
-boss maiores continuam adiados até evidência de necessidade.
+Se a revisão for aprovada, pedir autorização humana antes do merge. Depois da
+aprovação do MVP 1D, decidir entre produzir sprite sheets próprios completos ou
+retomar o Helper individual em uma branch separada. Não misturar os dois escopos.
 
 ## Leitura obrigatória
 
 - `AGENTS.md`
+- `docs/COMBAT_PRESENTATION.md`
 - `docs/GRID_COMBAT.md`
 - `docs/CURRENT_STATE.md`
 - `docs/ARCHITECTURE.md`
 - `docs/SESSION_CHECKPOINT.md`
-- `docs/THREAT_AND_AGGRO.md`
 - `docs/HELPER_RULES.md`
 
 ## Prompt curto
 
-> Leia AGENTS.md, docs/GRID_COMBAT.md, docs/SESSION_CHECKPOINT.md e
-> docs/NEXT_TASK.md. Revise o hardening do MVP 1C contra
-> origin/feature/boss-token, confira os seis achados, execute todos os gates e
-> três loops, informe divergências com evidências e não faça merge, publicação,
-> Helper, inventário ou equipamentos.
+> Revise independentemente o MVP 1D na branch feature/combat-presentation contra
+> origin/recovery/antigravity-mvp1b. Leia AGENTS.md,
+> docs/COMBAT_PRESENTATION.md, docs/SESSION_CHECKPOINT.md e docs/NEXT_TASK.md.
+> Confirme autoridade lógica, sync 0 px, masks 0, pause/speeds, pools, três loops,
+> 121 unit tests, 15 E2E e build. Não altere Helper, não faça merge e não publique.
 
 ## Fora do escopo
 
-Novas vocações, Helper, inventário, equipamentos, progressões, backend,
-multiplayer, market, economia e publicação.
+Helper, inventário, equipamentos, progressões, novas habilidades, backend,
+multiplayer, market, economia, arte protegida e publicação.

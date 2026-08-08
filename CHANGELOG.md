@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.4.0 — 2026-08-07
+
+### MVP 1D — Combat Presentation & Visual Fidelity
+
+- Adiciona `CombatPresentationSystem` para separar estado visual da lógica.
+- Reproduz movimento tile a tile, facing e estados pelo relógio autoritativo.
+- Projectiles percorrem `pathTiles`; waves e telegraphs usam máscaras lógicas.
+- Melhora melee, impactos, Challenge, damage, critical, heal, dodge e morte.
+- Separa terrain, telegraphs, shadows, entities, effects, projectiles, unit UI e
+  overlay para preservar legibilidade.
+- Adiciona footpoint, y-sort determinístico, sombras e stacking de feedback.
+- Reutiliza floating texts, projectiles, telegraphs e impactos por pooling.
+- Expande debug com comparação entre tile lógico e footpoint visual.
+- Prepara sprite sheets próprios por meio de `AnimationSet`.
+- Adiciona 30 testes unitários e 2 E2E específicos da apresentação.
+- Gate: 121 testes unitários, build de 741 módulos e 15 E2E aprovados.
+- Hunts manuais completas em 1x, 2x e 4x; três loops sem resíduos.
+- Sync máximo 0 px, masks 0, overlaps 0, resíduos 0 e console limpo.
+
+Helper, motor do MVP 1C, inventário, equipamentos, merge e publicação não foram
+alterados.
+
 ## 0.3.2 — 2026-08-07
 
 ### Correção final pontual do MVP 1C
