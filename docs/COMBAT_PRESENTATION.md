@@ -36,11 +36,12 @@ idle
 moving
 attack_windup
 attacking
+attack_recovery
 cast_windup
 casting
 hit_reaction
 healing
-stagger
+dodging
 dying
 dead
 ```
@@ -144,8 +145,9 @@ impacto no alvo e a aplicação de dano permanece no evento lógico corresponden
 
 Os pools removem o objeto do stage, limpam transformações e geometria e o
 devolvem pronto para reutilização. Diagnósticos expõem quantidades criadas,
-ativas e disponíveis. Sprites de área com vida curta ainda usam cleanup ao fim
-do tween; nenhuma criação ocorre a cada frame.
+ativas e disponíveis, além do custo médio e máximo de `syncPresentation`.
+Sprites de área com vida curta ainda usam cleanup ao fim do tween; nenhuma
+criação ocorre a cada frame.
 
 ## Debug e garantias de sincronização
 
@@ -154,8 +156,9 @@ uma camada de sync que desenha:
 
 - tile lógico esperado;
 - footpoint visual;
+- bounds do sprite;
 - linha da diferença durante interpolação;
-- facing e animation state nos diagnósticos.
+- facing, animation state, progresso de movimento, target e y-sort.
 
 Principais atributos de auditoria em `#game`:
 
@@ -167,6 +170,8 @@ Principais atributos de auditoria em `#game`:
 - `data-visual-overlap-warnings`;
 - `data-mask-mismatch-count`;
 - `data-residual-visual-objects`;
+- `data-presentation-update-average-ms`;
+- `data-presentation-update-max-ms`;
 - contagem das camadas e pools.
 
 Garantias verificadas:
@@ -177,15 +182,15 @@ Garantias verificadas:
 - reset e loop terminam com zero objeto visual residual;
 - mesma seed preserva integralmente o resultado do MVP 1C.
 
-## Validação de 7 de agosto de 2026
+## Validação de 19 de setembro de 2026
 
 | Gate | Resultado |
 |---|---|
 | TypeScript | aprovado, zero erros |
-| Vitest | 121 testes em 9 arquivos |
-| Testes próprios da apresentação | 30 casos |
+| Vitest | 124 testes em 9 arquivos |
+| Testes próprios da apresentação | 33 casos |
 | Build | 741 módulos, aprovado |
-| Playwright/Edge | 15 cenários, 4,7 min no gate final |
+| Playwright/Edge | 15 cenários, 4,6 min no gate final |
 | Hunts manuais | uma completa em 1x, 2x e 4x |
 | Três loops | aprovados, sem duplicação |
 | Sync | 0 px de erro máximo |

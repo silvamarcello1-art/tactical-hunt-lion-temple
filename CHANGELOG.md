@@ -4,6 +4,9 @@
 
 - Adiciona protocolo permanente de pre-flight e post-flight ao `AGENTS.md`.
 - Adiciona `pnpm health` para diagnóstico Git completo no Windows.
+- Explicita `attack_recovery` e `dodging` na máquina visual.
+- Expande debug de sync e mede custo médio/máximo da apresentação.
+- Gate: 124 testes unitários, build de 741 módulos e 15 E2E aprovados.
 
 ## 0.4.0 — 2026-08-07
 

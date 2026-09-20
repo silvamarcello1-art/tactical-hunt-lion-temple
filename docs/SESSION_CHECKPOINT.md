@@ -2,11 +2,11 @@
 
 ## Identificação
 
-- Data: 07/08/2026
+- Data: 19/09/2026
 - Base estável: `origin/recovery/antigravity-mvp1b`
 - Base integrada do MVP 1C: merge `004e42a271823993f9661ea7e3a41e040d396ace`
-- Branch: `feature/combat-presentation`
-- HEAD inicial: `004e42a271823993f9661ea7e3a41e040d396ace`
+- Branch: `feature/combat-presentation-astra`
+- HEAD inicial da continuação: `492891058acfcdd7a80c25c77856eba542ed88d2`
 - Helper individual: pausado e intocado
 - Merge e publicação: não realizados
 
@@ -26,16 +26,20 @@
 - Pools para floating texts, projectiles, telegraphs e impactos simples.
 - Sync debug e atributos E2E de posição, facing, estado, masks, pools e resíduos.
 - Abstração `AnimationSet` para futuros sprite sheets próprios.
-- 30 testes unitários específicos e 2 novos cenários E2E.
+- Estados explícitos `attack_recovery` e `dodging`, inclusive em saltos grandes
+  do relógio lógico.
+- Debug com bounds, progresso, target e y-sort; custo médio/máximo da
+  apresentação exposto para auditoria.
+- 33 testes unitários específicos e 2 novos cenários E2E.
 
 ## Validação registrada
 
 | Gate | Resultado |
 |---|---|
 | `pnpm run typecheck` | aprovado |
-| `pnpm exec vitest run` | 121/121, 9 arquivos |
+| `pnpm exec vitest run` | 124/124, 9 arquivos |
 | `pnpm run build` | aprovado, 741 módulos |
-| Playwright/Edge | 15/15, 1 worker, 4,7 min no gate final |
+| Playwright/Edge | 15/15, 1 worker, 4,6 min no gate final |
 | Hunt manual 1x | vitória, 60.106 ms lógicos |
 | Hunt manual 2x | vitória, 60.113 ms lógicos |
 | Hunt manual 4x | vitória, 60.114 ms lógicos |
@@ -59,6 +63,9 @@
 - `02e642d` — `perf: stabilize combat feedback layering and pooling`
 - `78ea4a0` — `test: cover combat presentation invariants`
 - `e44e999` — `perf: pool combat projectiles telegraphs and impacts`
+- `4928910` — `docs: document combat presentation architecture`
+- `552e598` — `chore: add autonomous project health protocol`
+- `56876d4` — `feat: harden combat presentation states and diagnostics`
 
 ## Não iniciado / fora do escopo
 

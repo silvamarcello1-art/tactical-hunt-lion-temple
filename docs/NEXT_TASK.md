@@ -2,8 +2,8 @@
 
 ## Estado de entrada
 
-O MVP 1D está implementado na branch `feature/combat-presentation`, criada a
-partir da base estável que contém o MVP 1C aprovado. TypeScript, 121 testes
+O MVP 1D está implementado na branch `feature/combat-presentation-astra`, criada a
+partir da base estável que contém o MVP 1C aprovado. TypeScript, 124 testes
 unitários, build, 15 E2E, três loops e hunts manuais em 1x, 2x e 4x passaram.
 
 Não fazer merge ou publicação automaticamente. O Helper individual permanece
@@ -23,7 +23,7 @@ Executar uma revisão independente do MVP 1D, comparando a branch com
 7. box, frontline e backline são legíveis em 1x, 2x e 4x;
 8. pausa congela toda a apresentação;
 9. pools não deixam objetos ativos ou residuais;
-10. os 121 unit tests, 15 E2E, build e três loops continuam verdes.
+10. os 124 unit tests, 15 E2E, build e três loops continuam verdes.
 
 Se a revisão for aprovada, pedir autorização humana antes do merge. Depois da
 aprovação do MVP 1D, decidir entre produzir sprite sheets próprios completos ou
@@ -41,11 +41,11 @@ retomar o Helper individual em uma branch separada. Não misturar os dois escopo
 
 ## Prompt curto
 
-> Revise independentemente o MVP 1D na branch feature/combat-presentation contra
+> Revise independentemente o MVP 1D na branch feature/combat-presentation-astra contra
 > origin/recovery/antigravity-mvp1b. Leia AGENTS.md,
 > docs/COMBAT_PRESENTATION.md, docs/SESSION_CHECKPOINT.md e docs/NEXT_TASK.md.
 > Confirme autoridade lógica, sync 0 px, masks 0, pause/speeds, pools, três loops,
-> 121 unit tests, 15 E2E e build. Não altere Helper, não faça merge e não publique.
+> 124 unit tests, 15 E2E e build. Não altere Helper, não faça merge e não publique.
 
 ## Fora do escopo
 

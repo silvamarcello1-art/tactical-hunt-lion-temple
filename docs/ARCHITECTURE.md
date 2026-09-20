@@ -1,6 +1,6 @@
 # Arquitetura canônica
 
-Atualizada em 7 de agosto de 2026 para o MVP 1D.
+Atualizada em 19 de setembro de 2026 para o MVP 1D.
 
 ## Stack
 
@@ -14,7 +14,7 @@ Atualizada em 7 de agosto de 2026 para o MVP 1D.
 | Testes de navegador | Playwright com Edge |
 | Persistência | `localStorage` apenas para preferências de habilidades |
 | Backend | Nenhum |
-| Hospedagem | OpenAI Sites |
+| Hospedagem | Fora do escopo; deploy exige autorização explícita |
 
 ## Fluxo obrigatório
 
