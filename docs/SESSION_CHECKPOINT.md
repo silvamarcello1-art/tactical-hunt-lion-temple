@@ -1,3 +1,21 @@
+# Checkpoint — structural and original visual foundation — 20/09/2026
+
+- Entrada: origin/feature/combat-presentation-astra e HEAD 64816acfcad1ebe810fb1baa74720802ca9af1d6, limpos e sincronizados após fetch.
+- Novo marco: feature/visual-identity-foundation. Motor/grid/eventos/dados não alterados.
+- main.ts cria a sessão; PlayerControlPort remove dependência do input em PixiRenderer.
+- SpriteDefinition/AnimationSet agora são consumidos. Seis blockouts vetoriais originais, quatro facings, seis ações, frames de 64 px; quatro pisos originais.
+- Imagem original gerada com ImageGen preservada em docs/art como conceito. Duas tentativas não entregaram alpha aceitável; não foi integrada como sprite final.
+- Sombras/seleção no footpoint, UI por anchor, efeitos menos invasivos. Frames de efeitos e projéteis passaram do ticker autônomo para o relógio lógico.
+- Health corrigido para branch sem upstream; TypeScript passou; Vitest **148/148**, 12 arquivos; Playwright/Edge **20/20**, um worker, 5,1 min.
+- Auto baseline: 24 hashes completos idênticos. Stress misto: 24 hunts, 23 vitórias e uma derrota real, sem falhas de integridade.
+- Inspeção visual Auto e Manual em 1x/2x/4x, mantendo pisos, boss, footpoint e ownership. Arte final e efeitos/ícones próprios continuam pendentes.
+- Rodada preliminar descartada: hot reload interrompeu um E2E e execução concorrente excedeu timeout de dois testes. Rodada final acima foi sequencial e sem edições de código.
+- Workflow Pages preparado para validar pushes de feature e publicar preview compartilhado com version.json/SHA. O site estável permanece preservado; nenhum remote sites foi usado.
+- Sites: acesso owner/public confirmado, mas exige push a repositório próprio, incompatível com a restrição contra remote sites. GitHub não tinha Pages/workflows; alternativa autorizada no mesmo provedor foi preparada.
+- Novo briefing recebido: MVP 2A Gameplay First. Esta base é o ponto de recuperação antes da remodelagem; o próximo checkpoint registrará o novo escopo e o resultado publicado.
+
+---
+
 # Session Checkpoint — MVP 1D
 
 ## Continuação — Manual Player Control Foundation — 19/09/2026

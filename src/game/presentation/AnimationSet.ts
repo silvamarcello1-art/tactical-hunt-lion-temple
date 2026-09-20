@@ -1,12 +1,14 @@
-import type { VisualAnimationState, VisualFacing } from './CombatPresentationSystem';
+import type { SpriteAction, SpriteFacing } from './SpriteDefinition';
 
 export interface AnimationClipDefinition {
   frames: string[];
   frameDuration: number;
+  frameRate: number;
+  frameCount: number;
   loop: boolean;
 }
 
-export type DirectionalAnimationClips = Partial<Record<VisualFacing, AnimationClipDefinition>>;
+export type DirectionalAnimationClips = Partial<Record<SpriteFacing, AnimationClipDefinition>>;
 
 /**
  * Asset-agnostic contract for the original sprite sheets that will replace the
@@ -15,7 +17,7 @@ export type DirectionalAnimationClips = Partial<Record<VisualFacing, AnimationCl
  */
 export interface AnimationSet {
   id: string;
-  clips: Partial<Record<VisualAnimationState, DirectionalAnimationClips>>;
+  clips: Partial<Record<SpriteAction, DirectionalAnimationClips>>;
   footAnchor: { x: number; y: number };
   visualOffset: { x: number; y: number };
 }

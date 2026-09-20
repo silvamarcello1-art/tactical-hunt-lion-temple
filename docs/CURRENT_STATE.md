@@ -1,3 +1,20 @@
+# Consolidação visual e estrutural — 20/09/2026
+
+Branch feature/visual-identity-foundation, base validada 64816ac. Motor e grid
+inalterados; main.ts cria a sessão e PlayerControls usa PlayerControlPort.
+Seis blockouts originais, quatro facings/seis ações e quatro pisos próprios
+carregam via manifesto. Footpoint, sombras, seleção e offsets estão coerentes;
+efeitos/projéteis param seus frames na pausa. Arte final e efeitos/ícones
+originais ainda pendentes. Conceito ImageGen separado do runtime.
+
+Pipeline de preview GitHub Pages adicionada ao repositório. Acesso Sites é
+válido, porém o envio obrigatório ao repositório próprio conflita com a regra
+contra remote sites. Nenhum envio a essa origem foi feito. O site estável
+chatgpt.site permanece na versão anterior. Evidência final em SESSION_CHECKPOINT.
+
+O histórico abaixo registra os marcos anteriores e suas limitações na época;
+para a situação vigente, prevalecem este resumo e o checkpoint mais recente.
+
 # Estado atual — MVP 0 até MVP 1D
 
 ## Takeover de 19/09/2026 — controle manual integrado

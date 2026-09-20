@@ -30,32 +30,32 @@ Não existe lint configurado.
 
 ## Protocolo operacional
 
-### Pre-flight obrigatório
+1. Pre-flight: fetch origin --prune e pnpm health; conferir raiz, remotes,
+   branch/base/upstream, HEAD local/remoto, ahead/behind e mudanças existentes.
+   Preservar trabalho alheio. Não tocar feature/helper-individual sem pedido.
+2. Implementar no marco adequado; executar health, typecheck, Vitest, build,
+   Playwright com um worker e git diff --check conforme escopo. Mudanças de
+   combate preservam o stress e os hashes Auto. Revisar o diff completo.
+3. Atualizar documentação/checkpoint, criar commits coerentes, fazer push
+   normal para origin e verificar o SHA real com git ls-remote. Conferir
+   worktree limpa. Branches e criação/atualização de PR estão autorizadas.
+4. Após gates verdes, publicar preview automaticamente quando disponível e
+   verificar status e commit servido. Feature usa preview; produção estável
+   depende de versão aprovada. Deployment único também está autorizado após
+   os gates quando seguro e compatível com estas restrições.
+5. Neste projeto, o workflow preview.yml valida pushes de feature e publica
+   um preview compartilhado no GitHub Pages; o site chatgpt.site é a referência
+   estável. Não chamar preview de produção aprovada, nem afirmar deploy sem
+   sucesso e URL verificados. Revalidar acesso/infra antes de mudar esse fluxo.
+6. Post-flight: informar resultado, gates, limitações, branch/commits e terminar
+   com links GitHub Repository, Current Branch, Current Commit, Pull Request,
+   Live Preview e Public/Stable Site. Campo indisponível deve dizer
+   "Not available — <motivo>". Nunca transferir verificações rotineiras ao usuário.
 
-1. Execute `pnpm health` e confirme a raiz do repositório, `origin`, branch,
-   upstream/base, HEAD local/remoto, ahead/behind e worktree.
-2. Execute `git fetch origin --prune` antes de comparar refs remotas.
-3. Preserve todo trabalho existente; se houver mudanças, identifique o dono e
-   trabalhe ao redor delas. Nunca descarte mudanças sem autorização.
-4. Nunca use `feature/helper-individual` sem solicitação explícita.
-5. Nunca use remote sites, publique, faça deploy ou merge sem autorização
-   explícita.
-
-### Post-flight obrigatório
-
-1. Execute os gates proporcionais ao escopo, `git diff --check` e revise o
-   diff completo.
-2. Atualize o checkpoint e a documentação afetada quando aplicável.
-3. Crie commits coerentes, faça push somente para `origin` e confirme HEAD local
-   igual ao remoto e worktree limpo.
-4. Informe branch, hash e gates executados.
-
-O Codex pode criar/trocar/renomear branches quando seguro, fazer fetch, stage,
-commit, push para `origin` e abrir Pull Request. Sem confirmação explícita, não
-pode fazer merge, force push, apagar branch remota, reescrever histórico
-compartilhado, publicar/deploy ou usar remote sites. O Codex executa as
-verificações por conta própria e não pede ao usuário comandos rotineiros de
-PowerShell.
+Continuam proibidos sem autorização específica: merge em branch estável,
+force push, reescrita de histórico compartilhado, remoção de branch remota e
+ações destrutivas. O remote sites continua proibido; não contornar a regra
+enviando para a mesma origem por outro nome ou URL. Não criar conta paga.
 
 ## Regras
 

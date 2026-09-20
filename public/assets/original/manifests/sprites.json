@@ -1,0 +1,1916 @@
+[
+  {
+    "id": "knight",
+    "entityType": "character",
+    "spriteSet": "/assets/original/characters/knight.svg",
+    "frameSize": 64,
+    "footAnchor": {
+      "x": 0.5,
+      "y": 0.875
+    },
+    "visualWidth": 64,
+    "visualHeight": 64,
+    "scale": 1,
+    "facings": [
+      "south",
+      "east",
+      "north",
+      "west"
+    ],
+    "animations": {
+      "id": "knight",
+      "clips": {
+        "idle": {
+          "south": {
+            "frames": [
+              "0:0"
+            ],
+            "frameCount": 1,
+            "frameDuration": 500,
+            "frameRate": 2,
+            "loop": true
+          },
+          "east": {
+            "frames": [
+              "1:0"
+            ],
+            "frameCount": 1,
+            "frameDuration": 500,
+            "frameRate": 2,
+            "loop": true
+          },
+          "north": {
+            "frames": [
+              "2:0"
+            ],
+            "frameCount": 1,
+            "frameDuration": 500,
+            "frameRate": 2,
+            "loop": true
+          },
+          "west": {
+            "frames": [
+              "3:0"
+            ],
+            "frameCount": 1,
+            "frameDuration": 500,
+            "frameRate": 2,
+            "loop": true
+          }
+        },
+        "walk": {
+          "south": {
+            "frames": [
+              "0:1",
+              "0:2",
+              "0:3",
+              "0:4"
+            ],
+            "frameCount": 4,
+            "frameDuration": 110,
+            "frameRate": 9.090909090909092,
+            "loop": true
+          },
+          "east": {
+            "frames": [
+              "1:1",
+              "1:2",
+              "1:3",
+              "1:4"
+            ],
+            "frameCount": 4,
+            "frameDuration": 110,
+            "frameRate": 9.090909090909092,
+            "loop": true
+          },
+          "north": {
+            "frames": [
+              "2:1",
+              "2:2",
+              "2:3",
+              "2:4"
+            ],
+            "frameCount": 4,
+            "frameDuration": 110,
+            "frameRate": 9.090909090909092,
+            "loop": true
+          },
+          "west": {
+            "frames": [
+              "3:1",
+              "3:2",
+              "3:3",
+              "3:4"
+            ],
+            "frameCount": 4,
+            "frameDuration": 110,
+            "frameRate": 9.090909090909092,
+            "loop": true
+          }
+        },
+        "attack": {
+          "south": {
+            "frames": [
+              "0:5",
+              "0:6",
+              "0:7"
+            ],
+            "frameCount": 3,
+            "frameDuration": 105,
+            "frameRate": 9.523809523809524,
+            "loop": false
+          },
+          "east": {
+            "frames": [
+              "1:5",
+              "1:6",
+              "1:7"
+            ],
+            "frameCount": 3,
+            "frameDuration": 105,
+            "frameRate": 9.523809523809524,
+            "loop": false
+          },
+          "north": {
+            "frames": [
+              "2:5",
+              "2:6",
+              "2:7"
+            ],
+            "frameCount": 3,
+            "frameDuration": 105,
+            "frameRate": 9.523809523809524,
+            "loop": false
+          },
+          "west": {
+            "frames": [
+              "3:5",
+              "3:6",
+              "3:7"
+            ],
+            "frameCount": 3,
+            "frameDuration": 105,
+            "frameRate": 9.523809523809524,
+            "loop": false
+          }
+        },
+        "cast": {
+          "south": {
+            "frames": [
+              "0:8",
+              "0:9",
+              "0:10"
+            ],
+            "frameCount": 3,
+            "frameDuration": 125,
+            "frameRate": 8,
+            "loop": false
+          },
+          "east": {
+            "frames": [
+              "1:8",
+              "1:9",
+              "1:10"
+            ],
+            "frameCount": 3,
+            "frameDuration": 125,
+            "frameRate": 8,
+            "loop": false
+          },
+          "north": {
+            "frames": [
+              "2:8",
+              "2:9",
+              "2:10"
+            ],
+            "frameCount": 3,
+            "frameDuration": 125,
+            "frameRate": 8,
+            "loop": false
+          },
+          "west": {
+            "frames": [
+              "3:8",
+              "3:9",
+              "3:10"
+            ],
+            "frameCount": 3,
+            "frameDuration": 125,
+            "frameRate": 8,
+            "loop": false
+          }
+        },
+        "hit": {
+          "south": {
+            "frames": [
+              "0:11"
+            ],
+            "frameCount": 1,
+            "frameDuration": 180,
+            "frameRate": 5.555555555555555,
+            "loop": false
+          },
+          "east": {
+            "frames": [
+              "1:11"
+            ],
+            "frameCount": 1,
+            "frameDuration": 180,
+            "frameRate": 5.555555555555555,
+            "loop": false
+          },
+          "north": {
+            "frames": [
+              "2:11"
+            ],
+            "frameCount": 1,
+            "frameDuration": 180,
+            "frameRate": 5.555555555555555,
+            "loop": false
+          },
+          "west": {
+            "frames": [
+              "3:11"
+            ],
+            "frameCount": 1,
+            "frameDuration": 180,
+            "frameRate": 5.555555555555555,
+            "loop": false
+          }
+        },
+        "death": {
+          "south": {
+            "frames": [
+              "0:12",
+              "0:13",
+              "0:14",
+              "0:15"
+            ],
+            "frameCount": 4,
+            "frameDuration": 90,
+            "frameRate": 11.11111111111111,
+            "loop": false
+          },
+          "east": {
+            "frames": [
+              "1:12",
+              "1:13",
+              "1:14",
+              "1:15"
+            ],
+            "frameCount": 4,
+            "frameDuration": 90,
+            "frameRate": 11.11111111111111,
+            "loop": false
+          },
+          "north": {
+            "frames": [
+              "2:12",
+              "2:13",
+              "2:14",
+              "2:15"
+            ],
+            "frameCount": 4,
+            "frameDuration": 90,
+            "frameRate": 11.11111111111111,
+            "loop": false
+          },
+          "west": {
+            "frames": [
+              "3:12",
+              "3:13",
+              "3:14",
+              "3:15"
+            ],
+            "frameCount": 4,
+            "frameDuration": 90,
+            "frameRate": 11.11111111111111,
+            "loop": false
+          }
+        }
+      },
+      "footAnchor": {
+        "x": 0.5,
+        "y": 0.875
+      },
+      "visualOffset": {
+        "x": 0,
+        "y": 0
+      }
+    },
+    "shadowProfile": {
+      "width": 15,
+      "height": 4,
+      "alpha": 0.28
+    },
+    "effectAnchors": {
+      "head": {
+        "x": 0,
+        "y": -48
+      },
+      "hand": {
+        "x": 15,
+        "y": -28
+      },
+      "chest": {
+        "x": 0,
+        "y": -28
+      }
+    }
+  },
+  {
+    "id": "druid",
+    "entityType": "character",
+    "spriteSet": "/assets/original/characters/druid.svg",
+    "frameSize": 64,
+    "footAnchor": {
+      "x": 0.5,
+      "y": 0.875
+    },
+    "visualWidth": 64,
+    "visualHeight": 64,
+    "scale": 1,
+    "facings": [
+      "south",
+      "east",
+      "north",
+      "west"
+    ],
+    "animations": {
+      "id": "druid",
+      "clips": {
+        "idle": {
+          "south": {
+            "frames": [
+              "0:0"
+            ],
+            "frameCount": 1,
+            "frameDuration": 500,
+            "frameRate": 2,
+            "loop": true
+          },
+          "east": {
+            "frames": [
+              "1:0"
+            ],
+            "frameCount": 1,
+            "frameDuration": 500,
+            "frameRate": 2,
+            "loop": true
+          },
+          "north": {
+            "frames": [
+              "2:0"
+            ],
+            "frameCount": 1,
+            "frameDuration": 500,
+            "frameRate": 2,
+            "loop": true
+          },
+          "west": {
+            "frames": [
+              "3:0"
+            ],
+            "frameCount": 1,
+            "frameDuration": 500,
+            "frameRate": 2,
+            "loop": true
+          }
+        },
+        "walk": {
+          "south": {
+            "frames": [
+              "0:1",
+              "0:2",
+              "0:3",
+              "0:4"
+            ],
+            "frameCount": 4,
+            "frameDuration": 110,
+            "frameRate": 9.090909090909092,
+            "loop": true
+          },
+          "east": {
+            "frames": [
+              "1:1",
+              "1:2",
+              "1:3",
+              "1:4"
+            ],
+            "frameCount": 4,
+            "frameDuration": 110,
+            "frameRate": 9.090909090909092,
+            "loop": true
+          },
+          "north": {
+            "frames": [
+              "2:1",
+              "2:2",
+              "2:3",
+              "2:4"
+            ],
+            "frameCount": 4,
+            "frameDuration": 110,
+            "frameRate": 9.090909090909092,
+            "loop": true
+          },
+          "west": {
+            "frames": [
+              "3:1",
+              "3:2",
+              "3:3",
+              "3:4"
+            ],
+            "frameCount": 4,
+            "frameDuration": 110,
+            "frameRate": 9.090909090909092,
+            "loop": true
+          }
+        },
+        "attack": {
+          "south": {
+            "frames": [
+              "0:5",
+              "0:6",
+              "0:7"
+            ],
+            "frameCount": 3,
+            "frameDuration": 105,
+            "frameRate": 9.523809523809524,
+            "loop": false
+          },
+          "east": {
+            "frames": [
+              "1:5",
+              "1:6",
+              "1:7"
+            ],
+            "frameCount": 3,
+            "frameDuration": 105,
+            "frameRate": 9.523809523809524,
+            "loop": false
+          },
+          "north": {
+            "frames": [
+              "2:5",
+              "2:6",
+              "2:7"
+            ],
+            "frameCount": 3,
+            "frameDuration": 105,
+            "frameRate": 9.523809523809524,
+            "loop": false
+          },
+          "west": {
+            "frames": [
+              "3:5",
+              "3:6",
+              "3:7"
+            ],
+            "frameCount": 3,
+            "frameDuration": 105,
+            "frameRate": 9.523809523809524,
+            "loop": false
+          }
+        },
+        "cast": {
+          "south": {
+            "frames": [
+              "0:8",
+              "0:9",
+              "0:10"
+            ],
+            "frameCount": 3,
+            "frameDuration": 125,
+            "frameRate": 8,
+            "loop": false
+          },
+          "east": {
+            "frames": [
+              "1:8",
+              "1:9",
+              "1:10"
+            ],
+            "frameCount": 3,
+            "frameDuration": 125,
+            "frameRate": 8,
+            "loop": false
+          },
+          "north": {
+            "frames": [
+              "2:8",
+              "2:9",
+              "2:10"
+            ],
+            "frameCount": 3,
+            "frameDuration": 125,
+            "frameRate": 8,
+            "loop": false
+          },
+          "west": {
+            "frames": [
+              "3:8",
+              "3:9",
+              "3:10"
+            ],
+            "frameCount": 3,
+            "frameDuration": 125,
+            "frameRate": 8,
+            "loop": false
+          }
+        },
+        "hit": {
+          "south": {
+            "frames": [
+              "0:11"
+            ],
+            "frameCount": 1,
+            "frameDuration": 180,
+            "frameRate": 5.555555555555555,
+            "loop": false
+          },
+          "east": {
+            "frames": [
+              "1:11"
+            ],
+            "frameCount": 1,
+            "frameDuration": 180,
+            "frameRate": 5.555555555555555,
+            "loop": false
+          },
+          "north": {
+            "frames": [
+              "2:11"
+            ],
+            "frameCount": 1,
+            "frameDuration": 180,
+            "frameRate": 5.555555555555555,
+            "loop": false
+          },
+          "west": {
+            "frames": [
+              "3:11"
+            ],
+            "frameCount": 1,
+            "frameDuration": 180,
+            "frameRate": 5.555555555555555,
+            "loop": false
+          }
+        },
+        "death": {
+          "south": {
+            "frames": [
+              "0:12",
+              "0:13",
+              "0:14",
+              "0:15"
+            ],
+            "frameCount": 4,
+            "frameDuration": 90,
+            "frameRate": 11.11111111111111,
+            "loop": false
+          },
+          "east": {
+            "frames": [
+              "1:12",
+              "1:13",
+              "1:14",
+              "1:15"
+            ],
+            "frameCount": 4,
+            "frameDuration": 90,
+            "frameRate": 11.11111111111111,
+            "loop": false
+          },
+          "north": {
+            "frames": [
+              "2:12",
+              "2:13",
+              "2:14",
+              "2:15"
+            ],
+            "frameCount": 4,
+            "frameDuration": 90,
+            "frameRate": 11.11111111111111,
+            "loop": false
+          },
+          "west": {
+            "frames": [
+              "3:12",
+              "3:13",
+              "3:14",
+              "3:15"
+            ],
+            "frameCount": 4,
+            "frameDuration": 90,
+            "frameRate": 11.11111111111111,
+            "loop": false
+          }
+        }
+      },
+      "footAnchor": {
+        "x": 0.5,
+        "y": 0.875
+      },
+      "visualOffset": {
+        "x": 0,
+        "y": 0
+      }
+    },
+    "shadowProfile": {
+      "width": 12,
+      "height": 4,
+      "alpha": 0.28
+    },
+    "effectAnchors": {
+      "head": {
+        "x": 0,
+        "y": -48
+      },
+      "hand": {
+        "x": 15,
+        "y": -28
+      },
+      "chest": {
+        "x": 0,
+        "y": -28
+      }
+    }
+  },
+  {
+    "id": "sorcerer",
+    "entityType": "character",
+    "spriteSet": "/assets/original/characters/sorcerer.svg",
+    "frameSize": 64,
+    "footAnchor": {
+      "x": 0.5,
+      "y": 0.875
+    },
+    "visualWidth": 64,
+    "visualHeight": 64,
+    "scale": 1,
+    "facings": [
+      "south",
+      "east",
+      "north",
+      "west"
+    ],
+    "animations": {
+      "id": "sorcerer",
+      "clips": {
+        "idle": {
+          "south": {
+            "frames": [
+              "0:0"
+            ],
+            "frameCount": 1,
+            "frameDuration": 500,
+            "frameRate": 2,
+            "loop": true
+          },
+          "east": {
+            "frames": [
+              "1:0"
+            ],
+            "frameCount": 1,
+            "frameDuration": 500,
+            "frameRate": 2,
+            "loop": true
+          },
+          "north": {
+            "frames": [
+              "2:0"
+            ],
+            "frameCount": 1,
+            "frameDuration": 500,
+            "frameRate": 2,
+            "loop": true
+          },
+          "west": {
+            "frames": [
+              "3:0"
+            ],
+            "frameCount": 1,
+            "frameDuration": 500,
+            "frameRate": 2,
+            "loop": true
+          }
+        },
+        "walk": {
+          "south": {
+            "frames": [
+              "0:1",
+              "0:2",
+              "0:3",
+              "0:4"
+            ],
+            "frameCount": 4,
+            "frameDuration": 110,
+            "frameRate": 9.090909090909092,
+            "loop": true
+          },
+          "east": {
+            "frames": [
+              "1:1",
+              "1:2",
+              "1:3",
+              "1:4"
+            ],
+            "frameCount": 4,
+            "frameDuration": 110,
+            "frameRate": 9.090909090909092,
+            "loop": true
+          },
+          "north": {
+            "frames": [
+              "2:1",
+              "2:2",
+              "2:3",
+              "2:4"
+            ],
+            "frameCount": 4,
+            "frameDuration": 110,
+            "frameRate": 9.090909090909092,
+            "loop": true
+          },
+          "west": {
+            "frames": [
+              "3:1",
+              "3:2",
+              "3:3",
+              "3:4"
+            ],
+            "frameCount": 4,
+            "frameDuration": 110,
+            "frameRate": 9.090909090909092,
+            "loop": true
+          }
+        },
+        "attack": {
+          "south": {
+            "frames": [
+              "0:5",
+              "0:6",
+              "0:7"
+            ],
+            "frameCount": 3,
+            "frameDuration": 105,
+            "frameRate": 9.523809523809524,
+            "loop": false
+          },
+          "east": {
+            "frames": [
+              "1:5",
+              "1:6",
+              "1:7"
+            ],
+            "frameCount": 3,
+            "frameDuration": 105,
+            "frameRate": 9.523809523809524,
+            "loop": false
+          },
+          "north": {
+            "frames": [
+              "2:5",
+              "2:6",
+              "2:7"
+            ],
+            "frameCount": 3,
+            "frameDuration": 105,
+            "frameRate": 9.523809523809524,
+            "loop": false
+          },
+          "west": {
+            "frames": [
+              "3:5",
+              "3:6",
+              "3:7"
+            ],
+            "frameCount": 3,
+            "frameDuration": 105,
+            "frameRate": 9.523809523809524,
+            "loop": false
+          }
+        },
+        "cast": {
+          "south": {
+            "frames": [
+              "0:8",
+              "0:9",
+              "0:10"
+            ],
+            "frameCount": 3,
+            "frameDuration": 125,
+            "frameRate": 8,
+            "loop": false
+          },
+          "east": {
+            "frames": [
+              "1:8",
+              "1:9",
+              "1:10"
+            ],
+            "frameCount": 3,
+            "frameDuration": 125,
+            "frameRate": 8,
+            "loop": false
+          },
+          "north": {
+            "frames": [
+              "2:8",
+              "2:9",
+              "2:10"
+            ],
+            "frameCount": 3,
+            "frameDuration": 125,
+            "frameRate": 8,
+            "loop": false
+          },
+          "west": {
+            "frames": [
+              "3:8",
+              "3:9",
+              "3:10"
+            ],
+            "frameCount": 3,
+            "frameDuration": 125,
+            "frameRate": 8,
+            "loop": false
+          }
+        },
+        "hit": {
+          "south": {
+            "frames": [
+              "0:11"
+            ],
+            "frameCount": 1,
+            "frameDuration": 180,
+            "frameRate": 5.555555555555555,
+            "loop": false
+          },
+          "east": {
+            "frames": [
+              "1:11"
+            ],
+            "frameCount": 1,
+            "frameDuration": 180,
+            "frameRate": 5.555555555555555,
+            "loop": false
+          },
+          "north": {
+            "frames": [
+              "2:11"
+            ],
+            "frameCount": 1,
+            "frameDuration": 180,
+            "frameRate": 5.555555555555555,
+            "loop": false
+          },
+          "west": {
+            "frames": [
+              "3:11"
+            ],
+            "frameCount": 1,
+            "frameDuration": 180,
+            "frameRate": 5.555555555555555,
+            "loop": false
+          }
+        },
+        "death": {
+          "south": {
+            "frames": [
+              "0:12",
+              "0:13",
+              "0:14",
+              "0:15"
+            ],
+            "frameCount": 4,
+            "frameDuration": 90,
+            "frameRate": 11.11111111111111,
+            "loop": false
+          },
+          "east": {
+            "frames": [
+              "1:12",
+              "1:13",
+              "1:14",
+              "1:15"
+            ],
+            "frameCount": 4,
+            "frameDuration": 90,
+            "frameRate": 11.11111111111111,
+            "loop": false
+          },
+          "north": {
+            "frames": [
+              "2:12",
+              "2:13",
+              "2:14",
+              "2:15"
+            ],
+            "frameCount": 4,
+            "frameDuration": 90,
+            "frameRate": 11.11111111111111,
+            "loop": false
+          },
+          "west": {
+            "frames": [
+              "3:12",
+              "3:13",
+              "3:14",
+              "3:15"
+            ],
+            "frameCount": 4,
+            "frameDuration": 90,
+            "frameRate": 11.11111111111111,
+            "loop": false
+          }
+        }
+      },
+      "footAnchor": {
+        "x": 0.5,
+        "y": 0.875
+      },
+      "visualOffset": {
+        "x": 0,
+        "y": 0
+      }
+    },
+    "shadowProfile": {
+      "width": 12,
+      "height": 4,
+      "alpha": 0.28
+    },
+    "effectAnchors": {
+      "head": {
+        "x": 0,
+        "y": -48
+      },
+      "hand": {
+        "x": 15,
+        "y": -28
+      },
+      "chest": {
+        "x": 0,
+        "y": -28
+      }
+    }
+  },
+  {
+    "id": "lion-guard",
+    "entityType": "creature",
+    "spriteSet": "/assets/original/creatures/lion-guard.svg",
+    "frameSize": 64,
+    "footAnchor": {
+      "x": 0.5,
+      "y": 0.875
+    },
+    "visualWidth": 64,
+    "visualHeight": 64,
+    "scale": 1,
+    "facings": [
+      "south",
+      "east",
+      "north",
+      "west"
+    ],
+    "animations": {
+      "id": "lion-guard",
+      "clips": {
+        "idle": {
+          "south": {
+            "frames": [
+              "0:0"
+            ],
+            "frameCount": 1,
+            "frameDuration": 500,
+            "frameRate": 2,
+            "loop": true
+          },
+          "east": {
+            "frames": [
+              "1:0"
+            ],
+            "frameCount": 1,
+            "frameDuration": 500,
+            "frameRate": 2,
+            "loop": true
+          },
+          "north": {
+            "frames": [
+              "2:0"
+            ],
+            "frameCount": 1,
+            "frameDuration": 500,
+            "frameRate": 2,
+            "loop": true
+          },
+          "west": {
+            "frames": [
+              "3:0"
+            ],
+            "frameCount": 1,
+            "frameDuration": 500,
+            "frameRate": 2,
+            "loop": true
+          }
+        },
+        "walk": {
+          "south": {
+            "frames": [
+              "0:1",
+              "0:2",
+              "0:3",
+              "0:4"
+            ],
+            "frameCount": 4,
+            "frameDuration": 110,
+            "frameRate": 9.090909090909092,
+            "loop": true
+          },
+          "east": {
+            "frames": [
+              "1:1",
+              "1:2",
+              "1:3",
+              "1:4"
+            ],
+            "frameCount": 4,
+            "frameDuration": 110,
+            "frameRate": 9.090909090909092,
+            "loop": true
+          },
+          "north": {
+            "frames": [
+              "2:1",
+              "2:2",
+              "2:3",
+              "2:4"
+            ],
+            "frameCount": 4,
+            "frameDuration": 110,
+            "frameRate": 9.090909090909092,
+            "loop": true
+          },
+          "west": {
+            "frames": [
+              "3:1",
+              "3:2",
+              "3:3",
+              "3:4"
+            ],
+            "frameCount": 4,
+            "frameDuration": 110,
+            "frameRate": 9.090909090909092,
+            "loop": true
+          }
+        },
+        "attack": {
+          "south": {
+            "frames": [
+              "0:5",
+              "0:6",
+              "0:7"
+            ],
+            "frameCount": 3,
+            "frameDuration": 105,
+            "frameRate": 9.523809523809524,
+            "loop": false
+          },
+          "east": {
+            "frames": [
+              "1:5",
+              "1:6",
+              "1:7"
+            ],
+            "frameCount": 3,
+            "frameDuration": 105,
+            "frameRate": 9.523809523809524,
+            "loop": false
+          },
+          "north": {
+            "frames": [
+              "2:5",
+              "2:6",
+              "2:7"
+            ],
+            "frameCount": 3,
+            "frameDuration": 105,
+            "frameRate": 9.523809523809524,
+            "loop": false
+          },
+          "west": {
+            "frames": [
+              "3:5",
+              "3:6",
+              "3:7"
+            ],
+            "frameCount": 3,
+            "frameDuration": 105,
+            "frameRate": 9.523809523809524,
+            "loop": false
+          }
+        },
+        "cast": {
+          "south": {
+            "frames": [
+              "0:8",
+              "0:9",
+              "0:10"
+            ],
+            "frameCount": 3,
+            "frameDuration": 125,
+            "frameRate": 8,
+            "loop": false
+          },
+          "east": {
+            "frames": [
+              "1:8",
+              "1:9",
+              "1:10"
+            ],
+            "frameCount": 3,
+            "frameDuration": 125,
+            "frameRate": 8,
+            "loop": false
+          },
+          "north": {
+            "frames": [
+              "2:8",
+              "2:9",
+              "2:10"
+            ],
+            "frameCount": 3,
+            "frameDuration": 125,
+            "frameRate": 8,
+            "loop": false
+          },
+          "west": {
+            "frames": [
+              "3:8",
+              "3:9",
+              "3:10"
+            ],
+            "frameCount": 3,
+            "frameDuration": 125,
+            "frameRate": 8,
+            "loop": false
+          }
+        },
+        "hit": {
+          "south": {
+            "frames": [
+              "0:11"
+            ],
+            "frameCount": 1,
+            "frameDuration": 180,
+            "frameRate": 5.555555555555555,
+            "loop": false
+          },
+          "east": {
+            "frames": [
+              "1:11"
+            ],
+            "frameCount": 1,
+            "frameDuration": 180,
+            "frameRate": 5.555555555555555,
+            "loop": false
+          },
+          "north": {
+            "frames": [
+              "2:11"
+            ],
+            "frameCount": 1,
+            "frameDuration": 180,
+            "frameRate": 5.555555555555555,
+            "loop": false
+          },
+          "west": {
+            "frames": [
+              "3:11"
+            ],
+            "frameCount": 1,
+            "frameDuration": 180,
+            "frameRate": 5.555555555555555,
+            "loop": false
+          }
+        },
+        "death": {
+          "south": {
+            "frames": [
+              "0:12",
+              "0:13",
+              "0:14",
+              "0:15"
+            ],
+            "frameCount": 4,
+            "frameDuration": 90,
+            "frameRate": 11.11111111111111,
+            "loop": false
+          },
+          "east": {
+            "frames": [
+              "1:12",
+              "1:13",
+              "1:14",
+              "1:15"
+            ],
+            "frameCount": 4,
+            "frameDuration": 90,
+            "frameRate": 11.11111111111111,
+            "loop": false
+          },
+          "north": {
+            "frames": [
+              "2:12",
+              "2:13",
+              "2:14",
+              "2:15"
+            ],
+            "frameCount": 4,
+            "frameDuration": 90,
+            "frameRate": 11.11111111111111,
+            "loop": false
+          },
+          "west": {
+            "frames": [
+              "3:12",
+              "3:13",
+              "3:14",
+              "3:15"
+            ],
+            "frameCount": 4,
+            "frameDuration": 90,
+            "frameRate": 11.11111111111111,
+            "loop": false
+          }
+        }
+      },
+      "footAnchor": {
+        "x": 0.5,
+        "y": 0.875
+      },
+      "visualOffset": {
+        "x": 0,
+        "y": 0
+      }
+    },
+    "shadowProfile": {
+      "width": 15,
+      "height": 4,
+      "alpha": 0.28
+    },
+    "effectAnchors": {
+      "head": {
+        "x": 0,
+        "y": -48
+      },
+      "hand": {
+        "x": 15,
+        "y": -28
+      },
+      "chest": {
+        "x": 0,
+        "y": -28
+      }
+    }
+  },
+  {
+    "id": "lion-oracle",
+    "entityType": "creature",
+    "spriteSet": "/assets/original/creatures/lion-oracle.svg",
+    "frameSize": 64,
+    "footAnchor": {
+      "x": 0.5,
+      "y": 0.875
+    },
+    "visualWidth": 64,
+    "visualHeight": 64,
+    "scale": 1,
+    "facings": [
+      "south",
+      "east",
+      "north",
+      "west"
+    ],
+    "animations": {
+      "id": "lion-oracle",
+      "clips": {
+        "idle": {
+          "south": {
+            "frames": [
+              "0:0"
+            ],
+            "frameCount": 1,
+            "frameDuration": 500,
+            "frameRate": 2,
+            "loop": true
+          },
+          "east": {
+            "frames": [
+              "1:0"
+            ],
+            "frameCount": 1,
+            "frameDuration": 500,
+            "frameRate": 2,
+            "loop": true
+          },
+          "north": {
+            "frames": [
+              "2:0"
+            ],
+            "frameCount": 1,
+            "frameDuration": 500,
+            "frameRate": 2,
+            "loop": true
+          },
+          "west": {
+            "frames": [
+              "3:0"
+            ],
+            "frameCount": 1,
+            "frameDuration": 500,
+            "frameRate": 2,
+            "loop": true
+          }
+        },
+        "walk": {
+          "south": {
+            "frames": [
+              "0:1",
+              "0:2",
+              "0:3",
+              "0:4"
+            ],
+            "frameCount": 4,
+            "frameDuration": 110,
+            "frameRate": 9.090909090909092,
+            "loop": true
+          },
+          "east": {
+            "frames": [
+              "1:1",
+              "1:2",
+              "1:3",
+              "1:4"
+            ],
+            "frameCount": 4,
+            "frameDuration": 110,
+            "frameRate": 9.090909090909092,
+            "loop": true
+          },
+          "north": {
+            "frames": [
+              "2:1",
+              "2:2",
+              "2:3",
+              "2:4"
+            ],
+            "frameCount": 4,
+            "frameDuration": 110,
+            "frameRate": 9.090909090909092,
+            "loop": true
+          },
+          "west": {
+            "frames": [
+              "3:1",
+              "3:2",
+              "3:3",
+              "3:4"
+            ],
+            "frameCount": 4,
+            "frameDuration": 110,
+            "frameRate": 9.090909090909092,
+            "loop": true
+          }
+        },
+        "attack": {
+          "south": {
+            "frames": [
+              "0:5",
+              "0:6",
+              "0:7"
+            ],
+            "frameCount": 3,
+            "frameDuration": 105,
+            "frameRate": 9.523809523809524,
+            "loop": false
+          },
+          "east": {
+            "frames": [
+              "1:5",
+              "1:6",
+              "1:7"
+            ],
+            "frameCount": 3,
+            "frameDuration": 105,
+            "frameRate": 9.523809523809524,
+            "loop": false
+          },
+          "north": {
+            "frames": [
+              "2:5",
+              "2:6",
+              "2:7"
+            ],
+            "frameCount": 3,
+            "frameDuration": 105,
+            "frameRate": 9.523809523809524,
+            "loop": false
+          },
+          "west": {
+            "frames": [
+              "3:5",
+              "3:6",
+              "3:7"
+            ],
+            "frameCount": 3,
+            "frameDuration": 105,
+            "frameRate": 9.523809523809524,
+            "loop": false
+          }
+        },
+        "cast": {
+          "south": {
+            "frames": [
+              "0:8",
+              "0:9",
+              "0:10"
+            ],
+            "frameCount": 3,
+            "frameDuration": 125,
+            "frameRate": 8,
+            "loop": false
+          },
+          "east": {
+            "frames": [
+              "1:8",
+              "1:9",
+              "1:10"
+            ],
+            "frameCount": 3,
+            "frameDuration": 125,
+            "frameRate": 8,
+            "loop": false
+          },
+          "north": {
+            "frames": [
+              "2:8",
+              "2:9",
+              "2:10"
+            ],
+            "frameCount": 3,
+            "frameDuration": 125,
+            "frameRate": 8,
+            "loop": false
+          },
+          "west": {
+            "frames": [
+              "3:8",
+              "3:9",
+              "3:10"
+            ],
+            "frameCount": 3,
+            "frameDuration": 125,
+            "frameRate": 8,
+            "loop": false
+          }
+        },
+        "hit": {
+          "south": {
+            "frames": [
+              "0:11"
+            ],
+            "frameCount": 1,
+            "frameDuration": 180,
+            "frameRate": 5.555555555555555,
+            "loop": false
+          },
+          "east": {
+            "frames": [
+              "1:11"
+            ],
+            "frameCount": 1,
+            "frameDuration": 180,
+            "frameRate": 5.555555555555555,
+            "loop": false
+          },
+          "north": {
+            "frames": [
+              "2:11"
+            ],
+            "frameCount": 1,
+            "frameDuration": 180,
+            "frameRate": 5.555555555555555,
+            "loop": false
+          },
+          "west": {
+            "frames": [
+              "3:11"
+            ],
+            "frameCount": 1,
+            "frameDuration": 180,
+            "frameRate": 5.555555555555555,
+            "loop": false
+          }
+        },
+        "death": {
+          "south": {
+            "frames": [
+              "0:12",
+              "0:13",
+              "0:14",
+              "0:15"
+            ],
+            "frameCount": 4,
+            "frameDuration": 90,
+            "frameRate": 11.11111111111111,
+            "loop": false
+          },
+          "east": {
+            "frames": [
+              "1:12",
+              "1:13",
+              "1:14",
+              "1:15"
+            ],
+            "frameCount": 4,
+            "frameDuration": 90,
+            "frameRate": 11.11111111111111,
+            "loop": false
+          },
+          "north": {
+            "frames": [
+              "2:12",
+              "2:13",
+              "2:14",
+              "2:15"
+            ],
+            "frameCount": 4,
+            "frameDuration": 90,
+            "frameRate": 11.11111111111111,
+            "loop": false
+          },
+          "west": {
+            "frames": [
+              "3:12",
+              "3:13",
+              "3:14",
+              "3:15"
+            ],
+            "frameCount": 4,
+            "frameDuration": 90,
+            "frameRate": 11.11111111111111,
+            "loop": false
+          }
+        }
+      },
+      "footAnchor": {
+        "x": 0.5,
+        "y": 0.875
+      },
+      "visualOffset": {
+        "x": 0,
+        "y": 0
+      }
+    },
+    "shadowProfile": {
+      "width": 12,
+      "height": 4,
+      "alpha": 0.28
+    },
+    "effectAnchors": {
+      "head": {
+        "x": 0,
+        "y": -48
+      },
+      "hand": {
+        "x": 15,
+        "y": -28
+      },
+      "chest": {
+        "x": 0,
+        "y": -28
+      }
+    }
+  },
+  {
+    "id": "hollow-regent",
+    "entityType": "boss",
+    "spriteSet": "/assets/original/bosses/hollow-regent.svg",
+    "frameSize": 64,
+    "footAnchor": {
+      "x": 0.5,
+      "y": 0.875
+    },
+    "visualWidth": 64,
+    "visualHeight": 64,
+    "scale": 1.15,
+    "facings": [
+      "south",
+      "east",
+      "north",
+      "west"
+    ],
+    "animations": {
+      "id": "hollow-regent",
+      "clips": {
+        "idle": {
+          "south": {
+            "frames": [
+              "0:0"
+            ],
+            "frameCount": 1,
+            "frameDuration": 500,
+            "frameRate": 2,
+            "loop": true
+          },
+          "east": {
+            "frames": [
+              "1:0"
+            ],
+            "frameCount": 1,
+            "frameDuration": 500,
+            "frameRate": 2,
+            "loop": true
+          },
+          "north": {
+            "frames": [
+              "2:0"
+            ],
+            "frameCount": 1,
+            "frameDuration": 500,
+            "frameRate": 2,
+            "loop": true
+          },
+          "west": {
+            "frames": [
+              "3:0"
+            ],
+            "frameCount": 1,
+            "frameDuration": 500,
+            "frameRate": 2,
+            "loop": true
+          }
+        },
+        "walk": {
+          "south": {
+            "frames": [
+              "0:1",
+              "0:2",
+              "0:3",
+              "0:4"
+            ],
+            "frameCount": 4,
+            "frameDuration": 110,
+            "frameRate": 9.090909090909092,
+            "loop": true
+          },
+          "east": {
+            "frames": [
+              "1:1",
+              "1:2",
+              "1:3",
+              "1:4"
+            ],
+            "frameCount": 4,
+            "frameDuration": 110,
+            "frameRate": 9.090909090909092,
+            "loop": true
+          },
+          "north": {
+            "frames": [
+              "2:1",
+              "2:2",
+              "2:3",
+              "2:4"
+            ],
+            "frameCount": 4,
+            "frameDuration": 110,
+            "frameRate": 9.090909090909092,
+            "loop": true
+          },
+          "west": {
+            "frames": [
+              "3:1",
+              "3:2",
+              "3:3",
+              "3:4"
+            ],
+            "frameCount": 4,
+            "frameDuration": 110,
+            "frameRate": 9.090909090909092,
+            "loop": true
+          }
+        },
+        "attack": {
+          "south": {
+            "frames": [
+              "0:5",
+              "0:6",
+              "0:7"
+            ],
+            "frameCount": 3,
+            "frameDuration": 105,
+            "frameRate": 9.523809523809524,
+            "loop": false
+          },
+          "east": {
+            "frames": [
+              "1:5",
+              "1:6",
+              "1:7"
+            ],
+            "frameCount": 3,
+            "frameDuration": 105,
+            "frameRate": 9.523809523809524,
+            "loop": false
+          },
+          "north": {
+            "frames": [
+              "2:5",
+              "2:6",
+              "2:7"
+            ],
+            "frameCount": 3,
+            "frameDuration": 105,
+            "frameRate": 9.523809523809524,
+            "loop": false
+          },
+          "west": {
+            "frames": [
+              "3:5",
+              "3:6",
+              "3:7"
+            ],
+            "frameCount": 3,
+            "frameDuration": 105,
+            "frameRate": 9.523809523809524,
+            "loop": false
+          }
+        },
+        "cast": {
+          "south": {
+            "frames": [
+              "0:8",
+              "0:9",
+              "0:10"
+            ],
+            "frameCount": 3,
+            "frameDuration": 125,
+            "frameRate": 8,
+            "loop": false
+          },
+          "east": {
+            "frames": [
+              "1:8",
+              "1:9",
+              "1:10"
+            ],
+            "frameCount": 3,
+            "frameDuration": 125,
+            "frameRate": 8,
+            "loop": false
+          },
+          "north": {
+            "frames": [
+              "2:8",
+              "2:9",
+              "2:10"
+            ],
+            "frameCount": 3,
+            "frameDuration": 125,
+            "frameRate": 8,
+            "loop": false
+          },
+          "west": {
+            "frames": [
+              "3:8",
+              "3:9",
+              "3:10"
+            ],
+            "frameCount": 3,
+            "frameDuration": 125,
+            "frameRate": 8,
+            "loop": false
+          }
+        },
+        "hit": {
+          "south": {
+            "frames": [
+              "0:11"
+            ],
+            "frameCount": 1,
+            "frameDuration": 180,
+            "frameRate": 5.555555555555555,
+            "loop": false
+          },
+          "east": {
+            "frames": [
+              "1:11"
+            ],
+            "frameCount": 1,
+            "frameDuration": 180,
+            "frameRate": 5.555555555555555,
+            "loop": false
+          },
+          "north": {
+            "frames": [
+              "2:11"
+            ],
+            "frameCount": 1,
+            "frameDuration": 180,
+            "frameRate": 5.555555555555555,
+            "loop": false
+          },
+          "west": {
+            "frames": [
+              "3:11"
+            ],
+            "frameCount": 1,
+            "frameDuration": 180,
+            "frameRate": 5.555555555555555,
+            "loop": false
+          }
+        },
+        "death": {
+          "south": {
+            "frames": [
+              "0:12",
+              "0:13",
+              "0:14",
+              "0:15"
+            ],
+            "frameCount": 4,
+            "frameDuration": 90,
+            "frameRate": 11.11111111111111,
+            "loop": false
+          },
+          "east": {
+            "frames": [
+              "1:12",
+              "1:13",
+              "1:14",
+              "1:15"
+            ],
+            "frameCount": 4,
+            "frameDuration": 90,
+            "frameRate": 11.11111111111111,
+            "loop": false
+          },
+          "north": {
+            "frames": [
+              "2:12",
+              "2:13",
+              "2:14",
+              "2:15"
+            ],
+            "frameCount": 4,
+            "frameDuration": 90,
+            "frameRate": 11.11111111111111,
+            "loop": false
+          },
+          "west": {
+            "frames": [
+              "3:12",
+              "3:13",
+              "3:14",
+              "3:15"
+            ],
+            "frameCount": 4,
+            "frameDuration": 90,
+            "frameRate": 11.11111111111111,
+            "loop": false
+          }
+        }
+      },
+      "footAnchor": {
+        "x": 0.5,
+        "y": 0.875
+      },
+      "visualOffset": {
+        "x": 0,
+        "y": 0
+      }
+    },
+    "shadowProfile": {
+      "width": 19,
+      "height": 6,
+      "alpha": 0.28
+    },
+    "effectAnchors": {
+      "head": {
+        "x": 0,
+        "y": -48
+      },
+      "hand": {
+        "x": 15,
+        "y": -28
+      },
+      "chest": {
+        "x": 0,
+        "y": -28
+      }
+    }
+  }
+]

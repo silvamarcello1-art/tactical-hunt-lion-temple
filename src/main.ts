@@ -1,3 +1,5 @@
+import { assetUrl } from './game/assetUrl';
+import { CombatEngine } from './combat/CombatEngine';
 import './style.css';
 import { PlayerControls } from './control/PlayerControls';
 import { CurrencyService } from './app/CurrencyService';
@@ -134,7 +136,7 @@ function renderParty() {
         .map(
           (ability) =>
             `<img class="${preferences[ability.id]?.enabled ? '' : 'disabled'}"
-              src="${ability.icon}" title="${ability.name} — ${ability.cooldown / 1000}s" alt="">`,
+              src="${assetUrl(ability.icon)}" title="${ability.name} — ${ability.cooldown / 1000}s" alt="">`,
         )
         .join('');
       const roleName =
@@ -162,7 +164,7 @@ function renderActionBar() {
       (ability) => `<button class="action ${
         preferences[ability.id]?.enabled ? '' : 'disabled'
       }" data-ability="${ability.id}" title="${ability.name} • ${ability.words}">
-        <img src="${ability.icon}" alt="${ability.name}">
+        <img src="${assetUrl(ability.icon)}" alt="${ability.name}">
         <em>${ability.cooldown / 1000}s</em>
         <span class="cooldown-mask" aria-hidden="true"></span>
         <strong class="cooldown-number" aria-hidden="true"></strong>
@@ -290,7 +292,7 @@ async function createRenderer() {
   playerControls = undefined;
   renderer?.destroy();
   renderer = undefined;
-  const nextRenderer = new PixiRenderer(preferences, {
+  const nextRenderer = new PixiRenderer(new CombatEngine(803, preferences, crypto.randomUUID()), {
     debugEnabled,
     selectedHeroId,
   });
@@ -298,7 +300,18 @@ async function createRenderer() {
     await nextRenderer.mount($('#game'));
     nextRenderer.player.speed = selectedSpeed;
     renderer = nextRenderer;
-    playerControls = new PlayerControls(nextRenderer,(id) => selectHero(id));
+    playerControls = new PlayerControls({
+      canvas:nextRenderer.app.canvas,
+      get sessionId() { return nextRenderer.engine.id; },
+      get time() { return nextRenderer.engine.time; },
+      get running() { return nextRenderer.player.isRunning; },
+      get entities() { return nextRenderer.engine.entities; },
+      get results() { return nextRenderer.engine.controlResults; },
+      controlOf:id => nextRenderer.engine.controlOf(id),
+      submit:command => nextRenderer.engine.submit(command),
+      selectTarget:id => nextRenderer.selectTarget(id),
+      beforeTick:callback => { nextRenderer.beforeTick = callback; },
+    },(id) => selectHero(id));
   } catch (error) {
     nextRenderer.destroy();
     throw error;
@@ -380,7 +393,7 @@ function renderAbilityModal(heroId = selectedHeroId) {
     .map((ability) => {
       const current = preferences[ability.id];
       return `<div class="ability-row">
-        <img src="${ability.icon}" alt="">
+        <img src="${assetUrl(ability.icon)}" alt="">
         <div><b>${ability.name}</b><small>${ability.words} • ${ability.cooldown / 1000}s</small></div>
         <label><input type="checkbox" data-enabled="${ability.id}" ${current.enabled ? 'checked' : ''}> Ativa</label>
         <label>Prioridade

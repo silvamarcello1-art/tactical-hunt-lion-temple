@@ -22,15 +22,15 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 $script:Root = ($rootOutput | Select-Object -First 1).Trim()
-$branch = (Invoke-Git branch --show-current | Select-Object -First 1).Trim()
+$branch = (Invoke-Git branch --show-current | Out-String).Trim()
 $localHead = (Invoke-Git rev-parse HEAD | Select-Object -First 1).Trim()
 $status = @(Invoke-Git status --short)
 $remoteBranchRef = if ($branch) { "refs/remotes/origin/$branch" } else { $null }
 $originHead = $null
 $ahead = $null
 $behind = $null
-$originDefault = (& git -C $script:Root symbolic-ref --quiet --short refs/remotes/origin/HEAD 2>$null)
-if ($LASTEXITCODE -ne 0) { $originDefault = '(not configured)' } else { $originDefault = ($originDefault | Select-Object -First 1).Trim() }
+$originDefault = (Invoke-Git for-each-ref '--format=%(symref)' refs/remotes/origin/HEAD | Out-String).Trim()
+if (!$originDefault) { $originDefault = '(not configured)' }
 
 if ($remoteBranchRef) {
   & git -C $script:Root show-ref --verify --quiet $remoteBranchRef
@@ -42,8 +42,8 @@ if ($remoteBranchRef) {
   }
 }
 
-$upstream = (& git -C $script:Root rev-parse --abbrev-ref --symbolic-full-name '@{upstream}' 2>$null)
-if ($LASTEXITCODE -ne 0) { $upstream = '(none)' } else { $upstream = ($upstream | Select-Object -First 1).Trim() }
+$upstream = if ($branch) { (Invoke-Git for-each-ref '--format=%(upstream:short)' "refs/heads/$branch" | Out-String).Trim() } else { '' }
+if (!$upstream) { $upstream = '(none)' }
 
 Write-Output 'Tactical Hunt - Project Health'
 Write-Output "Repository root : $($script:Root)"

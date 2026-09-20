@@ -1,7 +1,7 @@
 import { heroes } from '../data/config';
 import { abilities } from '../data/abilities';
 import type { CombatEvent } from '../events/types';
-import type { PixiRenderer } from '../game/PixiRenderer';
+import type { PlayerControlPort } from './PlayerControlPort';
 import { RENDER_CONFIG } from '../game/renderConfig';
 import { HeldInput, editableTarget, screenToTile } from './PlayerInput';
 import { InteractionController } from './InteractionState';
@@ -23,7 +23,7 @@ export class PlayerControls {
   private readonly status = document.querySelector<HTMLElement>('#interaction-status')!;
   private readonly menu = document.querySelector<HTMLElement>('#interaction-menu')!;
 
-  constructor(private renderer:PixiRenderer, private onSelect:(actorId:string) => void) {
+  constructor(private port:PlayerControlPort, private onSelect:(actorId:string) => void) {
     const signal = this.abort.signal;
     const listen = (target:EventTarget, name:string, callback:EventListener, capture = false) =>
       target.addEventListener(name,callback,{signal,capture});
@@ -46,7 +46,7 @@ export class PlayerControls {
         this.send({type:'look',target:this.target});
         if (this.target.kind === 'entity') {
           const id = this.target.entityId;
-          const entity = this.renderer.engine.entities.find(entity => entity.id === id);
+          const entity = this.port.entities.find(entity => entity.id === id);
           if (entity) this.status.textContent = `${entity.name} • HP ${entity.hp}/${entity.maxHp} • tile ${entity.tileX}, ${entity.tileY}`;
         } else this.status.textContent = `Tile ${this.target.tile.x}, ${this.target.tile.y}`;
       }
@@ -55,7 +55,7 @@ export class PlayerControls {
     listen(window,'keydown',(raw) => {
       const event = raw as KeyboardEvent;
       if (event.key === 'Escape') { this.clear(); this.status.textContent = 'Interação cancelada.'; return; }
-      if (this.mode === 'AI' || editableTarget(event.target) || !this.renderer.player.isRunning || event.ctrlKey || event.metaKey || event.altKey) return;
+      if (this.mode === 'AI' || editableTarget(event.target) || !this.port.running || event.ctrlKey || event.metaKey || event.altKey) return;
       if (this.held.press(event.code)) { event.preventDefault(); this.sync(); }
     });
     listen(window,'keyup',(raw) => { this.held.release((raw as KeyboardEvent).code); this.sync(); });
@@ -68,14 +68,14 @@ export class PlayerControls {
         (event.type === 'death' && (event.targetId === this.actorId || (this.target?.kind === 'entity' && this.target.entityId === event.targetId)))) this.clear();
     });
     listen(window,'hunt-time',() => {
-      const last = this.renderer.engine.controlResults.at(-1);
+      const last = this.port.results.at(-1);
       if (last && last.commandId !== this.lastResultId) {
         this.lastResultId = last.commandId;
         if (!last.accepted && last.reason !== 'blocked') this.status.textContent = this.reasonLabel(last.reason);
       }
       this.sync();
     });
-    listen(this.renderer.app.canvas,'pointerup',(raw) => {
+    listen(this.port.canvas,'pointerup',(raw) => {
       if (this.mode === 'AI') return;
       const event = raw as PointerEvent;
       event.stopImmediatePropagation();
@@ -90,7 +90,7 @@ export class PlayerControls {
       this.status.textContent = targeting ? 'Comando enviado.' : this.targetLabel();
       this.sync();
     },true);
-    listen(this.renderer.app.canvas,'contextmenu',(raw) => {
+    listen(this.port.canvas,'contextmenu',(raw) => {
       if (this.mode === 'AI') return;
       const event = raw as MouseEvent;
       event.preventDefault();
@@ -101,7 +101,7 @@ export class PlayerControls {
       this.status.textContent = this.targetLabel();
       this.sync();
     });
-    listen(this.renderer.app.canvas,'pointercancel',() => this.clear());
+    listen(this.port.canvas,'pointercancel',() => this.clear());
     listen(document.querySelector('#action-bar')!,'contextmenu',(raw) => {
       if (this.mode === 'AI') return;
       const button = (raw.target as Element).closest<HTMLElement>('[data-ability]');
@@ -109,11 +109,11 @@ export class PlayerControls {
       raw.preventDefault();
       this.cast(button.dataset.ability, true);
     });
-    this.renderer.beforeTick = () => {
+    this.port.beforeTick(() => {
       if (this.mode === 'AI') return;
       const {x:dx,y:dy} = this.held.direction();
       if (dx || dy) this.send({type:'move',dx,dy});
-    };
+    });
     this.clear();
     this.onSelect(this.actorId);
   }
@@ -124,7 +124,7 @@ export class PlayerControls {
     this.clear();
     this.actorId = actorId;
     this.actorSelect.value = actorId;
-    this.mode = this.renderer.engine.controlOf(actorId).mode;
+    this.mode = this.port.controlOf(actorId).mode;
     this.modeSelect.value = this.mode;
     this.onSelect(actorId);
     this.sync();
@@ -152,13 +152,13 @@ export class PlayerControls {
   }
   destroy() {
     if (this.abort.signal.aborted) return;
-    this.clear(); this.abort.abort(); this.renderer.beforeTick = undefined;
+    this.clear(); this.abort.abort(); this.port.beforeTick();
   }
   private send(intent:PlayerIntent) {
     const sequence = ++this.sequence;
-    const result = this.renderer.engine.submit({
-      commandId:`player-${sequence}`,sessionId:this.renderer.engine.id,actorId:this.actorId,
-      ownerId:'local-player',sequence,logicalTick:this.renderer.engine.time,intent,
+    const result = this.port.submit({
+      commandId:`player-${sequence}`,sessionId:this.port.sessionId,actorId:this.actorId,
+      ownerId:'local-player',sequence,logicalTick:this.port.time,intent,
     });
     if (!result.accepted) this.status.textContent = this.reasonLabel(result.reason);
     return result;
@@ -169,9 +169,9 @@ export class PlayerControls {
   }
   private stop() { this.clear(); if (this.manual) this.send({type:'stop'}); }
   private pointerTarget(event:MouseEvent):InteractionTarget | undefined {
-    const tile = screenToTile({x:event.clientX,y:event.clientY},this.renderer.app.canvas.getBoundingClientRect(),RENDER_CONFIG.arena);
+    const tile = screenToTile({x:event.clientX,y:event.clientY},this.port.canvas.getBoundingClientRect(),RENDER_CONFIG.arena);
     if (!tile) return;
-    const entity = this.renderer.engine.entities.find(entity => entity.alive && entity.tileX === tile.x && entity.tileY === tile.y);
+    const entity = this.port.entities.find(entity => entity.alive && entity.tileX === tile.x && entity.tileY === tile.y);
     return entity ? {kind:'entity',entityId:entity.id} : {kind:'tile',tile};
   }
   private targetLabel() {
@@ -182,7 +182,7 @@ export class PlayerControls {
     return labels[reason] ?? 'Comando indisponível.';
   }
   private sync() {
-    this.renderer.selectTarget(this.target?.kind === 'entity' ? this.target.entityId : undefined);
+    this.port.selectTarget(this.target?.kind === 'entity' ? this.target.entityId : undefined);
     this.panel.dataset.controlMode = this.mode;
     this.panel.dataset.controlledActor = this.actorId;
     this.panel.dataset.interactionState = this.interaction.state.kind;
@@ -191,6 +191,6 @@ export class PlayerControls {
     for (const id of ['player-attack','player-follow','player-stop']) {
       document.querySelector<HTMLButtonElement>(`#${id}`)!.disabled = this.mode === 'AI';
     }
-    this.renderer.app.canvas.style.cursor = this.interaction.state.kind === 'spell-targeting' ? 'crosshair' : '';
+    this.port.canvas.style.cursor = this.interaction.state.kind === 'spell-targeting' ? 'crosshair' : '';
   }
 }

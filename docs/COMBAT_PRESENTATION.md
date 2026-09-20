@@ -221,3 +221,19 @@ hunt no construtor. Facing, movimento, impactos, waves e telegraphs continuam
 usando os contratos existentes. O alvo escolhido pelo jogador recebe um marcador
 no chão que acompanha o footpoint visual e não participa do domínio.
 O reset também descarta input/targeting através de `PlayerControls`.
+
+## Fundação visual original
+
+SpriteLibrary agora consome AnimationSet e SpriteDefinition pelo manifesto de
+seis atores originais. Frames 64 px, anchor (0.5,0.875), quatro facings e seis
+ações. Sombras e seleção têm o mesmo footpoint; HP/nome e floating text usam
+o anchor de cabeça. O piso original tem baixo contraste para destacar as
+unidades e telegraphs. Efeitos de área têm escala/alpha menores.
+
+O AnimatedSprite autônomo fazia os frames dos efeitos/projéteis avançarem na
+pausa. Agora são amostrados explicitamente pela timeline, assim como os novos
+personagens. O teste sprite-pipeline.spec.ts verifica pausa e carregamento
+original. O motor, trajetórias e máscaras continuam inalterados.
+
+Ver ART_DIRECTION.md e SPRITE_PIPELINE.md. Blockouts não são arte final; o
+conceito raster está separado do runtime por não ter alpha aprovado.

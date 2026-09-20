@@ -37,7 +37,7 @@ Base concluída:
 - cooldown visual sincronizado;
 - camadas PixiJS de efeitos isoladas.
 
-Próximo incremento:
+Incremento pausado (não é a prioridade seguinte):
 
 - preferências independentes por personagem e contexto;
 - limiar configurável de cura;
@@ -57,7 +57,7 @@ Próximo incremento:
 - reação a AOE;
 - catálogo visual original/licenciado.
 
-Backend, inventário e progressões permanecem proibidos.
+Backend continua condicionado ao gate abaixo. O inventário entra somente no marco 1F descrito a seguir.
 
 Saída do MVP 1: dez ciclos consecutivos sem travar, atravessar obstáculos,
 duplicar eventos/recompensas ou divergir do relatório.
@@ -92,3 +92,21 @@ Condicionado ao gate de backend:
 2. **Backend:** ADR aprovada antes de persistência remota.
 3. **Monetização:** revisão jurídica e política não-P2W.
 4. **Escopo:** uma tarefa pertence a um único MVP.
+
+## Sequência vigente após o MVP 1D
+
+Esta sequência substitui a ordem histórica de curto prazo acima, preservada
+como contexto. Não confundir os marcos anteriores com novas tarefas pendentes.
+
+| Marco | Vertical slice / gate |
+|---|---|
+| 1D | Auto + Manual no mesmo motor; concluído; consolidação visual nesta branch |
+| 1E | mundo explorável pequeno, NPC/interação real e objetivo de quest |
+| 1F | inventário, containers, equipamento e Use-With reais, persistência local |
+| 1G | campanha/história composta de mapas e objetivos; sem modo história gigante |
+| 1H | protótipo de autoridade no servidor, apenas após ADR e revisão dos comandos |
+| 1I | PvP mínimo usando a autoridade validada, sem antecipar ranking/economia |
+
+Identidade visual é incremental: manifesto/cardinais/blockouts originais
+entregues; animação final e substituição dos efeitos/ícones legados continuam.
+Helper individual não antecede o próximo slice de aventura.

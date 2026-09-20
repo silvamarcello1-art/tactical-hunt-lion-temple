@@ -14,7 +14,7 @@ Atualizada em 19 de setembro de 2026 para o MVP 1D.
 | Testes de navegador | Playwright com Edge |
 | Persistência | `localStorage` apenas para preferências de habilidades |
 | Backend | Nenhum |
-| Hospedagem | Fora do escopo; deploy exige autorização explícita |
+| Hospedagem | Preview GitHub Pages após gates; site Sites estável preservado |
 
 ## Fluxo obrigatório
 
@@ -67,7 +67,7 @@ ela agrega os eventos emitidos e apresenta o `HuntResult` no encerramento.
 | Heróis, monstros, boss, formação e spawns | `src/data/config.ts` |
 | Habilidades e preferências | `src/data/abilities.ts` |
 | Estado visual temporário, facing, interpolação e métricas | `src/game/presentation/CombatPresentationSystem.ts` |
-| Contrato futuro de sprite sheets por estado e direção | `src/game/presentation/AnimationSet.ts` |
+| Sprites originais, contratos e sampling por relógio lógico | `src/game/presentation/{AnimationSet,SpriteDefinition,SpriteLibrary}.ts` |
 | Reuso de display objects | `src/game/presentation/DisplayObjectPool.ts` |
 | PixiJS, mapa, unidades, efeitos e limpeza | `src/game/PixiRenderer.ts` |
 | Escala, durações, offsets, câmera e debug | `src/game/renderConfig.ts` |
@@ -108,7 +108,7 @@ ela agrega os eventos emitidos e apresenta o `HuntResult` no encerramento.
 
 ## Ciclo de vida
 
-1. `main.ts` cria uma única instância de `PixiRenderer`.
+1. `main.ts` cria o CombatEngine da sessão e o injeta em uma única instância de PixiRenderer.
 2. `mount()` carrega assets, monta o canvas e registra um ticker nomeado.
 3. `LiveEventPlayer` avança a simulação pelo relógio lógico e entrega cada evento uma única vez.
 4. A máquina de estados distingue preparação, idle, execução, pausa, transição,
@@ -190,3 +190,30 @@ jogo.
    habilidade; regras por personagem pertencem ao MVP 1B.
 6. `main.ts` ainda concentra a orquestração do shell; extrair somente quando um
    sistema real justificar.
+
+## Consolidação estrutural — identidade visual
+
+A auditoria manteve o único motor e os resolvers de IA/Manual, pois não havia
+evidência para uma reescrita. O acoplamento concreto estava na construção do
+motor pelo renderer e no acesso direto de PlayerControls ao PixiRenderer.
+Agora main.ts compõe a sessão e injeta PlayerControlPort: canvas, relógio,
+snapshots somente leitura, ownership, submissão e seleção visual. O adapter DOM
+continua na borda; nenhum import de DOM/Pixi foi acrescentado ao domínio.
+
+O renderer consome SpriteDefinition pelo manifesto. Animações de personagens,
+efeitos e projéteis são amostradas no tempo lógico, incluindo pausa. Piso e
+personagens originais substituem os antigos sprites carregados no mapa.
+Efeitos/ícones legados ainda aguardam substituição; ver ART_DIRECTION.md.
+
+Para 1E, objetos de mundo devem ter IDs estáveis, tile/footprint e resolvers de
+interação no domínio, retornando eventos/snapshots. entity/tile já são alvos
+serializáveis; NPC, porta, baú, placa, escada, portal e container não precisam
+consultar Pixi. Adicionar tipos/eventos quando o primeiro objeto real existir,
+sem implementar agora uma segunda simulação nem interfaces vazias por categoria.
+Quest consome eventos de domínio; campanha compõe mapas/objetivos; PvP reutiliza
+PlayerCommand, mas exigirá autenticação, validação no servidor e ADR própria.
+
+Preview: .github/workflows/preview.yml valida a feature e publica um artefato
+Pages com version.json contendo o SHA. É uma URL compartilhada pela última
+feature validada, não uma URL isolada por branch. Não altera o site estável.
+Assets resolvem BASE_URL tanto na raiz do Sites quanto no subdiretório Pages.

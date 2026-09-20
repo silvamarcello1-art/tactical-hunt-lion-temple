@@ -1,3 +1,14 @@
+## 2026-09-20 — original visual foundation
+
+- Sessão composta em main.ts; PlayerControlPort desacopla input de Pixi.
+- SpriteDefinition/AnimationSet consumidos por manifesto: seis atores originais,
+  quatro facings, seis ações, quatro pisos; conceito raster separado dos blockouts.
+- Footpoint/sombras/seleção/labels e legibilidade de efeitos ajustados; frames
+  dos efeitos e projéteis seguem pausa/velocidade lógica.
+- Health tolera branch sem upstream; workflow valida feature e publica Pages
+  com identificação do commit, sem merge nem alteração do site estável.
+- Direção de arte, pipeline e roadmap 1E–1I documentados.
+
 # Changelog
 
 ## 0.5.0 — 2026-09-19

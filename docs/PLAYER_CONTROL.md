@@ -93,3 +93,11 @@ fictícia. Integrar objetos/NPC/itens reais pertence ao MVP 1E/futuro inventári
 
 Sprites cardinais completos, exploração persistente, NPC/quests, inventário e
 rede não fazem parte desta entrega. Helper individual permanece pausado.
+
+## Fronteira após consolidação
+
+PlayerControls recebe PlayerControlPort, sem conhecer PixiRenderer ou ter
+referência mutável ao motor. main.ts conecta snapshots, comandos e relógio à
+sessão única. O browser continua responsável por foco/teclas/ponteiro; comandos
+serializáveis e ownership permanecem validados no CombatEngine. Nenhuma regra
+de IA, cooldown, pathfinding, alvo ou dano foi alterada nesta consolidação.

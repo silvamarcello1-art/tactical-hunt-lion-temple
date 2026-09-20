@@ -1,3 +1,6 @@
+import { assetUrl } from './assetUrl';
+import { SpriteLibrary } from './presentation/SpriteLibrary';
+import { spriteId, spriteAction, type SpriteDefinition } from './presentation/SpriteDefinition';
 import {
   AnimatedSprite,
   Application,
@@ -12,9 +15,8 @@ import {
   Texture,
   type Ticker,
 } from 'pixi.js';
-import { CombatEngine } from '../combat/CombatEngine';
+import type { CombatEngine } from '../combat/CombatEngine';
 import { gridToWorld, TILE_SIZE } from '../combat/tiles';
-import type { AbilityPreferences } from '../data/abilities';
 import { HUNT_LAYOUT_CONFIG } from '../data/config';
 import { LiveEventPlayer } from '../events/LiveEventPlayer';
 import type {
@@ -56,7 +58,9 @@ type Unit = {
   maxMana: number;
   currentMana: number;
   hero: boolean;
-  baseSpriteScaleX: number;
+  definition: SpriteDefinition;
+  animationStartedAt: number;
+  animationKey: string;
 };
 
 type DirectionName = 'south' | 'east' | 'north' | 'west';
@@ -85,15 +89,14 @@ export class PixiRenderer {
   private floorText!: Text;
   private bossFill?: Graphics;
   private tweens: Tween[] = [];
-  private outfitSheet!: Spritesheet;
+  private readonly sprites = new SpriteLibrary();
   private effectSheet!: Spritesheet;
-  private heroAtlas!: Texture;
   private tileTextures = new Map<string, Texture>();
   private readonly presentation = new CombatPresentationSystem();
   private readonly terrainLayer = new Container();
   private readonly telegraphLayer = new Container();
   private readonly shadowLayer = new Container();
-  private readonly targetRing = new Graphics().ellipse(0, 7, 19, 10).stroke({width:2,color:0xf0bb55});
+  private readonly targetRing = new Graphics().ellipse(0, 0, 19, 7).stroke({width:2,color:0xf0bb55});
   private selectedTargetId?:string;
   private readonly effectLayer = new Container();
   private readonly entityLayer = new Container();
@@ -172,11 +175,11 @@ export class PixiRenderer {
     }
   };
 
-  constructor(preferences: AbilityPreferences, options: RendererOptions = {}) {
+  constructor(engine: CombatEngine, options: RendererOptions = {}) {
     this.debugEnabled =
       options.debugEnabled ?? RENDER_CONFIG.arena.debugEnabled;
     this.selectedHeroId = options.selectedHeroId ?? 'knight';
-    this.engine = new CombatEngine(803, preferences, crypto.randomUUID());
+    this.engine = engine;
     this.player = new LiveEventPlayer(
       this.engine,
       (event) => this.applyEvent(event),
@@ -202,7 +205,7 @@ export class PixiRenderer {
       autoDensity:true,
     });
     if (this.destroyed) return;
-    await this.loadTibiaAssets();
+    await this.loadAssets();
     if (this.destroyed) return;
     parent.replaceChildren(this.app.canvas);
     this.app.stage.sortableChildren = true;
@@ -311,6 +314,7 @@ export class PixiRenderer {
     this.bossFill = undefined;
     this.app.ticker?.remove(this.tickerHandler);
     try {
+      this.sprites.destroy();
       this.app.destroy(true, { children:true });
     } catch {
       // Pixi may not be fully initialized when a restart interrupts asset loading.
@@ -338,24 +342,21 @@ export class PixiRenderer {
     if (this.parent) this.parent.dataset.selectedHero = heroId;
   }
 
-  private async loadTibiaAssets() {
-    const [outfits, effects, heroAtlas] = await Promise.all([
-      Assets.load<Spritesheet>('/assets/tibia/outfits.json'),
-      Assets.load<Spritesheet>('/assets/tibia/effects.json'),
-      Assets.load<Texture>('/assets/character-atlas.png'),
+  private async loadAssets() {
+    const [effects] = await Promise.all([
+      Assets.load<Spritesheet>(assetUrl('/assets/tibia/effects.json')),
+      this.sprites.load(),
     ]);
-    this.outfitSheet = outfits;
     this.effectSheet = effects;
-    this.heroAtlas = heroAtlas;
     const sources: Record<string, string> = {
-      floorStone:'/assets/tibia/tiles/floor-stone.png',
-      floorOrnate:'/assets/tibia/tiles/floor-ornate.png',
-      floorGold:'/assets/tibia/tiles/floor-gold.png',
-      floorMosaic:'/assets/tibia/tiles/floor-mosaic.png',
+      floorStone:'/assets/original/terrain/floor-stone.svg',
+      floorOrnate:'/assets/original/terrain/floor-ornate.svg',
+      floorGold:'/assets/original/terrain/floor-gold.svg',
+      floorMosaic:'/assets/original/terrain/floor-mosaic.svg',
     };
     await Promise.all(
       Object.entries(sources).map(async ([key, source]) => {
-        this.tileTextures.set(key, await Assets.load<Texture>(source));
+        this.tileTextures.set(key, await Assets.load<Texture>(assetUrl(source)));
       }),
     );
   }
@@ -723,27 +724,20 @@ export class PixiRenderer {
 
     const hero = this.isHero(snapshot);
     const boss = snapshot.role === 'boss';
+    const definition = this.sprites.definition(spriteId(snapshot));
     const shadow = new Graphics()
-      .ellipse(0, 0, boss ? 25 : hero ? 19 : 17, boss ? 8 : 6)
-      .fill({ color:0x000000,alpha:boss ? .36 : .28 });
-    shadow.position.set(position.x, position.y + 11);
+      .ellipse(0, 0, definition.shadowProfile.width, definition.shadowProfile.height)
+      .fill({color:0x000000,alpha:definition.shadowProfile.alpha});
+    shadow.position.set(position.x, position.y);
     shadow.zIndex = 1;
     this.shadowLayer.addChild(shadow);
     const hpWidth = hero ? 58 : boss ? 56 : 48;
-    const hpY = hero
-      ? RENDER_CONFIG.entity.healthBarOffset.hero
-      : boss
-        ? RENDER_CONFIG.entity.healthBarOffset.boss
-        : RENDER_CONFIG.entity.healthBarOffset.monster;
+    const hpY = definition.effectAnchors.head.y * definition.scale - 10;
     const manaY = hero ? hpY + 8 : undefined;
     const sprite = this.createSprite(snapshot);
     const name = this.label(snapshot.name, hero || boss ? 11 : 10, '#f4f5e9');
     name.anchor.set(.5);
-    name.position.y = hero
-      ? RENDER_CONFIG.entity.nameOffset.hero
-      : boss
-        ? RENDER_CONFIG.entity.nameOffset.boss
-        : RENDER_CONFIG.entity.nameOffset.monster;
+    name.position.y = hpY - 12;
     const hpBackground = new Graphics()
       .rect(-hpWidth / 2 - 1, hpY - 1, hpWidth + 2, 7)
       .fill(0x080a07);
@@ -756,7 +750,7 @@ export class PixiRenderer {
     const mana = hero ? new Graphics() : undefined;
     const selection = hero
       ? new Graphics()
-          .roundRect(-26, -24, 52, 56, 5)
+          .ellipse(0, 0, 17, 6)
           .stroke({ width:2,color:0xe4c65a,alpha:.9 })
       : undefined;
     if (selection) selection.visible = snapshot.id === this.selectedHeroId;
@@ -796,7 +790,7 @@ export class PixiRenderer {
       ui,
       shadow,
       sprite,
-      spriteKey:this.spriteKey(snapshot),
+      spriteKey:spriteId(snapshot),
       facing:'south' as DirectionName,
       state:'idle' as EntityVisualState,
       hp,
@@ -811,7 +805,9 @@ export class PixiRenderer {
       maxMana:snapshot.maxMana,
       currentMana:snapshot.mana,
       hero,
-      baseSpriteScaleX:Math.abs(sprite.scale.x),
+      definition,
+      animationStartedAt:this.presentation.time,
+      animationKey:'idle',
     };
     this.units.set(snapshot.id, unit);
     this.syncDiagnostics();
@@ -826,16 +822,6 @@ export class PixiRenderer {
     if (boss) this.createBossBar(snapshot);
   }
 
-  private spriteKey(snapshot: EntitySnapshot) {
-    if (snapshot.role === 'knight') return 'knight';
-    if (snapshot.role === 'druid') return 'druid';
-    if (snapshot.role === 'sorcerer') return 'sorcerer';
-    if (snapshot.role === 'boss') return 'drume';
-    return snapshot.name.includes('Mage') || snapshot.name.includes('Warlock')
-      ? 'lion-warlock'
-      : 'lion-knight';
-  }
-
   private isHero(snapshot: EntitySnapshot) {
     return (
       snapshot.role === 'knight' ||
@@ -844,55 +830,20 @@ export class PixiRenderer {
     );
   }
 
-  private directionTextures(key: string, direction: DirectionName) {
-    return Array.from(
-      { length:4 },
-      (_, frame) => this.outfitSheet.textures[`${key}-${direction}-${frame}`],
+  private createSprite(snapshot: EntitySnapshot): Sprite {
+    const id = spriteId(snapshot);
+    const definition = this.sprites.definition(id);
+    const sprite = new Sprite(this.sprites.texture(id,'idle','south',0));
+    sprite.anchor.set(definition.footAnchor.x,definition.footAnchor.y);
+    sprite.scale.set(
+      definition.visualWidth / definition.frameSize * definition.scale,
+      definition.visualHeight / definition.frameSize * definition.scale,
     );
-  }
-
-  private createSprite(snapshot: EntitySnapshot): Sprite | AnimatedSprite {
-    if (this.isHero(snapshot)) {
-      const column =
-        snapshot.role === 'knight' ? 0 : snapshot.role === 'druid' ? 1 : 2;
-      const texture = new Texture({
-        source:this.heroAtlas.source,
-        frame:new Rectangle(column * 512, 0, 512, 512),
-      });
-      const hero = new Sprite(texture);
-      hero.anchor.set(.5);
-      hero.position.y = -5;
-      hero.scale.set(RENDER_CONFIG.entity.heroScale);
-      return hero;
-    }
-    const key = this.spriteKey(snapshot);
-    const sprite = new AnimatedSprite(this.directionTextures(key, 'south'));
-    sprite.anchor.set(.5);
-    sprite.position.y = 16;
-    sprite.animationSpeed = .16;
-    sprite.loop = true;
-    sprite.gotoAndStop(0);
-    if (snapshot.role === 'boss') {
-      sprite.scale.set(RENDER_CONFIG.entity.bossScale);
-    } else {
-      sprite.scale.set(RENDER_CONFIG.entity.monsterScale);
-    }
     return sprite;
   }
 
-  private face(unit: Unit, direction: DirectionName, walking = false) {
-    const changed = unit.facing !== direction;
+  private face(unit: Unit, direction: DirectionName) {
     unit.facing = direction;
-    if (!(unit.sprite instanceof AnimatedSprite)) {
-      if (direction === 'east') unit.sprite.scale.x = unit.baseSpriteScaleX;
-      if (direction === 'west') unit.sprite.scale.x = -unit.baseSpriteScaleX;
-      return;
-    }
-    if (changed) {
-      unit.sprite.textures = this.directionTextures(unit.spriteKey, direction);
-    }
-    if (walking) unit.sprite.play();
-    else unit.sprite.gotoAndStop(0);
   }
 
   private setUnitState(
@@ -933,7 +884,6 @@ export class PixiRenderer {
     const deltaY = target ? target.body.y - unit.body.y : -1;
     const distance = Math.max(1, Math.hypot(deltaX, deltaY));
     const lunge = state === 'attacking' ? 7 : 2;
-    if (unit.sprite instanceof AnimatedSprite) unit.sprite.play();
     this.tween(
       duration,
       (progress) => {
@@ -1288,27 +1238,23 @@ export class PixiRenderer {
           const effect = new AnimatedSprite(textures);
           effect.anchor.set(.5);
           effect.position.set(point.x, point.y);
-          effect.animationSpeed = .18;
+          effect.autoUpdate = false;
           effect.loop = false;
           effect.zIndex = 46;
           effect.alpha = 0;
           effect.scale.set(.72);
           effect.gotoAndStop(0);
           this.effectLayer.addChild(effect);
-          let started = false;
           this.tween(
             duration,
             (progress) => {
-              if (!started) {
-                started = true;
-                effect.gotoAndPlay(0);
-              }
+              effect.gotoAndStop(Math.min(textures.length - 1, Math.floor(progress * textures.length)));
               effect.alpha =
-                progress < .16
+                .65 * (progress < .16
                   ? progress / .16
-                  : Math.max(0, 1 - (progress - .62) / .38);
+                  : Math.max(0, 1 - (progress - .62) / .38));
               const swell = Math.sin(progress * Math.PI);
-              effect.scale.set(.72 + swell * .38);
+              effect.scale.set(.52 + swell * .2);
               effect.y = point.y + 5 - swell * 8;
             },
             () => effect.destroy(),
@@ -1357,8 +1303,8 @@ export class PixiRenderer {
     projectile.textures = textures;
     projectile.anchor.set(.5);
     projectile.scale.set(.52);
-    projectile.animationSpeed = .26;
-    projectile.play();
+    projectile.autoUpdate = false;
+    projectile.gotoAndStop(0);
     const state = this.presentation.projectiles.get(event.data?.castId ?? event.id);
     const origin = state?.position ?? event.data?.position ?? { x:0,y:0 };
     projectile.position.set(origin.x, origin.y);
@@ -1388,7 +1334,10 @@ export class PixiRenderer {
     const ring = new Graphics()
       .circle(0, 0, unit.hero ? 22 : 18)
       .stroke({ width:2, color:0xffdf76, alpha:.85 });
-    ring.position.copyFrom(unit.body.position);
+    ring.position.set(
+      unit.body.x + unit.definition.effectAnchors.chest.x * unit.definition.scale,
+      unit.body.y + unit.definition.effectAnchors.chest.y * unit.definition.scale,
+    );
     ring.zIndex = 55;
     this.effectLayer.addChild(ring);
     this.tween(
@@ -1489,7 +1438,7 @@ export class PixiRenderer {
     const direction = kind === 'dodge' ? 1 : kind === 'critical' ? -1 : 0;
     text.position.set(
       unit.body.x + direction * 8,
-      unit.body.y - (unit.hero ? 76 : 44) - stackIndex * 14,
+      unit.body.y + unit.definition.effectAnchors.head.y * unit.definition.scale - 34 - stackIndex * 14,
     );
     text.zIndex = 100;
     this.overlayLayer.addChild(text);
@@ -1566,15 +1515,21 @@ export class PixiRenderer {
       if (!unit) continue;
       unit.body.position.set(state.position.x, state.position.y);
       unit.ui.position.set(state.position.x, state.position.y);
-      unit.shadow.position.set(state.position.x, state.position.y + 11);
+      unit.shadow.position.set(state.position.x, state.position.y);
       const sortKey = visualSortKey(
         { x:state.position.x / TILE_SIZE,y:state.position.y / TILE_SIZE },
         id,
       );
       unit.body.zIndex = sortKey;
       unit.ui.zIndex = sortKey;
-      this.face(unit, state.facing as DirectionName, state.animation === 'moving');
+      this.face(unit, state.facing as DirectionName);
       this.setUnitState(unit, state.animation, state.targetId);
+      const animationKey = spriteAction(state.animation);
+      if (unit.animationKey !== animationKey) {
+        unit.animationKey = animationKey;
+        unit.animationStartedAt = this.presentation.time;
+      }
+      unit.sprite.texture = this.sprites.texture(unit.spriteKey,state.animation,unit.facing,this.presentation.time-unit.animationStartedAt);
     }
     for (const [castId, state] of this.presentation.projectiles) {
       const projectile = this.activeProjectiles.get(castId);
@@ -1582,6 +1537,7 @@ export class PixiRenderer {
       const previousX = projectile.x;
       const previousY = projectile.y;
       projectile.position.set(state.position.x, state.position.y);
+      projectile.gotoAndStop(Math.floor(Math.max(0,this.presentation.time-state.startedAt)/80) % projectile.textures.length);
       const dx = state.position.x - previousX;
       const dy = state.position.y - previousY;
       if (Math.abs(dx) + Math.abs(dy) > .01) projectile.rotation = Math.atan2(dy, dx);
@@ -1696,6 +1652,12 @@ export class PixiRenderer {
     this.parent.dataset.visualFacings = [...this.units.entries()]
       .map(([id, unit]) => `${id}:${unit.facing}`)
       .join(',');
+    this.parent.dataset.spriteFrames = [...this.units.entries()]
+      .map(([id,unit]) => `${id}:${unit.sprite.texture.frame.x}:${unit.sprite.texture.frame.y}`)
+      .join(',');
+    this.parent.dataset.effectFrames = [...this.effectLayer.children,...this.projectileLayer.children]
+      .filter((child):child is AnimatedSprite => child instanceof AnimatedSprite)
+      .map(child => child.currentFrame).join(',');
     this.parent.dataset.maxVisualSyncError = String(
       this.presentation.metrics.maxVisualSyncError,
     );
