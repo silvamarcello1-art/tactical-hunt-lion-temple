@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.4.1 — 2026-09-19
+
+- Adiciona protocolo permanente de pre-flight e post-flight ao `AGENTS.md`.
+- Adiciona `pnpm health` para diagnóstico Git completo no Windows.
+
 ## 0.4.0 — 2026-08-07
 
 ### MVP 1D — Combat Presentation & Visual Fidelity

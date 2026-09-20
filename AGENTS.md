@@ -23,9 +23,39 @@ pnpm typecheck
 pnpm test
 pnpm test:e2e
 pnpm build
+pnpm health
 ```
 
 Não existe lint configurado.
+
+## Protocolo operacional
+
+### Pre-flight obrigatório
+
+1. Execute `pnpm health` e confirme a raiz do repositório, `origin`, branch,
+   upstream/base, HEAD local/remoto, ahead/behind e worktree.
+2. Execute `git fetch origin --prune` antes de comparar refs remotas.
+3. Preserve todo trabalho existente; se houver mudanças, identifique o dono e
+   trabalhe ao redor delas. Nunca descarte mudanças sem autorização.
+4. Nunca use `feature/helper-individual` sem solicitação explícita.
+5. Nunca use remote sites, publique, faça deploy ou merge sem autorização
+   explícita.
+
+### Post-flight obrigatório
+
+1. Execute os gates proporcionais ao escopo, `git diff --check` e revise o
+   diff completo.
+2. Atualize o checkpoint e a documentação afetada quando aplicável.
+3. Crie commits coerentes, faça push somente para `origin` e confirme HEAD local
+   igual ao remoto e worktree limpo.
+4. Informe branch, hash e gates executados.
+
+O Codex pode criar/trocar/renomear branches quando seguro, fazer fetch, stage,
+commit, push para `origin` e abrir Pull Request. Sem confirmação explícita, não
+pode fazer merge, force push, apagar branch remota, reescrever histórico
+compartilhado, publicar/deploy ou usar remote sites. O Codex executa as
+verificações por conta própria e não pede ao usuário comandos rotineiros de
+PowerShell.
 
 ## Regras
 
