@@ -1,5 +1,40 @@
 # Session Checkpoint — MVP 1D
 
+## Continuação — Manual Player Control Foundation — 19/09/2026
+
+- Branch mantida: `feature/combat-presentation-astra`.
+- Base conferida após fetch: `ed23459805056bc25d22b1c2d5de7e769d1d9ced`.
+- Pre-flight: local/remoto iguais, 0 ahead/behind e worktree limpa.
+- Audit: apresentação existente e validada; controle manual ausente. O MVP 1D
+  combinado estava funcional porém incompleto, portanto não foi aberta branch 1E.
+- `CombatEngine.advanceTo()` e `run()` executam a mesma simulação. Nenhuma regra
+  de grid, A*, LoS, reserva, projectile ou máscara foi reimplementada.
+- AI/Manual/Assistido por ator; comandos serializáveis e validados; WASD/setas;
+  seleção, ataque básico, follow, Stop, casts e menu contextual de Look.
+- Input em campos editáveis é ignorado; blur/pausa/reset/loop limpam held keys e
+  targeting. Cooldown permanece válido ao alternar controllers.
+- Screen/world/tile aceita transformação de câmera. State machine possui
+  use-with e drag/drop, mas não há inventário falso nem operações de item reais.
+- Apresentação existente reutilizada, incluindo facing, máscaras e impacto;
+  marcador novo identifica o alvo selecionado.
+- Typecheck: aprovado. Vitest: **145/145 em 11 arquivos**. Build: **745 módulos**.
+- Gate E2E completo final: **19/19**, um worker, 4,8 min; inclui três loops,
+  três resoluções, os 15 cenários preservados e quatro fluxos manuais.
+- `git diff --check`: aprovado; commit funcional `b92624f`.
+- Baseline permanente: hashes SHA-256 de 24 resultados completos capturados
+  antes das alterações, seeds 803–814, energy wave ON/OFF; todos idênticos.
+- Stress misto: 24 hunts, 23 vitórias e uma derrota real (808/wave ON). Zero
+  overlap, fora de limites, entrada em obstáculo, stalemate, turn limit ou
+  reserva/projectile/hazard pendente no fim de andar.
+- Inspeção visual: controles, pausa, alvo e menu contextual conferidos; console
+  sem erros/warnings na inspeção.
+- Helper individual intocado. Sem merge, deploy, publicação ou remote sites.
+- Próximo gap: MVP 1E com exploração/interação concreta de mundo, NPC e quest
+  pequena. Inventário, arte cardinal completa e transporte remoto continuam
+  pendentes; ver `PLAYER_CONTROL.md`.
+
+Os registros abaixo documentam a entrega anterior de apresentação.
+
 ## Identificação
 
 - Data: 19/09/2026

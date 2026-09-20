@@ -1,5 +1,27 @@
 # Estado atual — MVP 0 até MVP 1D
 
+## Takeover de 19/09/2026 — controle manual integrado
+
+O HEAD de entrada `ed23459` continha apresentação funcional, mas não continha
+PlayerController, ownership, comandos ou execução ao vivo. Portanto o MVP 1D
+combinado estava **funcional porém incompleto**; a continuação permaneceu em
+`feature/combat-presentation-astra`, sem iniciar uma branch 1E.
+
+Agora existe um vertical slice Manual + Auto sobre o mesmo motor incremental:
+WASD/setas/diagonais, ownership AI/Manual/Assistido por ator, seleção, ataque,
+follow, stop, Look contextual e casts pela barra existente. A apresentação
+estabilizada foi reutilizada; os 24 resultados Auto do HEAD de entrada são
+protegidos por hashes completos. Use-with/drag possuem state machine e comandos,
+com rejeição explícita enquanto não houver inventário real.
+
+Gate final: typecheck, **145 testes**, build de **745 módulos**, **19 E2E**
+(incluindo três loops/três resoluções) e diff --check aprovados. Stress misto de
+24 hunts: 23 vitórias/uma derrota real; zero falhas de integridade.
+
+Próximo gap: MVP 1E com exploração e interação concreta de mundo/NPC/quest,
+sem antecipar inventário gigante, servidor ou PvP. Arte cardinal completa ainda
+é pendência visual. Ver `docs/PLAYER_CONTROL.md` e checkpoint para evidências.
+
 ## MVP 1D — Combat Presentation & Visual Fidelity
 
 - `CombatPresentationSystem` separa estado visual temporário do motor lógico.

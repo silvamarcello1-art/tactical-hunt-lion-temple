@@ -21,11 +21,11 @@ Atualizada em 19 de setembro de 2026 para o MVP 1D.
 ```text
 dados e preferências
         ↓
-CombatEngine.run()
+CombatEngine.advanceTo(time) / run() para batch
         ↓
-HuntResult + CombatEvent[]
+CombatEvent[] incremental + HuntResult ao encerrar
         ↓
-EventPlayer
+LiveEventPlayer (EventPlayer permanece para replay)
         ↓
 CombatPresentationSystem
         ↓
@@ -41,7 +41,10 @@ main.ts + LiveHuntState
         └─ modais
 ```
 
-O motor calcula a sessão inteira com semente determinística. O renderer não
+O motor executa a mesma simulação determinística incrementalmente; `run()` drena
+essa simulação para uso batch. `PlayerCommand` entra em fila validada e ownership
+por ator arbitra AI/Manual/Assistido. Movimento, ataques, cura e casts compartilham
+os resolvers existentes. Consulte `docs/PLAYER_CONTROL.md`. O renderer não
 calcula dano, cura, loot ou experiência. A interface não reconstrói resultados:
 ela agrega os eventos emitidos e apresenta o `HuntResult` no encerramento.
 
@@ -56,7 +59,9 @@ ela agrega os eventos emitidos e apresenta o `HuntResult` no encerramento.
 | Mapa, ocupação, reservas, A*, movimento, LoS e spell masks | `src/combat/grid/` |
 | Seleção pura de tile de disparo alcançável | `src/combat/grid/FiringPositionResolver.ts` |
 | Contratos de eventos e snapshots | `src/events/types.ts` |
-| Relógio, pausa, velocidade e descarte | `src/events/EventPlayer.ts` |
+| Relógio ao vivo, pausa, velocidade e descarte | `src/events/LiveEventPlayer.ts` |
+| Replay de timeline pré-calculada | `src/events/EventPlayer.ts` |
+| Comandos, teclado, seleção e targeting/drag | `src/control/` |
 | Agregação segura da sessão | `src/app/LiveHuntState.ts` |
 | Velocidades e repetição | `src/app/sessionConfig.ts` |
 | Heróis, monstros, boss, formação e spawns | `src/data/config.ts` |
@@ -105,7 +110,7 @@ ela agrega os eventos emitidos e apresenta o `HuntResult` no encerramento.
 
 1. `main.ts` cria uma única instância de `PixiRenderer`.
 2. `mount()` carrega assets, monta o canvas e registra um ticker nomeado.
-3. `EventPlayer` reproduz cada evento uma única vez.
+3. `LiveEventPlayer` avança a simulação pelo relógio lógico e entrega cada evento uma única vez.
 4. A máquina de estados distingue preparação, idle, execução, pausa, transição,
    boss, conclusão, derrota, reset e erro.
 5. Pausa interrompe timeline e tweens; conclusão permite somente a limpeza dos
@@ -174,7 +179,8 @@ jogo.
 
 ## Riscos restantes
 
-1. A timeline ainda é pré-calculada e não suporta autoridade remota.
+1. A simulação é incremental e local. Comandos possuem fronteira serializável,
+   mas transporte, autenticação e autoridade remota ainda não existem.
 2. Reachability possui cache curto por revisão; o A* de movimento continua por
    ação lógica. Priority queue ou cache permanente exigem benchmark com grupos
    maiores.

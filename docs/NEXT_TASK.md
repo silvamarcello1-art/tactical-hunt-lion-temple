@@ -2,52 +2,42 @@
 
 ## Estado de entrada
 
-O MVP 1D está implementado na branch `feature/combat-presentation-astra`, criada a
-partir da base estável que contém o MVP 1C aprovado. TypeScript, 124 testes
-unitários, build, 15 E2E, três loops e hunts manuais em 1x, 2x e 4x passaram.
+MVP 1D agora integra apresentação e controle manual na branch
+`feature/combat-presentation-astra`, sobre o HEAD validado `ed23459`.
 
-Não fazer merge ou publicação automaticamente. O Helper individual permanece
-pausado.
+O mesmo CombatEngine roda incrementalmente na UI e em batch via run().
+WASD/setas, AI/Manual/Assistido por ator, target/attack/follow/stop, magias,
+Look contextual, cancelamento, transformações de coordenadas e infraestrutura
+use-with/drag existem. Não reimplementar esses sistemas.
 
-## Próxima ação recomendada
+Leia AGENTS.md, CURRENT_STATE.md, SESSION_CHECKPOINT.md, PLAYER_CONTROL.md,
+COMBAT_PRESENTATION.md e ARCHITECTURE.md; execute pnpm health e fetch origin.
+Confira os gates finais registrados no checkpoint antes de continuar.
 
-Executar uma revisão independente do MVP 1D, comparando a branch com
-`origin/recovery/antigravity-mvp1b` e confirmando:
+## Próximo vertical slice: MVP 1E — Manual Adventure & Interaction
 
-1. nenhum cálculo de combate foi movido para a apresentação;
-2. movimento termina em erro visual 0 px;
-3. facing e estados não sobrevivem à morte/reset;
-4. projectiles usam exatamente os `pathTiles` e `impactAt` autoritativos;
-5. waves e telegraphs possuem diferença zero contra `logicalTiles`;
-6. nomes e vitais permanecem acima dos efeitos;
-7. box, frontline e backline são legíveis em 1x, 2x e 4x;
-8. pausa congela toda a apresentação;
-9. pools não deixam objetos ativos ou residuais;
-10. os 124 unit tests, 15 E2E, build e três loops continuam verdes.
+Após validar o HEAD entregue, crie `feature/manual-adventure-interaction` a
+partir dele. Entregue uma pequena experiência real de exploração com um ponto
+interativo de mundo/NPC e um objetivo de quest. Use os comandos existentes,
+validação no domínio e eventos/snapshots para a apresentação.
 
-Se a revisão for aprovada, pedir autorização humana antes do merge. Depois da
-aprovação do MVP 1D, decidir entre produzir sprite sheets próprios completos ou
-retomar o Helper individual em uma branch separada. Não misturar os dois escopos.
+- A hunt atual ainda usa quatro salas de combate e formação entre andares;
+  exploração persistente não está implementada.
+- `interact`, `use`, `use-with` e `drop` ainda retornam unsupported-interaction.
+  Só conecte essas operações a objetos/itens reais e regras explícitas; os slots
+  vazios do Backpack não representam inventário.
+- Pan/zoom é aceito pela transformação de coordenadas, mas a câmera continua fixa.
+- Sprites cardinais completos ainda dependem de arte própria/licenciada.
+- Comandos estão preparados para transporte; não existe autenticação nem servidor.
 
-## Leitura obrigatória
+Preserve os hashes Auto de 24 hunts, os testes existentes, os quatro E2E manuais
+(incluindo diagonal/pilar), a matriz de ownership, os cooldowns na troca de modo,
+a limpeza entre sessões e a sincronização de apresentação.
 
-- `AGENTS.md`
-- `docs/COMBAT_PRESENTATION.md`
-- `docs/GRID_COMBAT.md`
-- `docs/CURRENT_STATE.md`
-- `docs/ARCHITECTURE.md`
-- `docs/SESSION_CHECKPOINT.md`
-- `docs/HELPER_RULES.md`
+Helper individual continua pausado e sua branch não deve ser tocada.
+Não implementar inventário/quests/PvP gigantesco, backend ou novos frameworks.
+Não fazer merge, force push, publicação, deploy ou usar remote sites.
 
-## Prompt curto
-
-> Revise independentemente o MVP 1D na branch feature/combat-presentation-astra contra
-> origin/recovery/antigravity-mvp1b. Leia AGENTS.md,
-> docs/COMBAT_PRESENTATION.md, docs/SESSION_CHECKPOINT.md e docs/NEXT_TASK.md.
-> Confirme autoridade lógica, sync 0 px, masks 0, pause/speeds, pools, três loops,
-> 124 unit tests, 15 E2E e build. Não altere Helper, não faça merge e não publique.
-
-## Fora do escopo
-
-Helper, inventário, equipamentos, progressões, novas habilidades, backend,
-multiplayer, market, economia, arte protegida e publicação.
+O gate proporcional inclui health, typecheck, Vitest, build, Playwright com um
+worker, diff --check e stress. Commit/push somente para origin; confirmar HEAD
+local/remoto iguais e worktree limpa.

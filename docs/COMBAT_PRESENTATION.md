@@ -9,7 +9,7 @@ dano, cura, alvo, alcance, LoS, pathfinding, ocupação, reservas ou áreas de
 magia. A direção obrigatória dos dados é:
 
 ```text
-CombatEngine -> CombatEvent[] -> EventPlayer -> CombatPresentationSystem
+CombatEngine -> CombatEvent[] -> LiveEventPlayer -> CombatPresentationSystem
                                               -> PixiRenderer
 ```
 
@@ -18,7 +18,8 @@ nunca recalcula caminho, impacto, máscara ou resultado.
 
 ## Relógio e timeline visual
 
-- `EventPlayer.time` é o único relógio da apresentação.
+- `LiveEventPlayer.time` é o único relógio da apresentação ao vivo; `EventPlayer`
+  permanece disponível para replay. Ambos usam os timestamps emitidos pelo motor.
 - Movimento usa `startedAt` e `completesAt`.
 - Projéteis usam `startedAt`, `impactAt` e `pathTiles`.
 - Telegraphs usam `logicalTiles`, timestamp inicial e `impactAt`.
@@ -212,3 +213,11 @@ pela grade, cura e dano são distintos e a cena continua compreensível em 4x.
 - Alguns spells ainda reutilizam o atlas provisório de efeitos.
 - Sons, micro-shake e particles complexos foram adiados.
 - O Helper individual continua pausado e não foi alterado.
+
+## Controle manual integrado — 19/09/2026
+
+O renderer consome eventos incrementais do mesmo motor e não pré-calcula mais a
+hunt no construtor. Facing, movimento, impactos, waves e telegraphs continuam
+usando os contratos existentes. O alvo escolhido pelo jogador recebe um marcador
+no chão que acompanha o footpoint visual e não participa do domínio.
+O reset também descarta input/targeting através de `PlayerControls`.

@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.5.0 — 2026-09-19
+
+### MVP 1D — Manual Player Control Foundation
+
+- Converte o mesmo motor para execução incremental sem alterar os 24 resultados
+  e timelines Auto do baseline `ed23459`, agora protegidos por hashes de teste.
+- Adiciona comandos serializáveis e ownership AI/Manual/Assistido por ator.
+- Integra WASD/setas, diagonais, seleção, ataque/follow/stop, casts e Look
+  contextual; mantém movimento, dano, cooldowns e máscaras no domínio existente.
+- Reutiliza apresentação estabilizada e adiciona marcador de alvo no footpoint.
+- Limpa input/targeting em perda de foco, pausa, morte, transição e reset/loop.
+- Prepara transformação de câmera, use-with e drag/drop com rejeição explícita
+  de itens/interações indisponíveis, sem inventário fictício.
+- Typecheck e build aprovados; 145 unitários, 19 E2E, baseline de 24 hunts e
+  stress de 24 hunts mistas aprovados. Três loops e três resoluções preservados.
+- Helper, backend, merge e publicação permanecem fora desta entrega.
+
 ## 0.4.1 — 2026-09-19
 
 - Adiciona protocolo permanente de pre-flight e post-flight ao `AGENTS.md`.
