@@ -109,6 +109,9 @@ export class PixiRenderer {
   private readonly debugEnabled: boolean;
   private maskMismatchCount = 0;
   private maxActiveVisualObjects = 0;
+  private presentationUpdateSamples = 0;
+  private presentationUpdateTotalMs = 0;
+  private maxPresentationUpdateMs = 0;
   private readonly floatingTextPool = new DisplayObjectPool<Text>(
     () => this.label('', 14, '#ffffff'),
     (text) => {
@@ -604,6 +607,17 @@ export class PixiRenderer {
     for (const state of this.presentation.entities.values()) {
       if (!state.alive) continue;
       const expected = gridToWorld(state.tile);
+      const unit = this.units.get(state.id);
+      const movementProgress = state.movement
+        ? Math.max(0, Math.min(1,
+          (this.presentation.time - state.movement.startedAt) /
+          Math.max(1, state.movement.completesAt - state.movement.startedAt),
+        ))
+        : 1;
+      const sortKey = visualSortKey(
+        { x:state.position.x / TILE_SIZE,y:state.position.y / TILE_SIZE },
+        state.id,
+      );
       graphics
         .moveTo(expected.x, expected.y)
         .lineTo(state.position.x, state.position.y)
@@ -612,8 +626,23 @@ export class PixiRenderer {
         .stroke({ width:1,color:0x55f08b,alpha:.9 })
         .circle(state.position.x, state.position.y, 2)
         .fill({ color:0xff66dd,alpha:.85 });
+      if (unit) {
+        const bounds = unit.sprite.getBounds();
+        graphics
+          .rect(bounds.x, bounds.y, bounds.width, bounds.height)
+          .stroke({ width:1,color:0x57dcff,alpha:.55 });
+      }
+      const label = this.label(
+        `${state.id} ${state.tile.x},${state.tile.y} ${state.facing} ${state.animation}` +
+        ` p:${movementProgress.toFixed(2)} z:${sortKey}` +
+        `${state.targetId ? ` ->${state.targetId}` : ''}`,
+        7,
+        '#f3dbff',
+      );
+      label.position.set(state.position.x + 8, state.position.y + 14);
+      this.debugSyncLayer.addChild(label);
     }
-    this.debugSyncLayer.addChild(graphics);
+    this.debugSyncLayer.addChildAt(graphics, 0);
   }
 
   private drawDebugPath(event: CombatEvent) {
@@ -1517,6 +1546,7 @@ export class PixiRenderer {
   }
 
   private syncPresentation() {
+    const startedAt = performance.now();
     for (const [id, state] of this.presentation.entities) {
       const unit = this.units.get(id);
       if (!unit) continue;
@@ -1549,6 +1579,13 @@ export class PixiRenderer {
         .34 + state.intensity * .28 + Math.abs(Math.sin(state.intensity * Math.PI * 6)) * .28;
     }
     if (this.debugEnabled) this.drawSyncDebug();
+    const updateCost = performance.now() - startedAt;
+    this.presentationUpdateSamples++;
+    this.presentationUpdateTotalMs += updateCost;
+    this.maxPresentationUpdateMs = Math.max(
+      this.maxPresentationUpdateMs,
+      updateCost,
+    );
   }
 
   private cancelTween(key: string) {
@@ -1665,6 +1702,14 @@ export class PixiRenderer {
     this.parent.dataset.createdTelegraphs = String(telegraphPoolMetrics.created);
     this.parent.dataset.createdImpacts = String(impactPoolMetrics.created);
     this.parent.dataset.maxActiveVisualObjects = String(this.maxActiveVisualObjects);
+    this.parent.dataset.presentationUpdateAverageMs = String(
+      this.presentationUpdateSamples
+        ? this.presentationUpdateTotalMs / this.presentationUpdateSamples
+        : 0,
+    );
+    this.parent.dataset.presentationUpdateMaxMs = String(
+      this.maxPresentationUpdateMs,
+    );
     this.parent.dataset.residualVisualObjects = String(
       this.effectLayer.children.length +
       this.projectileLayer.children.length +

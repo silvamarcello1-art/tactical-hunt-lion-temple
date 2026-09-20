@@ -3,8 +3,8 @@ import type { CombatEvent, EntitySnapshot, GridPoint, Point, Role } from '../../
 
 export type VisualFacing = 'north' | 'east' | 'south' | 'west';
 export type VisualAnimationState = 'idle' | 'moving' | 'attack_windup' |
-  'attacking' | 'cast_windup' | 'casting' | 'hit_reaction' | 'healing' |
-  'stagger' | 'dying' | 'dead';
+  'attacking' | 'attack_recovery' | 'cast_windup' | 'casting' |
+  'hit_reaction' | 'healing' | 'dodging' | 'dying' | 'dead';
 export type FeedbackKind = 'damage' | 'critical' | 'heal' | 'dodge';
 
 export interface VisualMovement {
@@ -246,7 +246,7 @@ export class CombatPresentationSystem {
     const target = this.entities.get(targetId);
     if (!target?.alive) return;
     if (kind === 'damage') { target.animation = 'hit_reaction'; target.animationUntil = this.logicalTime + 180; }
-    else if (kind === 'dodge') { target.animation = 'stagger'; target.animationUntil = this.logicalTime + 140; }
+    else if (kind === 'dodge') { target.animation = 'dodging'; target.animationUntil = this.logicalTime + 140; }
     else if (kind === 'heal') { target.animation = 'healing'; target.animationUntil = this.logicalTime + 260; }
     const stackIndex = [...this.feedback.values()].filter((item) => item.targetId === targetId).length;
     const id = `feedback-${++this.feedbackSequence}`;
@@ -269,10 +269,25 @@ export class CombatPresentationSystem {
       if (entity.animation === 'dying') entity.animation = 'dead';
       else if (entity.alive && !entity.movement) entity.animation = 'idle';
       entity.animationUntil = undefined;
-    } else if (entity.animation === 'attack_windup' && entity.animationUntil !== undefined && entity.animationUntil - this.logicalTime <= 210) {
-      entity.animation = 'attacking';
-    } else if (entity.animation === 'cast_windup' && entity.animationUntil !== undefined && entity.animationUntil - this.logicalTime <= 250) {
-      entity.animation = 'casting';
+    } else if (
+      entity.animationUntil !== undefined &&
+      (entity.animation === 'attack_windup' ||
+        entity.animation === 'attacking' ||
+        entity.animation === 'attack_recovery')
+    ) {
+      const remaining = entity.animationUntil - this.logicalTime;
+      entity.animation = remaining <= 80
+        ? 'attack_recovery'
+        : remaining <= 210
+          ? 'attacking'
+          : 'attack_windup';
+    } else if (
+      entity.animationUntil !== undefined &&
+      (entity.animation === 'cast_windup' || entity.animation === 'casting')
+    ) {
+      entity.animation = entity.animationUntil - this.logicalTime <= 250
+        ? 'casting'
+        : 'cast_windup';
     }
   }
 

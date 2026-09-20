@@ -157,4 +157,27 @@ describe('CombatPresentationSystem', () => {
     const system=new CombatPresentationSystem(); const mask=[{ x:4,y:4 },{ x:5,y:4 },{ x:4,y:5 }]; system.handle(event('spell_telegraph',0,{ castId:'challenge',abilityId:'challenge',logicalTiles:mask,impactAt:200 }));
     expect(system.telegraphs.get('challenge')?.logicalTiles).toEqual(mask);
   });
+  it('31. melee action progresses through windup, strike, recovery and idle', () => {
+    const system=new CombatPresentationSystem(); spawn(system,'a',{ x:1,y:1 }); spawn(system,'b',{ x:2,y:1 },'monster');
+    system.handle(event('basic_attack',0,{ duration:320 },'a','b'));
+    expect(system.entities.get('a')?.animation).toBe('attack_windup');
+    system.setTime(120);
+    expect(system.entities.get('a')?.animation).toBe('attacking');
+    system.setTime(250);
+    expect(system.entities.get('a')?.animation).toBe('attack_recovery');
+    system.setTime(320);
+    expect(system.entities.get('a')?.animation).toBe('idle');
+  });
+  it('32. dodge uses its explicit visual state without damage feedback', () => {
+    const system=new CombatPresentationSystem(); spawn(system,'a',{ x:1,y:1 });
+    system.handle(event('dodge',0,{},'b','a'));
+    expect(system.entities.get('a')?.animation).toBe('dodging');
+    expect([...system.feedback.values()].some((item) => item.kind === 'damage')).toBe(false);
+  });
+  it('33. a large logical-time step resolves the correct attack phase', () => {
+    const system=new CombatPresentationSystem(); spawn(system,'a',{ x:1,y:1 }); spawn(system,'b',{ x:2,y:1 },'monster');
+    system.handle(event('basic_attack',0,{ duration:320 },'a','b'));
+    system.setTime(260);
+    expect(system.entities.get('a')?.animation).toBe('attack_recovery');
+  });
 });
