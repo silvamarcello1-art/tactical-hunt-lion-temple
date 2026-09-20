@@ -67,6 +67,13 @@
             <div><i id="stage-fill"></i></div>
           </div>
           <div id="game" aria-label="Mapa tático da hunt"></div>
+          <div id="player-controls" class="player-controls">
+            <label>Personagem <select id="controlled-actor" aria-label="Personagem controlado"><option value="knight">Aldric</option><option value="druid">Lyra</option><option value="sorcerer">Orin</option></select></label>
+            <label>Controle <select id="control-mode" aria-label="Modo de controle"><option value="AI">Auto</option><option value="MANUAL">Manual</option><option value="ASSISTED">Assistido</option></select></label>
+            <button id="player-attack" disabled>Atacar</button><button id="player-follow" disabled>Seguir</button><button id="player-stop" disabled>Parar</button>
+            <small id="interaction-status" role="status">WASD / setas • clique seleciona • botão direito abre ações</small>
+            <div id="interaction-menu" hidden aria-label="Ações do alvo"><button data-interaction="look">Examinar</button><button data-interaction="attack">Atacar alvo</button><button data-interaction="follow">Seguir alvo</button></div>
+          </div>
           <div class="center-tabs">
             <button class="active" data-view="general">Geral</button>
             <button data-view="combat">Combate</button>

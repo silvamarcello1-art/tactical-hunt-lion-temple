@@ -16,7 +16,7 @@ import { CombatEngine } from '../combat/CombatEngine';
 import { gridToWorld, TILE_SIZE } from '../combat/tiles';
 import type { AbilityPreferences } from '../data/abilities';
 import { HUNT_LAYOUT_CONFIG } from '../data/config';
-import { EventPlayer } from '../events/EventPlayer';
+import { LiveEventPlayer } from '../events/LiveEventPlayer';
 import type {
   CombatEvent,
   EntitySnapshot,
@@ -76,9 +76,11 @@ type RendererOptions = {
 
 export class PixiRenderer {
   readonly app = new Application();
-  readonly result: HuntResult;
+  readonly engine: CombatEngine;
+  get result():HuntResult { return this.engine.result; }
+  beforeTick?:(time:number) => void;
   readonly units = new Map<string, Unit>();
-  readonly player: EventPlayer;
+  readonly player: LiveEventPlayer;
 
   private floorText!: Text;
   private bossFill?: Graphics;
@@ -91,6 +93,8 @@ export class PixiRenderer {
   private readonly terrainLayer = new Container();
   private readonly telegraphLayer = new Container();
   private readonly shadowLayer = new Container();
+  private readonly targetRing = new Graphics().ellipse(0, 7, 19, 10).stroke({width:2,color:0xf0bb55});
+  private selectedTargetId?:string;
   private readonly effectLayer = new Container();
   private readonly entityLayer = new Container();
   private readonly projectileLayer = new Container();
@@ -172,14 +176,15 @@ export class PixiRenderer {
     this.debugEnabled =
       options.debugEnabled ?? RENDER_CONFIG.arena.debugEnabled;
     this.selectedHeroId = options.selectedHeroId ?? 'knight';
-    this.result = new CombatEngine(803, preferences).run();
-    this.player = new EventPlayer(
-      this.result.events,
+    this.engine = new CombatEngine(803, preferences, crypto.randomUUID());
+    this.player = new LiveEventPlayer(
+      this.engine,
       (event) => this.applyEvent(event),
       (ms) => {
         this.presentation.setTime(ms);
         window.dispatchEvent(new CustomEvent('hunt-time', { detail: ms }));
       },
+      (time) => this.beforeTick?.(time),
     );
   }
 
@@ -234,6 +239,8 @@ export class PixiRenderer {
       this.overlayLayer,
     );
     this.drawArena();
+    this.targetRing.visible = false;
+    this.shadowLayer.addChild(this.targetRing);
     if (this.debugEnabled) {
       this.drawDebugOverlay();
       this.overlayLayer.addChild(
@@ -542,6 +549,13 @@ export class PixiRenderer {
     legend.position.set(68, RENDER_CONFIG.arena.height - 30);
     overlay.addChild(legend);
     this.terrainLayer.addChild(overlay);
+  }
+
+  selectTarget(targetId?:string) {
+    this.selectedTargetId = targetId;
+    const target = targetId ? this.units.get(targetId) : undefined;
+    this.targetRing.visible = !!target && target.currentHp > 0;
+    if (target) this.targetRing.position.copyFrom(target.body.position);
   }
 
   private applyDebugEvent(event: CombatEvent) {
@@ -1578,6 +1592,7 @@ export class PixiRenderer {
       telegraph.alpha =
         .34 + state.intensity * .28 + Math.abs(Math.sin(state.intensity * Math.PI * 6)) * .28;
     }
+    this.selectTarget(this.selectedTargetId);
     if (this.debugEnabled) this.drawSyncDebug();
     const updateCost = performance.now() - startedAt;
     this.presentationUpdateSamples++;
@@ -1630,6 +1645,7 @@ export class PixiRenderer {
 
   private syncDiagnostics() {
     if (!this.parent || this.destroyed) return;
+    for (const [key,value] of Object.entries(this.engine.metrics)) this.parent.dataset[key] = String(value);
     const bounds = RENDER_CONFIG.arena.cameraBounds;
     const outOfBounds = [...this.units.values()].filter(
       (unit) =>
@@ -1657,7 +1673,7 @@ export class PixiRenderer {
     this.parent.dataset.effectCount = String(this.effectLayer.children.length);
     this.parent.dataset.telegraphLayerCount = String(this.telegraphLayer.children.length);
     this.parent.dataset.projectileLayerCount = String(this.projectileLayer.children.length);
-    this.parent.dataset.shadowLayerCount = String(this.shadowLayer.children.length);
+    this.parent.dataset.shadowLayerCount = String(this.shadowLayer.children.length - 1);
     this.parent.dataset.unitUiLayerCount = String(this.unitUiLayer.children.length);
     this.parent.dataset.activeProjectiles = String(this.activeProjectiles.size);
     this.parent.dataset.activeTelegraphs = String(this.activeTelegraphs.size);

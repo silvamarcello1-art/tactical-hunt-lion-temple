@@ -1,4 +1,5 @@
 import './style.css';
+import { PlayerControls } from './control/PlayerControls';
 import { CurrencyService } from './app/CurrencyService';
 import { LiveHuntState } from './app/LiveHuntState';
 import { SESSION_CONFIG } from './app/sessionConfig';
@@ -282,7 +283,11 @@ function resetInterface() {
   renderCurrencyBar();
 }
 
+let playerControls:PlayerControls | undefined;
+
 async function createRenderer() {
+  playerControls?.destroy();
+  playerControls = undefined;
   renderer?.destroy();
   renderer = undefined;
   const nextRenderer = new PixiRenderer(preferences, {
@@ -293,6 +298,7 @@ async function createRenderer() {
     await nextRenderer.mount($('#game'));
     nextRenderer.player.speed = selectedSpeed;
     renderer = nextRenderer;
+    playerControls = new PlayerControls(nextRenderer,(id) => selectHero(id));
   } catch (error) {
     nextRenderer.destroy();
     throw error;
@@ -312,6 +318,8 @@ function clearLoopTimer() {
 
 function showFatalError(error: unknown) {
   console.error('Falha controlada ao carregar a arena:', error);
+  playerControls?.destroy();
+  playerControls = undefined;
   renderer?.destroy();
   renderer = undefined;
   $('#game').innerHTML = `<div class="game-fallback" role="alert">
@@ -630,6 +638,7 @@ window.addEventListener('hunt-complete', (rawEvent) => {
 $('#start').onclick = start;
 $('#pause').onclick = () => {
   if (!renderer) return;
+  playerControls?.clear();
   if (sessionPhase === 'paused') {
     if (renderer.player.play()) setSessionPhase(resumePhase);
   } else if (
@@ -689,6 +698,10 @@ $('#action-bar').onclick = (event) => {
     '[data-ability]',
   );
   if (!button) return;
+  if (playerControls?.manual && button.dataset.ability) {
+    playerControls.cast(button.dataset.ability);
+    return;
+  }
   const ability = abilities.find(
     (candidate) => candidate.id === button.dataset.ability,
   );
@@ -747,6 +760,8 @@ document.querySelectorAll<HTMLButtonElement>('[data-module]').forEach((button) =
 
 window.addEventListener('hunt-select-character', (rawEvent) => {
   const heroId = (rawEvent as CustomEvent<string>).detail;
+  // Manual pointer selection belongs to PlayerControls; Pixi tap also fires on right click.
+  if (playerControls?.manual) return;
   selectHero(heroId, true);
 });
 
@@ -809,6 +824,7 @@ document.querySelectorAll<HTMLButtonElement>('[data-speed]').forEach((button) =>
 
 window.addEventListener('beforeunload', () => {
   clearLoopTimer();
+  playerControls?.destroy();
   renderer?.destroy();
 });
 
