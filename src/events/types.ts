@@ -1,4 +1,9 @@
+import type { HeroProgress } from '../data/progression';
 export type EventType =
+  | 'map_changed'
+  | 'boss_phase'
+  | 'hero_experience'
+  | 'level_up'
   | 'spawn'
   | 'boss_spawn'
   | 'tile_reserved'
@@ -52,6 +57,10 @@ export interface CombatEvent {
   sourceId?: string;
   targetId?: string;
   data?: {
+    requiresTelegraph?: boolean;
+    blocked?: boolean;
+    progress?: HeroProgress;
+    previousLevel?: number;
     amount?: number;
     element?: string;
     position?: Point;
@@ -108,6 +117,8 @@ export interface CombatEvent {
 export type Role = 'knight' | 'druid' | 'sorcerer' | 'monster' | 'boss';
 
 export interface EntitySnapshot {
+  description?: string;
+  archetype?: 'bruiser'|'hunter'|'flanker'|'caster';
   id: string;
   name: string;
   role: Role;
@@ -124,6 +135,8 @@ export interface EntitySnapshot {
   position: Point;
   color: number;
   bossTokenReward?: number;
+  magicPower?: number;
+  level?: number;
 }
 
 export interface HuntResult {

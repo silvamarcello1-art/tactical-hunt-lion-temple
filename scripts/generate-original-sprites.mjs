@@ -11,6 +11,8 @@ const actors = [
   ['sorcerer','characters','#3d3f50','#45365a','#9ea7ba',false,false],
   ['lion-guard','creatures','#89764c','#3f4445','#c0a363',true,true],
   ['lion-oracle','creatures','#605a47','#4c5963','#b4ced0',false,true],
+  ['lion-hunter','creatures','#586450','#344e46','#82b69c',false,true],
+  ['lion-flanker','creatures','#644b52','#392e3d','#c68c93',false,true],
   ['hollow-regent','bosses','#615e53','#572c38','#b59b58',true,true],
 ];
 const definitions = [];
@@ -60,6 +62,8 @@ for (const [id,folder,metal,cloth,accent,heavy,feline] of actors) {
         }
         art += '</g>';
         if (heavy && !back) art += poly('M -18 -30 L -8 -33 -6 -17 -13 -12 -19 -19 Z',cloth);
+        if(id==='lion-hunter')art+='<path d="M -17 -40 Q -32 -26 -17 -10 L -17 -40" stroke="#bfa874" stroke-width="2" fill="none"/>';
+        if(id==='lion-flanker')art+=poly('M -16 -28 L -23 -38 -21 -21 -13 -17 Z','#c7b2b4');
         content += `<g transform="translate(${dir*64+32} ${(row+frame)*64+56})"><g transform="scale(${mirror*(profile?.78:1)} 1) translate(${lean} 0) rotate(${death*20}) scale(1 ${1-death*.45})">${art}</g></g>`;
       }
     }
@@ -67,7 +71,7 @@ for (const [id,folder,metal,cloth,accent,heavy,feline] of actors) {
   }
   await mkdir(resolve(root,folder),{recursive:true});
   await writeFile(resolve(root,folder,`${id}.svg`),`<svg xmlns="http://www.w3.org/2000/svg" width="256" height="${row*64}" viewBox="0 0 256 ${row*64}">${content}</svg>\n`);
-  definitions.push({id,entityType:boss?'boss':folder==='characters'?'character':'creature',spriteSet:`/assets/original/${folder}/${id}.svg`,frameSize:64,footAnchor:{x:.5,y:.875},visualWidth:64,visualHeight:64,scale:boss?1.15:1,facings,animations,shadowProfile:{width:boss?19:heavy?15:12,height:boss?6:4,alpha:.28},effectAnchors:{head:{x:0,y:-48},hand:{x:15,y:-28},chest:{x:0,y:-28}}});
+  definitions.push({id,entityType:boss?'boss':folder==='characters'?'character':'creature',spriteSet:`/assets/original/${folder}/${id}.svg`,frameSize:64,footAnchor:{x:.5,y:.875},visualWidth:boss?45:48,visualHeight:64,scale:boss?1.08:1,footprint:{logicalTiles:{width:1,height:1},safeHorizontalBounds:{left:-15,right:15},maxUpwardOverflow:boss?60:56,shadowBounds:{width:28,height:8},visualCollisionEnvelope:{x:-11,y:-15,width:22,height:16}},facings,animations,shadowProfile:{width:14,height:4,alpha:.28},effectAnchors:{head:{x:0,y:-48},hand:{x:15,y:-28},chest:{x:0,y:-28}}});
 }
 await mkdir(resolve(root,'manifests'),{recursive:true});
 await writeFile(resolve(root,'manifests/sprites.json'),JSON.stringify(definitions,null,2)+'\n');

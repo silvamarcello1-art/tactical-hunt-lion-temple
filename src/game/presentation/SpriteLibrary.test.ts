@@ -5,8 +5,18 @@ import { spriteAction, type SpriteDefinition } from './SpriteDefinition';
 
 const definitions = JSON.parse(manifestText) as SpriteDefinition[];
 describe('original sprite export contract',() => {
+  it('keeps grounded envelopes and shadows inside one logical tile',()=>{
+    for(const {footprint:f} of definitions){
+      expect(f.logicalTiles).toEqual({width:1,height:1});
+      expect(f.safeHorizontalBounds.right-f.safeHorizontalBounds.left).toBeLessThanOrEqual(32);
+      expect(f.visualCollisionEnvelope.x).toBeGreaterThanOrEqual(f.safeHorizontalBounds.left);
+      expect(f.visualCollisionEnvelope.x+f.visualCollisionEnvelope.width).toBeLessThanOrEqual(f.safeHorizontalBounds.right);
+      expect(f.shadowBounds.width).toBeLessThanOrEqual(32);
+      expect(f.maxUpwardOverflow).toBeLessThanOrEqual(64);
+    }
+  });
   it('has six original silhouettes with every cardinal action inside its atlas',() => {
-    expect(new Set(definitions.map(item => item.id)).size).toBe(6);
+    expect(new Set(definitions.map(item => item.id)).size).toBe(8);
     for (const definition of definitions) {
       expect(definition.spriteSet).toMatch(/^\/assets\/original\//);
       expect(definition.footAnchor).toEqual({x:.5,y:.875});

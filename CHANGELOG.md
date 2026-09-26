@@ -1,3 +1,15 @@
+## 2026-09-26 — Mouse-first combat, compact HUD and encounter depth
+
+- MoveTo autoritativo, engage por botão direito e Look por chord consumido.
+- AUTO independente da seleção; MANUAL explícito; ASSISTED condicionado ao alvo.
+- Três habilidades originais por herói, HUD mínimo e cooldown no relógio lógico.
+- Quatro papéis inimigos, orientação determinística e reposicionamento limitado.
+- Boss com fase desperta e escombros temporários reais com revalidação da grade.
+- Telegraph reservado a perigo especial; magias e projéteis originais em pools.
+- Progressão local existente preservada; oito atores originais e cenário legível.
+- Distribuição exclui assets de referência legados sem remover arquivos-fonte.
+- Novo ruleset documenta mudança intencional do baseline e mantém repetibilidade.
+
 ## 2026-09-20 — original visual foundation
 
 - Sessão composta em main.ts; PlayerControlPort desacopla input de Pixi.

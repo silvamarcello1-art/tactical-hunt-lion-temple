@@ -13,6 +13,8 @@ export interface SpriteDefinition {
   visualWidth:number;
   visualHeight:number;
   scale:number;
+  /** All coordinates in rendered pixels relative to the grounded footpoint. */
+  footprint:{logicalTiles:{width:1;height:1};safeHorizontalBounds:{left:number;right:number};maxUpwardOverflow:number;shadowBounds:{width:number;height:number};visualCollisionEnvelope:{x:number;y:number;width:number;height:number}};
   facings:readonly SpriteFacing[];
   animations:AnimationSet;
   shadowProfile:{width:number;height:number;alpha:number};
@@ -32,5 +34,8 @@ export const spriteAction = (state:VisualAnimationState):SpriteAction => {
 export function spriteId(entity:EntitySnapshot):string {
   if (['knight','druid','sorcerer'].includes(entity.role)) return entity.role;
   if (entity.role === 'boss') return 'hollow-regent';
+  if(entity.archetype==='hunter')return 'lion-hunter';
+  if(entity.archetype==='flanker')return 'lion-flanker';
+  if(entity.archetype==='caster')return 'lion-oracle';
   return /Mage|Warlock/.test(entity.name) ? 'lion-oracle' : 'lion-guard';
 }

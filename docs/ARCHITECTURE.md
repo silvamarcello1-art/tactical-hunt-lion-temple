@@ -1,6 +1,6 @@
 # Arquitetura canônica
 
-Atualizada em 19 de setembro de 2026 para o MVP 1D.
+Atualizada em 26 de setembro de 2026 — Mouse-first / Encounter Depth.
 
 ## Stack
 
@@ -12,7 +12,7 @@ Atualizada em 19 de setembro de 2026 para o MVP 1D.
 | Interface | HTML, CSS e DOM imperativo |
 | Testes unitários | Vitest |
 | Testes de navegador | Playwright com Edge |
-| Persistência | `localStorage` apenas para preferências de habilidades |
+| Persistência | `localStorage`: preferências, Boss Tokens e progressão demonstrativa |
 | Backend | Nenhum |
 | Hospedagem | Preview GitHub Pages após gates; site Sites estável preservado |
 
@@ -62,6 +62,12 @@ ela agrega os eventos emitidos e apresenta o `HuntResult` no encerramento.
 | Relógio ao vivo, pausa, velocidade e descarte | `src/events/LiveEventPlayer.ts` |
 | Replay de timeline pré-calculada | `src/events/EventPlayer.ts` |
 | Comandos, teclado, seleção e targeting/drag | `src/control/` |
+| Roteamento de chord sem cliques duplicados | `src/control/MouseGesture.ts` |
+| XP, crescimento e passivas locais | `src/combat/Progression.ts`, `src/app/ProgressionStore.ts` |
+| Papéis inimigos e especiais de boss | `src/data/encounters.ts` |
+| Pontuação determinística de orientações/candidatos | `src/combat/DirectionalTactics.ts` |
+| Terreno temporário com ownership e restauração | `src/combat/TemporaryTerrain.ts` |
+| HUD compacto e slots reais | `src/ui/GameplayHUD.ts`, `src/data/actionBar.ts` |
 | Agregação segura da sessão | `src/app/LiveHuntState.ts` |
 | Velocidades e repetição | `src/app/sessionConfig.ts` |
 | Heróis, monstros, boss, formação e spawns | `src/data/config.ts` |
@@ -118,8 +124,8 @@ ela agrega os eventos emitidos e apresenta o `HuntResult` no encerramento.
 6. Reinício e loop descartam player, tweens, unidades e canvas antigos.
 7. A velocidade selecionada é reaplicada à nova instância.
 8. Erro de inicialização gera fallback controlado e permite nova tentativa.
-9. Selecionar uma entidade da party emite `hunt-select-character`; `main.ts`
-   atualiza a seleção e abre o Helper sem transferir regra de jogo ao renderer.
+9. Selecionar uma entidade da party atualiza seleção/slots sem abrir o Helper
+   nem mudar o modo. Helper continua explícito no botão de configuração.
 10. Estados visuais do renderer representam a timeline e nunca decidem o
     resultado lógico.
 
@@ -203,7 +209,9 @@ continua na borda; nenhum import de DOM/Pixi foi acrescentado ao domínio.
 O renderer consome SpriteDefinition pelo manifesto. Animações de personagens,
 efeitos e projéteis são amostradas no tempo lógico, incluindo pausa. Piso e
 personagens originais substituem os antigos sprites carregados no mapa.
-Efeitos/ícones legados ainda aguardam substituição; ver ART_DIRECTION.md.
+Efeitos usam OriginalEffects e ícones usam atlas original. Build e build:preview
+excluem as cópias legadas de public/assets/wiki, tibia e character-atlas de dist.
+Arquivos-fonte antigos permanecem como referências, fora do runtime publicado.
 
 Para 1E, objetos de mundo devem ter IDs estáveis, tile/footprint e resolvers de
 interação no domínio, retornando eventos/snapshots. entity/tile já são alvos
@@ -217,3 +225,25 @@ Preview: .github/workflows/preview.yml valida a feature e publica um artefato
 Pages com version.json contendo o SHA. É uma URL compartilhada pela última
 feature validada, não uma URL isolada por branch. Não altera o site estável.
 Assets resolvem BASE_URL tanto na raiz do Sites quanto no subdiretório Pages.
+
+## Novos contratos de combate
+
+- AUTO sempre decide; MANUAL só comandos/ordens; ASSISTED só decide depois de
+  um attack explícito cujo alvo ainda está vivo. Seleção de HUD é independente.
+- MoveTo substitui destino anterior e suspende a IA durante o deslocamento.
+  A* e MovementSystem existentes continuam autoridades de caminho e commit.
+- Caster/boss avaliam quatro orientações, tile atual e vizinhos alcançáveis a
+  cada 1500 ms lógicos. Score: hits*100 + alvo atual*10 - distância*12.
+  Não há pesquisa por frame nem previsão de input futuro.
+- Boss alterna fase aos 50% de HP. Queda da Coroa avisa por 1250 ms e aplica
+  impacto; tiles vazios afetados viram escombros por 3000 ms. Footprints ocupados
+  e paredes originais são preservados. Reservas podem ser invalidadas: o commit
+  já revalida contra GridMap.revision. map_changed transporta tiles e revisão.
+- TemporaryTerrain restaura no prazo, fim de andar e dispose/reset.
+- Somente requiresTelegraph habilita preaviso; efeitos comuns não pintam máscaras.
+- Baseline mudou por requisito de novos inimigos/spells; 24 execuções completas
+  repetidas e snapshots de resultados protegem determinismo do novo ruleset.
+
+Para desempenho, os atributos DOM expõem custo de syncPresentation (não FPS
+total), objetos no stage, VFX, recálculos de caminho e decisões táticas. O teste
+de três loops verifica lifecycle; ainda não existe benchmark de PvP massivo.

@@ -1,6 +1,6 @@
 # MVP 1D — Combat Presentation & Visual Fidelity
 
-Atualizado em 7 de agosto de 2026.
+Atualizado em 26 de setembro de 2026. As evidências datadas abaixo são históricas.
 
 ## Objetivo e regra de autoridade
 
@@ -118,7 +118,8 @@ impacto no alvo e a aplicação de dano permanece no evento lógico corresponden
 - Waves avançam visualmente a partir do caster por distância ao tile de origem.
 - O footprint não adiciona nem remove tiles.
 - Challenge usa o alcance lógico recebido e o feedback de aggro existente.
-- `spell_telegraph` cria a geometria exclusivamente de `logicalTiles`.
+- `spell_telegraph` cria geometria de `logicalTiles` somente com
+  `requiresTelegraph === true`; ataques comuns não pintam previamente o chão.
 - A intensidade do aviso deriva do progresso lógico até `impactAt`.
 - `spell_resolved` e `spell_cancelled` eliminam o telegraph pelo mesmo `castId`.
 - `data-mask-mismatch-count` compara a máscara lógica com os pontos mundiais
@@ -147,8 +148,9 @@ impacto no alvo e a aplicação de dano permanece no evento lógico corresponden
 Os pools removem o objeto do stage, limpam transformações e geometria e o
 devolvem pronto para reutilização. Diagnósticos expõem quantidades criadas,
 ativas e disponíveis, além do custo médio e máximo de `syncPresentation`.
-Sprites de área com vida curta ainda usam cleanup ao fim do tween; nenhuma
-criação ocorre a cada frame.
+Sprites animados de área usam pool dedicado com capacidade 256; excedentes
+são destruídos. Cleanup de tween devolve cada objeto ao pool, com transformações
+limpas. Nenhuma criação de Graphics ocorre por frame.
 
 ## Debug e garantias de sincronização
 
@@ -181,7 +183,8 @@ Garantias verificadas:
 - mask lógica versus visual: diferença 0;
 - pausa congela tempo, posição, projétil, telegraph, estado e tween;
 - reset e loop terminam com zero objeto visual residual;
-- mesma seed preserva integralmente o resultado do MVP 1C.
+- mesma seed preserva integralmente o resultado do ruleset vigente. A iteração
+  de setembro altera encontros intencionalmente; baseline anterior fica no Git.
 
 ## Validação de 19 de setembro de 2026
 
@@ -210,7 +213,7 @@ pela grade, cura e dano são distintos e a cena continua compreensível em 4x.
   arte própria com frames completos.
 - Heróis estáticos só comunicam leste/oeste por espelhamento; quatro direções
   visuais completas dependem dos sprite sheets próprios.
-- Alguns spells ainda reutilizam o atlas provisório de efeitos.
+- Efeitos atuais são gerados por OriginalEffects, sem atlas de terceiros.
 - Sons, micro-shake e particles complexos foram adiados.
 - O Helper individual continua pausado e não foi alterado.
 
@@ -225,7 +228,7 @@ O reset também descarta input/targeting através de `PlayerControls`.
 ## Fundação visual original
 
 SpriteLibrary agora consome AnimationSet e SpriteDefinition pelo manifesto de
-seis atores originais. Frames 64 px, anchor (0.5,0.875), quatro facings e seis
+oito atores originais. Frames 64 px, anchor (0.5,0.875), quatro facings e seis
 ações. Sombras e seleção têm o mesmo footpoint; HP/nome e floating text usam
 o anchor de cabeça. O piso original tem baixo contraste para destacar as
 unidades e telegraphs. Efeitos de área têm escala/alpha menores.
@@ -237,3 +240,19 @@ original. O motor, trajetórias e máscaras continuam inalterados.
 
 Ver ART_DIRECTION.md e SPRITE_PIPELINE.md. Blockouts não são arte final; o
 conceito raster está separado do runtime por não ter alpha aprovado.
+
+## Mouse-first / HUD / boss — setembro
+
+Party mínima sobre a arena, três slots de 48 px e drawers de análise/loot.
+Modo por herói é indicado por A/M/S; seleção não abre modal. O canvas conserva
+proporção com object-fit: contain, e picking desconta as faixas vazias.
+
+Magias de jogador mostram origem, cascata por distância e impacto próprios,
+sem quadriculado prévio. A Queda da Coroa usa fissuras circulares somente nos
+tiles lógicos de perigo; após impacto, map_changed desenha escombros. Não há
+bloqueio calculado no renderer. Boss possui banner e feedback de fase desperta.
+
+Novos contadores: createdSpellEffects, activeSpellEffects, displayObjectCount,
+pathRecalculations, monsterDecisions e temporaryBlockedTiles. Resultados do gate
+atual ficam no SESSION_CHECKPOINT; não extrapolar este slice para centenas de
+atores. Movimento/footpoint e aparência dos heróis aprovados foram preservados.

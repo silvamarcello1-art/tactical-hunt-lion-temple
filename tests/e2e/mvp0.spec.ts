@@ -70,6 +70,9 @@ async function installGridAudit(page: Page) {
         currentInitialBackline = 0;
       }
       const tile = event.data?.tile as { x:number;y:number } | undefined;
+      if(event.type==='map_changed')for(const tile of (event.data?.logicalTiles??[]) as {x:number;y:number}[]) {
+        const key=`${tile.x}:${tile.y}`;if(event.data?.blocked)blocked.add(key);else blocked.delete(key);
+      }
       const toTile = event.data?.toTile as { x:number;y:number } | undefined;
       if ((event.type === 'spawn' || event.type === 'boss_spawn') && event.targetId && tile) {
         positions.set(event.targetId, `${tile.x}:${tile.y}`);
@@ -200,15 +203,19 @@ test.describe.serial('MVP 0 + MVP 1A — fluxo completo', () => {
     );
     await expect(page.locator('#game canvas')).toHaveCount(1);
 
-    await page.locator('#party-config').click();
+    await page.locator('[data-module="helper"]').click();
     await expect(page.locator('#ability-modal')).toBeVisible();
     await page.locator('#ability-modal button[value="cancel"]').first().click();
 
-    await page.locator('[data-ability]').first().click();
+    await expect(page.locator('[data-ability]').first()).toBeDisabled();
+    await expect(page.locator('[data-ability]').first()).toHaveAttribute('data-unavailable-reason','not-started');
+    await page.locator('#ability-config').click();
     await expect(page.locator('#ability-modal')).toBeVisible();
     await page.locator('#ability-modal button[value="cancel"]').first().click();
 
-    for (const module of ['bestiary','progression','storage','social']) {
+    await page.locator('[data-view="combat"]').click();
+    await page.locator('.roadmap summary').click();
+    for (const module of ['bestiary','storage','social']) {
       await page.locator(`[data-module="${module}"]`).click();
       await expect(page.locator('#future-modal')).toBeVisible();
       await expect(page.locator('#future-description')).toContainText(
@@ -219,11 +226,13 @@ test.describe.serial('MVP 0 + MVP 1A — fluxo completo', () => {
 
     await page.locator('[data-view="combat"]').click();
     await expect(page.locator('#view-summary')).toBeVisible();
-    await expect(page.locator('#view-summary')).toContainText('MVP 1');
+    await expect(page.locator('#view-summary')).toContainText('Hunt Analyzer');
     await page.locator('[data-view="loot"]').click();
     await expect(page.locator('#view-summary')).toContainText('inventário');
     await page.locator('[data-view="general"]').click();
     await expect(page.locator('#view-summary')).toBeHidden();
+
+    await page.locator('[data-view="combat"]').click();
 
     const collapse = page.locator('[data-collapse]').first();
     const content = collapse.locator('xpath=ancestor::section[1]').locator(
@@ -234,12 +243,15 @@ test.describe.serial('MVP 0 + MVP 1A — fluxo completo', () => {
     await collapse.click();
     await expect(content).toBeVisible();
 
+    await page.locator('[data-view="loot"]').click();
+    await page.getByText('Planejamento de inventário',{exact:true}).click();
     await page.locator('#supply-config').click();
     await expect(page.locator('#future-modal')).toBeVisible();
     await expect(page.locator('#future-description')).toContainText(
       'Disponível em um próximo MVP',
     );
     await page.locator('#close-future').click();
+    await page.locator('#close-drawer').click();
     await page.locator('#loop-toggle').click();
     await expect(page.locator('#loop-toggle')).toHaveAttribute(
       'aria-pressed',
@@ -405,7 +417,9 @@ test.describe.serial('MVP 0 + MVP 1A — fluxo completo', () => {
     const errors = collectRuntimeErrors(page);
     await openIdleHunt(page);
 
-    await page.getByRole('button', { name:'Abrir Helper de Lyra' }).click();
+    await page.locator('#card-druid').click();
+    await expect(page.locator('#ability-modal')).toBeHidden();
+    await page.locator('#ability-config').click();
     await expect(page.locator('html')).toHaveAttribute(
       'data-selected-hero',
       'druid',
@@ -423,7 +437,8 @@ test.describe.serial('MVP 0 + MVP 1A — fluxo completo', () => {
       'data-session-state',
       'running',
     );
-    await page.getByRole('button', { name:'Abrir Helper de Orin' }).click();
+    await page.locator('#card-sorcerer').click();
+    await page.locator('#ability-config').click();
     await expect(page.locator('#helper-character-name')).toHaveText('Orin');
     await expect(page.locator('html')).toHaveAttribute(
       'data-selected-hero',
