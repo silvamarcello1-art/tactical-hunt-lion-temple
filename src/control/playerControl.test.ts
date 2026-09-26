@@ -139,7 +139,7 @@ describe('shared live engine and player commands', () => {
     const mana = actor(engine,'sorcerer').mana;
     send({type:'cast',abilityId:'energy_wave',targetId:'lion-3'},'sorcerer');
     engine.advanceTo(250);
-    expect(engine.controlResults.at(-1)?.reason).toBe('ability-unavailable');
+    expect(engine.controlResults.at(-1)?.reason).toBe('cooldown');
     expect(actor(engine,'sorcerer').mana).toBe(mana);
     } finally { heroes[2].tileY = originalY; }
   });
@@ -166,7 +166,7 @@ describe('shared live engine and player commands', () => {
     expect(actor(engine)).toMatchObject({mana:720,tileX:8,tileY:9});
   });
 
-  it('Assisted gives a blocked player step priority over AI and resumes AI when idle', () => {
+  it('Assisted gives a blocked player step priority and waits for explicit engage', () => {
     const original = {...heroes[0]};
     try {
       Object.assign(heroes[0],{tileX:11,tileY:6});
@@ -177,7 +177,7 @@ describe('shared live engine and player commands', () => {
       const blocked = engine.advanceTo(0);
       expect(engine.controlResults.at(-1)?.reason).toBe('blocked');
       expect(blocked.some(event => event.sourceId === 'knight' && ['movement_started','basic_attack','cast'].includes(event.type))).toBe(false);
-      expect(engine.advanceTo(1000).some(event => event.sourceId === 'knight' && ['movement_started','basic_attack','cast'].includes(event.type))).toBe(true);
+      expect(engine.advanceTo(1000).some(event => event.sourceId === 'knight' && ['movement_started','basic_attack','cast'].includes(event.type))).toBe(false);
     } finally { Object.assign(heroes[0],original); }
   });
 

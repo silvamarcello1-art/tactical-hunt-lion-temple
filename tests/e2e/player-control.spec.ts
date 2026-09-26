@@ -8,7 +8,8 @@ async function position(page:Page,id = 'knight') {
 }
 async function clickTile(page:Page,tile:{x:number;y:number},button:'left'|'right' = 'left') {
   const bounds = (await page.locator('#game canvas').boundingBox())!;
-  await page.mouse.click(bounds.x + tile.x*32*bounds.width/960,bounds.y + tile.y*32*bounds.height/576,{button});
+  const scale=Math.min(bounds.width/960,bounds.height/576);
+  await page.mouse.click(bounds.x+(bounds.width-960*scale)/2+tile.x*32*scale,bounds.y+(bounds.height-576*scale)/2+tile.y*32*scale,{button});
 }
 async function open(page:Page) {
   const errors:string[] = [];
@@ -32,13 +33,13 @@ test('WASD, arrows, focus loss, pause and Auto takeover preserve the live hunt',
   await page.keyboard.down('a');
   await expect.poll(async () => (await position(page)).x).toBeLessThan(7);
   await page.keyboard.up('a');
-  await page.locator('#player-stop').click();
+  await page.keyboard.press('Escape');
   await page.waitForTimeout(350);
   const west = await position(page);
   await page.keyboard.down('ArrowUp');
   await expect.poll(async () => (await position(page)).y).toBeLessThan(west.y);
   await page.keyboard.up('ArrowUp');
-  await page.locator('#player-stop').click();
+  await page.keyboard.press('Escape');
   await page.waitForTimeout(350);
   await page.keyboard.down('ArrowLeft');
   await expect(page.locator('#player-controls')).toHaveAttribute('data-held-keys','1');
@@ -49,9 +50,11 @@ test('WASD, arrows, focus loss, pause and Auto takeover preserve the live hunt',
   const paused = await page.locator('#game').getAttribute('data-visual-positions');
   await page.waitForTimeout(350);
   await expect(page.locator('#game')).toHaveAttribute('data-visual-positions',paused!);
-  await page.locator('#controlled-actor').focus();
+  await page.locator('#ability-config').click();
+  await page.locator('[data-priority]').first().focus();
   await page.keyboard.press('w');
   await expect(page.locator('#player-controls')).toHaveAttribute('data-held-keys','0');
+  await page.locator('#ability-modal button[value="cancel"]').first().click();
   await page.locator('#control-mode').selectOption('AI');
   await page.locator('[data-speed="4"]').click();
   await page.locator('#pause').click();
@@ -61,29 +64,30 @@ test('WASD, arrows, focus loss, pause and Auto takeover preserve the live hunt',
   expect(errors).toEqual([]);
 });
 
-test('select, attack, follow, Stop and contextual Look issue domain actions', async ({page}) => {
+test('mouse engage, ESC and two-button Look issue domain actions', async ({page}) => {
   const errors = await open(page);
   await page.locator('#pause').click();
   await clickTile(page,await position(page,'lion-1'));
   await expect(page.locator('#player-controls')).toHaveAttribute('data-selected-target','lion-1');
-  await page.locator('#player-attack').click();
+  await clickTile(page,await position(page,'lion-1'),'right');
   await page.locator('#pause').click();
   await expect.poll(() => page.evaluate(() => (window as any).__controlEvents.some((event:any) => event.sourceId === 'knight' && event.type === 'basic_attack'))).toBe(true);
   await expect(page.locator('#game')).toHaveAttribute('data-visual-facings',/knight:east/);
-  await page.locator('#player-stop').click();
+  await page.keyboard.press('Escape');
   await page.waitForTimeout(350);
   const attackCount = await page.evaluate(() => (window as any).__controlEvents.filter((event:any) => event.sourceId === 'knight' && event.type === 'basic_attack').length);
   await page.waitForTimeout(800);
   expect(await page.evaluate(() => (window as any).__controlEvents.filter((event:any) => event.sourceId === 'knight' && event.type === 'basic_attack').length)).toBe(attackCount);
   await page.locator('#pause').click();
-  await clickTile(page,await position(page,'sorcerer'),'right');
-  await expect(page.locator('#interaction-menu')).toBeVisible();
-  await page.locator('[data-interaction="look"]').click();
+  const target=await position(page,'sorcerer');const b=(await page.locator('#game canvas').boundingBox())!;const k=Math.min(b.width/960,b.height/576);
+  await page.mouse.move(b.x+(b.width-960*k)/2+target.x*32*k,b.y+(b.height-576*k)/2+target.y*32*k);
+  await page.mouse.down({button:'left'});await page.mouse.down({button:'right'});await page.mouse.up({button:'right'});await page.mouse.up({button:'left'});
+  await expect(page.locator('#interaction-menu')).toBeHidden();
   await expect(page.locator('#interaction-status')).toContainText('Orin');
-  await page.locator('#player-follow').click();
+  await expect(page.locator('#interaction-status')).toContainText('Você vê');
   await page.locator('#pause').click();
   await page.waitForTimeout(600);
-  await page.locator('#player-stop').click();
+  await page.keyboard.press('Escape');
   await expect(page.locator('#game')).toHaveAttribute('data-logical-overlaps','0');
   await expect(page.locator('#game')).toHaveAttribute('data-out-of-bounds','0');
   expect(errors).toEqual([]);
@@ -91,11 +95,11 @@ test('select, attack, follow, Stop and contextual Look issue domain actions', as
 
 test('spell targeting cancels with ESC and reset clears held and interaction state', async ({page}) => {
   const errors = await open(page);
-  await page.locator('[data-ability="berserk"]').click({button:'right'});
+  await page.keyboard.press('Shift+2');
   await expect(page.locator('#player-controls')).toHaveAttribute('data-interaction-state','spell-targeting');
   await page.keyboard.press('Escape');
   await expect(page.locator('#player-controls')).toHaveAttribute('data-interaction-state','idle');
-  await page.locator('[data-ability="berserk"]').click({button:'right'});
+  await page.keyboard.press('Shift+2');
   await page.keyboard.down('w');
   await page.locator('#restart').click();
   await page.keyboard.up('w');
@@ -110,10 +114,7 @@ test('spell targeting cancels with ESC and reset clears held and interaction sta
 test('manual steps route around a pillar and reject a blocked diagonal', async ({page}) => {
   const errors = await open(page);
   const step = async (key:string,tile:{x:number;y:number}) => {
-    const count = await page.evaluate(() => (window as any).__controlEvents.filter((event:any) => event.sourceId === 'knight' && event.type === 'movement_started').length);
-    await page.keyboard.down(key);
-    await expect.poll(() => page.evaluate(() => (window as any).__controlEvents.filter((event:any) => event.sourceId === 'knight' && event.type === 'movement_started').length),{intervals:[20]}).toBeGreaterThan(count);
-    await page.keyboard.up(key);
+    await page.keyboard.press(key);
     await expect.poll(() => position(page),{intervals:[20]}).toEqual(tile);
   };
   await step('w',{x:8,y:8}); await step('w',{x:8,y:7}); await step('w',{x:8,y:6});

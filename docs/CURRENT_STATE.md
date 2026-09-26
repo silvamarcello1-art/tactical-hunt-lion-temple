@@ -1,4 +1,34 @@
-# Consolidação visual e estrutural — 20/09/2026
+# Estado vigente — Mouse-first + Encounter Depth — 26/09/2026
+
+Branch feature/gameplay-first-mvp2a, base 58d9720. Este resumo substitui as
+descrições históricas abaixo quando divergirem.
+
+- Mouse: chão MoveTo, entidade seleção, direito engage, dois botões Look sem
+  ações duplicadas. WASD e 1–3 mantidos; nenhum menu Attack/Follow/Stop no HUD.
+- AUTO autônomo; MANUAL só ordens explícitas; ASSISTED aguarda alvo, usa rotação
+  até sua morte e então para. Seleção não muda controller.
+- Mundo domina a tela, party mínima e três slots reais com cooldown lógico.
+  Análise/loot ficam em drawers; configuração de habilidades continua disponível.
+- Quatro perfis originais: Custódio, Vigia, Garra e Oráculo. Ranged busca LoS/
+  distância; flanker procura backline; caster pontua máscaras e candidatos
+  determinísticos a cada 1500 ms lógicos.
+- Regente Vazio tem fase abaixo de 50% HP e Queda da Coroa: aviso especial,
+  impacto, escombros reais por 3000 ms, revisão de navegação e restauração.
+- Magias comuns não pintam pretelegraph; magia de jogador mantém projétil/
+  wave/impacto próprios. Apenas requiresTelegraph habilita aviso antecipado.
+- Arte aprovada preservada; oito atores originais, novo relevo do templo e
+  pools de efeitos animados. Build exclui cópias legadas, sem apagar fontes.
+- Progressão XP/nível/passiva e store local da etapa anterior preservados.
+- Novas regras alteram baseline Auto intencionalmente; repetibilidade completa
+  em 24 combinações substitui comparação aos antigos hashes (preservados no Git).
+
+Typecheck, 167 unitários, 24 E2E e build aprovados; evidências e publicação
+consolidados em SESSION_CHECKPOINT. Não há backend, inventário real ou PvP.
+Não confundir preview Pages com a referência estável chatgpt.site.
+
+---
+
+# Histórico — Consolidação visual e estrutural — 20/09/2026
 
 Branch feature/visual-identity-foundation, base validada 64816ac. Motor e grid
 inalterados; main.ts cria a sessão e PlayerControls usa PlayerControlPort.

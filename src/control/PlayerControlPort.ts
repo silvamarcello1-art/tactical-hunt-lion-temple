@@ -10,7 +10,11 @@ export interface PlayerControlPort {
   readonly entities:readonly Readonly<EntitySnapshot & {alive:boolean}>[];
   readonly results:readonly CommandResult[];
   controlOf(actorId:string):ControlOwnership;
+  abilityStatus(actorId:string,abilityId:string,targetId?:string):{ready:boolean;reason:string;remaining:number};
   submit(command:PlayerCommand):CommandResult;
   selectTarget(actorId?:string):void;
+  pickEntity?(clientX:number,clientY:number):string|undefined;
+  worldPoint?(clientX:number,clientY:number):{x:number;y:number}|undefined;
+  showDestination?(tile:{x:number;y:number}):void;
   beforeTick(callback?:() => void):void;
 }
