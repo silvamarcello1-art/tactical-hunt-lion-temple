@@ -37,6 +37,14 @@ jobs:
       - run: git diff --exit-code -- public/assets/original
       - run: pnpm exec playwright install msedge
       - run: pnpm test:e2e --workers=1
+      - name: Preserve browser failure diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-failure-diagnostics
+          path: test-results/
+          if-no-files-found: ignore
+          retention-days: 7
       - run: pnpm build
       - run: pnpm build:preview
       - run: git diff --check

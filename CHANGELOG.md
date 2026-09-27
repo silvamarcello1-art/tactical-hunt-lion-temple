@@ -9,6 +9,8 @@
 - Progressão local existente preservada; oito atores originais e cenário legível.
 - Distribuição exclui assets de referência legados sem remover arquivos-fonte.
 - Novo ruleset documenta mudança intencional do baseline e mantém repetibilidade.
+- E2E de fronteiras transitórias usa relógio controlado (frames reais) para não
+  disputar com o timer de loop/boss no runner; CI preserva traces em falhas.
 
 ## 2026-09-20 — original visual foundation
 

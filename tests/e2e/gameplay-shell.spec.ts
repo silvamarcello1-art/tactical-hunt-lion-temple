@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { advanceUntilAttribute, installControlledClock, pauseIdleClock } from './controlled-clock';
 
 const position=async(page:Page,id:string)=>{
   const entry=(await page.locator('#game').getAttribute('data-logical-positions'))?.split(',').find(s=>s.startsWith(id+':'));
@@ -42,11 +43,15 @@ test('compact slots follow selected hero; WASD and hotkeys submit real commands'
 
 test('Auto completes three evolving hunts, unlocks passives and persists progression',async({page})=>{
   test.setTimeout(180_000);
+  await installControlledClock(page);
   await page.goto('/');await expect(page.locator('html')).toHaveAttribute('data-session-state','idle');
+  await pauseIdleClock(page);
   await page.locator('[data-speed="4"]').click();await page.locator('#start').click();
-  await expect.poll(()=>page.locator('html').getAttribute('data-completed-cycles'),{timeout:150_000}).toBe('3');
+  await advanceUntilAttribute(page,'data-completed-cycles','3');
   await page.locator('#loop-toggle').click();
   await expect(page.locator('#stage-label')).toHaveText('Hunt concluída');
+  await page.clock.runFor(2500);
+  await expect(page.locator('html')).toHaveAttribute('data-completed-cycles','3');
   await expect(page.locator('#passive-state')).toHaveText('ATIVA');
   const level=await page.locator('#card-knight .hero-level').textContent();
   expect(level).not.toBe('Lv. 1');

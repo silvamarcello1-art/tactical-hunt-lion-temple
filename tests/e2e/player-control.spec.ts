@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { installControlledClock, pauseIdleClock } from './controlled-clock';
 
 async function position(page:Page,id = 'knight') {
   const value = await page.locator('#game').getAttribute('data-logical-positions');
@@ -11,19 +12,22 @@ async function clickTile(page:Page,tile:{x:number;y:number},button:'left'|'right
   const scale=Math.min(bounds.width/960,bounds.height/576);
   await page.mouse.click(bounds.x+(bounds.width-960*scale)/2+tile.x*32*scale,bounds.y+(bounds.height-576*scale)/2+tile.y*32*scale,{button});
 }
-async function open(page:Page) {
+async function open(page:Page, controlledClock = false) {
   const errors:string[] = [];
   page.on('pageerror',error => errors.push(error.message));
   page.on('console',message => {if(message.type() === 'error') errors.push(message.text());});
+  if (controlledClock) await installControlledClock(page);
   await page.addInitScript(() => {
     (window as any).__controlEvents = [];
     window.addEventListener('hunt-event',(event) => (window as any).__controlEvents.push((event as CustomEvent).detail));
   });
   await page.goto('/');
   await expect(page.locator('html')).toHaveAttribute('data-session-state','idle');
+  if (controlledClock) await pauseIdleClock(page);
   await page.locator('#loop-toggle').click();
   await page.locator('#control-mode').selectOption('MANUAL');
   await page.locator('#start').click();
+  if (controlledClock) await page.clock.runFor(250);
   await expect.poll(() => position(page)).toEqual({x:8,y:9});
   return errors;
 }
@@ -112,16 +116,18 @@ test('spell targeting cancels with ESC and reset clears held and interaction sta
 });
 
 test('manual steps route around a pillar and reject a blocked diagonal', async ({page}) => {
-  const errors = await open(page);
+  const errors = await open(page, true);
   const step = async (key:string,tile:{x:number;y:number}) => {
     await page.keyboard.press(key);
+    await page.clock.runFor(500);
     await expect.poll(() => position(page),{intervals:[20]}).toEqual(tile);
   };
   await step('w',{x:8,y:8}); await step('w',{x:8,y:7}); await step('w',{x:8,y:6});
   await step('d',{x:9,y:6}); await step('d',{x:10,y:6}); await step('d',{x:11,y:6});
   // Free destination (12,7), but the orthogonal tile (12,6) is a pillar.
+  // Both keydowns must reach the same logical tick, regardless of runner speed.
   await page.keyboard.down('s'); await page.keyboard.down('d');
-  await page.waitForTimeout(300);
+  await page.clock.runFor(300);
   await page.keyboard.up('s'); await page.keyboard.up('d');
   expect(await position(page)).toEqual({x:11,y:6});
   await step('s',{x:11,y:7}); await step('d',{x:12,y:7});

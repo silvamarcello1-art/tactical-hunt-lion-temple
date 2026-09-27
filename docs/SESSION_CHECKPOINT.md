@@ -77,7 +77,28 @@ ARCHITECTURE, CHANGELOG e instrução de baseline em AGENTS.
 
 ## Entrega e continuidade
 
-Código preparado para commit/push normal na branch acima. O workflow preview.yml
+Entrega de gameplay enviada em 1dd6c573552abf811509f699d1172f5086be1219; PR #3.
+O primeiro CI dessa entrega passou os 167 unitários e 19 E2E, mas detectou duas
+corridas de testes: clicar depois da janela de 2s do loop e clicar em reiniciar
+depois da morte do boss. Não houve deploy nesse run (36247097005).
+O run do PR (36247139458) também expôs loop extra durante teste de idempotência
+e teclas da diagonal chegando em ticks diferentes. A idempotência agora desliga
+loop antes de iniciar; o chord é enviado com relógio congelado entre keydowns.
+Correção posterior somente na sincronização E2E: Clock do Playwright executa
+todos os frames e congela nas fronteiras para o clique real, sem mock do motor,
+skip, force click ou redução das verificações. Fades finais são avançados antes
+da contagem de resíduos. Demais cenários mantêm relógio real. Traces passam a ser
+preservados como artifact quando o CI falhar. Os 167 unitários foram revalidados
+isoladamente com um worker; timeout sob carga concorrente não motivou mudança
+em limites nem nas assertions. Uma rodada local foi interrompida por suspensão
+de rede do navegador (ERR_NETWORK_IO_SUSPENDED), exigindo nova rodada E2E limpa.
+Rodada limpa posterior: 167/167 unitários (um worker), 24/24 E2E em 6,8 min,
+typecheck, build e diff --check aprovados. Nenhuma alteração adicional em src/.
+Arquivos da correção: controlled-clock.ts, gameplay-shell.spec.ts,
+mvp0.spec.ts, player-control.spec.ts e .github/workflows/preview.yml,
+além deste checkpoint, NEXT_TASK e CHANGELOG.
+
+O workflow preview.yml
 é a fonte do estado de publicação GitHub Pages. Confirmar deployment e version.json
 contra SHA remoto no post-flight; site estável permanece separado e não foi alterado.
 Link de preview configurado: https://silvamarcello1-art.github.io/tactical-hunt-lion-temple/

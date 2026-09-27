@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { advanceUntilAttribute, installControlledClock, pauseIdleClock } from './controlled-clock';
 
 function collectRuntimeErrors(page: Page) {
   const errors: string[] = [];
@@ -349,6 +350,9 @@ test.describe.serial('MVP 0 + MVP 1A — fluxo completo', () => {
   }) => {
     const errors = collectRuntimeErrors(page);
     await openIdleHunt(page);
+    // Isolate reward idempotency from the next legitimate loop's reward.
+    await page.locator('#loop-toggle').click();
+    await expect(page.locator('#loop-toggle')).toHaveAttribute('aria-pressed', 'false');
     await page.locator('[data-speed="4"]').click();
     await page.locator('#start').click();
     await expect(page.locator('html')).toHaveAttribute(
@@ -375,14 +379,15 @@ test.describe.serial('MVP 0 + MVP 1A — fluxo completo', () => {
     page,
   }) => {
     const errors = collectRuntimeErrors(page);
+    await installControlledClock(page);
     await openIdleHunt(page);
+    await pauseIdleClock(page);
     await page.locator('[data-speed="4"]').click();
     await page.locator('#start').click();
-    await expect(page.locator('html')).toHaveAttribute(
-      'data-completed-cycles',
-      '3',
-      { timeout: 100_000 },
-    );
+    await advanceUntilAttribute(page, 'data-completed-cycles', '3');
+    await page.locator('#loop-toggle').click();
+    await page.clock.runFor(2500);
+    await expect(page.locator('html')).toHaveAttribute('data-completed-cycles', '3');
     await expect(page.locator('#boss-token-balance')).toHaveText(
       '★ 3 Boss Token',
     );
@@ -568,16 +573,15 @@ test.describe.serial('MVP 0 + MVP 1A — fluxo completo', () => {
     page,
   }) => {
     const errors = collectRuntimeErrors(page);
+    await installControlledClock(page);
     await openIdleHunt(page);
+    await pauseIdleClock(page);
     await page.locator('#loop-toggle').click();
     await page.locator('[data-speed="4"]').click();
     await page.locator('#start').click();
 
-    await expect(page.locator('html')).toHaveAttribute(
-      'data-session-state',
-      'boss',
-      { timeout:60_000 },
-    );
+    await advanceUntilAttribute(page, 'data-session-state', 'boss');
+    await expect(page.locator('#result')).toBeHidden();
     await expect(page.locator('html')).toHaveAttribute(
       'data-boss-spawns',
       '1',
@@ -594,11 +598,7 @@ test.describe.serial('MVP 0 + MVP 1A — fluxo completo', () => {
     await expect(page.locator('#game')).toHaveAttribute('data-tween-count', '0');
 
     await page.locator('#start').click();
-    await expect(page.locator('html')).toHaveAttribute(
-      'data-session-state',
-      'completed',
-      { timeout:60_000 },
-    );
+    await advanceUntilAttribute(page, 'data-session-state', 'completed');
     await page.locator('#close-result').click();
     await page.locator('#restart').click();
     await expect(page.locator('html')).toHaveAttribute(
@@ -648,17 +648,18 @@ test.describe.serial('MVP 0 + MVP 1A — fluxo completo', () => {
 
   test('chega ao boss e conclui três loops sem duplicações', async ({ page }) => {
     const errors = collectRuntimeErrors(page);
+    await installControlledClock(page);
     await installGridAudit(page);
     await openIdleHunt(page);
+    await pauseIdleClock(page);
     await page.locator('[data-speed="4"]').click();
     await page.locator('#start').click();
 
-    await expect(page.locator('html')).toHaveAttribute(
-      'data-completed-cycles',
-      '3',
-      { timeout:100_000 },
-    );
+    await advanceUntilAttribute(page, 'data-completed-cycles', '3');
     await page.locator('#loop-toggle').click();
+    // The final cosmetic fade also uses rAF; let it finish without permitting
+    // the cancelled loop timer to start a fourth hunt.
+    await page.clock.runFor(2500);
     await expect(page.locator('#result')).toBeVisible();
     await expect(page.locator('#stage-label')).toHaveText('Hunt concluída');
     await expect(page.locator('html')).toHaveAttribute('data-boss-spawns', '1');
@@ -684,7 +685,7 @@ test.describe.serial('MVP 0 + MVP 1A — fluxo completo', () => {
         'data-processed-events',
       )))
       .toBeGreaterThan(0);
-    await page.waitForTimeout(2500);
+    await page.clock.runFor(2500);
     await expect(page.locator('html')).toHaveAttribute(
       'data-completed-cycles',
       '3',
