@@ -98,6 +98,17 @@ Arquivos da correção: controlled-clock.ts, gameplay-shell.spec.ts,
 mvp0.spec.ts, player-control.spec.ts e .github/workflows/preview.yml,
 além deste checkpoint, NEXT_TASK e CHANGELOG.
 
+O run 36285078409 passou os unitários, mas estourou o orçamento total de E2E.
+Traces comprovam três loops concluídos, sem erros de console, e chamadas de
+250 ms custando até 1,54 s; clicks chegam a 8,43 s e teardown a 31 s no runner.
+Um trace continha 1300 JPEGs (55,6 MB), contra 2 MB de eventos/snapshots.
+Correção operacional seguinte: retirar somente o screencast contínuo do trace
+(preservar snapshots, ações, fontes e PNG de falha) e dobrar orçamento total
+apenas no CI. Timeouts de assertions/estados, cobertura e motor não mudam.
+Rodada local com essa configuração: 24/24 E2E aprovados em 6,8 min (exit 0),
+sem falhas no relatório final. Os 167 unitários e o build da mesma implementação
+de gameplay já estavam aprovados; esta correção não altera src/.
+
 O workflow preview.yml
 é a fonte do estado de publicação GitHub Pages. Confirmar deployment e version.json
 contra SHA remoto no post-flight; site estável permanece separado e não foi alterado.

@@ -42,7 +42,7 @@ test('compact slots follow selected hero; WASD and hotkeys submit real commands'
 });
 
 test('Auto completes three evolving hunts, unlocks passives and persists progression',async({page})=>{
-  test.setTimeout(180_000);
+  test.setTimeout(process.env.CI ? 360_000 : 180_000);
   await installControlledClock(page);
   await page.goto('/');await expect(page.locator('html')).toHaveAttribute('data-session-state','idle');
   await pauseIdleClock(page);

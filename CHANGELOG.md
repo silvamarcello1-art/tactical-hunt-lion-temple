@@ -11,6 +11,8 @@
 - Novo ruleset documenta mudança intencional do baseline e mantém repetibilidade.
 - E2E de fronteiras transitórias usa relógio controlado (frames reais) para não
   disputar com o timer de loop/boss no runner; CI preserva traces em falhas.
+- Traces sem filmstrip contínuo de WebGL; snapshots e PNG de falha mantidos.
+  CI tem orçamento total de cenário ajustado, sem ampliar limites de assertions.
 
 ## 2026-09-20 — original visual foundation
 

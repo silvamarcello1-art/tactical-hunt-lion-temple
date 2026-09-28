@@ -15,8 +15,10 @@ worktree foi preservada e integrada. Não reimplemente estes sistemas.
 
 1. Revisar a entrega no preview e colher aprovação da jogabilidade/balanceamento.
 2. Confirmar deployment no SHA do commit, sem confundir preview com site estável.
-   O run inicial 36247097005 falhou por corridas E2E de loop/reset-boss; a correção
-   usa relógio controlado apenas nesses cenários. Exigir o novo CI verde.
+   Corridas E2E foram corrigidas com relógio controlado nas fronteiras. O run
+   36285078409 expôs overhead dos traces no runner Windows; filmstrip foi
+   removido, mantendo assertions e diagnósticos. Rodada local: 24/24 E2E.
+   Confirmar o novo CI verde e version.json antes de declarar a publicação.
 3. Só então avançar MVP 1E: um objeto/NPC real e uma quest curta de exploração,
    usando comandos existentes e validação no domínio. Nada de inventário/rede gigantes.
 
