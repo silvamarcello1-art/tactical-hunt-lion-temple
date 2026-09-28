@@ -118,6 +118,12 @@ frames reais para WASD/cast e também durante a pausa para verificar cooldown.
 Sem mudança em produção nem relaxamento de assertions. Deploy desse run pulado.
 Teste de hotbar corrigido: três execuções consecutivas aprovadas no Edge local.
 
+Push ce7b85f gerou run 36490592001, cancelado ainda na fila pelo PR
+36490597126 porque ambos usavam o grupo único feature-pages. Separar grupo
+de validação por PR do grupo serializado de deploy evita essa substituição.
+Todos os gates e a condição de publicação continuam iguais. Referência:
+https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/control-workflow-concurrency
+
 O workflow preview.yml
 é a fonte do estado de publicação GitHub Pages. Confirmar deployment e version.json
 contra SHA remoto no post-flight; site estável permanece separado e não foi alterado.

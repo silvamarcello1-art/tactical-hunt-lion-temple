@@ -15,6 +15,8 @@
   CI tem orçamento total de cenário ajustado, sem ampliar limites de assertions.
 - Teste de hotbar amostra o footpoint visual com relógio controlado para não
   clicar um tile abandonado pelo monstro entre chamadas do protocolo.
+- Validação do PR e publicação Pages usam filas separadas; PR não cancela mais
+  um push pendente. Deploys continuam serializados e condicionados aos gates.
 
 ## 2026-09-20 — original visual foundation
 

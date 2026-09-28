@@ -11,7 +11,9 @@ permissions:
   contents: read
 
 concurrency:
-  group: feature-pages
+  # PR validation must not evict a pending deploy from the single-slot queue.
+  # Push deployments still share one serialized Pages lane across branches.
+  group: feature-pages-${{ github.event_name == 'pull_request' && github.ref || 'deploy' }}
   cancel-in-progress: false
 
 jobs:
