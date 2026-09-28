@@ -19,6 +19,8 @@ worktree foi preservada e integrada. Não reimplemente estes sistemas.
    36285078409 expôs overhead dos traces no runner Windows; filmstrip foi
    removido, mantendo assertions e diagnósticos. Rodada local: 24/24 E2E.
    Confirmar o novo CI verde e version.json antes de declarar a publicação.
+   Run 36487765160 aprovou 23/24 E2E (incluindo loops); teste de hotbar ainda
+   clicava uma posição antiga de monstro. Correção usa posição visual e Clock.
 3. Só então avançar MVP 1E: um objeto/NPC real e uma quest curta de exploração,
    usando comandos existentes e validação no domínio. Nada de inventário/rede gigantes.
 

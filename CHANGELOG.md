@@ -13,6 +13,8 @@
   disputar com o timer de loop/boss no runner; CI preserva traces em falhas.
 - Traces sem filmstrip contínuo de WebGL; snapshots e PNG de falha mantidos.
   CI tem orçamento total de cenário ajustado, sem ampliar limites de assertions.
+- Teste de hotbar amostra o footpoint visual com relógio controlado para não
+  clicar um tile abandonado pelo monstro entre chamadas do protocolo.
 
 ## 2026-09-20 — original visual foundation
 

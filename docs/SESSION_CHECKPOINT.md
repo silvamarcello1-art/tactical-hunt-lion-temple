@@ -109,6 +109,15 @@ Rodada local com essa configuração: 24/24 E2E aprovados em 6,8 min (exit 0),
 sem falhas no relatório final. Os 167 unitários e o build da mesma implementação
 de gameplay já estavam aprovados; esta correção não altera src/.
 
+Run 36487765160 (3a98e09): 167 unitários e 23/24 E2E aprovados; os três
+cenários de loop e todas as falhas anteriores passaram. Falha restante no teste
+de hotbar: leitura de lion-3 em (5,14), seguida de clique ~0,9 s depois, quando
+o monstro já estava em (5,13). O trace confirma MoveTo no chão, não seleção.
+Correção isolada: amostrar footpoint visual com Clock controlado, avançando
+frames reais para WASD/cast e também durante a pausa para verificar cooldown.
+Sem mudança em produção nem relaxamento de assertions. Deploy desse run pulado.
+Teste de hotbar corrigido: três execuções consecutivas aprovadas no Edge local.
+
 O workflow preview.yml
 é a fonte do estado de publicação GitHub Pages. Confirmar deployment e version.json
 contra SHA remoto no post-flight; site estável permanece separado e não foi alterado.
