@@ -1,5 +1,9 @@
 import { expect, type Page } from '@playwright/test';
 
+// Three complete rendered hunts consistently take ~210 s on Windows CI.
+// This bounds the whole scenario, not any individual state assertion.
+export const REPEATED_HUNT_TIMEOUT_MS = process.env.CI ? 360_000 : 180_000;
+
 // Use only for transient boundaries (boss/reset, loop window, key chords).
 // The real engine and renderer still execute every animation frame. Other
 // scenarios deliberately retain wall-clock playback and real mouse timing.

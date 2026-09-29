@@ -124,6 +124,18 @@ de validação por PR do grupo serializado de deploy evita essa substituição.
 Todos os gates e a condição de publicação continuam iguais. Referência:
 https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/control-workflow-concurrency
 
+ee1b502: PR run 36490812435 aprovou 167 unitários, 24 E2E e ambos os builds.
+Push run 36490806945 falhou no limite total de 220 s do terceiro cenário de
+três loops, após as verificações de conclusão/loot; o mesmo teste passou no PR.
+Os três cenários duram ~210 s no CI. O orçamento especial de 360 s existia só
+no teste de progressão: agora é compartilhado pelos três, sem mudar limites
+de estados/assertions ou pular verificações. Correção de seleção passou no CI.
+Revalidações locais nesta retomada sofreram timeouts de simulação e RPC do
+Vitest (Node 24), além de perda temporária de DNS; não houve alteração de
+assertions do motor nem de seus timeouts. CI Node 22 aprovou esses unitários.
+Padronização dos loops validada localmente: typecheck, 3/3 cenários longos
+(1,5 min) e diff --check aprovados, sem mudanças de gameplay.
+
 O workflow preview.yml
 é a fonte do estado de publicação GitHub Pages. Confirmar deployment e version.json
 contra SHA remoto no post-flight; site estável permanece separado e não foi alterado.

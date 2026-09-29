@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { advanceUntilAttribute, installControlledClock, pauseIdleClock } from './controlled-clock';
+import { advanceUntilAttribute, installControlledClock, pauseIdleClock, REPEATED_HUNT_TIMEOUT_MS } from './controlled-clock';
 
 function collectRuntimeErrors(page: Page) {
   const errors: string[] = [];
@@ -378,6 +378,7 @@ test.describe.serial('MVP 0 + MVP 1A — fluxo completo', () => {
   test('três loops legítimos concedem três Boss Tokens', async ({
     page,
   }) => {
+    test.setTimeout(REPEATED_HUNT_TIMEOUT_MS);
     const errors = collectRuntimeErrors(page);
     await installControlledClock(page);
     await openIdleHunt(page);
@@ -647,6 +648,7 @@ test.describe.serial('MVP 0 + MVP 1A — fluxo completo', () => {
   });
 
   test('chega ao boss e conclui três loops sem duplicações', async ({ page }) => {
+    test.setTimeout(REPEATED_HUNT_TIMEOUT_MS);
     const errors = collectRuntimeErrors(page);
     await installControlledClock(page);
     await installGridAudit(page);

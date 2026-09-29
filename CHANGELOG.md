@@ -17,6 +17,8 @@
   clicar um tile abandonado pelo monstro entre chamadas do protocolo.
 - Validação do PR e publicação Pages usam filas separadas; PR não cancela mais
   um push pendente. Deploys continuam serializados e condicionados aos gates.
+- Os três cenários de loops compartilham orçamento total explícito, mantendo
+  limites individuais e auditorias de integridade inalterados.
 
 ## 2026-09-20 — original visual foundation
 

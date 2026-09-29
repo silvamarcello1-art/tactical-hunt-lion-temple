@@ -21,6 +21,8 @@ worktree foi preservada e integrada. Não reimplemente estes sistemas.
    Confirmar o novo CI verde e version.json antes de declarar a publicação.
    Run 36487765160 aprovou 23/24 E2E (incluindo loops); teste de hotbar ainda
    clicava uma posição antiga de monstro. Correção usa posição visual e Clock.
+   ee1b502 passou todos os gates no PR, mas o push estourou o orçamento de
+   um cenário longo. Os três testes de loop agora compartilham o mesmo limite.
 3. Só então avançar MVP 1E: um objeto/NPC real e uma quest curta de exploração,
    usando comandos existentes e validação no domínio. Nada de inventário/rede gigantes.
 

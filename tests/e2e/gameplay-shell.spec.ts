@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { advanceUntilAttribute, installControlledClock, pauseIdleClock } from './controlled-clock';
+import { advanceUntilAttribute, installControlledClock, pauseIdleClock, REPEATED_HUNT_TIMEOUT_MS } from './controlled-clock';
 
 const position=async(page:Page,id:string)=>{
   const entry=(await page.locator('#game').getAttribute('data-visual-positions'))?.split(',').find(s=>s.startsWith(id+':'));
@@ -48,7 +48,7 @@ test('compact slots follow selected hero; WASD and hotkeys submit real commands'
 });
 
 test('Auto completes three evolving hunts, unlocks passives and persists progression',async({page})=>{
-  test.setTimeout(process.env.CI ? 360_000 : 180_000);
+  test.setTimeout(REPEATED_HUNT_TIMEOUT_MS);
   await installControlledClock(page);
   await page.goto('/');await expect(page.locator('html')).toHaveAttribute('data-session-state','idle');
   await pauseIdleClock(page);
