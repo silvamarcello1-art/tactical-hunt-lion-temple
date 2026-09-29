@@ -13,6 +13,19 @@ worktree foi preservada e integrada. Não reimplemente estes sistemas.
 
 ## Próximo passo recomendado
 
+**Bloqueio atual de publicação (29/09):** todos os gates do código `056a743`
+passaram localmente e no CI (167 unitários, 24 E2E, builds e diff check).
+O deploy do run `36526442306` foi rejeitado antes de iniciar porque o ambiente
+`github-pages` permite somente `recovery/antigravity-mvp1b`.
+Solicitar autorização para ADICIONAR apenas `feature/gameplay-first-mvp2a`
+à lista existente, sem remover proteções ou autorizar `feature/**`.
+Não fazer merge, trocar a branch do deploy nem usar Sites como contorno.
+Após aprovação, adicionar a permissão específica e reexecutar somente o job
+de deploy que falhou, utilizando o artifact já validado de `056a743` (se ainda
+disponível). Confirmar version.json e testar uma hunt pública até o boss.
+Este checkpoint é posterior e somente documental; distinguir o SHA do artifact
+do HEAD documental. Se o artifact expirar, rodar o workflow completo novamente.
+
 1. Revisar a entrega no preview e colher aprovação da jogabilidade/balanceamento.
 2. Confirmar deployment no SHA do commit, sem confundir preview com site estável.
    Corridas E2E foram corrigidas com relógio controlado nas fronteiras. O run

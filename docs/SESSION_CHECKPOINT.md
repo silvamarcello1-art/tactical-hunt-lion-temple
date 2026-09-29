@@ -77,6 +77,23 @@ ARCHITECTURE, CHANGELOG e instrução de baseline em AGENTS.
 
 ## Entrega e continuidade
 
+### Estado final da retomada de 29/09
+
+- Código validado e enviado: `056a743bf9417edc7b29da0433e61e22023f1e4c`.
+- Local: 167/167 unitários, 24/24 E2E (5,0 min), typecheck, build e diff check.
+  Os timeouts locais transitórios da rodada anterior não se repetiram.
+- CI push `36526442306`: validate aprovado, 167 unitários, 24 E2E (19,6 min),
+  build, build:preview, diff check e upload do artifact aprovados.
+- CI PR `36526446097`: aprovado; PR #3 continua aberto, sem merge.
+- Deploy `109276025132`: rejeitado pelas environment protection rules, antes
+  de qualquer step. Somente `recovery/antigravity-mvp1b` está permitida.
+- Nenhuma regra de proteção foi alterada. Nenhum deploy público concluído.
+- Aguardar autorização específica para adicionar a branch de trabalho ao
+  ambiente Pages, preservando as outras regras. Depois reexecutar somente o
+  deploy falho e verificar manifest/hash/navegador público. Ver NEXT_TASK.
+- Este registro altera somente documentação; CI não precisa ser repetido para
+  ele. O artifact validado permanece vinculado ao SHA de código acima.
+
 Entrega de gameplay enviada em 1dd6c573552abf811509f699d1172f5086be1219; PR #3.
 O primeiro CI dessa entrega passou os 167 unitários e 19 E2E, mas detectou duas
 corridas de testes: clicar depois da janela de 2s do loop e clicar em reiniciar
