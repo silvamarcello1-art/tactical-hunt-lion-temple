@@ -77,7 +77,7 @@ ARCHITECTURE, CHANGELOG e instrução de baseline em AGENTS.
 
 ## Entrega e continuidade
 
-### Estado final da retomada de 29/09
+### Estado final da retomada de 30/09
 
 - Código validado e enviado: `056a743bf9417edc7b29da0433e61e22023f1e4c`.
 - Local: 167/167 unitários, 24/24 E2E (5,0 min), typecheck, build e diff check.
@@ -85,12 +85,21 @@ ARCHITECTURE, CHANGELOG e instrução de baseline em AGENTS.
 - CI push `36526442306`: validate aprovado, 167 unitários, 24 E2E (19,6 min),
   build, build:preview, diff check e upload do artifact aprovados.
 - CI PR `36526446097`: aprovado; PR #3 continua aberto, sem merge.
-- Deploy `109276025132`: rejeitado pelas environment protection rules, antes
-  de qualquer step. Somente `recovery/antigravity-mvp1b` está permitida.
-- Nenhuma regra de proteção foi alterada. Nenhum deploy público concluído.
-- Aguardar autorização específica para adicionar a branch de trabalho ao
-  ambiente Pages, preservando as outras regras. Depois reexecutar somente o
-  deploy falho e verificar manifest/hash/navegador público. Ver NEXT_TASK.
+- Bloqueio anterior de allowlist resolvido com autorização explícita do usuário:
+  adicionada somente `feature/gameplay-first-mvp2a` (policy 61489770), mantendo
+  `recovery/antigravity-mvp1b` (60465899) e proteção branch_policy 66126927.
+- Reexecução somente dos jobs falhos do run `36526442306`, tentativa 2:
+  deploy `109758004341` aprovado com o artifact validado antes de expirar.
+- Manifest público version.json confirmou `056a743bf9417edc7b29da0433e61e22023f1e4c`.
+  URL: https://silvamarcello1-art.github.io/tactical-hunt-lion-temple/
+- Smoke público: Auto, 4x, Loop OFF; vitória em 47s lógicos, 17 mortes,
+  4.240 XP, 1.515 gold, 1 Boss Token, cura 1.232. Boss realmente morto.
+  Console sem erros/avisos; zero overlap/OOB/reservas pendentes/efeitos,
+  projéteis e tweens residuais. Sem merge, sem alteração do site estável.
+- Limite da ferramenta de navegador: cliques automatizados chegaram deslocados
+  no viewport; controles foram acionados por foco + Enter e verificados na UI.
+  Configuração aberta durante a tentativa foi cancelada sem salvar; gameplay
+  e o smoke não exigiram nenhuma mudança de código. Mouse já coberto pelos E2E.
 - Este registro altera somente documentação; CI não precisa ser repetido para
   ele. O artifact validado permanece vinculado ao SHA de código acima.
 

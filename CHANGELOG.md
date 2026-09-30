@@ -1,3 +1,9 @@
+## 2026-09-30 — Preview público validado
+
+- GitHub Pages publicou `056a743` com artifact aprovado (167 unitários, 24 E2E).
+- Allowlist ampliada somente para a branch autorizada, preservando proteções.
+- Manifest e hunt pública até vitória verificados; sem merge ou alteração de Sites.
+
 ## 2026-09-26 — Mouse-first combat, compact HUD and encounter depth
 
 - MoveTo autoritativo, engage por botão direito e Look por chord consumido.

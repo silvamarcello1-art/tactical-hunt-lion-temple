@@ -13,29 +13,21 @@ worktree foi preservada e integrada. Não reimplemente estes sistemas.
 
 ## Próximo passo recomendado
 
-**Bloqueio atual de publicação (29/09):** todos os gates do código `056a743`
-passaram localmente e no CI (167 unitários, 24 E2E, builds e diff check).
-O deploy do run `36526442306` foi rejeitado antes de iniciar porque o ambiente
-`github-pages` permite somente `recovery/antigravity-mvp1b`.
-Solicitar autorização para ADICIONAR apenas `feature/gameplay-first-mvp2a`
-à lista existente, sem remover proteções ou autorizar `feature/**`.
-Não fazer merge, trocar a branch do deploy nem usar Sites como contorno.
-Após aprovação, adicionar a permissão específica e reexecutar somente o job
-de deploy que falhou, utilizando o artifact já validado de `056a743` (se ainda
-disponível). Confirmar version.json e testar uma hunt pública até o boss.
-Este checkpoint é posterior e somente documental; distinguir o SHA do artifact
-do HEAD documental. Se o artifact expirar, rodar o workflow completo novamente.
+**Preview publicado e verificado (30/09):** código `056a743bf9417edc7b29da0433e61e22023f1e4c`.
+Com autorização explícita do usuário, foi adicionada somente a branch
+`feature/gameplay-first-mvp2a` à allowlist do ambiente `github-pages`.
+A branch anterior e todas as demais proteções foram preservadas.
+Run `36526442306`, tentativa 2: deploy aprovado reutilizando o artifact validado;
+`version.json` público confirmou o SHA exato. Nenhum merge ou envio a Sites.
+Preview: https://silvamarcello1-art.github.io/tactical-hunt-lion-temple/
+Smoke público em Auto/4x, Loop OFF: vitória em 47s lógicos, 17 mortes, 4.240 XP,
+1.515 gold, 1 Boss Token; console sem erros/avisos. Zero overlap, out-of-bounds,
+reservas pendentes, projéteis/efeitos/tweens residuais. O HEAD documental posterior
+não muda o SHA da aplicação publicada. Gates: 167 unitários, 24 E2E e builds verdes.
 
 1. Revisar a entrega no preview e colher aprovação da jogabilidade/balanceamento.
-2. Confirmar deployment no SHA do commit, sem confundir preview com site estável.
-   Corridas E2E foram corrigidas com relógio controlado nas fronteiras. O run
-   36285078409 expôs overhead dos traces no runner Windows; filmstrip foi
-   removido, mantendo assertions e diagnósticos. Rodada local: 24/24 E2E.
-   Confirmar o novo CI verde e version.json antes de declarar a publicação.
-   Run 36487765160 aprovou 23/24 E2E (incluindo loops); teste de hotbar ainda
-   clicava uma posição antiga de monstro. Correção usa posição visual e Clock.
-   ee1b502 passou todos os gates no PR, mas o push estourou o orçamento de
-   um cenário longo. Os três testes de loop agora compartilham o mesmo limite.
+2. Manter a distinção entre preview compartilhado e site estável, não atualizado.
+   Corridas E2E e fila do CI foram resolvidas; histórico em SESSION_CHECKPOINT.
 3. Só então avançar MVP 1E: um objeto/NPC real e uma quest curta de exploração,
    usando comandos existentes e validação no domínio. Nada de inventário/rede gigantes.
 
