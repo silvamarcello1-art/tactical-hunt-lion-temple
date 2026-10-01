@@ -5,6 +5,7 @@ export type InteractionTarget = { kind:'entity'; entityId:string } | { kind:'til
 export type PlayerIntent =
   | { type:'control'; mode:ControlMode }
   | { type:'move'; dx:number; dy:number }
+  | { type:'move-to'; tile:GridPoint }
   | { type:'attack' | 'follow'; targetId:string }
   | { type:'stop' }
   | { type:'cast'; abilityId:string; targetId:string }
@@ -43,6 +44,7 @@ export function validIntent(intent: PlayerIntent): boolean {
   switch (intent.type) {
     case 'control': return ['AI','MANUAL','ASSISTED'].includes(intent.mode);
     case 'move': return [intent.dx,intent.dy].every(value => Number.isInteger(value) && Math.abs(value) <= 1) && !!(intent.dx || intent.dy);
+    case 'move-to': return Number.isSafeInteger(intent.tile?.x) && Number.isSafeInteger(intent.tile?.y);
     case 'attack': case 'follow': return id(intent.targetId);
     case 'stop': return true;
     case 'cast': return id(intent.abilityId) && id(intent.targetId);

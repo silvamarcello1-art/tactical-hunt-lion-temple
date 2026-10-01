@@ -1,4 +1,52 @@
-# Consolidação visual e estrutural — 20/09/2026
+# Estado vigente — MVP 2B — 30/09/2026
+
+Implementação em validação na branch `feature/gameplay-first-mvp2a`.
+Inventário local com 24 espaços, materiais em stacks de 99 e reserva sem descarte;
+seis armas, duas armaduras e um material originais. Drops vêm do domínio em RNG
+isolado, com IDs persistentes e recibos contra replay. Equipar/forjar somente
+entre hunts com Loop OFF. Forja +1 custa 200 gold e uma Brasa do Templo.
+Stats de nível e equipamento são calculados no domínio, também usado pela UI;
+trocas não acumulam bônus nem recuperam HP/mana. XP, preferências e Boss Tokens
+anteriores são preservados por migração aditiva. Save inválido não é apagado.
+
+UI: drawer por herói, comparação, slots reais, forja, reserva, relatório com
+drops reais, feedback compacto de Loop. Inputs do mundo bloqueados no drawer.
+Polish focado em identificação da party, contraste de HP e comparação legível;
+sprites existentes preservados. Contrato: `EQUIPMENT_AND_LOOT.md`.
+Gates/ponto exato: `SESSION_CHECKPOINT.md`. Sem backend, comércio, descarte,
+drag-and-drop, novos slots ou economia online. Roadmap vigente: 2B–2F.
+
+## Histórico — Mouse-first + Encounter Depth — 26/09/2026
+
+Branch feature/gameplay-first-mvp2a, base 58d9720. Este resumo substitui as
+descrições históricas abaixo quando divergirem.
+
+- Mouse: chão MoveTo, entidade seleção, direito engage, dois botões Look sem
+  ações duplicadas. WASD e 1–3 mantidos; nenhum menu Attack/Follow/Stop no HUD.
+- AUTO autônomo; MANUAL só ordens explícitas; ASSISTED aguarda alvo, usa rotação
+  até sua morte e então para. Seleção não muda controller.
+- Mundo domina a tela, party mínima e três slots reais com cooldown lógico.
+  Análise/loot ficam em drawers; configuração de habilidades continua disponível.
+- Quatro perfis originais: Custódio, Vigia, Garra e Oráculo. Ranged busca LoS/
+  distância; flanker procura backline; caster pontua máscaras e candidatos
+  determinísticos a cada 1500 ms lógicos.
+- Regente Vazio tem fase abaixo de 50% HP e Queda da Coroa: aviso especial,
+  impacto, escombros reais por 3000 ms, revisão de navegação e restauração.
+- Magias comuns não pintam pretelegraph; magia de jogador mantém projétil/
+  wave/impacto próprios. Apenas requiresTelegraph habilita aviso antecipado.
+- Arte aprovada preservada; oito atores originais, novo relevo do templo e
+  pools de efeitos animados. Build exclui cópias legadas, sem apagar fontes.
+- Progressão XP/nível/passiva e store local da etapa anterior preservados.
+- Novas regras alteram baseline Auto intencionalmente; repetibilidade completa
+  em 24 combinações substitui comparação aos antigos hashes (preservados no Git).
+
+Typecheck, 167 unitários, 24 E2E e build aprovados; evidências e publicação
+consolidados em SESSION_CHECKPOINT. Não há backend, inventário real ou PvP.
+Não confundir preview Pages com a referência estável chatgpt.site.
+
+---
+
+# Histórico — Consolidação visual e estrutural — 20/09/2026
 
 Branch feature/visual-identity-foundation, base validada 64816ac. Motor e grid
 inalterados; main.ts cria a sessão e PlayerControls usa PlayerControlPort.

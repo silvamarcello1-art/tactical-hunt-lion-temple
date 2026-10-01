@@ -35,7 +35,8 @@ Não existe lint configurado.
    Preservar trabalho alheio. Não tocar feature/helper-individual sem pedido.
 2. Implementar no marco adequado; executar health, typecheck, Vitest, build,
    Playwright com um worker e git diff --check conforme escopo. Mudanças de
-   combate preservam o stress e os hashes Auto. Revisar o diff completo.
+   combate preservam stress e determinismo Auto; se um novo ruleset alterar os
+   hashes, documentar motivo e versionar o baseline. Revisar o diff completo.
 3. Atualizar documentação/checkpoint, criar commits coerentes, fazer push
    normal para origin e verificar o SHA real com git ls-remote. Conferir
    worktree limpa. Branches e criação/atualização de PR estão autorizadas.

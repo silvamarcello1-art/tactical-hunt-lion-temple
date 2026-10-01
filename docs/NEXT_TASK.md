@@ -1,52 +1,61 @@
-# Próxima tarefa
+# Próxima tarefa — concluir validação do MVP 2B
 
-## Estado de entrada
+Estado atual: implementação local de inventário, equipamentos, drops e forja +1.
+Leia `SESSION_CHECKPOINT.md` e `EQUIPMENT_AND_LOOT.md` antes de retomar.
+Não reimplemente sistemas concluídos. Branch `feature/gameplay-first-mvp2a`;
+ponto inicial desta etapa `bf8e823f8a9329a9cb42ddd460b6ce467b1e7ab2`.
 
-MVP 1D integra apresentação e controle manual desde 64816ac. A consolidação
-seguinte está em feature/visual-identity-foundation; leia o checkpoint atual.
+Gates locais completos em 01/10: 183 unitários, 27 E2E, TypeScript/build/diff.
+Restam commit/push, CI e publicação autorizada no GitHub Pages com verificação
+do manifest. Não usar Sites/merge.
+Após MVP 2B validado: playtest humano e MVP 2C Adventure/mundo/NPC/quests,
+depois 2D campanha, 2E servidor/rede, 2F PvP. Não antecipar esses sistemas.
 
-O mesmo CombatEngine roda incrementalmente na UI e em batch via run().
-WASD/setas, AI/Manual/Assistido por ator, target/attack/follow/stop, magias,
-Look contextual, cancelamento, transformações de coordenadas e infraestrutura
-use-with/drag existem. Não reimplementar esses sistemas.
+## Registro histórico — Mouse-first / Encounter Depth
 
-Leia AGENTS.md, CURRENT_STATE.md, SESSION_CHECKPOINT.md, PLAYER_CONTROL.md,
-COMBAT_PRESENTATION.md e ARCHITECTURE.md; execute pnpm health e fetch origin.
-Confira os gates finais registrados no checkpoint antes de continuar.
+## Ponto de continuação
 
-## Próximo vertical slice: MVP 1E — Manual Adventure & Interaction
+Branch: feature/gameplay-first-mvp2a. Base: 58d97203a7666e1f5ed3d0a6040bc2d95c54ab38.
+Execute fetch e pnpm health; confirme HEAD real. Leia SESSION_CHECKPOINT,
+CURRENT_STATE, PLAYER_CONTROL, COMBAT_PRESENTATION e ARCHITECTURE.
 
-Após validar o HEAD entregue, crie `feature/manual-adventure-interaction` a
-partir dele. Entregue uma pequena experiência real de exploração com um ponto
-interativo de mundo/NPC e um objetivo de quest. Use os comandos existentes,
-validação no domínio e eventos/snapshots para a apresentação.
+Implementado: mouse-first, Auto/Manual/Assisted estritos, três slots reais,
+HUD compacto, quatro papéis de monstros, direcionamento tático determinístico,
+boss com fases/escombros temporários e pooling. Progressão local já presente no
+worktree foi preservada e integrada. Não reimplemente estes sistemas.
 
-- A hunt atual ainda usa quatro salas de combate e formação entre andares;
-  exploração persistente não está implementada.
-- `interact`, `use`, `use-with` e `drop` ainda retornam unsupported-interaction.
-  Só conecte essas operações a objetos/itens reais e regras explícitas; os slots
-  vazios do Backpack não representam inventário.
-- Pan/zoom é aceito pela transformação de coordenadas, mas a câmera continua fixa.
-- Cardinais e seis ações existem como blockouts originais de 64 px; acabamento
-  raster final e efeitos/ícones originais ainda estão pendentes.
-- Comandos estão preparados para transporte; não existe autenticação nem servidor.
+## Próximo passo recomendado
 
-Preserve os hashes Auto de 24 hunts, os testes existentes, os quatro E2E manuais
-(incluindo diagonal/pilar), a matriz de ownership, os cooldowns na troca de modo,
-a limpeza entre sessões e a sincronização de apresentação.
+**Preview publicado e verificado (30/09):** código `056a743bf9417edc7b29da0433e61e22023f1e4c`.
+Com autorização explícita do usuário, foi adicionada somente a branch
+`feature/gameplay-first-mvp2a` à allowlist do ambiente `github-pages`.
+A branch anterior e todas as demais proteções foram preservadas.
+Run `36526442306`, tentativa 2: deploy aprovado reutilizando o artifact validado;
+`version.json` público confirmou o SHA exato. Nenhum merge ou envio a Sites.
+Preview: https://silvamarcello1-art.github.io/tactical-hunt-lion-temple/
+Smoke público em Auto/4x, Loop OFF: vitória em 47s lógicos, 17 mortes, 4.240 XP,
+1.515 gold, 1 Boss Token; console sem erros/avisos. Zero overlap, out-of-bounds,
+reservas pendentes, projéteis/efeitos/tweens residuais. O HEAD documental posterior
+não muda o SHA da aplicação publicada. Gates: 167 unitários, 24 E2E e builds verdes.
 
-Helper individual continua pausado e sua branch não deve ser tocada.
-Não implementar inventário/quests/PvP gigantesco, backend ou novos frameworks.
-Não fazer merge, force push ou usar remote sites. Preview automático após
-gates está autorizado pelo AGENTS.md. Preserve o site estável e verifique SHA/URL.
+1. Revisar a entrega no preview e colher aprovação da jogabilidade/balanceamento.
+2. Manter a distinção entre preview compartilhado e site estável, não atualizado.
+   Corridas E2E e fila do CI foram resolvidas; histórico em SESSION_CHECKPOINT.
+3. Só então avançar MVP 1E: um objeto/NPC real e uma quest curta de exploração,
+   usando comandos existentes e validação no domínio. Nada de inventário/rede gigantes.
 
-O gate proporcional inclui health, typecheck, Vitest, build, Playwright com um
-worker, diff --check e stress. Commit/push somente para origin; confirmar HEAD
-local/remoto iguais e worktree limpa.
+## Limitações explícitas
 
+- Câmera fixa; transformação suporta escala/letterbox, não pan/zoom interativo.
+- Arte original de oito atores ainda é blockout; não copiar sprites externos.
+- Botões de habilidade 1–3 são reais; use-with/drop/interact ainda sem resolver.
+- Progressão/saldo locais são demonstrativos, não anticheat nem economia online.
+- Balanceamento da nova IA precisa de playtest humano; stress não prova diversão.
+- Helper individual permanece pausado, sem tocar sua branch.
+- A publicação no chatgpt.site exige envio a origem Sites atualmente proibida.
+  Não contornar por outro nome/URL. Preview Pages é o fluxo aprovado.
 
-Antes de 1E, consumir ART_DIRECTION.md e SPRITE_PIPELINE.md; não reabrir uma
-refatoração grande do motor. Não trocar os blockouts por atlas opaco ou assets
-de terceiros. A pipeline é substituir arte pelo manifesto, sem mudar a grade.
-Depois: 1F inventário/Use-With; 1G campanha; 1H autoridade no servidor após ADR;
-1I PvP. Campanha está prevista e ainda não implementada.
+Gates: typecheck, Vitest, build, Playwright (um worker), diff --check e stress.
+O ruleset desta entrega mudou intencionalmente: manter o novo baseline
+determinístico, não tentar restaurar os resultados numéricos do MVP 1C.
+Nenhum merge/force push. Atualizar checkpoint e confirmar push/HEAD.

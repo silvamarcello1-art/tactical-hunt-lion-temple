@@ -1,4 +1,11 @@
-import { assetUrl } from './game/assetUrl';
+import { GameplayHUD } from './ui/GameplayHUD';
+import { EquipmentStore } from './app/EquipmentStore';
+import { EquipmentPanel, itemName } from './ui/EquipmentPanel';
+import { itemById } from './data/items';
+import { itemIcon } from './ui/ItemIcons';
+import type { Vocation } from './data/progression';
+import { iconMarkup, abilityNames } from './data/actionBar';
+import { ProgressionStore } from './app/ProgressionStore';
 import { CombatEngine } from './combat/CombatEngine';
 import './style.css';
 import { PlayerControls } from './control/PlayerControls';
@@ -33,6 +40,10 @@ const $ = <T extends HTMLElement>(selector: string) =>
 const heroIds = new Set(['knight', 'druid', 'sorcerer']);
 const storageKey = 'tactical-hunt-ability-preferences';
 const liveState = new LiveHuntState();
+const progressionStore = new ProgressionStore();
+const equipmentStore = new EquipmentStore(localStorage);
+const hud = new GameplayHUD();
+let casting: {id:string; until:number} | undefined;
 const debugEnabled =
   new URLSearchParams(window.location.search).get('debug') === '1';
 
@@ -50,6 +61,7 @@ let loopTimer: number | undefined;
 let restartInProgress = false;
 let completedCycles = 0;
 let lastResult: HuntResult | undefined;
+let completedReport:HuntResult | undefined;
 let logicalTime = 0;
 let huntSessionId = createNewHuntSessionId();
 const currencyService = new CurrencyService();
@@ -58,6 +70,34 @@ const abilityCooldowns = new Map<
   string,
   { endsAt: number; duration: number }
 >();
+
+const equipmentRoot=document.createElement('aside');
+equipmentRoot.id='equipment-drawer';equipmentRoot.className='drawer equipment-drawer';equipmentRoot.hidden=true;
+equipmentRoot.setAttribute('aria-label','Inventário e equipamento');equipmentRoot.tabIndex=-1;
+equipmentRoot.innerHTML='<button id="close-equipment" class="drawer-close" aria-label="Fechar inventário">×</button><div id="equipment-content"></div>';
+document.querySelector('.app-shell')!.append(equipmentRoot);
+const equipmentPanel=new EquipmentPanel($('#equipment-content'),equipmentStore,()=>({
+  hero:selectedHeroId as Vocation,progress:progressionStore.snapshot(),allowed:!loopEnabled&&['idle','completed','defeated'].includes(sessionPhase),
+}),id=>selectHero(id),()=>{
+  if(sessionPhase==='idle') renderer?.engine.configureLoadout(equipmentStore.loadout());
+});
+const inventoryButton=document.createElement('button');inventoryButton.id='open-equipment';inventoryButton.textContent='Inventário';
+document.querySelector('.center-tabs')!.append(inventoryButton);
+const reportButton=document.createElement('button');reportButton.id='open-report';reportButton.textContent='Relatório';reportButton.disabled=true;
+document.querySelector('.center-tabs')!.append(reportButton);
+reportButton.onclick=()=>{if(completedReport) {clearLoopTimer();showResult(completedReport);}};
+const rewardNotice=document.createElement('button');rewardNotice.id='reward-notice';rewardNotice.hidden=true;rewardNotice.onclick=reportButton.onclick;
+document.querySelector('.world-stage')!.append(rewardNotice);
+function openEquipment(itemId?:string) {
+  ($('#result') as HTMLDialogElement).close();$('#view-summary').hidden=true;
+  playerControls?.clear();equipmentRoot.hidden=false;equipmentPanel.focusItem(itemId);equipmentRoot.focus();
+}
+inventoryButton.onclick=()=>openEquipment();
+$('#close-equipment').onclick=()=>{equipmentRoot.hidden=true;playerControls?.clear();inventoryButton.focus();};
+equipmentRoot.addEventListener('keydown',event=>{
+  event.stopPropagation();if(event.key==='Escape') $('#close-equipment').click();
+});
+function refreshEquipment(){if(!equipmentRoot.hidden) equipmentPanel.render();}
 
 function loadPreferences(): AbilityPreferences {
   try {
@@ -126,52 +166,24 @@ function setSessionPhase(phase: SessionPhase, message?: string) {
     error:'Falha ao carregar a arena',
   };
   $('#session-state').textContent = message ?? defaults[phase];
+  if(document.querySelector('#passive-state')) updateHUD();
+  refreshEquipment();
 }
 
-function renderParty() {
-  $('#party').innerHTML = heroes
-    .map((hero) => {
-      const vocation = hero.role as 'knight' | 'druid' | 'sorcerer';
-      const spells = abilitiesByVocation(vocation)
-        .map(
-          (ability) =>
-            `<img class="${preferences[ability.id]?.enabled ? '' : 'disabled'}"
-              src="${assetUrl(ability.icon)}" title="${ability.name} — ${ability.cooldown / 1000}s" alt="">`,
-        )
-        .join('');
-      const roleName =
-        vocation === 'knight' ? 'TANK' : vocation === 'druid' ? 'SUP' : 'DPS';
-      const selected = hero.id === selectedHeroId;
-      return `<article class="hero-card ${selected ? 'selected' : ''}"
-        id="card-${hero.id}" data-hero-id="${hero.id}" role="button"
-        tabindex="0" aria-pressed="${selected}"
-        aria-label="Abrir Helper de ${hero.name}">
-        <div class="hero-title">
-          <span class="role-badge role-${vocation}">${roleName}</span>
-          <b>${hero.name}</b><small>lv 250</small>
-        </div>
-        <div class="bar hp"><i style="width:100%"></i></div>
-        <div class="bar mp"><i style="width:100%"></i></div>
-        <div class="party-spells">${spells}</div>
-      </article>`;
-    })
-    .join('');
-}
-
-function renderActionBar() {
-  $('#action-bar').innerHTML = abilities
-    .map(
-      (ability) => `<button class="action ${
-        preferences[ability.id]?.enabled ? '' : 'disabled'
-      }" data-ability="${ability.id}" title="${ability.name} • ${ability.words}">
-        <img src="${assetUrl(ability.icon)}" alt="${ability.name}">
-        <em>${ability.cooldown / 1000}s</em>
-        <span class="cooldown-mask" aria-hidden="true"></span>
-        <strong class="cooldown-number" aria-hidden="true"></strong>
-      </button>`,
-    )
-    .join('');
-  updateCooldownVisuals(logicalTime);
+function renderParty() { hud.renderParty(selectedHeroId); }
+function renderActionBar() { hud.renderActions(selectedHeroId,preferences); updateCooldownVisuals(logicalTime); }
+function updateHUD() {
+  const engine=renderer?.engine;
+  hud.update(engine?.entities??[],engine?.progression??progressionStore.snapshot(),id=>engine?.controlOf(id).mode??'AI',selectedHeroId);
+  hud.availability(id=>{
+    if(!renderer || ['idle','completed','defeated','error'].includes(sessionPhase)) return {ready:false,reason:sessionPhase==='idle'?'not-started':'session-ended',remaining:0};
+    const ability=abilities.find(a=>a.id===id)!;
+    const target=ability.group==='healing'||ability.group==='support'?selectedHeroId:playerControls?.selectedTarget;
+    return engine!.abilityStatus(selectedHeroId,id,target);
+  },casting && casting.until>logicalTime?casting.id:undefined);
+  $('#compact-time').textContent=formatTime(liveState.time);
+  $('#compact-kills').textContent=liveState.kills+' derrotados';
+  $('#compact-gold').textContent=formatNumber(liveState.gold)+' ouro';
 }
 
 function updateCooldownVisuals(time: number) {
@@ -211,12 +223,10 @@ function registerCooldown(event: CombatEvent) {
 }
 
 function renderInventory() {
-  $('#backpack-slots').innerHTML = Array.from(
-    { length:20 },
-    (_, index) =>
-      `<span class="slot" data-slot="${index + 1}" aria-label="Slot ${index + 1}"></span>`,
-  ).join('');
-  $('#backpack-capacity').textContent = '0 / 20 slots';
+  const demo=$('#backpack-slots').closest('details');
+  if(demo) demo.remove();
+  const text=document.querySelector('[data-drawer="loot"] > p');
+  if(text) text.textContent='Ouro vai para o saldo local. Equipamentos e brasas ficam no Inventário; demais troféus são registros desta expedição.';
 }
 
 function healthBarColor(ratio: number) {
@@ -288,11 +298,12 @@ function resetInterface() {
 let playerControls:PlayerControls | undefined;
 
 async function createRenderer() {
+  const rememberedHero=selectedHeroId;
   playerControls?.destroy();
   playerControls = undefined;
   renderer?.destroy();
   renderer = undefined;
-  const nextRenderer = new PixiRenderer(new CombatEngine(803, preferences, crypto.randomUUID()), {
+  const nextRenderer = new PixiRenderer(new CombatEngine(803, preferences, huntSessionId, progressionStore.snapshot(), equipmentStore.loadout(),true), {
     debugEnabled,
     selectedHeroId,
   });
@@ -308,10 +319,16 @@ async function createRenderer() {
       get entities() { return nextRenderer.engine.entities; },
       get results() { return nextRenderer.engine.controlResults; },
       controlOf:id => nextRenderer.engine.controlOf(id),
+      abilityStatus:(id,ability,target) => nextRenderer.engine.abilityStatus(id,ability,target),
       submit:command => nextRenderer.engine.submit(command),
       selectTarget:id => nextRenderer.selectTarget(id),
+      pickEntity:(x,y)=>nextRenderer.pickEntity(x,y),
+      worldPoint:(x,y)=>nextRenderer.canvasPoint(x,y),
+      showDestination:tile=>nextRenderer.showDestination(tile),
       beforeTick:callback => { nextRenderer.beforeTick = callback; },
     },(id) => selectHero(id));
+    playerControls.selectActor(rememberedHero);
+    updateHUD();
   } catch (error) {
     nextRenderer.destroy();
     throw error;
@@ -319,6 +336,8 @@ async function createRenderer() {
 }
 
 function start() {
+  if(progressionStore.blocked) {$('#session-state').textContent=progressionStore.warning;return;}
+  if(equipmentStore.blocked || equipmentStore.warning || equipmentStore.pendingCount) {$('#session-state').textContent=equipmentStore.warning || 'Salve as recompensas pendentes primeiro.';openEquipment();return;}
   if (sessionPhase !== 'idle' || !renderer?.player.play()) return;
   setSessionPhase('running');
   renderAnalyzer();
@@ -373,6 +392,7 @@ function vocationLabel(role: string) {
 
 function selectHero(heroId: string, openHelper = false) {
   if (!heroIds.has(heroId)) return;
+  if(playerControls && playerControls.selectedActor!==heroId) {playerControls.selectActor(heroId);return;}
   selectedHeroId = heroId;
   document.documentElement.dataset.selectedHero = heroId;
   renderer?.selectHero(heroId);
@@ -381,6 +401,9 @@ function selectHero(heroId: string, openHelper = false) {
     card.classList.toggle('selected', selected);
     card.setAttribute('aria-pressed', String(selected));
   });
+  renderActionBar();
+  updateHUD();
+  refreshEquipment();
   if (openHelper) showAbilityModal(heroId);
 }
 
@@ -393,8 +416,8 @@ function renderAbilityModal(heroId = selectedHeroId) {
     .map((ability) => {
       const current = preferences[ability.id];
       return `<div class="ability-row">
-        <img src="${assetUrl(ability.icon)}" alt="">
-        <div><b>${ability.name}</b><small>${ability.words} • ${ability.cooldown / 1000}s</small></div>
+        ${iconMarkup(ability.id)}
+        <div><b>${abilityNames[ability.id]}</b><small>${ability.manaCost} MP • ${ability.cooldown / 1000}s</small></div>
         <label><input type="checkbox" data-enabled="${ability.id}" ${current.enabled ? 'checked' : ''}> Ativa</label>
         <label>Prioridade
           <select data-priority="${ability.id}">
@@ -432,13 +455,18 @@ function showResult(hunt: HuntResult) {
     XP total: ${formatNumber(hunt.xp)}<br>Gold: ${formatNumber(hunt.gold)}<br>
     Boss Tokens: ${formatBossToken(hunt.bossTokens)}<br>
     Monstros derrotados: ${hunt.kills}<br>Cura de Lyra: ${formatNumber(hunt.healing)}<br>
-    Recompensa: ${hunt.loot['Lion King fragment'] ? 'Lion King fragment' : '—'}</div>`;
+    Recompensa: ${hunt.loot['Lion King fragment'] ? 'Fragmento do Regente' : '—'}</div>
+    <p>${heroes.map(hero=>`${hero.name}: +${hunt.events.filter(e=>e.type==='level_up'&&e.targetId===hero.id).reduce((sum,e)=>sum+(e.data!.progress!.level-e.data!.previousLevel!),0)} níveis`).join(' · ')}</p>
+    <h3>Encontrados nesta hunt · comparar e equipar</h3><div class="reward-items">${hunt.events.filter(e=>e.type==='equipment_drop'&&e.data?.equipment).map(e=>{const item=e.data!.equipment!,def=itemById(item.definitionId)!;return `<button data-reward-item="${item.id}" class="${def.rarity}">${itemIcon(def.icon)}<span>${itemName(item)}${item.quantity>1?' ×'+item.quantity:''}<small>${def.vocations.join(' / ')} · ${def.description}</small></span></button>`;}).join('')}</div>`;
+  $('#result-content').querySelectorAll<HTMLButtonElement>('[data-reward-item]').forEach(button=>button.onclick=()=>openEquipment(button.dataset.rewardItem));
   const dialog = $('#result') as HTMLDialogElement;
   if (!dialog.open) dialog.showModal();
 }
 
 function scheduleLoop() {
   clearLoopTimer();
+  if(($('#result') as HTMLDialogElement).open) return;
+  if(equipmentStore.warning || equipmentStore.pendingCount) {$('#session-state').textContent=equipmentStore.warning || 'Salve as recompensas pendentes primeiro.';return;}
   if (
     !loopEnabled ||
     (sessionPhase !== 'completed' && sessionPhase !== 'defeated')
@@ -454,6 +482,7 @@ function scheduleLoop() {
 window.addEventListener('hunt-time', (rawEvent) => {
   liveState.setTime((rawEvent as CustomEvent<number>).detail);
   updateCooldownVisuals(liveState.time);
+  updateHUD();
   const element = document.querySelector('#time');
   if (element) element.textContent = formatTime(liveState.time);
 });
@@ -491,6 +520,7 @@ window.addEventListener('hunt-event', (rawEvent) => {
       Number(document.documentElement.dataset.bossSpawns ?? 0) + 1;
     document.documentElement.dataset.bossSpawns = String(bossSpawns);
     setSessionPhase('boss');
+    $('#boss-banner').hidden=false;window.setTimeout(()=>$('#boss-banner').hidden=true,2200);
   }
 
   if (event.type === 'boss_reward') {
@@ -507,43 +537,20 @@ window.addEventListener('hunt-event', (rawEvent) => {
     }
   }
 
-  if (event.type === 'spawn' && heroIds.has(event.targetId ?? '')) {
-    const hp = document.querySelector<HTMLElement>(
-      `#card-${event.targetId} .hp i`,
-    );
-    const mp = document.querySelector<HTMLElement>(
-      `#card-${event.targetId} .mp i`,
-    );
-    if (hp) {
-      hp.style.width = '100%';
-      hp.style.background = healthBarColor(1);
-    }
-    if (mp) mp.style.width = '100%';
+  progressionStore.apply(event);
+  if(event.type==='equipment_drop' || event.type==='loot'&&event.data?.item==='Gold coin') {
+    equipmentStore.apply(event,huntSessionId);refreshEquipment();
+    if(equipmentStore.warning) {$('#session-state').textContent=equipmentStore.warning;}
   }
-
-  if (event.type === 'damage' || event.type === 'heal') {
-    const unit = renderer?.units.get(event.targetId!);
-    const bar = document.querySelector<HTMLElement>(
-      `#card-${event.targetId} .hp i`,
-    );
-    if (bar && unit) {
-      const ratio = unit.maxHp > 0 ? unit.currentHp / unit.maxHp : 0;
-      bar.style.width = `${100 * ratio}%`;
-      bar.style.background = healthBarColor(ratio);
-    }
-  }
-
-  if (event.type === 'cast' && heroIds.has(event.sourceId ?? '')) {
+  if(event.type==='cast' && heroIds.has(event.sourceId??'')) {
     registerCooldown(event);
-    const unit = renderer?.units.get(event.sourceId!);
-    const bar = document.querySelector<HTMLElement>(
-      `#card-${event.sourceId} .mp i`,
-    );
-    if (bar && unit) {
-      const ratio = unit.maxMana > 0 ? unit.currentMana / unit.maxMana : 0;
-      bar.style.width = `${100 * ratio}%`;
-    }
+    if(event.sourceId===selectedHeroId) casting={id:event.data?.abilityId??'',until:event.time+400};
   }
+  if(event.type==='level_up') {
+    const notice=$('#level-notice');notice.textContent=heroes.find(h=>h.id===event.targetId)?.name+' · Nível '+event.data?.progress?.level;notice.hidden=false;
+    window.setTimeout(()=>notice.hidden=true,2200);
+  }
+  updateHUD();
 
   if (
     [
@@ -600,7 +607,7 @@ function labelEvent(event: CombatEvent) {
   if (event.type === 'dodge') return `${event.targetId}: esquiva.`;
   if (event.type === 'death') return `${event.targetId} foi derrotado.`;
   if (event.type === 'aggro') {
-    return 'Aldric desafiou os inimigos com exeta res.';
+    return 'Aldric lançou o Chamado do Ferro.';
   }
   if (event.type === 'reposition') {
     return `${event.sourceId} reposicionou-se.`;
@@ -636,6 +643,7 @@ function showBossTokenNotification(amount: number) {
 window.addEventListener('hunt-complete', (rawEvent) => {
   const hunt = (rawEvent as CustomEvent<HuntResult>).detail;
   lastResult = hunt;
+  completedReport=hunt;reportButton.disabled=false;
   completedCycles++;
   document.documentElement.dataset.completedCycles = String(completedCycles);
   renderAnalyzer(hunt);
@@ -644,7 +652,11 @@ window.addEventListener('hunt-complete', (rawEvent) => {
     ? 'Hunt concluída'
     : 'Equipe derrotada';
   setSessionPhase(hunt.victory ? 'completed' : 'defeated');
-  if (loopEnabled) scheduleLoop();
+  if (loopEnabled) {
+    const count=hunt.events.filter(e=>e.type==='equipment_drop').length;
+    rewardNotice.textContent=`${hunt.victory?'Vitória':'Expedição encerrada'} · +${hunt.gold} ouro · ${count} drops · Ver relatório`;
+    rewardNotice.hidden=false;scheduleLoop();
+  }
   else showResult(hunt);
 });
 
@@ -670,6 +682,7 @@ $('#repeat').onclick = () => void restart(true);
 $('#close-result').onclick = () => {
   ($('#result') as HTMLDialogElement).close();
 };
+$('#result').addEventListener('close',()=>{if(loopEnabled) scheduleLoop();});
 $('#loop-toggle').onclick = () => {
   loopEnabled = !loopEnabled;
   const button = $('#loop-toggle');
@@ -697,29 +710,22 @@ $('#ability-config').onclick = () => showAbilityModal();
 $('#party-config').onclick = () => showAbilityModal();
 $('#party').onclick = (event) => {
   const card = (event.target as Element).closest<HTMLElement>('[data-hero-id]');
-  if (card?.dataset.heroId) selectHero(card.dataset.heroId, true);
+  if (card?.dataset.heroId) selectHero(card.dataset.heroId);
 };
 $('#party').onkeydown = (event) => {
   if (event.key !== 'Enter' && event.key !== ' ') return;
   const card = (event.target as Element).closest<HTMLElement>('[data-hero-id]');
   if (!card?.dataset.heroId) return;
   event.preventDefault();
-  selectHero(card.dataset.heroId, true);
+  selectHero(card.dataset.heroId);
 };
 $('#action-bar').onclick = (event) => {
+  if(!equipmentRoot.hidden) return;
   const button = (event.target as Element).closest<HTMLButtonElement>(
     '[data-ability]',
   );
   if (!button) return;
-  if (playerControls?.manual && button.dataset.ability) {
-    playerControls.cast(button.dataset.ability);
-    return;
-  }
-  const ability = abilities.find(
-    (candidate) => candidate.id === button.dataset.ability,
-  );
-  const hero = heroes.find((candidate) => candidate.role === ability?.vocation);
-  showAbilityModal(hero?.id ?? selectedHeroId);
+  if(button.dataset.ability) playerControls?.cast(button.dataset.ability);
 };
 $('#save-abilities').onclick = (event) => {
   event.preventDefault();
@@ -775,7 +781,7 @@ window.addEventListener('hunt-select-character', (rawEvent) => {
   const heroId = (rawEvent as CustomEvent<string>).detail;
   // Manual pointer selection belongs to PlayerControls; Pixi tap also fires on right click.
   if (playerControls?.manual) return;
-  selectHero(heroId, true);
+  selectHero(heroId);
 });
 
 document.querySelectorAll<HTMLButtonElement>('[data-view]').forEach((button) => {
@@ -786,17 +792,8 @@ document.querySelectorAll<HTMLButtonElement>('[data-view]').forEach((button) => 
       item.setAttribute('aria-selected', String(active));
     });
     const view = button.dataset.view;
-    const summary = $('#view-summary');
-    if (view === 'general') {
-      summary.hidden = true;
-      summary.textContent = '';
-    } else {
-      summary.hidden = false;
-      summary.textContent =
-        view === 'combat'
-          ? 'A análise detalhada de dano e ameaças será ampliada no MVP 1.'
-          : 'A gestão de loot e filtros pertence ao MVP de inventário.';
-    }
+    $('#view-summary').hidden=view==='general';
+    document.querySelectorAll<HTMLElement>('[data-drawer]').forEach(panel=>panel.hidden=panel.dataset.drawer!==view);
   };
 });
 
@@ -812,7 +809,10 @@ document.querySelectorAll<HTMLButtonElement>('[data-collapse]').forEach((button)
   };
 });
 
-$('#supply-config').onclick = () => {
+$('#close-drawer').onclick=()=>{ $('#view-summary').hidden=true; };
+
+const supplyConfig=document.querySelector<HTMLButtonElement>('#supply-config');
+if(supplyConfig) supplyConfig.onclick = () => {
   showFutureModule(
     'Supply Pouch — próximo MVP',
     'Configuração e consumo persistente de supplies serão implementados no MVP de inventário.',
@@ -835,10 +835,14 @@ document.querySelectorAll<HTMLButtonElement>('[data-speed]').forEach((button) =>
   };
 });
 
-window.addEventListener('beforeunload', () => {
+window.addEventListener('pagehide', (event) => {
+  if(event.persisted) return;
   clearLoopTimer();
   playerControls?.destroy();
   renderer?.destroy();
+});
+window.addEventListener('beforeunload',event=>{
+  if(equipmentStore.pendingCount) {event.preventDefault();event.returnValue='';}
 });
 
 async function initialize() {

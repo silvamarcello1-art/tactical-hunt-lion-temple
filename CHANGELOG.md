@@ -1,3 +1,38 @@
+## 2026-09-30 — MVP 2B (em validação)
+
+- Inventário persistente, drops determinísticos, comparação e equipamento por vocação.
+- Forja +1 atômica; overflow em reserva; proteção contra replay e save inválido.
+- Drawer com bloqueio de input do mundo; relatório de drops reais e feedback compacto de Loop.
+- Roadmap atual 2B–2F; histórico anterior preservado e identificado.
+
+## 2026-09-30 — Preview público validado
+
+- GitHub Pages publicou `056a743` com artifact aprovado (167 unitários, 24 E2E).
+- Allowlist ampliada somente para a branch autorizada, preservando proteções.
+- Manifest e hunt pública até vitória verificados; sem merge ou alteração de Sites.
+
+## 2026-09-26 — Mouse-first combat, compact HUD and encounter depth
+
+- MoveTo autoritativo, engage por botão direito e Look por chord consumido.
+- AUTO independente da seleção; MANUAL explícito; ASSISTED condicionado ao alvo.
+- Três habilidades originais por herói, HUD mínimo e cooldown no relógio lógico.
+- Quatro papéis inimigos, orientação determinística e reposicionamento limitado.
+- Boss com fase desperta e escombros temporários reais com revalidação da grade.
+- Telegraph reservado a perigo especial; magias e projéteis originais em pools.
+- Progressão local existente preservada; oito atores originais e cenário legível.
+- Distribuição exclui assets de referência legados sem remover arquivos-fonte.
+- Novo ruleset documenta mudança intencional do baseline e mantém repetibilidade.
+- E2E de fronteiras transitórias usa relógio controlado (frames reais) para não
+  disputar com o timer de loop/boss no runner; CI preserva traces em falhas.
+- Traces sem filmstrip contínuo de WebGL; snapshots e PNG de falha mantidos.
+  CI tem orçamento total de cenário ajustado, sem ampliar limites de assertions.
+- Teste de hotbar amostra o footpoint visual com relógio controlado para não
+  clicar um tile abandonado pelo monstro entre chamadas do protocolo.
+- Validação do PR e publicação Pages usam filas separadas; PR não cancela mais
+  um push pendente. Deploys continuam serializados e condicionados aos gates.
+- Os três cenários de loops compartilham orçamento total explícito, mantendo
+  limites individuais e auditorias de integridade inalterados.
+
 ## 2026-09-20 — original visual foundation
 
 - Sessão composta em main.ts; PlayerControlPort desacopla input de Pixi.

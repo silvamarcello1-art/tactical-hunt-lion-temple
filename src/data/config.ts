@@ -1,5 +1,6 @@
 import { tile } from '../combat/tiles';
 import type { EntitySnapshot } from '../events/types';
+import { monsterProfiles } from './encounters';
 
 export const HUNT_LAYOUT_CONFIG = {
   maxInitialBacklineAttackers:2,
@@ -112,3 +113,14 @@ export const floors: EntitySnapshot[][] = [
     lion('guard-2','Royal Guard',620,75,HUNT_LAYOUT_CONFIG.enemySpawnPositions[3][2]),
   ],
 ];
+
+// Stable encounter IDs preserve reward/save identity; presentation names are original.
+const roster:NonNullable<EntitySnapshot['archetype']>[][]=[
+  ['bruiser','flanker','hunter','caster'],['bruiser','hunter','caster','flanker'],
+  ['bruiser','flanker','hunter','caster','caster','bruiser'],['bruiser','bruiser','hunter'],
+];
+floors.forEach((floor,i)=>floor.forEach((entity,j)=>{
+  if(entity.role==='boss') {entity.name='O Regente Vazio';entity.description='A coroa desperta. Seus golpes derrubam o próprio templo.';return;}
+  const archetype=roster[i][j],profile=monsterProfiles[archetype];
+  Object.assign(entity,{archetype,name:profile.name,description:profile.description,color:profile.color});
+}));

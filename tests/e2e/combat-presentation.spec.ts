@@ -73,6 +73,11 @@ test.describe.serial('MVP 1D — combat presentation', () => {
     await expect(page.locator('#game')).toHaveAttribute('data-active-projectiles', '0');
     await expect(page.locator('#game')).toHaveAttribute('data-active-telegraphs', '0');
     await expect(page.locator('#game')).toHaveAttribute('data-active-floating-texts', '0');
+    await expect(page.locator('#game')).toHaveAttribute('data-active-spell-effects', '0');
+    await expect(page.locator('#game')).toHaveAttribute('data-temporary-blocked-tiles', '0');
+    console.info('Presentation sample',await page.locator('#game').evaluate(el=>Object.fromEntries(
+      Object.entries((el as HTMLElement).dataset).filter(([key])=>
+        /presentationUpdate|displayObjectCount|monsterDecisions|pathRecalculations|createdSpellEffects|maxActiveVisualObjects/.test(key)))));
     await expect(page.locator('#game')).toHaveAttribute('data-shadow-layer-count', '3');
     await expect(page.locator('#game')).toHaveAttribute('data-unit-ui-layer-count', '3');
     expect(Number(await gameAttribute(page, 'data-max-active-visual-objects'))).toBeGreaterThan(0);

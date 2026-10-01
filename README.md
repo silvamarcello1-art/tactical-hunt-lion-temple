@@ -1,9 +1,18 @@
 # Lion Temple — Tactical Hunt
 
 Vertical slice jogável de uma hunt automática 2D com PixiJS. Knight, Druid e
-Sorcerer atravessam três ondas e enfrentam um boss. O motor gera uma timeline
-determinística; o PixiJS a reproduz e o shell HTML apresenta controles, Party,
-habilidades, loot e Hunt Analyzer.
+Sorcerer atravessam três ondas e enfrentam um boss. Um motor incremental usa
+grade autoritativa, A*, LoS e eventos determinísticos; PixiJS representa o
+combate, e HTML/CSS apresenta controles Auto/Manual/Assisted, Party e Analyzer.
+
+## Recompensas e build — MVP 2B
+
+Desligue **Loop**, conclua uma hunt e abra **Inventário**. Escolha um herói,
+compare uma arma/armadura e equipe por clique. A forja +1 custa 200 ouro e uma
+Brasa do Templo; não tem falha nem destruição. Equipar/forjar só entre hunts.
+O próximo combate utiliza os stats efetivos. Reload preserva XP, equipamentos,
+ouro e Boss Tokens. Mochila cheia envia recompensas para uma reserva visível.
+Regras e recuperação de save: [Equipment and Loot](docs/EQUIPMENT_AND_LOOT.md).
 
 ## Executar
 
@@ -39,7 +48,7 @@ pnpm build
 
 ## Estado
 
-O MVP 0 está fechado. Consulte:
+O MVP 0 é histórico; a etapa atual é MVP 2B. Consulte:
 
 - `docs/CURRENT_STATE.md`
 - `docs/ACCEPTANCE_MVP0.md`
@@ -47,7 +56,7 @@ O MVP 0 está fechado. Consulte:
 
 ## Limites
 
-- Sem colisão/pathfinding completo.
-- Sem inventário real, equipamentos, backend, contas ou multiplayer.
-- Assets são provisórios e devem ser licenciados ou substituídos antes de uso
-  comercial.
+- Arena limitada; ainda sem Adventure, NPCs, quests ou campanha.
+- Save local, sem backend, contas, multiplayer ou anticheat de economia online.
+- Dois slots por herói, melhoria até +1; sem venda, descarte ou drag-and-drop.
+- Sprites originais ainda são blockouts; referências legadas ficam fora do build.
