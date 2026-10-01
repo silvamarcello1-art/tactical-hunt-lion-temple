@@ -54,6 +54,11 @@ test('Auto completes three evolving hunts, unlocks passives and persists progres
   await pauseIdleClock(page);
   await page.locator('[data-speed="4"]').click();await page.locator('#start').click();
   await advanceUntilAttribute(page,'data-completed-cycles','3');
+  await page.locator('#open-report').click();
+  await page.clock.runFor(2500);
+  await expect(page.locator('#result')).toBeVisible();
+  await expect(page.locator('html')).toHaveAttribute('data-completed-cycles','3');
+  await page.locator('#close-result').click();
   await page.locator('#loop-toggle').click();
   await expect(page.locator('#stage-label')).toHaveText('Hunt concluída');
   await page.clock.runFor(2500);
@@ -61,7 +66,14 @@ test('Auto completes three evolving hunts, unlocks passives and persists progres
   await expect(page.locator('#passive-state')).toHaveText('ATIVA');
   const level=await page.locator('#card-knight .hero-level').textContent();
   expect(level).not.toBe('Lv. 1');
+  const gear=await page.evaluate(()=>JSON.parse(localStorage.getItem('tactical-hunt-equipment-v2')!));
+  expect(gear.gold).toBeGreaterThan(3000);
+  expect(gear.items.filter((item:any)=>item.definitionId==='temple-ember').reduce((n:number,item:any)=>n+item.quantity,0)).toBe(9);
+  expect(new Set(gear.receipts).size).toBe(gear.receipts.length);
+  const ids=[...gear.items,...gear.inbox].map((item:any)=>item.id);
+  expect(new Set(ids).size).toBe(ids.length);
   await page.reload();await expect(page.locator('html')).toHaveAttribute('data-session-state','idle');
+  expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('tactical-hunt-equipment-v2')!))).toEqual(gear);
   await expect(page.locator('#card-knight .hero-level')).toHaveText(level!);
   await expect(page.locator('#game')).toHaveAttribute('data-visual-footprint',/logical:32/);
 });

@@ -58,3 +58,20 @@ dialog footer, .dialog-actions { display: flex; justify-content: flex-end; gap: 
 @media(max-height:760px){#game{min-height:330px}.action-dock{padding-block:8px;min-height:116px}.topbar{height:44px}.game-layout{padding-top:8px}}
 .controls .center-tabs{position:static;display:flex}.topbar{height:38px}.action-dock .controls{display:grid;grid-template-columns:auto auto;gap:3px 8px}.controls .center-tabs{grid-column:1/-1;justify-content:flex-end}
 .hero-card .hero-mode{display:block;color:#bca875}
+.hero-card .hero-title b{display:block!important;font-size:10px;color:#eee6cf}
+.hero-card{min-height:47px}.hero-card .hp i{filter:brightness(1.18)}
+.equipment-drawer{width:min(460px,calc(100vw - 32px));z-index:30;background:#141e1a;color:#e5e8df;padding:20px;box-shadow:-12px 0 45px #0008;overflow:auto}
+.equipment-drawer p{font-size:12px;line-height:1.5;color:#c0cbbd}.equipment-drawer h3{font-size:13px;margin:12px 0 8px}
+.equipment-heroes,.equipment-slots{display:flex;gap:8px}.equipment-heroes button[aria-pressed=true]{border-color:#e3c384;background:#403a27}
+.equipment-slots section{flex:1;border:1px solid #485044;padding:10px;display:grid;gap:8px}.equipment-slots b{font-size:12px}
+.effective-stats{display:grid;grid-template-columns:1fr 1fr;gap:6px}.effective-stats div{display:flex;justify-content:space-between;gap:5px;background:#202c25;padding:6px;font-size:11px}.effective-stats dd{margin:0;font-weight:700;color:#e5d19a}
+.bag-heading{display:flex;align-items:center;justify-content:space-between}.bag-heading>b{font-size:13px;color:#edcd85}
+.item-list{display:grid;gap:5px}.item-row{width:100%;display:flex;align-items:center;gap:10px;text-align:left;padding:8px}.item-row>span{flex:1}.item-row small,.reward-items small{display:block;line-height:1.6}.item-row.selected{outline:1px solid #e4c888;background:#323b2d}
+.item-icon{width:36px;height:40px;flex-shrink:0;color:#c9b48a}.rare .item-icon{color:#b8aedc}.uncommon .item-icon{color:#9ac8b0}.item-row em{font-size:9px;color:#afd0a8}
+.comparison-stats{display:grid;grid-template-columns:1fr auto auto;gap:5px 12px;font-size:12px;padding:10px;background:#0e1512}.comparison-stats em{font-style:normal}.gain{color:#b1daa5}.loss{color:#ffa796}
+.forge-preview{padding:12px;border:1px solid #6a583c;margin-top:14px}.forge-preview small{display:block;line-height:1.5;margin-top:8px}.equipment-warning:not(:empty){border-left:3px solid #d6af68;padding:8px;background:#342c1d;color:#f2dcaf}
+#item-comparison{border-top:1px solid #4f5847;margin-top:16px;padding-top:12px}.equipment-policy{border-left:2px solid #80a899;padding-left:9px}
+.reward-items{display:grid;grid-template-columns:1fr 1fr;gap:6px;max-height:260px;overflow:auto}.reward-items button{display:flex;gap:8px;align-items:center;text-align:left}.reward-items small{font-size:10px}
+#reward-notice{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);z-index:5;background:#243329eb;border-color:#ad9866;white-space:nowrap;color:#f2deb1}
+#result{max-height:85vh;overflow:auto}#result h3{font-size:13px}#result .result-list{font-variant-numeric:tabular-nums}
+#equipment-drawer>.drawer-close{position:sticky;top:0;float:right;z-index:2;background:#26372c}

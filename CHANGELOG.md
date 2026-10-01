@@ -1,3 +1,10 @@
+## 2026-09-30 — MVP 2B (em validação)
+
+- Inventário persistente, drops determinísticos, comparação e equipamento por vocação.
+- Forja +1 atômica; overflow em reserva; proteção contra replay e save inválido.
+- Drawer com bloqueio de input do mundo; relatório de drops reais e feedback compacto de Loop.
+- Roadmap atual 2B–2F; histórico anterior preservado e identificado.
+
 ## 2026-09-30 — Preview público validado
 
 - GitHub Pages publicou `056a743` com artifact aprovado (167 unitários, 24 E2E).

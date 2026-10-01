@@ -39,8 +39,13 @@ gesto sem executar ação. Contextmenu é prevenido **somente no canvas**. HUD �
 DOM externo e não encaminha cliques ao mundo.
 
 Look usa dados de entidade e worldDescriptions, com uma linha contextual. NPC,
-inventário real, use/use-with/drop ainda retornam unsupported-interaction.
+use/use-with/drop no mundo ainda retornam unsupported-interaction.
 Não há menus artificiais para funcionalidades futuras.
+
+MVP 2B: inventário/equipamento/forja reais em drawer. Enquanto aberto, limpa
+inputs pendentes e bloqueia mouse/teclado do mundo; ESC fecha sem enviar Stop.
+A seleção de herói atualiza imediatamente o painel. Equipar/desequipar/forjar
+só entre hunts com Loop OFF; a simulação automática pode continuar em consulta.
 
 ## Autoridade
 

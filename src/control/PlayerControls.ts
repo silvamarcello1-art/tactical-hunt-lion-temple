@@ -57,6 +57,7 @@ export class PlayerControls {
     });
     listen(window,'keydown',(raw) => {
       const event = raw as KeyboardEvent;
+      if(document.querySelector('#equipment-drawer:not([hidden])')) {this.clear();return;}
       if (editableTarget(event.target)) return;
       if (event.key === 'Escape') { this.stop(); this.status.textContent = 'Parado.'; return; }
       if (editableTarget(event.target) || !this.port.running || event.ctrlKey || event.metaKey || event.altKey) return;
@@ -90,6 +91,7 @@ export class PlayerControls {
     listen(this.port.canvas,'pointerdown',event=>event.stopImmediatePropagation(),true);
     listen(this.port.canvas,'pointerup',event=>event.stopImmediatePropagation(),true);
     listen(this.port.canvas,'mousedown',(raw)=>{
+      if(document.querySelector('#equipment-drawer:not([hidden])')) return;
       const event=raw as MouseEvent;
       event.stopImmediatePropagation();
       if(this.mouse.down(event.button,event.buttons)==='look') {
@@ -98,6 +100,7 @@ export class PlayerControls {
       }
     },true);
     listen(window,'mouseup',(raw) => {
+      if(document.querySelector('#equipment-drawer:not([hidden])')) {this.mouse.clear();return;}
       const event = raw as MouseEvent;
       const gesture=this.mouse.up(event.button);
       if(!gesture || event.target!==this.port.canvas) return;
@@ -130,6 +133,7 @@ export class PlayerControls {
     });
     listen(this.port.canvas,'pointercancel',() => this.clear());
     this.port.beforeTick(() => {
+      if(document.querySelector('#equipment-drawer:not([hidden])')) {this.clear();return;}
       if (this.mode === 'AI') return;
       const held=this.held.direction();
       const {x:dx,y:dy}=held.x||held.y?held:this.pendingStep??held;

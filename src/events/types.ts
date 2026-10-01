@@ -1,5 +1,7 @@
 import type { HeroProgress } from '../data/progression';
+import type { ItemInstance } from '../combat/Equipment';
 export type EventType =
+  | 'equipment_drop'
   | 'map_changed'
   | 'boss_phase'
   | 'hero_experience'
@@ -57,6 +59,7 @@ export interface CombatEvent {
   sourceId?: string;
   targetId?: string;
   data?: {
+    equipment?: ItemInstance;
     requiresTelegraph?: boolean;
     blocked?: boolean;
     progress?: HeroProgress;

@@ -1,4 +1,6 @@
-import { awardXp, grownStats, passiveAmount, progressFromTotal } from './Progression';
+import { awardXp, passiveAmount, progressFromTotal } from './Progression';
+import { effectiveStats, applyEffectiveStats, type Loadout } from './Equipment';
+import { EquipmentDrops } from './EquipmentDrops';
 import { monsterProfiles,bossSpecial,monsterWave } from '../data/encounters';
 import { chooseDirectionalAttack } from './DirectionalTactics';
 import { TemporaryTerrain } from './TemporaryTerrain';
@@ -115,7 +117,12 @@ export class CombatEngine {
   private readonly basicReady = new Map<string,number>();
 
   private progress?:PartyProgress;
+  private equipmentDrops?:EquipmentDrops;
   get progression() { return clone(this.progress ?? {}); }
+  configureLoadout(loadout:Loadout) {
+    if(this.iterator || this.disposed || this.finished) return false;
+    this.loadout=clone(loadout);return true;
+  }
 
   /** Read-only domain availability for input/slot feedback. Execution revalidates. */
   abilityStatus(actorId:string,abilityId:string,targetId?:string) {
@@ -149,7 +156,8 @@ export class CombatEngine {
       const next=awardXp(old,gained); this.progress[hero.id]=next;
       this.emit('hero_experience',floor,undefined,hero.id,{amount:gained,progress:clone(next),sessionId:this.sessionId});
       if(next.level>old.level) {
-        Object.assign(hero,grownStats(heroes.find(base=>base.id===hero.id)!,next),{level:next.level});
+        applyEffectiveStats(hero,effectiveStats(heroes.find(base=>base.id===hero.id)!,next,this.loadout));
+        hero.level=next.level;
         // Current HP/mana stay absolute; level-up does not heal or refill.
         this.emit('level_up',floor,hero.id,hero.id,{previousLevel:old.level,progress:clone(next),entity:clone(hero),sessionId:this.sessionId});
       }
@@ -409,8 +417,12 @@ export class CombatEngine {
     private preferences: AbilityPreferences = defaultAbilityPreferences(),
     sessionId?:string,
     progression?:PartyProgress,
+    private loadout:Loadout={},
+    equipmentRewards=false,
   ) {
     this.sessionId = sessionId ?? `hunt-${seed}`;
+    this.loadout=clone(loadout);
+    if(equipmentRewards) this.equipmentDrops=new EquipmentDrops(seed ^ 0x7e91,this.sessionId);
     if (progression) this.progress=Object.fromEntries(heroes.map(hero=>[hero.id,progressFromTotal(progression[hero.id]?.totalXp??0)]));
   }
 
@@ -442,7 +454,7 @@ export class CombatEngine {
     const tilePosition = { x:snapshot.tileX,y:snapshot.tileY };
     const progress=this.progress?.[snapshot.id];
     if(progress) {
-      const stats=grownStats(snapshot,progress);
+      const stats=effectiveStats(snapshot,progress,this.loadout);
       snapshot={...snapshot,...stats,hp:stats.maxHp,mana:stats.maxMana,level:progress.level};
     }
     return {
@@ -948,6 +960,9 @@ export class CombatEngine {
         rewardType:'bossToken',
       });
       if (this.random() < 0.3) this.addLoot('Rare gem', 1, floor, enemy.id);
+    }
+    for(const equipment of this.equipmentDrops?.forKill(enemy.id,boss)??[]) {
+      this.emit('equipment_drop',floor,enemy.id,undefined,{equipment,sessionId:this.sessionId});
     }
   }
 

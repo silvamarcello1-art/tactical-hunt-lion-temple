@@ -188,10 +188,13 @@ test.describe.serial('MVP 0 + MVP 1A — fluxo completo', () => {
     const errors = collectRuntimeErrors(page);
     await openIdleHunt(page);
 
-    await expect(page.locator('#backpack-capacity')).toHaveText('0 / 20 slots');
+    await page.locator('#open-equipment').click();
+    await expect(page.locator('.empty-inventory')).toContainText('Derrote o Regente');
+    await expect(page.locator('#inventory-gold')).toHaveText('0 ouro');
+    await page.locator('#close-equipment').click();
     await expect(page.locator('#loot-capacity')).toHaveText('0 / 64 slots');
     await expect(page.locator('#loot')).toHaveText('Nenhum item ainda.');
-    await expect(page.locator('.demo-tag')).not.toHaveCount(0);
+    await expect(page.locator('#backpack-slots')).toHaveCount(0);
 
     await page.locator('[data-module="helper"]').click();
     await expect(page.locator('#ability-modal')).toBeVisible();
@@ -229,7 +232,7 @@ test.describe.serial('MVP 0 + MVP 1A — fluxo completo', () => {
     await expect(page.locator('#view-summary')).toBeVisible();
     await expect(page.locator('#view-summary')).toContainText('Hunt Analyzer');
     await page.locator('[data-view="loot"]').click();
-    await expect(page.locator('#view-summary')).toContainText('inventário');
+    await expect(page.locator('#view-summary')).toContainText('Inventário');
     await page.locator('[data-view="general"]').click();
     await expect(page.locator('#view-summary')).toBeHidden();
 
@@ -245,13 +248,11 @@ test.describe.serial('MVP 0 + MVP 1A — fluxo completo', () => {
     await expect(content).toBeVisible();
 
     await page.locator('[data-view="loot"]').click();
-    await page.getByText('Planejamento de inventário',{exact:true}).click();
-    await page.locator('#supply-config').click();
-    await expect(page.locator('#future-modal')).toBeVisible();
-    await expect(page.locator('#future-description')).toContainText(
-      'Disponível em um próximo MVP',
-    );
-    await page.locator('#close-future').click();
+    // Real inventory replaces the former decorative slots/Supply placeholder.
+    await page.locator('#open-equipment').click();
+    await expect(page.locator('#equipment-drawer')).toContainText('Somente consulta');
+    await page.locator('#close-equipment').click();
+    await page.locator('[data-view="loot"]').click();
     await page.locator('#close-drawer').click();
     await page.locator('#loop-toggle').click();
     await expect(page.locator('#loop-toggle')).toHaveAttribute(

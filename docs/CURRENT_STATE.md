@@ -1,4 +1,22 @@
-# Estado vigente — Mouse-first + Encounter Depth — 26/09/2026
+# Estado vigente — MVP 2B — 30/09/2026
+
+Implementação em validação na branch `feature/gameplay-first-mvp2a`.
+Inventário local com 24 espaços, materiais em stacks de 99 e reserva sem descarte;
+seis armas, duas armaduras e um material originais. Drops vêm do domínio em RNG
+isolado, com IDs persistentes e recibos contra replay. Equipar/forjar somente
+entre hunts com Loop OFF. Forja +1 custa 200 gold e uma Brasa do Templo.
+Stats de nível e equipamento são calculados no domínio, também usado pela UI;
+trocas não acumulam bônus nem recuperam HP/mana. XP, preferências e Boss Tokens
+anteriores são preservados por migração aditiva. Save inválido não é apagado.
+
+UI: drawer por herói, comparação, slots reais, forja, reserva, relatório com
+drops reais, feedback compacto de Loop. Inputs do mundo bloqueados no drawer.
+Polish focado em identificação da party, contraste de HP e comparação legível;
+sprites existentes preservados. Contrato: `EQUIPMENT_AND_LOOT.md`.
+Gates/ponto exato: `SESSION_CHECKPOINT.md`. Sem backend, comércio, descarte,
+drag-and-drop, novos slots ou economia online. Roadmap vigente: 2B–2F.
+
+## Histórico — Mouse-first + Encounter Depth — 26/09/2026
 
 Branch feature/gameplay-first-mvp2a, base 58d9720. Este resumo substitui as
 descrições históricas abaixo quando divergirem.

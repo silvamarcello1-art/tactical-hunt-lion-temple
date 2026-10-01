@@ -1,4 +1,9 @@
 import { GameplayHUD } from './ui/GameplayHUD';
+import { EquipmentStore } from './app/EquipmentStore';
+import { EquipmentPanel, itemName } from './ui/EquipmentPanel';
+import { itemById } from './data/items';
+import { itemIcon } from './ui/ItemIcons';
+import type { Vocation } from './data/progression';
 import { iconMarkup, abilityNames } from './data/actionBar';
 import { ProgressionStore } from './app/ProgressionStore';
 import { CombatEngine } from './combat/CombatEngine';
@@ -36,6 +41,7 @@ const heroIds = new Set(['knight', 'druid', 'sorcerer']);
 const storageKey = 'tactical-hunt-ability-preferences';
 const liveState = new LiveHuntState();
 const progressionStore = new ProgressionStore();
+const equipmentStore = new EquipmentStore(localStorage);
 const hud = new GameplayHUD();
 let casting: {id:string; until:number} | undefined;
 const debugEnabled =
@@ -55,6 +61,7 @@ let loopTimer: number | undefined;
 let restartInProgress = false;
 let completedCycles = 0;
 let lastResult: HuntResult | undefined;
+let completedReport:HuntResult | undefined;
 let logicalTime = 0;
 let huntSessionId = createNewHuntSessionId();
 const currencyService = new CurrencyService();
@@ -63,6 +70,34 @@ const abilityCooldowns = new Map<
   string,
   { endsAt: number; duration: number }
 >();
+
+const equipmentRoot=document.createElement('aside');
+equipmentRoot.id='equipment-drawer';equipmentRoot.className='drawer equipment-drawer';equipmentRoot.hidden=true;
+equipmentRoot.setAttribute('aria-label','Inventário e equipamento');equipmentRoot.tabIndex=-1;
+equipmentRoot.innerHTML='<button id="close-equipment" class="drawer-close" aria-label="Fechar inventário">×</button><div id="equipment-content"></div>';
+document.querySelector('.app-shell')!.append(equipmentRoot);
+const equipmentPanel=new EquipmentPanel($('#equipment-content'),equipmentStore,()=>({
+  hero:selectedHeroId as Vocation,progress:progressionStore.snapshot(),allowed:!loopEnabled&&['idle','completed','defeated'].includes(sessionPhase),
+}),id=>selectHero(id),()=>{
+  if(sessionPhase==='idle') renderer?.engine.configureLoadout(equipmentStore.loadout());
+});
+const inventoryButton=document.createElement('button');inventoryButton.id='open-equipment';inventoryButton.textContent='Inventário';
+document.querySelector('.center-tabs')!.append(inventoryButton);
+const reportButton=document.createElement('button');reportButton.id='open-report';reportButton.textContent='Relatório';reportButton.disabled=true;
+document.querySelector('.center-tabs')!.append(reportButton);
+reportButton.onclick=()=>{if(completedReport) {clearLoopTimer();showResult(completedReport);}};
+const rewardNotice=document.createElement('button');rewardNotice.id='reward-notice';rewardNotice.hidden=true;rewardNotice.onclick=reportButton.onclick;
+document.querySelector('.world-stage')!.append(rewardNotice);
+function openEquipment(itemId?:string) {
+  ($('#result') as HTMLDialogElement).close();$('#view-summary').hidden=true;
+  playerControls?.clear();equipmentRoot.hidden=false;equipmentPanel.focusItem(itemId);equipmentRoot.focus();
+}
+inventoryButton.onclick=()=>openEquipment();
+$('#close-equipment').onclick=()=>{equipmentRoot.hidden=true;playerControls?.clear();inventoryButton.focus();};
+equipmentRoot.addEventListener('keydown',event=>{
+  event.stopPropagation();if(event.key==='Escape') $('#close-equipment').click();
+});
+function refreshEquipment(){if(!equipmentRoot.hidden) equipmentPanel.render();}
 
 function loadPreferences(): AbilityPreferences {
   try {
@@ -132,6 +167,7 @@ function setSessionPhase(phase: SessionPhase, message?: string) {
   };
   $('#session-state').textContent = message ?? defaults[phase];
   if(document.querySelector('#passive-state')) updateHUD();
+  refreshEquipment();
 }
 
 function renderParty() { hud.renderParty(selectedHeroId); }
@@ -187,12 +223,10 @@ function registerCooldown(event: CombatEvent) {
 }
 
 function renderInventory() {
-  $('#backpack-slots').innerHTML = Array.from(
-    { length:20 },
-    (_, index) =>
-      `<span class="slot" data-slot="${index + 1}" aria-label="Slot ${index + 1}"></span>`,
-  ).join('');
-  $('#backpack-capacity').textContent = '0 / 20 slots';
+  const demo=$('#backpack-slots').closest('details');
+  if(demo) demo.remove();
+  const text=document.querySelector('[data-drawer="loot"] > p');
+  if(text) text.textContent='Ouro vai para o saldo local. Equipamentos e brasas ficam no Inventário; demais troféus são registros desta expedição.';
 }
 
 function healthBarColor(ratio: number) {
@@ -269,7 +303,7 @@ async function createRenderer() {
   playerControls = undefined;
   renderer?.destroy();
   renderer = undefined;
-  const nextRenderer = new PixiRenderer(new CombatEngine(803, preferences, crypto.randomUUID(), progressionStore.snapshot()), {
+  const nextRenderer = new PixiRenderer(new CombatEngine(803, preferences, huntSessionId, progressionStore.snapshot(), equipmentStore.loadout(),true), {
     debugEnabled,
     selectedHeroId,
   });
@@ -302,6 +336,8 @@ async function createRenderer() {
 }
 
 function start() {
+  if(progressionStore.blocked) {$('#session-state').textContent=progressionStore.warning;return;}
+  if(equipmentStore.blocked || equipmentStore.warning || equipmentStore.pendingCount) {$('#session-state').textContent=equipmentStore.warning || 'Salve as recompensas pendentes primeiro.';openEquipment();return;}
   if (sessionPhase !== 'idle' || !renderer?.player.play()) return;
   setSessionPhase('running');
   renderAnalyzer();
@@ -367,6 +403,7 @@ function selectHero(heroId: string, openHelper = false) {
   });
   renderActionBar();
   updateHUD();
+  refreshEquipment();
   if (openHelper) showAbilityModal(heroId);
 }
 
@@ -418,13 +455,18 @@ function showResult(hunt: HuntResult) {
     XP total: ${formatNumber(hunt.xp)}<br>Gold: ${formatNumber(hunt.gold)}<br>
     Boss Tokens: ${formatBossToken(hunt.bossTokens)}<br>
     Monstros derrotados: ${hunt.kills}<br>Cura de Lyra: ${formatNumber(hunt.healing)}<br>
-    Recompensa: ${hunt.loot['Lion King fragment'] ? 'Lion King fragment' : '—'}</div>`;
+    Recompensa: ${hunt.loot['Lion King fragment'] ? 'Fragmento do Regente' : '—'}</div>
+    <p>${heroes.map(hero=>`${hero.name}: +${hunt.events.filter(e=>e.type==='level_up'&&e.targetId===hero.id).reduce((sum,e)=>sum+(e.data!.progress!.level-e.data!.previousLevel!),0)} níveis`).join(' · ')}</p>
+    <h3>Encontrados nesta hunt · comparar e equipar</h3><div class="reward-items">${hunt.events.filter(e=>e.type==='equipment_drop'&&e.data?.equipment).map(e=>{const item=e.data!.equipment!,def=itemById(item.definitionId)!;return `<button data-reward-item="${item.id}" class="${def.rarity}">${itemIcon(def.icon)}<span>${itemName(item)}${item.quantity>1?' ×'+item.quantity:''}<small>${def.vocations.join(' / ')} · ${def.description}</small></span></button>`;}).join('')}</div>`;
+  $('#result-content').querySelectorAll<HTMLButtonElement>('[data-reward-item]').forEach(button=>button.onclick=()=>openEquipment(button.dataset.rewardItem));
   const dialog = $('#result') as HTMLDialogElement;
   if (!dialog.open) dialog.showModal();
 }
 
 function scheduleLoop() {
   clearLoopTimer();
+  if(($('#result') as HTMLDialogElement).open) return;
+  if(equipmentStore.warning || equipmentStore.pendingCount) {$('#session-state').textContent=equipmentStore.warning || 'Salve as recompensas pendentes primeiro.';return;}
   if (
     !loopEnabled ||
     (sessionPhase !== 'completed' && sessionPhase !== 'defeated')
@@ -496,6 +538,10 @@ window.addEventListener('hunt-event', (rawEvent) => {
   }
 
   progressionStore.apply(event);
+  if(event.type==='equipment_drop' || event.type==='loot'&&event.data?.item==='Gold coin') {
+    equipmentStore.apply(event,huntSessionId);refreshEquipment();
+    if(equipmentStore.warning) {$('#session-state').textContent=equipmentStore.warning;}
+  }
   if(event.type==='cast' && heroIds.has(event.sourceId??'')) {
     registerCooldown(event);
     if(event.sourceId===selectedHeroId) casting={id:event.data?.abilityId??'',until:event.time+400};
@@ -597,6 +643,7 @@ function showBossTokenNotification(amount: number) {
 window.addEventListener('hunt-complete', (rawEvent) => {
   const hunt = (rawEvent as CustomEvent<HuntResult>).detail;
   lastResult = hunt;
+  completedReport=hunt;reportButton.disabled=false;
   completedCycles++;
   document.documentElement.dataset.completedCycles = String(completedCycles);
   renderAnalyzer(hunt);
@@ -605,7 +652,11 @@ window.addEventListener('hunt-complete', (rawEvent) => {
     ? 'Hunt concluída'
     : 'Equipe derrotada';
   setSessionPhase(hunt.victory ? 'completed' : 'defeated');
-  if (loopEnabled) scheduleLoop();
+  if (loopEnabled) {
+    const count=hunt.events.filter(e=>e.type==='equipment_drop').length;
+    rewardNotice.textContent=`${hunt.victory?'Vitória':'Expedição encerrada'} · +${hunt.gold} ouro · ${count} drops · Ver relatório`;
+    rewardNotice.hidden=false;scheduleLoop();
+  }
   else showResult(hunt);
 });
 
@@ -631,6 +682,7 @@ $('#repeat').onclick = () => void restart(true);
 $('#close-result').onclick = () => {
   ($('#result') as HTMLDialogElement).close();
 };
+$('#result').addEventListener('close',()=>{if(loopEnabled) scheduleLoop();});
 $('#loop-toggle').onclick = () => {
   loopEnabled = !loopEnabled;
   const button = $('#loop-toggle');
@@ -668,6 +720,7 @@ $('#party').onkeydown = (event) => {
   selectHero(card.dataset.heroId);
 };
 $('#action-bar').onclick = (event) => {
+  if(!equipmentRoot.hidden) return;
   const button = (event.target as Element).closest<HTMLButtonElement>(
     '[data-ability]',
   );
@@ -758,7 +811,8 @@ document.querySelectorAll<HTMLButtonElement>('[data-collapse]').forEach((button)
 
 $('#close-drawer').onclick=()=>{ $('#view-summary').hidden=true; };
 
-$('#supply-config').onclick = () => {
+const supplyConfig=document.querySelector<HTMLButtonElement>('#supply-config');
+if(supplyConfig) supplyConfig.onclick = () => {
   showFutureModule(
     'Supply Pouch — próximo MVP',
     'Configuração e consumo persistente de supplies serão implementados no MVP de inventário.',
@@ -781,10 +835,14 @@ document.querySelectorAll<HTMLButtonElement>('[data-speed]').forEach((button) =>
   };
 });
 
-window.addEventListener('beforeunload', () => {
+window.addEventListener('pagehide', (event) => {
+  if(event.persisted) return;
   clearLoopTimer();
   playerControls?.destroy();
   renderer?.destroy();
+});
+window.addEventListener('beforeunload',event=>{
+  if(equipmentStore.pendingCount) {event.preventDefault();event.returnValue='';}
 });
 
 async function initialize() {

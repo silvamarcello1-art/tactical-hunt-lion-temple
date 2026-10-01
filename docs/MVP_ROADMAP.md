@@ -1,5 +1,21 @@
 # Roadmap
 
+## Sequência vigente — decisão do usuário em 30/09/2026
+
+| Marco | Escopo |
+|---|---|
+| MVP 2B | Inventory + Equipment + Loot + Forge; vertical slice local atual |
+| MVP 2C | Manual Adventure + World + NPCs + Quests |
+| MVP 2D | Story/Campaign Foundation |
+| MVP 2E | Server Authority + Networking; exige ADR antes de autoridade remota |
+| MVP 2F | PvP Vertical Slice, sobre a autoridade validada |
+
+2B não inicia Adventure, NPCs, quests, campanha, servidor ou PvP. Weapon e armor
+são o núcleo; helmet/amulet e drag-and-drop ficam fora desta entrega.
+As seções abaixo são registros históricos, não uma sequência concorrente.
+
+## Histórico de planejamento e marcos anteriores
+
 ## MVP 0 — baseline estável
 
 **Concluído em 27/07/2026.**
@@ -57,7 +73,7 @@ Incremento pausado (não é a prioridade seguinte):
 - reação a AOE;
 - catálogo visual original/licenciado.
 
-Backend continua condicionado ao gate abaixo. O inventário entra somente no marco 1F descrito a seguir.
+Planejamento histórico: inventário era 1F. Substituído pelo MVP 2B acima.
 
 Saída do MVP 1: dez ciclos consecutivos sem travar, atravessar obstáculos,
 duplicar eventos/recompensas ou divergir do relatório.
@@ -93,10 +109,9 @@ Condicionado ao gate de backend:
 3. **Monetização:** revisão jurídica e política não-P2W.
 4. **Escopo:** uma tarefa pertence a um único MVP.
 
-## Sequência vigente após o MVP 1D
+## Sequência histórica após o MVP 1D — substituída por 2B–2F
 
-Esta sequência substitui a ordem histórica de curto prazo acima, preservada
-como contexto. Não confundir os marcos anteriores com novas tarefas pendentes.
+Esta sequência foi usada antes da decisão de 30/09. Preservada apenas como histórico.
 
 | Marco | Vertical slice / gate |
 |---|---|

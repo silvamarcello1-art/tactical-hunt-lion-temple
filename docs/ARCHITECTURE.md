@@ -213,7 +213,7 @@ Efeitos usam OriginalEffects e ícones usam atlas original. Build e build:previe
 excluem as cópias legadas de public/assets/wiki, tibia e character-atlas de dist.
 Arquivos-fonte antigos permanecem como referências, fora do runtime publicado.
 
-Para 1E, objetos de mundo devem ter IDs estáveis, tile/footprint e resolvers de
+Para MVP 2C (antigo 1E, histórico), objetos de mundo devem ter IDs estáveis, tile/footprint e resolvers de
 interação no domínio, retornando eventos/snapshots. entity/tile já são alvos
 serializáveis; NPC, porta, baú, placa, escada, portal e container não precisam
 consultar Pixi. Adicionar tipos/eventos quando o primeiro objeto real existir,
@@ -247,3 +247,22 @@ Assets resolvem BASE_URL tanto na raiz do Sites quanto no subdiretório Pages.
 Para desempenho, os atributos DOM expõem custo de syncPresentation (não FPS
 total), objetos no stage, VFX, recálculos de caminho e decisões táticas. O teste
 de três loops verifica lifecycle; ainda não existe benchmark de PvP massivo.
+
+## MVP 2B — equipamento e recompensas
+
+- `data/items.ts`: catálogo original, restrições, modificadores e regras de forja.
+- `combat/Equipment.ts`: única composição base → nível/passiva → item → +1.
+  Ganhar máximos não recarrega HP/mana; redução aplica clamp.
+- `combat/EquipmentDrops.ts`: LCG isolado, mesma fórmula existente. Preserva os
+  rolls de combate; equipamento é opt-in nos fixtures antigos, ativo na aplicação.
+- `CombatEngine`: emite equipment_drop somente na recompensa de criatura morta;
+  recebe loadout copiado na criação/configuração anterior ao primeiro tick.
+- `app/EquipmentStore.ts`: save local v2, IDs e recibos persistentes, operação
+  copy → validate → persist → commit. Sem DOM/Pixi; não aceita stats salvos.
+- `ui/EquipmentPanel.ts`: drawer compacto, seleção, comparação e forja, usando
+  as mesmas funções do domínio. Não modifica entidades nem concede recompensas.
+- `ui/ItemIcons.ts`: nove silhuetas vetoriais originais, sem assets externos.
+
+Equipar/forjar apenas entre hunts e Loop OFF. O próximo motor recebe a build;
+trocar itens nunca cura a sessão em andamento. A recuperação normal de uma nova
+hunt já existia e não depende de alternar equipamento. Ver EQUIPMENT_AND_LOOT.md.

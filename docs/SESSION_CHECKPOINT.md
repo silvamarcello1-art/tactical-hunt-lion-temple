@@ -1,4 +1,16 @@
-# Checkpoint — Mouse-first / Clean HUD / Encounter Depth
+# Checkpoint atual — MVP 2B (01/10/2026, em validação)
+
+- Branch: `feature/gameplay-first-mvp2a`; ponto inicial local/remoto `bf8e823f8a9329a9cb42ddd460b6ce467b1e7ab2`.
+- Implementado no worktree: drops determinísticos isolados do RNG de combate, inventário com IDs/stack/reserva, equipamento por vocação, stats canônicos, forja +1 atômica, persistência local versionada, drawer de comparação e relatório real.
+- Equipar/forjar somente entre hunts com Loop OFF. Saves inválidos são preservados; recompensas pendentes bloqueiam novas hunts e transações até recuperação.
+- Novos arquivos: EquipmentStore/test, Equipment, EquipmentDrops, items, EquipmentPanel, ItemIcons, E2E equipment e EQUIPMENT_AND_LOOT. Integrações: CombatEngine, eventos, ProgressionStore, PlayerControls, main/style e E2E existentes.
+- Gates em 01/10: health, TypeScript, `pnpm exec vitest run` (183/183 em 16 arquivos), build (765 módulos), Playwright (27/27 em 5,6 min, um worker) e diff --check aprovados. Em 30/09 houve timeout de teste antigo/RPC; a nova rodada passou mantendo todos os limites/assertions/snapshots originais. Exigir CI verde e manifest conferido antes de considerar publicado.
+- Ajustes finais validados: pagehide preserva arena em saída cancelada; relatório suspende reinício do Loop; loot varia deterministicamente por sessão. Teste de falha de storage aguarda um drop real (1 s não garantia morte no nível 1).
+- Manual em 01/10: vitória equipada em 32 s lógicos, 17 mortes, 4.240 XP, 1.512 gold e Boss Token real. Nova alternativa Martelo versus Gume +1: -20 ataque/+12 defesa; mochila 24/24 preservou excedente na reserva. Forja +1 e reload já verificados. Amostra real de syncPresentation: média 0,046 ms, máximo 2,1 ms; 594 objetos, zero VFX/resíduos/reservas/overlap/OOB ao final. Não é medição de FPS.
+- Em andamento: commit/push, CI e preview Pages após gates locais aprovados. Diff revisto; README/contratos/roadmap atualizados. Nenhum merge/Sites.
+- Próximo comando: `pnpm typecheck`, `pnpm exec vitest run --maxWorkers=1`, `pnpm build`, `pnpm exec playwright test --reporter=line --workers=1`, `git diff --check`.
+
+## Histórico anterior — Mouse-first / Clean HUD / Encounter Depth
 
 Data: 26/09/2026. Branch: feature/gameplay-first-mvp2a.
 Base conferida: origin/feature/visual-identity-foundation =
