@@ -6,9 +6,12 @@ Não reimplemente sistemas concluídos. Branch `feature/gameplay-first-mvp2a`;
 ponto inicial desta etapa `bf8e823f8a9329a9cb42ddd460b6ce467b1e7ab2`.
 
 Gates locais completos em 05/10: 184 unitários, 28 E2E, TypeScript/build/diff.
-Commit inicial dca5339 enviado. Correção posterior permite equipar da reserva
-mesmo com mochila cheia; concluir commit/push e novo CI antes da
-publicação autorizada no GitHub Pages e conferência do manifest. Não usar Sites/merge.
+Correção enviada em 8e2a309f07a0521ceed02e265395df56acdb3600: equipar da reserva
+mesmo com mochila cheia. Local = origin confirmado, PR #3 atualizada.
+Próximo passo: acompanhar CI push 37353880622 e PR 37353885091; não repetir
+gates locais sem mudança de código. Após sucesso do deploy, conferir version.json
+público contra o SHA de código e fazer smoke no navegador. Publicação ainda
+não confirmada nesta retomada. Não usar Sites/merge.
 Após MVP 2B validado: playtest humano e MVP 2C Adventure/mundo/NPC/quests,
 depois 2D campanha, 2E servidor/rede, 2F PvP. Não antecipar esses sistemas.
 

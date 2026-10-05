@@ -14,6 +14,9 @@
 - Retomada 05/10: local/origin continuam dca5339; alterações preservadas. TypeScript, 184/184 unitários com um worker e build aprovados. Nenhum timeout/assertion alterado; a execução concorrente de 01/10 havia excedido 5 s no teste antigo de equivalência de timeline.
 - Manual 05/10: vitória equipada em 32 s, 17 mortes, 4.240 XP, 1.519 gold, 1 Boss Token e console sem erros. Troca direta Couraça da reserva por Manto equipado manteve mochila 24/24 e nove itens na reserva; comparação mostrou +6 defesa/+80 HP/-8 magia/-80 mana. Sem exclusão de dados ou reset de progresso.
 - Gates finais 05/10: health, TypeScript, 184/184 unitários (um worker), build, 28/28 E2E (5,1 min, um worker), diff --check aprovados; diff completo revisto. Amostra manual syncPresentation média 0,051 ms/máximo 6,1 ms, zero overlap/OOB/reservas/resíduos. Commit/push da correção e CI são o próximo passo; ainda não afirmar publicação.
+- Entrega da correção 05/10: commit 8e2a309f07a0521ceed02e265395df56acdb3600 enviado; HEAD local = remoto e worktree limpo confirmados antes deste registro documental. PR #3 atualizada; sem merge.
+- CI em andamento: push/deploy https://github.com/silvamarcello1-art/tactical-hunt-lion-temple/actions/runs/37353880622 e PR https://github.com/silvamarcello1-art/tactical-hunt-lion-temple/actions/runs/37353885091. Última observação do push: instalação do Edge após gates unitários/arte. Ainda sem confirmação de deploy/manifest; preview não deve ser apresentado como versão nova.
+- Próximo comando: consultar jobs do run 37353880622. Se falhar, ler logs/trace antes de alterar código; se aprovado, conferir version.json e smoke público. Este checkpoint documental não altera o código testado nem requer republicação própria.
 
 ## Histórico anterior — Mouse-first / Clean HUD / Encounter Depth
 
