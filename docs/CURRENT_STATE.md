@@ -1,6 +1,9 @@
-# Estado vigente — MVP 2B — 30/09/2026
+# Estado vigente — MVP 2B — 05/10/2026
 
-Implementação em validação na branch `feature/gameplay-first-mvp2a`.
+Implementação local validada em 05/10 na branch `feature/gameplay-first-mvp2a`:
+184 unitários, 28 E2E, TypeScript/build/diff aprovados. A correção posterior a
+dca5339 permite equipar diretamente da reserva mesmo com mochila cheia.
+Publicação e CI: ver SESSION_CHECKPOINT.
 Inventário local com 24 espaços, materiais em stacks de 99 e reserva sem descarte;
 seis armas, duas armaduras e um material originais. Drops vêm do domínio em RNG
 isolado, com IDs persistentes e recibos contra replay. Equipar/forjar somente

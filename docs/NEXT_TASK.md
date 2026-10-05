@@ -5,11 +5,17 @@ Leia `SESSION_CHECKPOINT.md` e `EQUIPMENT_AND_LOOT.md` antes de retomar.
 Não reimplemente sistemas concluídos. Branch `feature/gameplay-first-mvp2a`;
 ponto inicial desta etapa `bf8e823f8a9329a9cb42ddd460b6ce467b1e7ab2`.
 
-Gates locais completos em 01/10: 183 unitários, 27 E2E, TypeScript/build/diff.
-Restam commit/push, CI e publicação autorizada no GitHub Pages com verificação
-do manifest. Não usar Sites/merge.
+Gates locais completos em 05/10: 184 unitários, 28 E2E, TypeScript/build/diff.
+Commit inicial dca5339 enviado. Correção posterior permite equipar da reserva
+mesmo com mochila cheia; concluir commit/push e novo CI antes da
+publicação autorizada no GitHub Pages e conferência do manifest. Não usar Sites/merge.
 Após MVP 2B validado: playtest humano e MVP 2C Adventure/mundo/NPC/quests,
 depois 2D campanha, 2E servidor/rede, 2F PvP. Não antecipar esses sistemas.
+
+Playtest antes de expandir: legibilidade das comparações, valor das alternativas
+ofensiva/defensiva, facilidade de equipar com Loop OFF e gestão de duplicatas
+quando mochila/slots lotam. Troca pela reserva descrita em EQUIPMENT_AND_LOOT.
+Não confundir gates determinísticos com aprovação da diversão ou da economia.
 
 ## Registro histórico — Mouse-first / Encounter Depth
 

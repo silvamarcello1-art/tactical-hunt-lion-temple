@@ -122,12 +122,19 @@ export class EquipmentStore {
     if(this.blocked || this.pending.size) return this.warning || 'Salve as recompensas pendentes primeiro.';
     if(!allowed) return 'Equipamento só pode mudar entre hunts, com Loop OFF.';
     if(!roles.includes(hero)) return 'Herói inválido.';
-    const item=this.state.items.find(item=>item.id===id);const def=item && itemById(item.definitionId);
+    const item=[...this.state.items,...this.state.inbox].find(item=>item.id===id);const def=item && itemById(item.definitionId);
     if(!def || def.slot==='material' || !def.vocations.includes(hero)) return 'Vocação incompatível ou item indisponível.';
     const next=this.snapshot();const current=next.equipment[hero]?.[def.slot];
     if(current===id) return 'Já equipado.';
     if(equippedIds(next).has(id)) return 'Equipado por outro herói; desequipe primeiro.';
+    const reserved=next.inbox.findIndex(item=>item.id===id);
+    if(reserved>=0) next.items.push(next.inbox.splice(reserved,1)[0]);
     (next.equipment[hero]??={})[def.slot]=id;
+    // A full bag must not trap future upgrades in overflow. Exchange, never discard.
+    if(current && bagSize(next)>EQUIPMENT_RULES.capacity) {
+      const previous=next.items.findIndex(item=>item.id===current);
+      next.inbox.push(next.items.splice(previous,1)[0]);
+    }
     return this.commit(next)?'Equipado. Efeito na próxima hunt.':this.warning;
   }
   unequip(hero:Vocation,slot:EquipmentSlot,allowed:boolean):string {

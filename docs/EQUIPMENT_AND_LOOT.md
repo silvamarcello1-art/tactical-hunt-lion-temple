@@ -37,6 +37,10 @@ histórico nem convertidos silenciosamente em ouro ou equipamento.
   é rejeitado e mantém a instância no herói. Não há destruição/venda neste slice.
 - Recibos não são truncados: não reabilitar recompensas antigas após muitos loops.
 - Reserva/ledger crescem localmente. Não equivalem a armazenamento online escalável.
+- Equipamentos na reserva podem ser comparados e equipados diretamente entre
+  hunts, com Loop OFF. Se a mochila estiver cheia, o item substituído vai para
+  a reserva na mesma transação; falha de gravação desfaz a troca inteira.
+  Não há venda ou descarte nesta etapa: nenhum item é perdido na troca.
 
 ## Equipamento / forja
 

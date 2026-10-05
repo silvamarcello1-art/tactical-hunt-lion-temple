@@ -1,7 +1,9 @@
-## 2026-09-30 — MVP 2B (em validação)
+## 2026-10-01 — MVP 2B (em validação)
 
 - Inventário persistente, drops determinísticos, comparação e equipamento por vocação.
 - Forja +1 atômica; overflow em reserva; proteção contra replay e save inválido.
+- Equipar diretamente da reserva com mochila cheia preserva o item substituído;
+  falha ao salvar desfaz toda a troca, sem perda ou duplicação.
 - Drawer com bloqueio de input do mundo; relatório de drops reais e feedback compacto de Loop.
 - Roadmap atual 2B–2F; histórico anterior preservado e identificado.
 

@@ -1,4 +1,4 @@
-# Checkpoint atual — MVP 2B (01/10/2026, em validação)
+# Checkpoint atual — MVP 2B (05/10/2026, em validação)
 
 - Branch: `feature/gameplay-first-mvp2a`; ponto inicial local/remoto `bf8e823f8a9329a9cb42ddd460b6ce467b1e7ab2`.
 - Implementado no worktree: drops determinísticos isolados do RNG de combate, inventário com IDs/stack/reserva, equipamento por vocação, stats canônicos, forja +1 atômica, persistência local versionada, drawer de comparação e relatório real.
@@ -7,8 +7,13 @@
 - Gates em 01/10: health, TypeScript, `pnpm exec vitest run` (183/183 em 16 arquivos), build (765 módulos), Playwright (27/27 em 5,6 min, um worker) e diff --check aprovados. Em 30/09 houve timeout de teste antigo/RPC; a nova rodada passou mantendo todos os limites/assertions/snapshots originais. Exigir CI verde e manifest conferido antes de considerar publicado.
 - Ajustes finais validados: pagehide preserva arena em saída cancelada; relatório suspende reinício do Loop; loot varia deterministicamente por sessão. Teste de falha de storage aguarda um drop real (1 s não garantia morte no nível 1).
 - Manual em 01/10: vitória equipada em 32 s lógicos, 17 mortes, 4.240 XP, 1.512 gold e Boss Token real. Nova alternativa Martelo versus Gume +1: -20 ataque/+12 defesa; mochila 24/24 preservou excedente na reserva. Forja +1 e reload já verificados. Amostra real de syncPresentation: média 0,046 ms, máximo 2,1 ms; 594 objetos, zero VFX/resíduos/reservas/overlap/OOB ao final. Não é medição de FPS.
-- Em andamento: commit/push, CI e preview Pages após gates locais aprovados. Diff revisto; README/contratos/roadmap atualizados. Nenhum merge/Sites.
-- Próximo comando: `pnpm typecheck`, `pnpm exec vitest run --maxWorkers=1`, `pnpm build`, `pnpm exec playwright test --reporter=line --workers=1`, `git diff --check`.
+- Commit/push confirmados: `dca53395721fa0e1e22d85a7ed2f7b87cb9d9276`, local = origin, PR #3 aberta. Diff revisto; README/contratos/roadmap atualizados. Nenhum merge/Sites.
+- CI de push/deploy `36815714472` e PR `36815717660` cancelados antes da publicação: o playtest revelou equipamento preso na reserva com mochila cheia. Não representam aprovação final.
+- Correção: equipar diretamente da reserva, trocando o item anterior para ela quando a mochila está cheia, numa gravação atômica. Testes específicos aprovados: 17 unitários de equipamento e E2E de mochila cheia/reload; suíte completa em execução. Manual confirmou comparação, equipamento da reserva e persistência após reload.
+- Próxima verificação: finalizar gates da correção, commit/push, acompanhar novo CI e verificar https://silvamarcello1-art.github.io/tactical-hunt-lion-temple/version.json.
+- Retomada 05/10: local/origin continuam dca5339; alterações preservadas. TypeScript, 184/184 unitários com um worker e build aprovados. Nenhum timeout/assertion alterado; a execução concorrente de 01/10 havia excedido 5 s no teste antigo de equivalência de timeline.
+- Manual 05/10: vitória equipada em 32 s, 17 mortes, 4.240 XP, 1.519 gold, 1 Boss Token e console sem erros. Troca direta Couraça da reserva por Manto equipado manteve mochila 24/24 e nove itens na reserva; comparação mostrou +6 defesa/+80 HP/-8 magia/-80 mana. Sem exclusão de dados ou reset de progresso.
+- Gates finais 05/10: health, TypeScript, 184/184 unitários (um worker), build, 28/28 E2E (5,1 min, um worker), diff --check aprovados; diff completo revisto. Amostra manual syncPresentation média 0,051 ms/máximo 6,1 ms, zero overlap/OOB/reservas/resíduos. Commit/push da correção e CI são o próximo passo; ainda não afirmar publicação.
 
 ## Histórico anterior — Mouse-first / Clean HUD / Encounter Depth
 

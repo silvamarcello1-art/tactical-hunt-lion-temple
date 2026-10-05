@@ -44,6 +44,26 @@ describe('equipment domain and persistence',()=>{
     expect(s.loadout().knight?.weapon?.id).toBe('item0');
     expect(s.snapshot().items.length+s.snapshot().inbox.length).toBe(26);
   });
+  it('full bag exchanges reserve equipment atomically without loss or policy bypass',()=>{
+    const storage=memory(),s=new EquipmentStore(storage);
+    s.apply(drop(item('old')),'s');s.equip('knight','old',true);
+    for(let i=0;i<24;i++) s.apply(drop(item('bag'+i)),'s');
+    s.apply(drop(item('new','ward-hammer')),'s');
+    const before=s.snapshot();
+    expect(s.equip('druid','new',true)).toContain('incompatível');
+    expect(s.equip('knight','new',false)).toContain('entre hunts');
+    expect(s.snapshot()).toEqual(before);
+    const write=storage.setItem;storage.setItem=()=>{throw Error('quota');};
+    expect(s.equip('knight','new',true)).toContain('Não foi possível');
+    expect(s.snapshot()).toEqual(before);storage.setItem=write;
+    for(const id of ['new','old','new']) {
+      expect(s.equip('knight',id,true)).toContain('Equipado');
+      const state=s.snapshot();expect(bagSize(state)).toBe(24);
+      expect(state.inbox.map(i=>i.id)).toEqual([id==='new'?'old':'new']);
+      expect(new Set([...state.items,...state.inbox].map(i=>i.id)).size).toBe(26);
+      expect(new EquipmentStore(storage).loadout().knight?.weapon?.id).toBe(id);
+    }
+  });
   it('materials stack to 99 then retain remainder, including overflow',()=>{
     const s=new EquipmentStore(memory());s.apply(drop(item('m1','temple-ember',98)),'s');s.apply(drop(item('m2','temple-ember',5)),'s');
     expect(s.snapshot().items.map(i=>i.quantity)).toEqual([99,4]);

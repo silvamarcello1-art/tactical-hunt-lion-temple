@@ -45,6 +45,28 @@ test('real hunt → drop → compare → equip → forge → reload → equipped
   expect(errors).toEqual([]);
 });
 
+test('full inventory equips from reserve and preserves the previous weapon across reload',async({page})=>{
+  await page.goto('/');
+  await page.evaluate(()=>{
+    const item=(id:string,definitionId='iron-edge')=>({id,definitionId,quantity:1,upgrade:0});
+    localStorage.setItem('tactical-hunt-equipment-v2',JSON.stringify({version:2,gold:0,
+      items:[item('old'),...Array.from({length:24},(_,i)=>item('bag'+i))],
+      inbox:[item('new','ward-hammer')],equipment:{knight:{weapon:'old'}},receipts:[]}));
+  });
+  await page.reload();await page.locator('#loop-toggle').click();
+  await page.locator('#open-equipment').click();
+  await page.locator('[data-reserved-item="new"]').click();
+  await expect(page.locator('#item-comparison')).toContainText('Item da reserva');
+  await page.locator('[data-action="equip"]').click();
+  await expect(page.locator('.equipment-slots')).toContainText('Martelo');
+  await expect(page.locator('[data-reserved-item="old"]')).toBeVisible();
+  await page.reload();await page.locator('#open-equipment').click();
+  await expect(page.locator('.equipment-slots')).toContainText('Martelo');
+  const save=await page.evaluate(()=>JSON.parse(localStorage.getItem('tactical-hunt-equipment-v2')!));
+  expect(save.inbox.map((i:any)=>i.id)).toEqual(['old']);
+  expect(new Set([...save.items,...save.inbox].map((i:any)=>i.id)).size).toBe(26);
+});
+
 test('inventory panels keep three desktop viewports readable and capture clicks',async({page})=>{
   await page.goto('/');await expect(page.locator('html')).toHaveAttribute('data-session-state','idle');
   for(const size of [{width:1366,height:768},{width:1600,height:900},{width:1920,height:1080}]) {
