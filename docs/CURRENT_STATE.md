@@ -1,4 +1,90 @@
-# Consolidação visual e estrutural — 20/09/2026
+# Estado vigente — MVP 2B.1 — retomada 10/10/2026
+
+Implementação na branch `feature/gameplay-first-mvp2a`, sobre 7062c5d (código
+anterior 8e2a309). Controles físicos separados Digit/Numpad, slots estáveis por
+herói, Assistido com Auto Attack/Auto Magias independentes e HUD compacto em
+screen space. O mundo mantém o viewport dominante e as passivas continuam visíveis.
+
+Projéteis diretos são linhas contínuas entre pontos autorizados; supercover
+serve para colisão, não animação. O ruleset 2B.1 usa ponto original, sem homing:
+alvo que abandona o tile provoca cancelamento, não teleporte/dano fantasma.
+Movimentos e impactos comprometidos resolvem nos prazos lógicos, entre decisões
+de 250 ms; uma única amostra de input por decisão. Pausa/velocidade compartilham
+esse relógio. O ruleset antigo permanece para regressões determinísticas.
+
+Dois reforços originais: Bastião de Bronze e Balista Errante, com ataques
+anunciados e recuperação. Roster 5/5/6/3, sem inflação de XP/loot pelos reforços;
+IDs e RNG de recompensas existentes preservados. Inventário/forja/equipamentos
+não foram reimplementados; troca da reserva com mochila cheia preservada.
+
+Auto Druid recupera posição válida de cura quando LoS bloqueia um aliado ferido,
+antes da ofensiva. O terceiro loop progressivo não pode sacrificar um herói por
+esse bloqueio. Assistido não recebe movimento oculto; usa a posição do jogador.
+
+Contrato detalhado: `GAMEPLAY_POLISH.md`. Gates, métricas, limitações e SHA
+servido: `SESSION_CHECKPOINT.md`. Sequência permanece 2B → 2C → 2D → 2E → 2F.
+
+Código da etapa: `d51361c0b822fa69d1e23d36ffd7e5b207c03462`, push normal para
+origin confirmado. Gates locais: 216 unitários e 33 E2E; build de preview também
+validado no base path real. CI push 38090057573 / PR 38090060114 aprovados,
+deploy Pages aprovado e version.json público confirmado em d51361c. Smoke
+público 1x→4x terminou em vitória, sem erros/resíduos. O fechamento documental
+posterior não muda esse SHA de runtime; não confundir preview com release estável.
+
+## Histórico — MVP 2B
+
+# Estado vigente — MVP 2B — 05/10/2026
+
+Implementação local validada em 05/10 na branch `feature/gameplay-first-mvp2a`:
+184 unitários, 28 E2E, TypeScript/build/diff aprovados. A correção posterior a
+dca5339 permite equipar diretamente da reserva mesmo com mochila cheia.
+Publicação e CI: ver SESSION_CHECKPOINT.
+Inventário local com 24 espaços, materiais em stacks de 99 e reserva sem descarte;
+seis armas, duas armaduras e um material originais. Drops vêm do domínio em RNG
+isolado, com IDs persistentes e recibos contra replay. Equipar/forjar somente
+entre hunts com Loop OFF. Forja +1 custa 200 gold e uma Brasa do Templo.
+Stats de nível e equipamento são calculados no domínio, também usado pela UI;
+trocas não acumulam bônus nem recuperam HP/mana. XP, preferências e Boss Tokens
+anteriores são preservados por migração aditiva. Save inválido não é apagado.
+
+UI: drawer por herói, comparação, slots reais, forja, reserva, relatório com
+drops reais, feedback compacto de Loop. Inputs do mundo bloqueados no drawer.
+Polish focado em identificação da party, contraste de HP e comparação legível;
+sprites existentes preservados. Contrato: `EQUIPMENT_AND_LOOT.md`.
+Gates/ponto exato: `SESSION_CHECKPOINT.md`. Sem backend, comércio, descarte,
+drag-and-drop, novos slots ou economia online. Roadmap vigente: 2B–2F.
+
+## Histórico — Mouse-first + Encounter Depth — 26/09/2026
+
+Branch feature/gameplay-first-mvp2a, base 58d9720. Este resumo substitui as
+descrições históricas abaixo quando divergirem.
+
+- Mouse: chão MoveTo, entidade seleção, direito engage, dois botões Look sem
+  ações duplicadas. WASD e 1–3 mantidos; nenhum menu Attack/Follow/Stop no HUD.
+- AUTO autônomo; MANUAL só ordens explícitas; ASSISTED aguarda alvo, usa rotação
+  até sua morte e então para. Seleção não muda controller.
+- Mundo domina a tela, party mínima e três slots reais com cooldown lógico.
+  Análise/loot ficam em drawers; configuração de habilidades continua disponível.
+- Quatro perfis originais: Custódio, Vigia, Garra e Oráculo. Ranged busca LoS/
+  distância; flanker procura backline; caster pontua máscaras e candidatos
+  determinísticos a cada 1500 ms lógicos.
+- Regente Vazio tem fase abaixo de 50% HP e Queda da Coroa: aviso especial,
+  impacto, escombros reais por 3000 ms, revisão de navegação e restauração.
+- Magias comuns não pintam pretelegraph; magia de jogador mantém projétil/
+  wave/impacto próprios. Apenas requiresTelegraph habilita aviso antecipado.
+- Arte aprovada preservada; oito atores originais, novo relevo do templo e
+  pools de efeitos animados. Build exclui cópias legadas, sem apagar fontes.
+- Progressão XP/nível/passiva e store local da etapa anterior preservados.
+- Novas regras alteram baseline Auto intencionalmente; repetibilidade completa
+  em 24 combinações substitui comparação aos antigos hashes (preservados no Git).
+
+Typecheck, 167 unitários, 24 E2E e build aprovados; evidências e publicação
+consolidados em SESSION_CHECKPOINT. Não há backend, inventário real ou PvP.
+Não confundir preview Pages com a referência estável chatgpt.site.
+
+---
+
+# Histórico — Consolidação visual e estrutural — 20/09/2026
 
 Branch feature/visual-identity-foundation, base validada 64816ac. Motor e grid
 inalterados; main.ts cria a sessão e PlayerControls usa PlayerControlPort.

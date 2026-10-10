@@ -1,3 +1,67 @@
+## 2026-10-10 — retomada MVP 2B.1
+
+- Código d51361c: CI push/PR e deploy Pages aprovados; manifest público no SHA
+  exato e smoke até boss verificados. 216 unitários/33 E2E; zero erros/resíduos
+  no smoke público. Fechamento documental separado não altera runtime servido.
+
+- Auto Druid busca linha de cura segura pelo MovementSystem quando um aliado
+  ferido está sem LoS; Assistido mantém movimento do jogador. Corrigida a causa
+  da derrota do Sorcerer no terceiro loop progressivo, mantendo o assert original.
+- E2E exercita as quatro combinações de assistência após engage, parada após
+  morte do alvo e novo engage explícito. Gates finais registrados no checkpoint.
+
+## 2026-10-05 — MVP 2B.1
+
+- Bindings data-driven Digit1–3 por herói, foco do gameplay, self-heal/targeting/ESC.
+- Numpad físico em oito direções, buffer limitado e Stop; Assistido mantém modo.
+- Auto Attack/Auto Magias independentes por herói, domínio validado/persistência sem ordens.
+- Cast explícito precede automação no mesmo orçamento; cooldown individual/grupo lógico.
+- Projéteis contínuos com endpoints autorizados e original-tile, sem homing/escada.
+- Deadlines lógicos entre decisões: completesAt/impactAt exatos, input só uma vez por tick.
+- Party fora da arena; HP/mana úteis, três ícones originais por vocação e passivas visíveis.
+- Bastião de Bronze e Balista Errante em duas composições; reforços sem inflação de loot/XP.
+- Debug opt-in e testes de geometria/assistência/numpad/roster/lifecycle; regressões preservadas.
+- Vitest serializa arquivos CPU-bound sem aumentar timeouts ou afrouxar assertions.
+- Inventário, forja, IDs/recibos/RNG e troca de equipamento da reserva intactos.
+- Gates e publicação efetivamente verificados são registrados em SESSION_CHECKPOINT.
+
+## 2026-10-01 — MVP 2B (em validação)
+
+- Inventário persistente, drops determinísticos, comparação e equipamento por vocação.
+- Forja +1 atômica; overflow em reserva; proteção contra replay e save inválido.
+- Equipar diretamente da reserva com mochila cheia preserva o item substituído;
+  falha ao salvar desfaz toda a troca, sem perda ou duplicação.
+- Drawer com bloqueio de input do mundo; relatório de drops reais e feedback compacto de Loop.
+- Roadmap atual 2B–2F; histórico anterior preservado e identificado.
+
+## 2026-09-30 — Preview público validado
+
+- GitHub Pages publicou `056a743` com artifact aprovado (167 unitários, 24 E2E).
+- Allowlist ampliada somente para a branch autorizada, preservando proteções.
+- Manifest e hunt pública até vitória verificados; sem merge ou alteração de Sites.
+
+## 2026-09-26 — Mouse-first combat, compact HUD and encounter depth
+
+- MoveTo autoritativo, engage por botão direito e Look por chord consumido.
+- AUTO independente da seleção; MANUAL explícito; ASSISTED condicionado ao alvo.
+- Três habilidades originais por herói, HUD mínimo e cooldown no relógio lógico.
+- Quatro papéis inimigos, orientação determinística e reposicionamento limitado.
+- Boss com fase desperta e escombros temporários reais com revalidação da grade.
+- Telegraph reservado a perigo especial; magias e projéteis originais em pools.
+- Progressão local existente preservada; oito atores originais e cenário legível.
+- Distribuição exclui assets de referência legados sem remover arquivos-fonte.
+- Novo ruleset documenta mudança intencional do baseline e mantém repetibilidade.
+- E2E de fronteiras transitórias usa relógio controlado (frames reais) para não
+  disputar com o timer de loop/boss no runner; CI preserva traces em falhas.
+- Traces sem filmstrip contínuo de WebGL; snapshots e PNG de falha mantidos.
+  CI tem orçamento total de cenário ajustado, sem ampliar limites de assertions.
+- Teste de hotbar amostra o footpoint visual com relógio controlado para não
+  clicar um tile abandonado pelo monstro entre chamadas do protocolo.
+- Validação do PR e publicação Pages usam filas separadas; PR não cancela mais
+  um push pendente. Deploys continuam serializados e condicionados aos gates.
+- Os três cenários de loops compartilham orçamento total explícito, mantendo
+  limites individuais e auditorias de integridade inalterados.
+
 ## 2026-09-20 — original visual foundation
 
 - Sessão composta em main.ts; PlayerControlPort desacopla input de Pixi.

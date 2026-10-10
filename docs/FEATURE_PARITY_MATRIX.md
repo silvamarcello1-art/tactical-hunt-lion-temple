@@ -2,6 +2,21 @@
 
 Referência comportamental: `docs/reference/VIDEO_REFERENCE_MAP.md`.
 
+## Atualização MVP 2B — 30/09/2026
+
+| Funcionalidade | Estado atual | Diferença restante | Prioridade / marco | Dependência / aceite |
+|---|---|---|---|---|
+| Inventário | Local real, 24 entradas, stacks/reserva persistentes | Sem venda/descarte/DnD | P1 / 2B | Drops de domínio conservados e replay protegido |
+| Equipamento | Arma/armadura por herói, comparação e stats efetivos | Sem slots extras | P1 / 2B | Vocação e política entre hunts validadas; combate realmente alterado |
+| Forja | +1, 200 gold e uma brasa, transação única | Sem tiers adicionais | P1 / 2B | Duplo clique não consome duas vezes; reload preserva |
+| Resultado/Loop | Drops reais, atalho à comparação e feedback compacto | Sem histórico de todas as hunts | P1 / 2B | Três loops sem duplicação e relatório sob demanda |
+
+Estado corrente do combate/grade em CURRENT_STATE e GRID_COMBAT. A tabela
+abaixo é o diagnóstico histórico anterior a esses marcos, não a lista atual
+de funcionalidades ausentes. Roadmap vigente: 2B–2F em MVP_ROADMAP.
+
+## Matriz histórica da referência
+
 | Funcionalidade | Referência | Estado atual | Diferença | Prioridade | MVP | Dependências | Aceite |
 |---|---|---|---|---|---|---|---|
 | Shell compacto | Hunt central e dados nas bordas | Implementado no MVP 1A | Dados reais ainda limitados | P1 | 1A | Design | Hunt permanece principal em 1366–1920 px |

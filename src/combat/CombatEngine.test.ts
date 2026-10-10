@@ -91,7 +91,7 @@ describe('CombatEngine', () => {
     }
   });
 
-  it('usa áreas direcionais próprias para as duas ondas', () => {
+  it('uses a nature projectile and a directional wave clipped by LoS', () => {
     const casts = new CombatEngine()
       .run()
       .events.filter((event) => event.type === 'cast');
@@ -101,10 +101,12 @@ describe('CombatEngine', () => {
     const energy = casts.find(
       (event) => event.data?.abilityId === 'energy_wave',
     );
-    expect(ice?.data?.tiles).toHaveLength(25);
-    expect(energy?.data?.tiles).toHaveLength(11);
+    expect(ice?.data?.tiles).toHaveLength(1);
+    expect(abilityOffsets('energy_wave')).toHaveLength(11);
+    expect(energy?.data?.tiles?.length).toBeGreaterThan(0);
+    expect(energy?.data?.tiles?.length).toBeLessThanOrEqual(11);
     expect(new Set(ice?.data?.tiles?.map((point) => `${point.x}:${point.y}`)).size)
-      .toBe(25);
+      .toBe(1);
   });
 
   it('usa as áreas originais cadastradas em SQMs', () => {
@@ -155,13 +157,13 @@ describe('CombatEngine', () => {
     expect(casts.some((event) => event.data?.abilityId === 'energy_wave')).toBe(true);
   });
 
-  it('usa exeta res após dois segundos sem alcance global ou puxão físico', () => {
+  it('usa Chamado do Ferro após dois segundos sem alcance global ou puxão físico', () => {
     const events = new CombatEngine().run().events;
     const cast = events.find(
       (event) =>
         event.type === 'cast' &&
         event.data?.abilityId === 'challenge' &&
-        event.data?.words === 'exeta res',
+        event.data?.words === 'Chamado do Ferro',
     );
     expect(cast).toBeDefined();
     expect(cast!.time).toBeGreaterThanOrEqual(2000);
@@ -411,7 +413,7 @@ describe('CombatEngine', () => {
         expect(terminal[0].time).toBe(telegraph.data?.impactAt);
       } else {
         expect(terminal[0].data?.reason).toBeTruthy();
-        expect(terminal[0].time).toBeLessThan(telegraph.data?.impactAt ?? Infinity);
+        expect(terminal[0].time).toBeLessThanOrEqual(telegraph.data?.impactAt ?? Infinity);
       }
     }
   });

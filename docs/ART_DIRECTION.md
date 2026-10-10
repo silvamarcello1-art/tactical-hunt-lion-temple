@@ -1,3 +1,22 @@
+# Direção de arte — atualização 2B.1 (05/10/2026)
+
+Dez atores vetoriais originais no manifesto; heróis aprovados preservados.
+Bastião de Bronze: escudo largo e armadura pesada. Balista Errante: arma transversal
+com cavalete, silhueta não felina. Ambos mantêm frame/footpoint/footprint registrados,
+não são recolors. Qualidade atual é blockout, não arte final.
+
+Nove ícones SVG originais 48×48 individuais: chamado/espada/ruptura, cura/folha/
+jardim, lança/onda astral/céu. IDs antigos do Druid são chaves de compatibilidade,
+não justificam gelo na imagem: Laço Vital, Semente Errante e Jardim da Vigília
+possuem símbolos de cura/natureza. Tooltip usa o mesmo ID e nome do binding.
+
+Party compacta fora do mundo; barras contrastadas, ícones/teclas/custos discretos,
+passivas com efeito e unlock visíveis. Identidade não depende só de cor/hover.
+Gerador existente produz sprites e ícones; não houve cópia de assets externos.
+Os itens/ícones de equipamento e fontes legadas preservadas não foram reeditados.
+
+## Direção de arte base e histórico
+
 # Tactical Hunt — direção de arte
 
 ## Identidade
