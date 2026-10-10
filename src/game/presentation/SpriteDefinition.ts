@@ -34,6 +34,8 @@ export const spriteAction = (state:VisualAnimationState):SpriteAction => {
 export function spriteId(entity:EntitySnapshot):string {
   if (['knight','druid','sorcerer'].includes(entity.role)) return entity.role;
   if (entity.role === 'boss') return 'hollow-regent';
+  if(entity.archetype==='protector')return 'bronze-bastion';
+  if(entity.archetype==='artillery')return 'wandering-ballista';
   if(entity.archetype==='hunter')return 'lion-hunter';
   if(entity.archetype==='flanker')return 'lion-flanker';
   if(entity.archetype==='caster')return 'lion-oracle';

@@ -93,7 +93,7 @@ function openEquipment(itemId?:string) {
   playerControls?.clear();equipmentRoot.hidden=false;equipmentPanel.focusItem(itemId);equipmentRoot.focus();
 }
 inventoryButton.onclick=()=>openEquipment();
-$('#close-equipment').onclick=()=>{equipmentRoot.hidden=true;playerControls?.clear();inventoryButton.focus();};
+$('#close-equipment').onclick=()=>{equipmentRoot.hidden=true;playerControls?.clear();playerControls?.focusGame();};
 equipmentRoot.addEventListener('keydown',event=>{
   event.stopPropagation();if(event.key==='Escape') $('#close-equipment').click();
 });
@@ -179,7 +179,7 @@ function updateHUD() {
     if(!renderer || ['idle','completed','defeated','error'].includes(sessionPhase)) return {ready:false,reason:sessionPhase==='idle'?'not-started':'session-ended',remaining:0};
     const ability=abilities.find(a=>a.id===id)!;
     const target=ability.group==='healing'||ability.group==='support'?selectedHeroId:playerControls?.selectedTarget;
-    return engine!.abilityStatus(selectedHeroId,id,target);
+    return engine!.abilityStatus(selectedHeroId,id,target,engine!.time);
   },casting && casting.until>logicalTime?casting.id:undefined);
   $('#compact-time').textContent=formatTime(liveState.time);
   $('#compact-kills').textContent=liveState.kills+' derrotados';
@@ -191,9 +191,11 @@ function updateCooldownVisuals(time: number) {
   document.querySelectorAll<HTMLButtonElement>('[data-ability]').forEach((button) => {
     const abilityId = button.dataset.ability ?? '';
     const state = abilityCooldowns.get(abilityId);
-    const remaining = state ? Math.max(0, state.endsAt - logicalTime) : 0;
+    const domain=renderer?.engine.cooldownState(selectedHeroId,abilityId);
+    const remaining = domain?.remaining??(state ? Math.max(0, state.endsAt - logicalTime) : 0);
     if (state && remaining === 0) abilityCooldowns.delete(abilityId);
-    const ratio = state && state.duration > 0 ? remaining / state.duration : 0;
+    const duration=domain?.duration??state?.duration??0;
+    const ratio = duration>0 ? Math.min(1,remaining/duration) : 0;
     button
       .querySelector<HTMLElement>('.cooldown-mask')
       ?.style.setProperty('--cooldown-angle', `${Math.round(ratio * 360)}deg`);
@@ -303,7 +305,7 @@ async function createRenderer() {
   playerControls = undefined;
   renderer?.destroy();
   renderer = undefined;
-  const nextRenderer = new PixiRenderer(new CombatEngine(803, preferences, huntSessionId, progressionStore.snapshot(), equipmentStore.loadout(),true), {
+  const nextRenderer = new PixiRenderer(new CombatEngine(803, preferences, huntSessionId, progressionStore.snapshot(), equipmentStore.loadout(),true,true), {
     debugEnabled,
     selectedHeroId,
   });
@@ -319,7 +321,8 @@ async function createRenderer() {
       get entities() { return nextRenderer.engine.entities; },
       get results() { return nextRenderer.engine.controlResults; },
       controlOf:id => nextRenderer.engine.controlOf(id),
-      abilityStatus:(id,ability,target) => nextRenderer.engine.abilityStatus(id,ability,target),
+      assistanceOf:id=>nextRenderer.engine.assistanceOf(id),
+      abilityStatus:(id,ability,target) => nextRenderer.engine.abilityStatus(id,ability,target,nextRenderer.engine.time),
       submit:command => nextRenderer.engine.submit(command),
       selectTarget:id => nextRenderer.selectTarget(id),
       pickEntity:(x,y)=>nextRenderer.pickEntity(x,y),
@@ -809,7 +812,7 @@ document.querySelectorAll<HTMLButtonElement>('[data-collapse]').forEach((button)
   };
 });
 
-$('#close-drawer').onclick=()=>{ $('#view-summary').hidden=true; };
+$('#close-drawer').onclick=()=>{ $('#view-summary').hidden=true;playerControls?.clear();playerControls?.focusGame(); };
 
 const supplyConfig=document.querySelector<HTMLButtonElement>('#supply-config');
 if(supplyConfig) supplyConfig.onclick = () => {

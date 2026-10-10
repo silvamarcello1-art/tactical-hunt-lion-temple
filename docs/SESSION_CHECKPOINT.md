@@ -1,3 +1,73 @@
+# Checkpoint — MVP 2B.1 — retomada 10/10/2026
+
+Branch `feature/gameplay-first-mvp2a`; entrada local/origin
+`7062c5d872e4d43f7a61a2c06ad2b1389d0f2812`, upstream confirmado, worktree limpa
+antes desta implementação. Origin GitHub correto; base visual 58d9720. Nenhuma
+alteração alheia descartada, nenhum Helper/Sites/merge/force push.
+
+Concluído: bindings estáveis, foco/targeting/self-heal, oito direções físicas,
+Assistido por herói/persistência de booleans, projéteis contínuos, prazos lógicos,
+party/slots/passivas compactos, dois inimigos/composições e debug opt-in.
+Preservados inventário, recibos, RNG isolado e troca da reserva com mochila cheia.
+
+Auditoria de publicação anterior: push 37353880622 falhou no timeout total do
+cenário mouse-first (27/28 E2E passaram); PR 37353885091 passou. Deploy pulado;
+manifest público ainda 056a743, não 8e2a309. Não atribuir esse site ao código novo.
+
+Gates em 10/10: health, typecheck, 216/216 unitários (17 arquivos), build
+de 766 módulos e reprodução de arte com hashes idênticos aprovados. Playwright
+33/33 aprovados (8,2 min, um worker); diff --check aprovado, diff completo revisto.
+Instalação frozen-lockfile também aprovada; nenhuma dependência/lockfile alterada.
+Vitest serializa arquivos para evitar contenção de CPU: nenhum timeout/assertion
+existente ampliado. Novos fixtures de teclado verificam origem livre e reinício
+por direção; fixture antigo de obstáculos usa roster antigo (mesmos asserts).
+Sem alterações de snapshots de combate. Regra nova isolada por `polishedRules`.
+
+Correção causal final: no terceiro loop progressivo, Sorcerer morria enquanto
+Druid tinha mana mas LoS de cura bloqueada. Auto Druid agora busca tile seguro e
+alcançável de cura antes da ofensiva; Assistido não move. Três ciclos unitários
+52350/50850/46350 ms, todos com três heróis vivos. Assert E2E original preservado.
+
+Manual 10/10, save existente Lv22/23 preservado: 1x→4x, Loop OFF, vitória em
+37s lógicos, 19 kills, 4240 XP, 1505 gold e 1 Boss Token real. Ao final zero
+overlap/OOB/reservas/projéteis/telegraphs/tweens/resíduos, três heróis. Amostra
+syncPresentation média 0,174 ms/máximo 3 ms, 594 objetos finais, pico 93 objetos
+visuais ativos.
+E2E de apresentação da rodada final: média 0,153 ms/máximo 3,8 ms,
+594 objetos finais/pico 98 objetos visuais ativos.
+São amostras diferentes, não FPS nem prova de ganho sobre a versão anterior.
+Erros antigos da aba ao faltar servidor desapareceram após startup/reload;
+filtrar console pelo timestamp desta sessão, não atribuí-los ao novo combate.
+Manual: Digit1 Druid heal_friend, Digit1 Sorcerer flame_strike e Digit2 Knight
+berserk resolveram os IDs corretos; mana foi debitada uma vez. ESC cancelou
+targeting; quatro estados ON/OFF legíveis, alvo morto sem autoaquisição; Numpad4
+moveu Sorcerer 5:12→4:12 mantendo Assistido. Latência observada desse tap 185,6 ms,
+uma amostra com execução de gates concomitante, não benchmark comparável.
+Smoke isolado real com scripts/qa-preview.mjs (1x→4x): vitória em 52s, 19 kills,
+4240 XP, 1489 gold, um Boss Token, cura 1237; zero erros/avisos e lifecycle limpo.
+Custo de execução de callbacks rAF (update/render/UI, não FPS): 1x, 3684 amostras,
+média 2,034 ms/máximo 143 ms; 4x, 2508 amostras, média 2,414 ms/máximo 84 ms.
+Há picos a perfilar; não foi feita comparação controlada com a versão anterior.
+Playtest continuou até cinco ciclos concluídos (incluindo teste de modos e três
+loops Auto posteriores). Loop OFF encerrou normalmente; três unidades e zero
+resíduos/reservas/projéteis/overlap/OOB ao final. Nenhum save foi apagado.
+Novo E2E inicialmente contou o intervalo fechado de 250 ms como um tick; dois
+eventos eram de ticks distintos (250/500). Corrigido para exigir uma ação por
+timestamp e categorias permitidas; caso isolado e suíte completa passaram.
+
+Evidência inicial: seis hunts 803/811/814, wave ON/OFF, seis vitórias, zero overlap,
+OOB e reservas/projéteis/perigos órfãos. Timeline exata em batch e frames 73/1000.
+Numpad testado no Edge via protocolo físico com key numérico e key de navegação;
+a luz/estado físico NumLock de um teclado real não pode ser alternada neste
+ambiente. Esse playtest físico permanece como limitação explícita.
+
+Próximo comando: commit/push normal, acompanhar CI/deploy, conferir version.json
+e smoke do SHA correto. Gates locais encerrados; não repetir sem mudança de código.
+Não afirmar
+entrega navegável nova enquanto o deploy estiver pendente.
+
+## Histórico — checkpoint MVP 2B
+
 # Checkpoint atual — MVP 2B (05/10/2026, em validação)
 
 - Branch: `feature/gameplay-first-mvp2a`; ponto inicial local/remoto `bf8e823f8a9329a9cb42ddd460b6ce467b1e7ab2`.

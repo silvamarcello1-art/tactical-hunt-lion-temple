@@ -1,3 +1,32 @@
+# Estado vigente — MVP 2B.1 — retomada 10/10/2026
+
+Implementação na branch `feature/gameplay-first-mvp2a`, sobre 7062c5d (código
+anterior 8e2a309). Controles físicos separados Digit/Numpad, slots estáveis por
+herói, Assistido com Auto Attack/Auto Magias independentes e HUD compacto em
+screen space. O mundo mantém o viewport dominante e as passivas continuam visíveis.
+
+Projéteis diretos são linhas contínuas entre pontos autorizados; supercover
+serve para colisão, não animação. O ruleset 2B.1 usa ponto original, sem homing:
+alvo que abandona o tile provoca cancelamento, não teleporte/dano fantasma.
+Movimentos e impactos comprometidos resolvem nos prazos lógicos, entre decisões
+de 250 ms; uma única amostra de input por decisão. Pausa/velocidade compartilham
+esse relógio. O ruleset antigo permanece para regressões determinísticas.
+
+Dois reforços originais: Bastião de Bronze e Balista Errante, com ataques
+anunciados e recuperação. Roster 5/5/6/3, sem inflação de XP/loot pelos reforços;
+IDs e RNG de recompensas existentes preservados. Inventário/forja/equipamentos
+não foram reimplementados; troca da reserva com mochila cheia preservada.
+
+Auto Druid recupera posição válida de cura quando LoS bloqueia um aliado ferido,
+antes da ofensiva. O terceiro loop progressivo não pode sacrificar um herói por
+esse bloqueio. Assistido não recebe movimento oculto; usa a posição do jogador.
+
+Contrato detalhado: `GAMEPLAY_POLISH.md`. Gates, métricas, limitações e SHA
+servido: `SESSION_CHECKPOINT.md`. Não considerar o preview atualizado antes
+de CI/deploy/manifest confirmados. Sequência permanece 2B → 2C → 2D → 2E → 2F.
+
+## Histórico — MVP 2B
+
 # Estado vigente — MVP 2B — 05/10/2026
 
 Implementação local validada em 05/10 na branch `feature/gameplay-first-mvp2a`:

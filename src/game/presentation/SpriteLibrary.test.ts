@@ -15,8 +15,10 @@ describe('original sprite export contract',() => {
       expect(f.maxUpwardOverflow).toBeLessThanOrEqual(64);
     }
   });
-  it('has six original silhouettes with every cardinal action inside its atlas',() => {
-    expect(new Set(definitions.map(item => item.id)).size).toBe(8);
+  it('has ten original silhouettes with every cardinal action inside its atlas',() => {
+    expect(new Set(definitions.map(item => item.id)).size).toBe(10);
+    expect(definitions.map(item=>item.id)).toContain('bronze-bastion');
+    expect(definitions.map(item=>item.id)).toContain('wandering-ballista');
     for (const definition of definitions) {
       expect(definition.spriteSet).toMatch(/^\/assets\/original\//);
       expect(definition.footAnchor).toEqual({x:.5,y:.875});

@@ -5,6 +5,7 @@
 | Marco | Escopo |
 |---|---|
 | MVP 2B | Inventory + Equipment + Loot + Forge; vertical slice local atual |
+| MVP 2B.1 | Consolidação de 2B: hotkeys, Numpad, Assistido, projéteis contínuos, party/HUD e duas composições; antes de Adventure |
 | MVP 2C | Manual Adventure + World + NPCs + Quests |
 | MVP 2D | Story/Campaign Foundation |
 | MVP 2E | Server Authority + Networking; exige ADR antes de autoridade remota |

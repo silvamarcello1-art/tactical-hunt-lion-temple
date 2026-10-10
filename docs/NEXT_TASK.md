@@ -1,24 +1,24 @@
-# Próxima tarefa — concluir validação do MVP 2B
+# Próxima tarefa — fechar MVP 2B.1 e playtest, antes de Adventure
 
-Estado atual: implementação local de inventário, equipamentos, drops e forja +1.
-Leia `SESSION_CHECKPOINT.md` e `EQUIPMENT_AND_LOOT.md` antes de retomar.
-Não reimplemente sistemas concluídos. Branch `feature/gameplay-first-mvp2a`;
-ponto inicial desta etapa `bf8e823f8a9329a9cb42ddd460b6ce467b1e7ab2`.
+Branch `feature/gameplay-first-mvp2a`; contrato `GAMEPLAY_POLISH.md`. Leia
+CURRENT_STATE/SESSION_CHECKPOINT para gates, CI e SHA real. Não reimplementar
+controles, inventário, equipamento, loot/forja ou Helper individual.
 
-Gates locais completos em 05/10: 184 unitários, 28 E2E, TypeScript/build/diff.
-Correção enviada em 8e2a309f07a0521ceed02e265395df56acdb3600: equipar da reserva
-mesmo com mochila cheia. Local = origin confirmado, PR #3 atualizada.
-Próximo passo: acompanhar CI push 37353880622 e PR 37353885091; não repetir
-gates locais sem mudança de código. Após sucesso do deploy, conferir version.json
-público contra o SHA de código e fazer smoke no navegador. Publicação ainda
-não confirmada nesta retomada. Não usar Sites/merge.
-Após MVP 2B validado: playtest humano e MVP 2C Adventure/mundo/NPC/quests,
-depois 2D campanha, 2E servidor/rede, 2F PvP. Não antecipar esses sistemas.
+1. Gates locais concluídos em 10/10: 216 unitários, 33 E2E, typecheck/build/diff
+   e arte reproduzível. Diff revisto. Confirmar commit/push local = origin.
+2. Acompanhar o workflow do SHA novo; ler logs/trace se falhar. Não aumentar
+   timeouts/assertions ou regenerar snapshots para passar gates. Conferir
+   deploy Pages, version.json e smoke público antes de afirmar publicação.
+3. Playtest físico NumLock ON/OFF, com teclas de navegação e oito direções.
+   Teste Edge de code/key já existe; o estado de um teclado físico não foi
+   alternado por este ambiente. Colher aprovação da identidade/assistência e
+   counterplay/balanceamento dos dois inimigos (arte ainda blockout original).
+4. Só então planejar MVP 2C Adventure/mundo/NPC/quests; sequência 2B→2C→2D→2E→2F.
+   Nenhum networking/PvP/campanha agora. Não fazer merge estável nem usar Sites.
 
-Playtest antes de expandir: legibilidade das comparações, valor das alternativas
-ofensiva/defensiva, facilidade de equipar com Loop OFF e gestão de duplicatas
-quando mochila/slots lotam. Troca pela reserva descrita em EQUIPMENT_AND_LOOT.
-Não confundir gates determinísticos com aprovação da diversão ou da economia.
+Após os gates desta etapa, não repeti-los sem alteração de código; confirmar
+publicação pelo SHA, não por parâmetro ?v. Mantido o swap pela reserva com mochila
+cheia e saves atuais. Não limpar saves de usuário para validar cenas.
 
 ## Registro histórico — Mouse-first / Encounter Depth
 

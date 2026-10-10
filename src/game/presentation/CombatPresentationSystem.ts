@@ -19,6 +19,7 @@ export interface VisualEntityState {
 export interface VisualProjectileState {
   castId: string; sourceId?: string; targetId?: string; pathTiles: GridPoint[];
   position: Point; startedAt: number; impactAt: number; cancelled: boolean;
+  origin:Point; impact:Point;
 }
 export interface VisualTelegraphState {
   castId: string; logicalTiles: GridPoint[]; startedAt: number;
@@ -65,11 +66,8 @@ export const visualSortKey = (tile: GridPoint, entityId: string) =>
 export const interpolatePath = (pathTiles: GridPoint[], progress: number): Point => {
   if (!pathTiles.length) return { x:0,y:0 };
   if (pathTiles.length === 1) return tileCenter(pathTiles[0]);
-  const scaled = clamp01(progress) * (pathTiles.length - 1);
-  const index = Math.min(pathTiles.length - 2, Math.floor(scaled));
-  return interpolate(
-    tileCenter(pathTiles[index]), tileCenter(pathTiles[index + 1]), scaled - index,
-  );
+  // Supercover tiles are collision evidence, not visual waypoints.
+  return interpolate(tileCenter(pathTiles[0]),tileCenter(pathTiles.at(-1)!),clamp01(progress));
 };
 
 export class CombatPresentationSystem {
@@ -134,7 +132,7 @@ export class CombatPresentationSystem {
     for (const entity of this.entities.values()) this.updateEntity(entity);
     for (const projectile of this.projectiles.values()) {
       const duration = Math.max(1, projectile.impactAt - projectile.startedAt);
-      projectile.position = interpolatePath(projectile.pathTiles, (logicalTime - projectile.startedAt) / duration);
+      projectile.position = interpolate(projectile.origin,projectile.impact,clamp01((logicalTime - projectile.startedAt) / duration));
     }
     for (const telegraph of this.telegraphs.values()) {
       const duration = Math.max(1, telegraph.impactAt - telegraph.startedAt);
@@ -216,9 +214,11 @@ export class CombatPresentationSystem {
     if (!path.length) return;
     const startedAt = event.data?.startedAt ?? event.time;
     const impactAt = event.data?.impactAt ?? startedAt + Math.max(1, event.data?.duration ?? 180);
+    const visualOrigin=event.data?.visualOrigin??tileCenter(path[0]);
+    const visualImpact=event.data?.visualImpact??tileCenter(path.at(-1)!);
     this.projectiles.set(castId, {
       castId,sourceId:event.sourceId,targetId:event.targetId,pathTiles:path.map(cloneTile),
-      position:tileCenter(path[0]),startedAt,impactAt,cancelled:false,
+      origin:{...visualOrigin},impact:{...visualImpact},position:{...visualOrigin},startedAt,impactAt,cancelled:false,
     });
   }
 
@@ -229,7 +229,7 @@ export class CombatPresentationSystem {
   }
   private resolveProjectile(castId: string) {
     const projectile = this.projectiles.get(castId);
-    if (projectile) projectile.position = interpolatePath(projectile.pathTiles, 1);
+    if (projectile) projectile.position = {...projectile.impact};
     this.projectiles.delete(castId);
   }
   private startTelegraph(event: CombatEvent) {

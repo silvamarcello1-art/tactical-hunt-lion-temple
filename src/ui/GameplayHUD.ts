@@ -1,8 +1,7 @@
-import { abilities, abilitiesByVocation, type AbilityPreferences } from '../data/abilities';
+import { abilities, type AbilityPreferences } from '../data/abilities';
 import { heroes } from '../data/config';
 import { passives, type PartyProgress, type Vocation } from '../data/progression';
 import type { EntitySnapshot } from '../events/types';
-import { assetUrl } from '../game/assetUrl';
 
 import { abilityNames, abilityReasons, iconMarkup, actionSlots } from '../data/actionBar';
 /** Screen-space DOM only. No renderer, transforms or entity display objects. */
@@ -33,10 +32,13 @@ export class GameplayHUD {
       card.classList.toggle('defeated',!entity.alive);card.dataset.alive=String(entity.alive);
       card.querySelector<HTMLElement>('.hp i')!.style.width=`${Math.max(0,entity.hp/entity.maxHp)*100}%`;
       card.querySelector<HTMLElement>('.mp i')!.style.width=`${Math.max(0,entity.mana/entity.maxMana)*100}%`;
-      card.querySelector('.hero-vitals')!.textContent=`${Math.ceil(entity.hp)} / ${entity.maxHp}`;
+      card.querySelector('.hero-vitals')!.textContent=`HP ${Math.ceil(entity.hp)}/${entity.maxHp} · MP ${Math.ceil(entity.mana)}/${entity.maxMana}`;
+      card.querySelector<HTMLElement>('.hp i')!.style.background=entity.hp/entity.maxHp<=.3?'#e27765':entity.hp/entity.maxHp<=.6?'#d4ba64':'var(--hp)';
+      card.querySelector('.hp')!.setAttribute('aria-label',`Vida ${Math.ceil(entity.hp)} de ${entity.maxHp}`);
+      card.querySelector('.mp')!.setAttribute('aria-label',`Mana ${Math.ceil(entity.mana)} de ${entity.maxMana}`);
       card.querySelector('.hero-level')!.textContent=`Lv. ${progress[hero.id]?.level??1}`;
       const mode=card.querySelector<HTMLElement>('.hero-mode')!;
-      mode.textContent=entity.alive?({AI:'A',MANUAL:'M',ASSISTED:'S'}[modeOf(hero.id)]??'A'):'×';
+      mode.textContent=entity.alive?({AI:'AUTO',MANUAL:'MANUAL',ASSISTED:'ASSISTIDO'}[modeOf(hero.id)]??'AUTO'):'KO';
       mode.title=entity.alive?modeOf(hero.id).replace('AI','AUTO'):'Derrotado';
       card.dataset.controlMode=modeOf(hero.id);
     }
@@ -51,9 +53,9 @@ export class GameplayHUD {
   availability(statusOf:(abilityId:string)=>{ready:boolean;reason:string;remaining:number},castingId?:string) {
     document.querySelectorAll<HTMLButtonElement>('#action-bar [data-ability]').forEach(button=>{
       const id=button.dataset.ability!;const state=statusOf(id);
-      button.disabled=!state.ready && state.reason!=='no-target';
+      button.disabled=['not-started','actor-dead','session-ended'].includes(state.reason);
       button.dataset.unavailableReason=state.reason;button.classList.toggle('casting',id===castingId);
-      button.title=`${abilityNames[id]} · ${abilityReasons[state.reason]??state.reason}${state.remaining>0?` (${Math.ceil(state.remaining/1000)}s)`:''} · ${abilities.find(a=>a.id===id)!.group==='healing'?'Aliado / você':'Inimigo / área'} · Shift + tecla: escolher alvo`;
+      button.title=`${abilityNames[id]} · Tecla ${button.dataset.hotkey} · ${abilityReasons[state.reason]??state.reason}${state.remaining>0?` (${Math.ceil(state.remaining/1000)}s)`:''} · ${abilities.find(a=>a.id===id)!.group==='healing'?'Padrão: você; Shift permite aliado':'Alvo selecionado / área'} · Shift + tecla: escolher alvo`;
       button.querySelector('.ability-reason')!.textContent=state.reason==='ok'?'':abilityReasons[state.reason]??state.reason;
     });
   }

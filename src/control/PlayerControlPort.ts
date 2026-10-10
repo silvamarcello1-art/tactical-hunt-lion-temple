@@ -1,5 +1,5 @@
 import type { EntitySnapshot } from '../events/types';
-import type { CommandResult, ControlOwnership, PlayerCommand } from './PlayerCommand';
+import type { AssistanceOptions, CommandResult, ControlOwnership, PlayerCommand } from './PlayerCommand';
 
 /** Browser adapter dependencies; no Pixi implementation or mutable engine. */
 export interface PlayerControlPort {
@@ -10,6 +10,7 @@ export interface PlayerControlPort {
   readonly entities:readonly Readonly<EntitySnapshot & {alive:boolean}>[];
   readonly results:readonly CommandResult[];
   controlOf(actorId:string):ControlOwnership;
+  assistanceOf?(actorId:string):AssistanceOptions;
   abilityStatus(actorId:string,abilityId:string,targetId?:string):{ready:boolean;reason:string;remaining:number};
   submit(command:PlayerCommand):CommandResult;
   selectTarget(actorId?:string):void;

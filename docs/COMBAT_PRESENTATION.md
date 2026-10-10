@@ -1,3 +1,27 @@
+# Apresentação vigente — MVP 2B.1 (05/10/2026)
+
+`GAMEPLAY_POLISH.md` contém o contrato atual. Projéteis interpolam diretamente
+`visualOrigin` → `visualImpact`, emitidos pelo domínio junto de castId/sessionId,
+startedAt/impactAt e pathTiles. Rotação usa o vetor constante de viagem. PathTiles
+é evidência supercover de colisão; não são pontos de animação. Alvo móvel no
+ruleset novo usa original-tile, cancela se abandonado, sem homing visual.
+
+Lifecycle comprometido resolve entre turnos, no timestamp exato; teste compara
+HuntResult/timeline inteiros com frames 73/1000. Renderer não inventa destino,
+dano ou máscara. Pausa e 1x/2x/4x mantêm geometria; cancel/reset limpam pools.
+Movimento visual das entidades mantém a interpolação anterior.
+
+Party é uma coluna DOM screen-space fora da arena. HP/mana/nível/modo e seleção
+permanecem juntos; slots fixos de ícone/tecla/custo e tooltip, passivas visíveis.
+Cooldown máscara circular individual/grupo vem do motor no relógio lógico.
+Layouts verificados em 1366×768, 1600×900 e 1920×1080, sem scroll obrigatório.
+
+Debug somente `?debug=1`: herói/binding/intenção/resultado/assistência/latência no
+painel técnico; linha visual de projétil versus supercover e sync no Pixi.
+Métricas existentes continuam em data-*; não são exibidas na HUD normal.
+
+## Histórico — MVP 1D
+
 # MVP 1D — Combat Presentation & Visual Fidelity
 
 Atualizado em 26 de setembro de 2026. As evidências datadas abaixo são históricas.

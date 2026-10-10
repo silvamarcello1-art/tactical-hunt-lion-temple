@@ -1,3 +1,31 @@
+# Arquitetura — atualização MVP 2B.1 (10/10/2026)
+
+Stack existente preservada; nenhum motor paralelo/backend. `AssistanceStore`
+guarda só opções por herói; `PlayerCommand.assistance` valida/aplica no domínio.
+`actionBindings` é a única tabela de slot/ID/tecla; define binding, label e ícone.
+Seleção não altera ownership. Comandos de configuração precedem casts explícitos,
+que precedem automação; `acted` impede duas ações/cobranças no mesmo turno.
+
+A sessão de produção ativa `polishedRules` (7º parâmetro do CombatEngine), com
+rosters 2B.1, projectile original-tile e scheduler de deadlines entre decisões.
+O default antigo preserva fixtures/hashes Auto e a prova de não regressão. Os
+novos cenários são separados e comparam timelines completas; não regenerar hashes.
+Deadline de movimento/projétil/perigo usa o mesmo relógio e revalidação existente;
+nenhum input é amostrado em deadline intermediário. Renderer não resolve colisão.
+
+Auto Druid usa o resolver de firing-position também para recuperar linha de cura,
+antes de fallback ofensivo, com tiles alcançáveis/seguros e MovementSystem normal.
+Não se aplica ao Assistido. Regressão de três loops exige os três heróis vivos.
+
+`visualOrigin`/`visualImpact` autorizam trajetória; `pathTiles` mantém supercover.
+Reforços `rewardSuppressed` contam kills mas não avançam RNG/XP/loot/equipmentdrops.
+Persistência de equipamento/XP/currency permanece intacta, sem restaurar ordens.
+Vitest serializa arquivos para cumprir os mesmos deadlines sob CPU Windows;
+Playwright permanece um worker. Nenhum timeout/assertion/snapshot foi afrouxado.
+Contrato detalhado: `GAMEPLAY_POLISH.md`.
+
+## Arquitetura base e histórico
+
 # Arquitetura canônica
 
 Atualizada em 26 de setembro de 2026 — Mouse-first / Encounter Depth.

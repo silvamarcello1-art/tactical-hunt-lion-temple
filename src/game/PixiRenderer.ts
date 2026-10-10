@@ -706,6 +706,11 @@ export class PixiRenderer {
       label.position.set(state.position.x + 8, state.position.y + 14);
       this.debugSyncLayer.addChild(label);
     }
+    for(const projectile of this.presentation.projectiles.values()) {
+      graphics.moveTo(projectile.origin.x,projectile.origin.y).lineTo(projectile.impact.x,projectile.impact.y).stroke({width:1,color:0x55ddff,alpha:.8});
+      for(const tile of projectile.pathTiles)graphics.rect(tile.x*32-4,tile.y*32-4,8,8).stroke({width:1,color:0xffba55,alpha:.6});
+      graphics.circle(projectile.position.x,projectile.position.y,3).fill({color:0xffffff,alpha:.8});
+    }
     this.debugSyncLayer.addChildAt(graphics, 0);
   }
 
@@ -1123,7 +1128,7 @@ export class PixiRenderer {
       event.data?.castId
     ) {
       if (event.type === 'projectile_resolved' && event.targetId) {
-        this.impactSpark(event.targetId, this.elementColor(event.data?.element));
+        this.impactSpark(event.targetId, this.elementColor(event.data?.element),event.data?.visualImpact);
       }
       this.cleanupProjectile(event.data.castId);
     }
@@ -1554,7 +1559,7 @@ export class PixiRenderer {
     }, () => this.impactPool.release(trace));
   }
 
-  private impactSpark(targetId: string, color: number) {
+  private impactSpark(targetId: string, color: number,impact?:{x:number;y:number}) {
     const target = this.units.get(targetId);
     if (!target) return;
     const spark = this.impactPool.acquire();
@@ -1565,7 +1570,7 @@ export class PixiRenderer {
         .lineTo(Math.cos(angle) * 13, Math.sin(angle) * 13)
         .stroke({ width:2,color,alpha:.9 });
     }
-    spark.position.copyFrom(target.body.position);
+    spark.position.copyFrom(impact??target.body.position);
     spark.zIndex = 60;
     this.effectLayer.addChild(spark);
     this.tween(220, (progress) => {
@@ -1605,12 +1610,10 @@ export class PixiRenderer {
     for (const [castId, state] of this.presentation.projectiles) {
       const projectile = this.activeProjectiles.get(castId);
       if (!projectile) continue;
-      const previousX = projectile.x;
-      const previousY = projectile.y;
       projectile.position.set(state.position.x, state.position.y);
       projectile.gotoAndStop(Math.floor(Math.max(0,this.presentation.time-state.startedAt)/80) % projectile.textures.length);
-      const dx = state.position.x - previousX;
-      const dy = state.position.y - previousY;
+      const dx = state.impact.x - state.origin.x;
+      const dy = state.impact.y - state.origin.y;
       if (Math.abs(dx) + Math.abs(dy) > .01) projectile.rotation = Math.atan2(dy, dx);
     }
     for (const [castId, state] of this.presentation.telegraphs) {

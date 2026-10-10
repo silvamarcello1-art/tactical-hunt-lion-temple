@@ -1,3 +1,31 @@
+# Controle do jogador — contrato vigente (05/10/2026)
+
+`GAMEPLAY_POLISH.md` detalha o MVP 2B.1 e prevalece sobre o histórico abaixo.
+Digit1–3 usa os três IDs/slots reais do herói, de `actionBindings`; clique e tecla
+chamam `cast()` e a mesma intenção validada. Repetição do SO não enfileira casts.
+Cura padrão self; Shift escolhe aliado. Sem alvo ofensivo arma targeting; ESC
+cancela targeting antes de Stop. Botões não engolem teclas; campos/selects em
+edição, dialogs/drawers capturam deliberadamente. Fechar devolve foco ao canvas.
+
+Numpad físico: 7/8/9 ↖/↑/↗, 4/6 ←/→, 1/2/3 ↙/↓/↘, 5 Stop. WASD e setas mantidos.
+KeyboardEvent.code separa numérico de fileira superior, independentemente de key.
+Buffer de um tap e amostra por decisão; passos passam pelo MovementSystem, sem
+cortar quinas ou ignorar ocupação/reserva. Stop não cancela passo comprometido.
+
+Auto conserva autonomia; movimento explícito assume Manual somente no selecionado.
+Manual permanece explícito. Assistido agora nunca move por rotação/perseguição:
+jogador controla tiles, engage direito é obrigatório, sem autoaquisição após morte.
+Movimento explícito mantém Assistido e opções, suspende ações durante o passo.
+Duas opções por herói comandadas pelo domínio/persistidas em chave própria;
+reload restaura apenas booleans, não modos, ordens, alvo ou início automático.
+Ambos OFF: só ações explícitas. Attack ON: básicos. Magias ON: rotação válida e
+suporte documentado, um orçamento por ator/tick. Cast explícito aceito prevalece;
+desligar opção impede novos lançamentos, não apaga impactos comprometidos.
+Cast explícito não troca modo nem companheiros; em Auto substitui a ação
+automática apenas naquele tick. Movimento/Stop em Auto assume Manual.
+
+## Histórico — contrato anterior (26/09/2026)
+
 # Controle do jogador — contrato vigente (26/09/2026)
 
 ## Um motor, três modos por personagem

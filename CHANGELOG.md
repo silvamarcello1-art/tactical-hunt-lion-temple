@@ -1,3 +1,26 @@
+## 2026-10-10 — retomada MVP 2B.1
+
+- Auto Druid busca linha de cura segura pelo MovementSystem quando um aliado
+  ferido está sem LoS; Assistido mantém movimento do jogador. Corrigida a causa
+  da derrota do Sorcerer no terceiro loop progressivo, mantendo o assert original.
+- E2E exercita as quatro combinações de assistência após engage, parada após
+  morte do alvo e novo engage explícito. Gates finais registrados no checkpoint.
+
+## 2026-10-05 — MVP 2B.1
+
+- Bindings data-driven Digit1–3 por herói, foco do gameplay, self-heal/targeting/ESC.
+- Numpad físico em oito direções, buffer limitado e Stop; Assistido mantém modo.
+- Auto Attack/Auto Magias independentes por herói, domínio validado/persistência sem ordens.
+- Cast explícito precede automação no mesmo orçamento; cooldown individual/grupo lógico.
+- Projéteis contínuos com endpoints autorizados e original-tile, sem homing/escada.
+- Deadlines lógicos entre decisões: completesAt/impactAt exatos, input só uma vez por tick.
+- Party fora da arena; HP/mana úteis, três ícones originais por vocação e passivas visíveis.
+- Bastião de Bronze e Balista Errante em duas composições; reforços sem inflação de loot/XP.
+- Debug opt-in e testes de geometria/assistência/numpad/roster/lifecycle; regressões preservadas.
+- Vitest serializa arquivos CPU-bound sem aumentar timeouts ou afrouxar assertions.
+- Inventário, forja, IDs/recibos/RNG e troca de equipamento da reserva intactos.
+- Gates e publicação efetivamente verificados são registrados em SESSION_CHECKPOINT.
+
 ## 2026-10-01 — MVP 2B (em validação)
 
 - Inventário persistente, drops determinísticos, comparação e equipamento por vocação.

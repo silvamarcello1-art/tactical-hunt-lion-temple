@@ -116,6 +116,9 @@ test('spell targeting cancels with ESC and reset clears held and interaction sta
 });
 
 test('manual steps route around a pillar and reject a blocked diagonal', async ({page}) => {
+  // Keep the original four-enemy obstacle fixture. The new Bastião legitimately
+  // occupies (12,7) on this route; its collision is covered by polished encounters.
+  await page.route('**/src/data/config.ts',async route=>{const response=await route.fetch();await route.fulfill({response,body:(await response.text())+'\npolishedFloors[0].pop();'});});
   const errors = await open(page, true);
   const step = async (key:string,tile:{x:number;y:number}) => {
     await page.keyboard.press(key);

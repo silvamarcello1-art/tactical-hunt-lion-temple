@@ -3,6 +3,9 @@ import type { GridPoint, Point } from '../events/types';
 const directions:Record<string,Point> = {
   KeyW:{x:0,y:-1}, ArrowUp:{x:0,y:-1}, KeyS:{x:0,y:1}, ArrowDown:{x:0,y:1},
   KeyA:{x:-1,y:0}, ArrowLeft:{x:-1,y:0}, KeyD:{x:1,y:0}, ArrowRight:{x:1,y:0},
+  Numpad7:{x:-1,y:-1},Numpad8:{x:0,y:-1},Numpad9:{x:1,y:-1},
+  Numpad4:{x:-1,y:0},Numpad6:{x:1,y:0},
+  Numpad1:{x:-1,y:1},Numpad2:{x:0,y:1},Numpad3:{x:1,y:1},
 };
 
 /** OS repeats only update a set; one step is sampled per domain tick. */

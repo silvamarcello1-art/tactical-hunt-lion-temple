@@ -1,3 +1,14 @@
+# Pipeline — atualização MVP 2B.1 (05/10/2026)
+
+`pnpm art:generate` reproduz dez atores (incluindo bronze-bastion e wandering-ballista)
+e nove ícones individuais em `public/assets/original/ui/<abilityId>.svg`.
+Os SVG de UI são 48×48, consumidos em slots de tamanho fixo; não derivar ícone
+pela posição de ability em array. Exportação segue os contratos abaixo; os testes
+verificam bounds/direções/ações/registro de todos os dez atores.
+
+Reproduzir a geração e verificar diff antes do commit; CI exige arte reproduzível.
+Não copiar frames de referência para o bundle. Silhuetas são blockout original.
+
 # Pipeline de sprites originais
 
 ## Resolução e registro

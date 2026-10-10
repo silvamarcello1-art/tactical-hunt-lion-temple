@@ -78,6 +78,8 @@ export interface CombatEvent {
     pathTiles?: GridPoint[];
     originTile?: GridPoint;
     targetTile?: GridPoint;
+    visualOrigin?: Point;
+    visualImpact?: Point;
     facing?: Direction;
     ability?: string;
     abilityId?: string;
@@ -121,7 +123,8 @@ export type Role = 'knight' | 'druid' | 'sorcerer' | 'monster' | 'boss';
 
 export interface EntitySnapshot {
   description?: string;
-  archetype?: 'bruiser'|'hunter'|'flanker'|'caster';
+  archetype?: 'bruiser'|'hunter'|'flanker'|'caster'|'protector'|'artillery';
+  rewardSuppressed?: boolean;
   id: string;
   name: string;
   role: Role;
