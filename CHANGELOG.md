@@ -1,5 +1,9 @@
 ## 2026-10-10 — retomada MVP 2B.1
 
+- Código d51361c: CI push/PR e deploy Pages aprovados; manifest público no SHA
+  exato e smoke até boss verificados. 216 unitários/33 E2E; zero erros/resíduos
+  no smoke público. Fechamento documental separado não altera runtime servido.
+
 - Auto Druid busca linha de cura segura pelo MovementSystem quando um aliado
   ferido está sem LoS; Assistido mantém movimento do jogador. Corrigida a causa
   da derrota do Sorcerer no terceiro loop progressivo, mantendo o assert original.

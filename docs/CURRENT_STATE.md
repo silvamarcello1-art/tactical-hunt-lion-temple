@@ -22,8 +22,14 @@ antes da ofensiva. O terceiro loop progressivo não pode sacrificar um herói po
 esse bloqueio. Assistido não recebe movimento oculto; usa a posição do jogador.
 
 Contrato detalhado: `GAMEPLAY_POLISH.md`. Gates, métricas, limitações e SHA
-servido: `SESSION_CHECKPOINT.md`. Não considerar o preview atualizado antes
-de CI/deploy/manifest confirmados. Sequência permanece 2B → 2C → 2D → 2E → 2F.
+servido: `SESSION_CHECKPOINT.md`. Sequência permanece 2B → 2C → 2D → 2E → 2F.
+
+Código da etapa: `d51361c0b822fa69d1e23d36ffd7e5b207c03462`, push normal para
+origin confirmado. Gates locais: 216 unitários e 33 E2E; build de preview também
+validado no base path real. CI push 38090057573 / PR 38090060114 aprovados,
+deploy Pages aprovado e version.json público confirmado em d51361c. Smoke
+público 1x→4x terminou em vitória, sem erros/resíduos. O fechamento documental
+posterior não muda esse SHA de runtime; não confundir preview com release estável.
 
 ## Histórico — MVP 2B
 

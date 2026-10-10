@@ -61,10 +61,38 @@ Numpad testado no Edge via protocolo físico com key numérico e key de navegaç
 a luz/estado físico NumLock de um teclado real não pode ser alternada neste
 ambiente. Esse playtest físico permanece como limitação explícita.
 
-Próximo comando: commit/push normal, acompanhar CI/deploy, conferir version.json
-e smoke do SHA correto. Gates locais encerrados; não repetir sem mudança de código.
-Não afirmar
-entrega navegável nova enquanto o deploy estiver pendente.
+Código commitado/pushed: `d51361c0b822fa69d1e23d36ffd7e5b207c03462`;
+local = origin confirmado, worktree limpa após commit. PR #3 atualizada.
+CI push `38090057573` e PR `38090060114` concluídos com sucesso. O run do push
+validou 216 unitários, 33 E2E (27,4 min no runner Windows), ambos os builds,
+arte reproduzível e diff; deploy Pages aprovado. Nenhuma proteção alterada.
+Smoke do build:preview no caminho real /tactical-hunt-lion-temple/ confirmou
+version.json nesse SHA, vitória em 52s, 19 kills, 4240 XP, 1489 gold e um Boss Token.
+Zero erros/avisos, overlap/OOB/reservas/projéteis/VFX residuais; três heróis vivos.
+Callbacks rAF compilados: 1x, 3644 amostras, média 2,207 ms/máximo 127,5 ms;
+4x, 2214 amostras, média 2,907 ms/máximo 130,3 ms. São custos de callbacks,
+não FPS; picos permanecem como investigação futura, sem comparação controlada.
+
+Publicação confirmada em 10/10: version.json público retornou exatamente
+`d51361c0b822fa69d1e23d36ffd7e5b207c03462`. Smoke isolado 1x→4x no Pages:
+vitória em 52s, 19 kills, 4240 XP, 1489 gold, um Boss Token e cura 1237.
+Zero erros/avisos, overlap/OOB/reservas/projéteis/telegraphs/tweens/resíduos;
+três heróis vivos e zero divergência de máscara/sync. 594 objetos finais,
+pico 97 objetos visuais ativos; syncPresentation média 0,108 ms/máximo 3,5 ms.
+Callbacks rAF públicos: 1x, 4016 amostras, média 1,538 ms/máximo 123,6 ms;
+4x, 3094 amostras, média 1,660 ms/máximo 60,3 ms. Não são FPS nem comparação
+controlada; picos continuam pendentes de profiling. Drops de equipamento variam
+por sessão no RNG de recompensas isolado, sem mudar o resultado do combate.
+CUA conferiu Druid/slots/Assistido com ambos toggles ON no site novo; voltou a
+Auto sem iniciar combate, apagar saves ou alterar preferências persistentes.
+Evidências ignoradas, fora do bundle: test-results/mvp2b1-public-gameplay.png e
+mvp2b1-public-victory.png. Preview: https://silvamarcello1-art.github.io/tactical-hunt-lion-temple/
+
+Este fechamento documental é um commit separado com [skip ci], sem alteração
+de runtime; o SHA servido e validado é d51361c, não o HEAD documental posterior.
+Nenhum merge estável ou envio a Sites. Próximo passo: playtest físico NumLock,
+aprovação da arte/balanceamento e profiling; só então planejar 2C. Gates locais
+e remotos encerrados; não repetir sem mudança de código.
 
 ## Histórico — checkpoint MVP 2B
 

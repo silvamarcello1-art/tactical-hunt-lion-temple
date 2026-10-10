@@ -1,19 +1,24 @@
-# Próxima tarefa — fechar MVP 2B.1 e playtest, antes de Adventure
+# Próxima tarefa — playtest do MVP 2B.1, antes de Adventure
 
 Branch `feature/gameplay-first-mvp2a`; contrato `GAMEPLAY_POLISH.md`. Leia
 CURRENT_STATE/SESSION_CHECKPOINT para gates, CI e SHA real. Não reimplementar
 controles, inventário, equipamento, loot/forja ou Helper individual.
 
 1. Gates locais concluídos em 10/10: 216 unitários, 33 E2E, typecheck/build/diff
-   e arte reproduzível. Diff revisto. Confirmar commit/push local = origin.
-2. Acompanhar o workflow do SHA novo; ler logs/trace se falhar. Não aumentar
-   timeouts/assertions ou regenerar snapshots para passar gates. Conferir
-   deploy Pages, version.json e smoke público antes de afirmar publicação.
+   e arte reproduzível. Diff revisto; push do código d51361c confirmado.
+   Smoke compilado com version.json desse SHA aprovado no base path real.
+2. CI push 38090057573 / PR 38090060114 aprovados, deploy Pages aprovado.
+   version.json público = d51361c; smoke 1x→4x com vitória/19 kills/4240 XP,
+   console limpo e lifecycle encerrado. Fechamento documental [skip ci] não
+   altera o runtime publicado. Não aumentar timeouts/assertions ou regenerar
+   snapshots para passar gates de futuras mudanças.
 3. Playtest físico NumLock ON/OFF, com teclas de navegação e oito direções.
    Teste Edge de code/key já existe; o estado de um teclado físico não foi
    alternado por este ambiente. Colher aprovação da identidade/assistência e
    counterplay/balanceamento dos dois inimigos (arte ainda blockout original).
-4. Só então planejar MVP 2C Adventure/mundo/NPC/quests; sequência 2B→2C→2D→2E→2F.
+4. Perfilar picos de callback rAF (não FPS), com baseline comparável antes de
+   alegar melhoria. Amostras e gaps estão no checkpoint. Só então planejar
+   MVP 2C Adventure/mundo/NPC/quests; sequência 2B→2C→2D→2E→2F.
    Nenhum networking/PvP/campanha agora. Não fazer merge estável nem usar Sites.
 
 Após os gates desta etapa, não repeti-los sem alteração de código; confirmar
