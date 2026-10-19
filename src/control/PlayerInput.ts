@@ -10,6 +10,7 @@ const directions:Record<string,Point> = {
 
 /** OS repeats only update a set; one step is sampled per domain tick. */
 export class HeldInput {
+  constructor(private recentAxisWins=false){}
   private keys = new Set<string>();
   press(code:string) { if (!(code in directions)) return false; this.keys.add(code); return true; }
   release(code:string) { return this.keys.delete(code); }
@@ -17,6 +18,7 @@ export class HeldInput {
   get size() { return this.keys.size; }
   direction():Point {
     const values = [...this.keys].map(code => directions[code]);
+    if(this.recentAxisWins){const recent=values.slice().reverse();return {x:recent.find(d=>d.x!==0)?.x??0,y:recent.find(d=>d.y!==0)?.y??0};}
     // W + Up is one north direction, even while S is also pressed.
     return {
       x:Number(values.some(d => d.x === 1)) - Number(values.some(d => d.x === -1)),

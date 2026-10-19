@@ -1,4 +1,22 @@
-# Estado vigente — MVP 2B.1 — retomada 10/10/2026
+# Estado vigente — MVP 2B.2 em validação — 19/10/2026
+
+Treino local Party × Bot em ?training=1, no mesmo motor, Manual inicial e sem
+recompensas persistentes. Magic Wall/Fire Field por 4/5 + clique, com cargas,
+exhaust, range/LoS, terreno e burning de domínio. Quinas dinâmicas revalidadas
+no treino; inversão por tecla recente sem fila. Sprites próprios preservados.
+Não é PvP online nem conversão completa de magias/passivas/Wheel do Tibia.
+Contrato e fontes: TACTICAL_RUNES.md. A* original foi mantido após experimento
+não benéfico; batch run evita cópias incrementais descartadas, sem mudar eventos.
+
+NÃO ENTREGUE/PUBLICADO: gates completos ainda não verdes, com timeouts de testes
+antigos sob carga. Testes novos de domínio e rodada inicial de três E2E passaram;
+rodada expandida e playtest manual ainda pendentes. Computer Use interrompido
+pela política ao não confirmar URL do Edge. Não contornar esse bloqueio.
+Checkpoint detalhado e próximo comando em SESSION_CHECKPOINT/NEXT_TASK.
+
+## Última entrega publicada — 10/10/2026
+
+# Estado anterior — MVP 2B.1 — retomada 10/10/2026
 
 Implementação na branch `feature/gameplay-first-mvp2a`, sobre 7062c5d (código
 anterior 8e2a309). Controles físicos separados Digit/Numpad, slots estáveis por

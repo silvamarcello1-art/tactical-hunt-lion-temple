@@ -1,5 +1,16 @@
 # Controle do jogador — contrato vigente (05/10/2026)
 
+## Treino 2B.2 (19/10)
+
+No cenário ?training=1, 4/5 armam Magic Wall/Fire Field; clicar no tile envia
+runa (um comando, sem repeat). ESC cancela primeiro. Cargas/exhaust são validados
+no domínio. Numpad e 1–3 mantêm funções separadas. O treino prefere a tecla mais
+recente por eixo ao inverter direção; hunts conservam cancelamento de opostas.
+Manual inicial por herói, sem transferência implícita de controle. Auto/Assistido
+continuam disponíveis. Kit gratuito e Loop OFF; o treino não é PvP online.
+Preferências de Helper/assistência explicitamente editadas mantêm os stores
+existentes; somente os estados de combate/kit são efêmeros. TACTICAL_RUNES.md.
+
 `GAMEPLAY_POLISH.md` detalha o MVP 2B.1 e prevalece sobre o histórico abaixo.
 Digit1–3 usa os três IDs/slots reais do herói, de `actionBindings`; clique e tecla
 chamam `cast()` e a mesma intenção validada. Repetição do SO não enfileira casts.

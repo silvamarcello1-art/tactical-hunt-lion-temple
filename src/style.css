@@ -92,3 +92,12 @@ dialog footer, .dialog-actions { display: flex; justify-content: flex-end; gap: 
 #reward-notice{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);z-index:5;background:#243329eb;border-color:#ad9866;white-space:nowrap;color:#f2deb1}
 #result{max-height:85vh;overflow:auto}#result h3{font-size:13px}#result .result-list{font-variant-numeric:tabular-nums}
 #equipment-drawer>.drawer-close{position:sticky;top:0;float:right;z-index:2;background:#26372c}
+/* Local tactical training: normal hunt layout and three spell slots stay intact. */
+#training-link { color:var(--gold, #d9bd71); font-size:11px; text-decoration:none; white-space:nowrap; }
+#training-link[aria-disabled="true"] { opacity:.45; cursor:not-allowed; }
+#rune-kit:not([hidden]) { display:flex; flex-wrap:wrap; align-items:center; gap:6px; }
+#rune-kit button { min-height:26px; font-size:11px; }
+#rune-kit kbd { color:#edcf88; font-weight:700; }
+#rune-kit span { color:#b7c6bd; font-size:10px; }
+#rune-kit small { font-size:10px; color:#aebfb3; }
+[data-scenario="training"] .phase-track { display:none; }

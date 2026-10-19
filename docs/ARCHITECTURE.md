@@ -1,5 +1,16 @@
 # Arquitetura — atualização MVP 2B.1 (10/10/2026)
 
+## Incremento 2B.2 — 19/10: treino local no mesmo domínio
+
+O 8º parâmetro trainingMode do CombatEngine seleciona um roster de sparring,
+ownership Manual inicial e ausência de progressão/recompensas. Não cria outro
+motor. RuneSystem possui o terreno de runas e condições; PlayerIntent.rune passa
+pela mesma fila/validação. Expiração/burning entram no scheduler de deadlines.
+Movimento reativo revalida também quinas/footprint no commit (opt-in no treino).
+Estado visual de runas só consome rune_placed/rune_removed e relógio existente.
+main.ts bloqueia aplicações de eventos econômicos no treino; saves não são
+limpos nem normalizados. Contrato, fontes e limites: TACTICAL_RUNES.md.
+
 Stack existente preservada; nenhum motor paralelo/backend. `AssistanceStore`
 guarda só opções por herói; `PlayerCommand.assistance` valida/aplica no domínio.
 `actionBindings` é a única tabela de slot/ID/tecla; define binding, label e ícone.

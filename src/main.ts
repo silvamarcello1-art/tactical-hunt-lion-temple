@@ -21,6 +21,7 @@ import {
 import { heroes } from './data/config';
 import type { CombatEvent, HuntResult } from './events/types';
 import { PixiRenderer } from './game/PixiRenderer';
+import {runeDefinitions,type RuneId} from './data/runes';
 
 type SessionPhase =
   | 'preparing'
@@ -43,6 +44,25 @@ const liveState = new LiveHuntState();
 const progressionStore = new ProgressionStore();
 const equipmentStore = new EquipmentStore(localStorage);
 const hud = new GameplayHUD();
+const trainingMode=new URLSearchParams(location.search).get('training')==='1';
+document.documentElement.dataset.scenario=trainingMode?'training':'hunt';
+const trainingLink=document.createElement('a');trainingLink.id='training-link';
+const scenarioUrl=new URL(location.href);
+if(trainingMode)scenarioUrl.searchParams.delete('training');else scenarioUrl.searchParams.set('training','1');
+trainingLink.href=scenarioUrl.href;trainingLink.textContent=trainingMode?'Voltar à hunt':'Treino de runas';
+trainingLink.title='Troque de cenário entre sessões. O treino é local, sem XP, ouro ou drops.';
+document.querySelector('.topbar')!.append(trainingLink);
+trainingLink.onclick=event=>{if(!['idle','completed','defeated','error'].includes(sessionPhase))event.preventDefault();};
+const runeKit=document.createElement('div');runeKit.id='rune-kit';runeKit.hidden=!trainingMode;
+runeKit.setAttribute('aria-label','Runas de treino');runeKit.innerHTML=Object.values(runeDefinitions).map(r=>`<button data-rune="${r.id}" title="${r.name}: selecionar com ${r.key}, clicar no tile; ESC cancela. Kit gratuito por sessão, sem fabricação."><kbd>${r.key}</kbd> ${r.name} <span></span></button>`).join('')+'<small>Treino local · kit gratuito · sem recompensas · alvo no chão</small>';
+document.querySelector('#player-controls')!.prepend(runeKit);
+if(trainingMode){
+  document.querySelector('.brand small')!.textContent='TREINO LOCAL · NÃO É PVP ONLINE';
+  document.querySelector('#repeat')!.textContent='Repetir treino';
+  document.querySelector('#restart')!.setAttribute('title','Reiniciar treino');
+  document.querySelector('.phase-track')!.setAttribute('hidden','');
+  document.querySelector('.rail-hint')!.textContent='Party em Manual contra um bot. Selecione um herói, mova com WASD/Numpad e use 4/5 + clique. Atributos base, sem recompensas persistentes.';
+}
 let casting: {id:string; until:number} | undefined;
 const debugEnabled =
   new URLSearchParams(window.location.search).get('debug') === '1';
@@ -56,7 +76,7 @@ let resumePhase: Extract<
   'running' | 'floor_transition' | 'boss'
 > = 'running';
 let selectedSpeed: number = SESSION_CONFIG.defaultSpeed;
-let loopEnabled = true;
+let loopEnabled = !trainingMode;
 let loopTimer: number | undefined;
 let restartInProgress = false;
 let completedCycles = 0;
@@ -77,7 +97,7 @@ equipmentRoot.setAttribute('aria-label','Inventário e equipamento');equipmentRo
 equipmentRoot.innerHTML='<button id="close-equipment" class="drawer-close" aria-label="Fechar inventário">×</button><div id="equipment-content"></div>';
 document.querySelector('.app-shell')!.append(equipmentRoot);
 const equipmentPanel=new EquipmentPanel($('#equipment-content'),equipmentStore,()=>({
-  hero:selectedHeroId as Vocation,progress:progressionStore.snapshot(),allowed:!loopEnabled&&['idle','completed','defeated'].includes(sessionPhase),
+  hero:selectedHeroId as Vocation,progress:progressionStore.snapshot(),allowed:!trainingMode&&!loopEnabled&&['idle','completed','defeated'].includes(sessionPhase),
 }),id=>selectHero(id),()=>{
   if(sessionPhase==='idle') renderer?.engine.configureLoadout(equipmentStore.loadout());
 });
@@ -138,6 +158,7 @@ const formatTime = (milliseconds: number) => {
 
 function setSessionPhase(phase: SessionPhase, message?: string) {
   sessionPhase = phase;
+  trainingLink.setAttribute('aria-disabled',String(!['idle','completed','defeated','error'].includes(phase)));
   document.documentElement.dataset.sessionState = phase;
   const startButton = $('#start') as HTMLButtonElement;
   const pauseButton = $('#pause') as HTMLButtonElement;
@@ -184,6 +205,12 @@ function updateHUD() {
   $('#compact-time').textContent=formatTime(liveState.time);
   $('#compact-kills').textContent=liveState.kills+' derrotados';
   $('#compact-gold').textContent=formatNumber(liveState.gold)+' ouro';
+  if(trainingMode)for(const button of Array.from(runeKit.querySelectorAll<HTMLButtonElement>('[data-rune]'))){
+    const status=engine?.runeStatus(selectedHeroId,button.dataset.rune as RuneId);
+    button.disabled=!status||['idle','completed','defeated','error'].includes(sessionPhase)||!engine?.entities.find(h=>h.id===selectedHeroId)?.alive||status.charges===0;
+    button.querySelector('span')!.textContent=`${status?.charges??runeDefinitions[button.dataset.rune as RuneId].charges} cargas${status?.remaining?` · ${Math.ceil(status.remaining/1000)}s`:''}`;
+    button.dataset.charges=String(status?.charges??0);button.dataset.remaining=String(status?.remaining??0);
+  }
 }
 
 function updateCooldownVisuals(time: number) {
@@ -257,7 +284,7 @@ function renderAnalyzer(hunt?: HuntResult) {
   const duration = Math.max(1, hunt?.duration ?? liveState.time);
   const xp = hunt?.xp ?? liveState.xp;
   const damageTaken = hunt?.damageTaken ?? liveState.damageTaken;
-  const bosses = hunt ? (hunt.victory ? 1 : 0) : liveState.bosses;
+  const bosses = hunt?.bosses ?? liveState.bosses;
   $('#analyzer').innerHTML = `<div class="stat-grid">
     <div class="stat"><span>Sessão</span><b id="time">${formatTime(liveState.time)}</b></div>
     <div class="stat"><span>Status</span><b>${status}</b></div>
@@ -289,7 +316,7 @@ function resetInterface() {
   $('#loot').textContent = 'Nenhum item ainda.';
   $('#loot-capacity').textContent = '0 / 64 slots';
   $('#stage-fill').style.width = '0';
-  $('#stage-label').textContent = 'Preparação';
+  $('#stage-label').textContent = trainingMode?'Treino tático · Party × Bot':'Preparação';
   document.querySelectorAll('.phase').forEach((phase, index) => {
     phase.classList.toggle('active', index === 0);
     phase.classList.remove('done');
@@ -305,7 +332,7 @@ async function createRenderer() {
   playerControls = undefined;
   renderer?.destroy();
   renderer = undefined;
-  const nextRenderer = new PixiRenderer(new CombatEngine(803, preferences, huntSessionId, progressionStore.snapshot(), equipmentStore.loadout(),true,true), {
+  const nextRenderer = new PixiRenderer(new CombatEngine(803, preferences, huntSessionId, trainingMode?undefined:progressionStore.snapshot(), trainingMode?{}:equipmentStore.loadout(),true,true,trainingMode), {
     debugEnabled,
     selectedHeroId,
   });
@@ -318,6 +345,7 @@ async function createRenderer() {
       get sessionId() { return nextRenderer.engine.id; },
       get time() { return nextRenderer.engine.time; },
       get running() { return nextRenderer.player.isRunning; },
+      training:trainingMode,
       get entities() { return nextRenderer.engine.entities; },
       get results() { return nextRenderer.engine.controlResults; },
       controlOf:id => nextRenderer.engine.controlOf(id),
@@ -339,8 +367,8 @@ async function createRenderer() {
 }
 
 function start() {
-  if(progressionStore.blocked) {$('#session-state').textContent=progressionStore.warning;return;}
-  if(equipmentStore.blocked || equipmentStore.warning || equipmentStore.pendingCount) {$('#session-state').textContent=equipmentStore.warning || 'Salve as recompensas pendentes primeiro.';openEquipment();return;}
+  if(!trainingMode&&progressionStore.blocked) {$('#session-state').textContent=progressionStore.warning;return;}
+  if(!trainingMode&&(equipmentStore.blocked || equipmentStore.warning || equipmentStore.pendingCount)) {$('#session-state').textContent=equipmentStore.warning || 'Salve as recompensas pendentes primeiro.';openEquipment();return;}
   if (sessionPhase !== 'idle' || !renderer?.player.play()) return;
   setSessionPhase('running');
   renderAnalyzer();
@@ -453,6 +481,10 @@ function showFutureModule(title: string, description: string) {
 }
 
 function showResult(hunt: HuntResult) {
+  if(trainingMode){
+    $('#result-content').innerHTML=`<h2>${hunt.victory?'Treino concluído':'Treino encerrado'}</h2><p>Party × bot local · ${formatTime(hunt.duration)} · ${hunt.kills} bot derrotado.</p><p>Sem XP, ouro, itens ou Boss Tokens. Kit e arena reiniciam em cada treino.</p>`;
+    const dialog=$('#result') as HTMLDialogElement;if(!dialog.open)dialog.showModal();return;
+  }
   $('#result-content').innerHTML = `<h2>${hunt.victory ? 'Vitória no templo' : 'A expedição falhou'}</h2>
     <div class="result-list">Duração: ${formatTime(hunt.duration)}<br>
     XP total: ${formatNumber(hunt.xp)}<br>Gold: ${formatNumber(hunt.gold)}<br>
@@ -491,6 +523,7 @@ window.addEventListener('hunt-time', (rawEvent) => {
 });
 
 window.addEventListener('hunt-floor', (rawEvent) => {
+  if(trainingMode)return;
   const floor = (rawEvent as CustomEvent<number>).detail;
   $('#stage-label').textContent =
     floor === 4 ? 'Boss derrotado' : `Andar ${floor + 1} de 4`;
@@ -540,8 +573,8 @@ window.addEventListener('hunt-event', (rawEvent) => {
     }
   }
 
-  progressionStore.apply(event);
-  if(event.type==='equipment_drop' || event.type==='loot'&&event.data?.item==='Gold coin') {
+  if(!trainingMode)progressionStore.apply(event);
+  if(!trainingMode&&(event.type==='equipment_drop' || event.type==='loot'&&event.data?.item==='Gold coin')) {
     equipmentStore.apply(event,huntSessionId);refreshEquipment();
     if(equipmentStore.warning) {$('#session-state').textContent=equipmentStore.warning;}
   }
@@ -651,7 +684,7 @@ window.addEventListener('hunt-complete', (rawEvent) => {
   document.documentElement.dataset.completedCycles = String(completedCycles);
   renderAnalyzer(hunt);
   $('#stage-fill').style.width = '100%';
-  $('#stage-label').textContent = hunt.victory
+  $('#stage-label').textContent = trainingMode?'Treino encerrado':hunt.victory
     ? 'Hunt concluída'
     : 'Equipe derrotada';
   setSessionPhase(hunt.victory ? 'completed' : 'defeated');
@@ -687,6 +720,7 @@ $('#close-result').onclick = () => {
 };
 $('#result').addEventListener('close',()=>{if(loopEnabled) scheduleLoop();});
 $('#loop-toggle').onclick = () => {
+  if(trainingMode)return;
   loopEnabled = !loopEnabled;
   const button = $('#loop-toggle');
   button.classList.toggle('active', loopEnabled);
@@ -849,6 +883,7 @@ window.addEventListener('beforeunload',event=>{
 });
 
 async function initialize() {
+  if(trainingMode){const loop=$('#loop-toggle') as HTMLButtonElement;loop.disabled=true;loop.classList.remove('active');loop.setAttribute('aria-pressed','false');loop.innerHTML='Loop OFF · treino';}
   document.documentElement.dataset.completedCycles = '0';
   document.documentElement.dataset.playbackSpeed = String(selectedSpeed);
   document.documentElement.dataset.processedEvents = '0';
@@ -870,3 +905,5 @@ async function initialize() {
 }
 
 void initialize();
+
+runeKit.querySelectorAll<HTMLButtonElement>('[data-rune]').forEach(button=>button.onclick=()=>playerControls?.armRune(button.dataset.rune as RuneId));

@@ -1,11 +1,13 @@
 import type { Point } from '../events/types';
 import type { InteractionTarget, PlayerIntent } from './PlayerCommand';
+import type {RuneId} from '../data/runes';
 
 export type InteractionState =
   | {kind:'idle'}
   | {kind:'selected'; target:InteractionTarget}
   | {kind:'spell-targeting'; abilityId:string}
   | {kind:'use-with'; itemId:string}
+  | {kind:'rune-targeting'; runeId:RuneId}
   | {kind:'pressed' | 'dragging'; itemId:string; pointerId:number; origin:Point; position:Point};
 
 /** Pointer state has no inventory authority. A drop is a command for the domain. */
@@ -14,6 +16,7 @@ export class InteractionController {
   cancel() { this.state = {kind:'idle'}; }
   select(target:InteractionTarget) { this.state = {kind:'selected',target}; }
   armSpell(abilityId:string) { this.state = {kind:'spell-targeting',abilityId}; }
+  armRune(runeId:RuneId){this.state={kind:'rune-targeting',runeId};}
   armItem(itemId:string) { this.state = {kind:'use-with',itemId}; }
   press(itemId:string, pointerId:number, position:Point) {
     this.state = {kind:'pressed',itemId,pointerId,origin:{...position},position:{...position}};
@@ -33,6 +36,7 @@ export class InteractionController {
   target(target:InteractionTarget):PlayerIntent | undefined {
     const state = this.state;
     this.cancel();
+    if(state.kind==='rune-targeting'&&target.kind==='tile')return {type:'rune',runeId:state.runeId,tile:target.tile};
     if (state.kind === 'use-with') return {type:'use-with',itemId:state.itemId,target};
     if (state.kind === 'spell-targeting' && target.kind === 'entity') return {type:'cast',abilityId:state.abilityId,targetId:target.entityId};
     this.select(target);

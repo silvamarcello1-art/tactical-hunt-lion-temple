@@ -4,6 +4,9 @@ import { EquipmentDrops } from './EquipmentDrops';
 import { monsterProfiles,bossSpecial,monsterWave,committedAttacks } from '../data/encounters';
 import { chooseDirectionalAttack } from './DirectionalTactics';
 import { TemporaryTerrain } from './TemporaryTerrain';
+import {RuneSystem} from './RuneSystem';
+import {runeDefinitions,type RuneId} from '../data/runes';
+import {trainingFloors} from '../data/training';
 import { PROGRESSION, type PartyProgress, type Vocation } from '../data/progression';
 import { validIntent, defaultAssistance, type AssistanceOptions, type PlayerCommand, type PlayerIntent, type CommandResult, type ControlOwnership } from '../control/PlayerCommand';
 import {
@@ -102,6 +105,7 @@ export class CombatEngine {
   private elapsed = 0;
   private finished = false;
   private disposed = false;
+  private draining = false;
   private party:SimEntity[] = [];
   private enemies:SimEntity[] = [];
   private currentFloor = 1;
@@ -111,6 +115,17 @@ export class CombatEngine {
   private readonly orders = new Map<string, Extract<PlayerIntent, {type:'attack' | 'follow'}>>();
   private readonly destinations = new Map<string, GridPosition>();
   private temporaryTerrain?:TemporaryTerrain;
+  private runes?:RuneSystem;
+  private readonly runeCharges=new Map<string,number>();
+  get runeTiles(){return this.runes?.tiles??[];}
+  get runeConditionCount(){return this.runes?.conditionCount??0;}
+  runeStatus(actorId:string,runeId:RuneId,at=this.elapsed){
+    const charges=this.runeCharges.get(`${actorId}:${runeId}`)??runeDefinitions[runeId].charges;
+    const actor=this.party.find(h=>h.id===actorId);
+    const remaining=Math.max(0,(actor?.groupCooldowns.attack??0)-at);
+    const reason=!this.trainingMode?'training-only':this.disposed||this.finished?'session-ended':!actor?'not-started':!actor.alive?'actor-dead':charges<=0?'no-charges':remaining>0?'cooldown':'ok';
+    return {ready:reason==='ok',reason,remaining,charges};
+  }
   private monsterDecisions=0;
   get encounterMetrics(){return {monsterDecisionEvaluations:this.monsterDecisions,temporaryBlockedTiles:this.temporaryTerrain?.size??0};}
   private readonly commands:PlayerCommand[] = [];
@@ -220,9 +235,9 @@ export class CombatEngine {
       if (step.done) this.finished = true;
       else this.nextTick = step.value;
     }
-    const events = this.events.slice(this.delivered);
+    const events = this.draining?[]:this.events.slice(this.delivered);
     this.delivered = this.events.length;
-    return clone(events);
+    return this.draining?events:clone(events);
   }
 
   dispose() {
@@ -249,7 +264,7 @@ export class CombatEngine {
     this.acted.clear();
     const pending=this.commands.splice(0);
     // Configuration first; explicit casts precede movement and AI for this actor.
-    const rank=(c:PlayerCommand)=>c.intent.type==='control'||c.intent.type==='assistance'?0:c.intent.type==='cast'?1:2;
+    const rank=(c:PlayerCommand)=>c.intent.type==='control'||c.intent.type==='assistance'?0:['cast','rune'].includes(c.intent.type)?1:2;
     pending.sort((a,b)=>rank(a)-rank(b));
     for (const command of pending) {
       const actor = party.find(hero => hero.id === command.actorId);
@@ -291,6 +306,21 @@ export class CombatEngine {
   }
 
   private resolvePlayerIntent(actor:SimEntity, intent:PlayerIntent, party:SimEntity[], enemies:SimEntity[], floor:number):string {
+    if(intent.type==='rune'){
+      if(this.acted.has(actor.id))return 'action-pending';
+      const status=this.runeStatus(actor.id,intent.runeId,this.now);
+      if(!status.ready)return status.reason;
+      const definition=runeDefinitions[intent.runeId];
+      if(!this.gridMap.isInside(intent.tile))return 'invalid-destination';
+      if(gridDistance(this.tileOf(actor),intent.tile)>definition.range)return 'out-of-range';
+      if(!this.lineOfSight.hasLineOfSight(this.tileOf(actor),intent.tile))return 'line-of-sight';
+      const rune={id:`rune-${++this.castSequence}`,runeId:intent.runeId,sourceId:actor.id,sessionId:this.sessionId,tile:{...intent.tile},startedAt:this.now,expiresAt:this.now+definition.duration};
+      if(!this.runes!.place(rune))return 'blocked';
+      this.runeCharges.set(`${actor.id}:${intent.runeId}`,status.charges-1);
+      actor.groupCooldowns.attack=this.now+definition.cooldown;
+      this.emit('rune_placed',floor,actor.id,undefined,{runeId:rune.runeId,tile:rune.tile,startedAt:rune.startedAt,expiresAt:rune.expiresAt,castId:rune.id,sessionId:this.sessionId});
+      this.acted.add(actor.id);return 'ok';
+    }
     if (intent.type === 'stop') {
       this.orders.delete(actor.id);
       this.destinations.delete(actor.id);
@@ -437,11 +467,14 @@ export class CombatEngine {
     private loadout:Loadout={},
     equipmentRewards=false,
     private polishedRules=false,
+    readonly trainingMode=false,
   ) {
     this.sessionId = sessionId ?? `hunt-${seed}`;
     this.loadout=clone(loadout);
-    if(equipmentRewards) this.equipmentDrops=new EquipmentDrops(seed ^ 0x7e91,this.sessionId);
-    if (progression) this.progress=Object.fromEntries(heroes.map(hero=>[hero.id,progressFromTotal(progression[hero.id]?.totalXp??0)]));
+    this.runes=new RuneSystem(this.gridMap,this.occupancy);
+    if(trainingMode)for(const hero of heroes)this.ownership.set(hero.id,{mode:'MANUAL',ownerId:'local-player'});
+    if(equipmentRewards&&!trainingMode) this.equipmentDrops=new EquipmentDrops(seed ^ 0x7e91,this.sessionId);
+    if (progression&&!trainingMode) this.progress=Object.fromEntries(heroes.map(hero=>[hero.id,progressFromTotal(progression[hero.id]?.totalXp??0)]));
   }
 
   private random() {
@@ -505,6 +538,7 @@ export class CombatEngine {
 
   private resetGridContext() {
     this.temporaryTerrain?.restore();
+    this.runes?.clear();
     this.occupancy = new OccupancyGrid(this.gridMap);
     this.movement = new MovementSystem(
       this.gridMap,
@@ -513,6 +547,7 @@ export class CombatEngine {
     );
     this.lineOfSight = new LineOfSightResolver(this.gridMap, this.occupancy);
     this.temporaryTerrain=new TemporaryTerrain(this.gridMap,this.occupancy);
+    this.runes=new RuneSystem(this.gridMap,this.occupancy);
     this.spellArea = new SpellAreaResolver(this.gridMap, this.lineOfSight);
     this.projectiles = new ProjectileSystem(this.lineOfSight, this.gridMetrics);
   }
@@ -799,6 +834,7 @@ export class CombatEngine {
               : 10,
       tickOrder:this.movementOrder++,
       allowBacktrack,
+      revalidateCorners:this.trainingMode,
     });
     if (result.recalculated) {
       this.emit('path_recalculated', floor, entity.id, undefined, {
@@ -914,16 +950,17 @@ export class CombatEngine {
     floor: number,
     element = 'physical',
     castId?: string,
+    fixedDamage=false,
   ) {
     if (!target.alive) return;
-    if (this.random() < target.dodge) {
+    if (!fixedDamage && this.random() < target.dodge) {
       this.emit('dodge', floor, source.id, target.id, { castId });
       return;
     }
-    const critical = this.random() < source.crit;
+    const critical = !fixedDamage && this.random() < source.crit;
     const amount = Math.max(
       1,
-      Math.round((rawAmount - target.defense * 0.35) * (critical ? 1.5 : 1)),
+      Math.round(fixedDamage?rawAmount:(rawAmount - target.defense * 0.35) * (critical ? 1.5 : 1)),
     );
     if (critical) {
       this.emit('critical', floor, source.id, target.id, { amount, castId });
@@ -2044,14 +2081,32 @@ export class CombatEngine {
 
   run(): HuntResult {
     if (this.disposed) throw new Error('Cannot run a disposed combat session');
-    while (!this.completed) this.advanceTo(this.nextTick);
+    // Batch drains the SAME generator but never consumes incremental copies.
+    // Keep defensive cloning at the live API boundary, not on discarded batches.
+    this.draining=true;
+    try {while (!this.completed) this.advanceTo(this.nextTick);}
+    finally {this.draining=false;}
     return this.snapshotResult();
+  }
+
+  private expireRunes(floor:number,all=false){
+    if(!this.trainingMode)return;
+    const removed=all?this.runes!.clear():this.runes!.expire(this.now);
+    for(const rune of removed)this.emit('rune_removed',floor,rune.sourceId,undefined,{runeId:rune.runeId,tile:rune.tile,castId:rune.id,sessionId:this.sessionId,reason:all?'floor-complete':'expired'});
+  }
+  private resolveRuneDamage(party:SimEntity[],enemies:SimEntity[],floor:number){
+    if(!this.trainingMode)return;
+    const actors=[...party,...enemies];
+    for(const hit of this.runes!.resolve(this.now,actors)){
+      const source=actors.find(a=>a.id===hit.sourceId),target=actors.find(a=>a.id===hit.targetId);
+      if(source&&target)this.applyDamage(source,target,hit.amount,floor,'fire',hit.castId,true);
+    }
   }
 
   private *simulate():Generator<number,HuntResult,void> {
     const party = heroes.map((hero) => this.entity(hero));
     this.party = party;
-    const encounterFloors=this.polishedRules?polishedFloors:floors;
+    const encounterFloors=this.trainingMode?trainingFloors:this.polishedRules?polishedFloors:floors;
     for (let floorIndex = 0; floorIndex < encounterFloors.length; floorIndex++) {
       this.resetGridContext();
       const floor = floorIndex + 1;
@@ -2119,10 +2174,13 @@ export class CombatEngine {
         const progressEventIndex = this.events.length;
         const restored=this.temporaryTerrain!.restore(this.now);
         if(restored.length) this.emit('map_changed',floor,undefined,undefined,{blocked:false,logicalTiles:restored,pathRevision:this.gridMap.revision});
+        this.expireRunes(floor);
         this.resolvePendingMovements(party, enemies, floor);
+        this.resolveRuneDamage(party,enemies,floor);
         this.resolvePendingProjectiles(party, enemies);
         hazards = this.resolveHazards(hazards, party, enemies);
         this.processCommands(party, enemies, floor);
+        this.resolveRuneDamage(party,enemies,floor);
         this.heroActions(party, enemies, floor, turn);
         for (const enemy of enemies.filter((entity) => !entity.alive)) {
           this.reward(enemy, floor);
@@ -2133,10 +2191,12 @@ export class CombatEngine {
           // Schedule committed lifecycles in timestamp order, independent of
           // display frame size. Intermediate deadlines never sample new input.
           for(;;) {
-            const deadlines=[...this.movement.pendingEntries().map(p=>p.completesAt),...this.projectiles.pendingEntries().map(p=>p.impactAt),...hazards.map(h=>h.detonateAt)].filter(t=>t>this.now&&t<nextDecision);
+            const deadlines=[...this.movement.pendingEntries().map(p=>p.completesAt),...this.projectiles.pendingEntries().map(p=>p.impactAt),...hazards.map(h=>h.detonateAt),...(this.trainingMode?this.runes!.deadlines(this.now):[])].filter(t=>t>this.now&&t<nextDecision);
             if(!deadlines.length)break;
             this.now=Math.min(...deadlines);yield this.now;
+            this.expireRunes(floor);
             this.resolvePendingMovements(party,enemies,floor);
+            this.resolveRuneDamage(party,enemies,floor);
             this.resolvePendingProjectiles(party,enemies);
             hazards=this.resolveHazards(hazards,party,enemies);
             for(const enemy of enemies.filter(e=>!e.alive))this.reward(enemy,floor);
@@ -2149,7 +2209,7 @@ export class CombatEngine {
         if (noProgressTurns === NO_PROGRESS_RECOVERY_TURNS) {
           this.recoverFromNoProgress(party, enemies, floor);
         }
-        if (noProgressTurns >= NO_PROGRESS_STALEMATE_TURNS) {
+        if (!this.trainingMode && noProgressTurns >= NO_PROGRESS_STALEMATE_TURNS) {
           interruptedByStalemate = true;
           break;
         }
@@ -2161,6 +2221,7 @@ export class CombatEngine {
       this.cancelPendingProjectiles(floor, 'floor-complete');
       hazards = this.resolveHazards(hazards, party, enemies);
       hazards = this.cancelHazards(hazards, 'floor-complete');
+      this.expireRunes(floor,true);
       const restored=this.temporaryTerrain!.restore();
       if(restored.length)this.emit('map_changed',floor,undefined,undefined,{blocked:false,logicalTiles:restored,pathRevision:this.gridMap.revision});
       for (const enemy of enemies.filter((entity) => !entity.alive)) {
@@ -2195,15 +2256,15 @@ export class CombatEngine {
       }
       if (!completion.victory) break;
     }
-    const victory = this.events.some(
+    const victory = this.trainingMode?this.floorCompletionReasons.at(-1)==='victory':this.events.some(
       (event) => event.type === 'death' && event.targetId === 'lion-king',
     );
-    this.emit('hunt_complete', 4, undefined, undefined, { victory });
+    this.emit('hunt_complete', this.trainingMode?1:4, undefined, undefined, { victory });
     return this.snapshotResult();
   }
 
   private snapshotResult():HuntResult {
-    const victory = this.events.some(event => event.type === 'death' && event.targetId === 'lion-king');
+    const victory = this.trainingMode?this.floorCompletionReasons.at(-1)==='victory':this.events.some(event => event.type === 'death' && event.targetId === 'lion-king');
     return {
       events:this.events,
       duration:this.now,

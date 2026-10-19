@@ -1,5 +1,9 @@
 # Direção de arte — atualização 2B.1 (05/10/2026)
 
+Incremento 2B.2 em 19/10: parede violeta geométrica e campo de chamas vetorial,
+ambos originais e amostrados pelo relógio lógico. Bot de treino usa o blockout
+caster existente. Nenhuma cópia de sprites/ícones do Tibia. Arte final pendente.
+
 Dez atores vetoriais originais no manifesto; heróis aprovados preservados.
 Bastião de Bronze: escudo largo e armadura pesada. Balista Errante: arma transversal
 com cavalete, silhueta não felina. Ambos mantêm frame/footpoint/footprint registrados,

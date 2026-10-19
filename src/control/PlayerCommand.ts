@@ -1,4 +1,5 @@
 import type { GridPoint } from '../events/types';
+import {isRuneId,type RuneId} from '../data/runes';
 
 export type ControlMode = 'AI' | 'MANUAL' | 'ASSISTED';
 export type InteractionTarget = { kind:'entity'; entityId:string } | { kind:'tile'; tile:GridPoint };
@@ -10,6 +11,7 @@ export type PlayerIntent =
   | { type:'attack' | 'follow'; targetId:string }
   | { type:'stop' }
   | { type:'cast'; abilityId:string; targetId:string }
+  | { type:'rune'; runeId:RuneId; tile:GridPoint }
   | { type:'look' | 'interact'; target:InteractionTarget }
   | { type:'use'; itemId:string }
   | { type:'use-with' | 'drop'; itemId:string; target:InteractionTarget };
@@ -52,6 +54,7 @@ export function validIntent(intent: PlayerIntent): boolean {
     case 'attack': case 'follow': return id(intent.targetId);
     case 'stop': return true;
     case 'cast': return id(intent.abilityId) && id(intent.targetId);
+    case 'rune': return isRuneId(intent.runeId) && !!target({kind:'tile',tile:intent.tile});
     case 'look': case 'interact': return !!target(intent.target);
     case 'use': return id(intent.itemId);
     case 'use-with': case 'drop': return id(intent.itemId) && !!target(intent.target);

@@ -1,4 +1,29 @@
-# Próxima tarefa — playtest do MVP 2B.1, antes de Adventure
+# Próxima tarefa — concluir gates/QA do treino 2B.2 — 19/10/2026
+
+Manter feature/gameplay-first-mvp2a, sem Helper individual, merge ou Sites.
+Núcleo de runas/movimento já implementado; não reimplementar. Ler TACTICAL_RUNES
+e SESSION_CHECKPOINT. Nenhuma publicação desta etapa foi autorizada pelos gates.
+
+1. pnpm health e revisar HEAD/diff. Ler a execução 66046 se ainda disponível;
+   era a quarta tentativa de typecheck→unitários→build→36 E2E, fail-fast. Há
+   timeouts de 5s em casos antigos; não aumentar limites ou enfraquecer asserts.
+2. Comparação opcional, sem reset: node scripts/profile-grid.mjs 41477b9;
+   pnpm exec vitest run src/control/GameplayPolish.test.ts -t "polished lifecycle scheduling"
+   --config scripts/baseline-vitest.config.mjs (comando em uma linha). Apenas
+   diagnóstico da versão antiga; nunca substitui o gate da implementação atual.
+3. Finalizar pnpm typecheck, pnpm exec vitest run, pnpm build, pnpm exec playwright
+   test --reporter=line --workers=1 e git diff --check. Não regenerar snapshots.
+4. Reabrir playtest manual somente em nova sessão de Computer Use com URL
+   confirmada. A ferramenta interrompeu a ação em 19/10; não tentar contornar
+   com outro mecanismo de UI. E2E existentes continuam testes do repositório.
+5. Somente com gates/QA verdes: commit/push normal, CI/Pages, manifest e smoke
+   do SHA correto. Checkpoint WIP usa [skip ci] para não disparar deploy.
+6. Depois: catálogo versionado de magias/condições das três vocações; passivas/
+   Wheel em slice próprio. PvP online só após 2E; manter 2C→2D→2E→2F.
+
+## Histórico — fechamento 2B.1
+
+# Próxima tarefa anterior — playtest do MVP 2B.1, antes de Adventure
 
 Branch `feature/gameplay-first-mvp2a`; contrato `GAMEPLAY_POLISH.md`. Leia
 CURRENT_STATE/SESSION_CHECKPOINT para gates, CI e SHA real. Não reimplementar

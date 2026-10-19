@@ -280,3 +280,12 @@ Novos contadores: createdSpellEffects, activeSpellEffects, displayObjectCount,
 pathRecalculations, monsterDecisions e temporaryBlockedTiles. Resultados do gate
 atual ficam no SESSION_CHECKPOINT; não extrapolar este slice para centenas de
 atores. Movimento/footpoint e aparência dos heróis aprovados foram preservados.
+## Runas locais 2B.2 — 19/10/2026
+
+Magic Wall/Fire Field são gráficos próprios na camada de terreno, guiados por
+rune_placed/rune_removed com ID de sessão/cast, tile e expiração. Pulso e fade
+usam o relógio lógico; nenhum transform de personagem é alterado. Rune use ativa
+a animação de cast existente, sem recitar uma fórmula fictícia de fabricação.
+Remoção tem fade de 250 ms e destruição explícita. activeRuneTiles/runeConditions
+complementam os contadores de VFX para validar limpeza. O treino reutiliza o
+bot caster e seus projéteis/magias já existentes, não sprites externos.

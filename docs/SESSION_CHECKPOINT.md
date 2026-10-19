@@ -1,3 +1,72 @@
+# Checkpoint parcial — MVP 2B.2 — 19/10/2026
+
+Base local/origin 41477b948bdbda6079477ffb2163c01211b9f494, limpa na entrada;
+branch feature/gameplay-first-mvp2a, base visual 58d9720. Fetch/health confirmados.
+Usuário escolheu treino local contra bot, não PvP online. Sem backend, Helper
+individual, merge, force push, Sites ou novas permissões.
+
+## Concluído no código
+
+- RuneSystem/data/runes, comando rune, charges/cooldown/range/LoS e terreno de
+  Magic Wall; Fire Field walkable com entrada/burning fixo sem crítico/dodge.
+- Scheduler com prazos de expiração/DoT, cleanup de sessão e eventos próprios.
+- Treino Party × Bot no mesmo CombatEngine; base stats, Manual, sem XP/gold/
+  drops/Boss Tokens/forja/Loop. Stores econômicos não recebem eventos de treino.
+- Targeting 4/5/clique/ESC, UI do kit, pulsos/fade próprios no Pixi, input recente
+  por eixo e revalidação de quinas/footprint em passos comprometidos de treino.
+- Drenagem batch evita cópias incrementais descartadas; API ao vivo ainda clona.
+  Experimento heap A* foi retirado, não melhorou cenário real; A* original intacto.
+- Contrato/fontes/limites e plano de magias/passivas/Wheel em TACTICAL_RUNES.
+
+## Parcialmente concluído / bloqueio da sessão
+
+Typecheck passou. Baseline inicial: 216/216 unitários e build aprovados.
+Novos testes: RuneSystem 12/12 e rota congelada 1/1 aprovados em casos isolados;
+três E2E iniciais aprovaram runas, colisão, burning, pausa, expiração, reset,
+isolamento econômico e resoluções. Depois o caso de vitória foi expandido para
+três treinos e screenshot; essa versão ainda exige execução completa.
+
+Gates completos NÃO verdes: rodadas tiveram 226/227 e 228/229 com timeout de 5s
+em GameplayPolish (frame equivalence), sem divergência de resultado. Após retirar
+heap, caso isolado 4025 ms; baseline Git 41477b9 no mesmo teste 4021 ms. Não houve
+alteração de timeouts, assertions antigas ou snapshots. Profiling A/B confirmou
+hash completo edcf9f6d0aa4488bda430a900d74003401d5f924d48fc6b5627da8a5f87a554b
+para a seed 803, batch e frames 73/1000. Não é prova de melhoria de FPS.
+
+Última execução terminal 66046 estava ativa: typecheck passou e Auto baseline
+24 cenários passou (35,4s); depois um teste antigo de tiles em CombatEngine
+excedeu 5s (5988 ms). Os gates seguintes são fail-fast; ler o resultado final.
+Rodadas anteriores não chegaram ao build/E2E completos por causa dos unitários.
+
+Playtest manual interrompido pela skill Computer Use: a ferramenta não conseguiu
+confirmar com segurança a URL da janela do Edge e encerrou Computer Use neste
+turno. Não emitir mais inputs nem contornar o bloqueio. Edge foi aberto numa
+nova guia, sem navegação/entrada de texto/click no jogo. Nenhum save apagado.
+
+## Não iniciado
+
+Catálogo inteiro do Tibia atual, conversão de passivas/Wheel, Paladin/Monk,
+Energy/Poison Field, crafting/supplies persistentes e PvP online. Valores de
+runas são parâmetros de treino documentados, não paridade numérica certificada.
+Publicação 2B.2 não realizada. Último runtime verificado em 10/10 era d51361c.
+
+## Arquivos e continuação
+
+Runtime: CombatEngine/RuneSystem, MovementSystem/OccupancyGrid, PlayerCommand/
+PlayerControls/PlayerInput/InteractionState/PlayerControlPort, events/types,
+PixiRenderer/CombatPresentationSystem, main/style e data/runes/training.
+Testes: RuneSystem.test, Pathfinder.test e tests/e2e/runes.spec. Diagnósticos
+read-only: scripts/profile-grid.mjs e baseline-vitest.config.mjs. Documentos:
+TACTICAL_RUNES, ARCHITECTURE, PLAYER_CONTROL, COMBAT_PRESENTATION, ART_DIRECTION,
+MVP_ROADMAP, DECISIONS, CURRENT_STATE, NEXT_TASK, SESSION_CHECKPOINT e CHANGELOG.
+
+Próximo comando recomendado: pnpm health; depois ler saída da sessão 66046 e
+executar os gates da implementação, sem elevar limites. Retomar QA manual em
+nova sessão somente com URL reconhecida. Publicar apenas após validação verde.
+Checkpoint WIP com [skip ci] evita deploy automático de código ainda em QA.
+
+## Histórico — última entrega aprovada/publicada
+
 # Checkpoint — MVP 2B.1 — retomada 10/10/2026
 
 Branch `feature/gameplay-first-mvp2a`; entrada local/origin

@@ -6,10 +6,15 @@
 |---|---|
 | MVP 2B | Inventory + Equipment + Loot + Forge; vertical slice local atual |
 | MVP 2B.1 | Consolidação de 2B: hotkeys, Numpad, Assistido, projéteis contínuos, party/HUD e duas composições; antes de Adventure |
+| MVP 2B.2 | Autorizado em 19/10: treino local Party × Bot, movimento reativo e Magic Wall/Fire Field; não é PvP online nem o catálogo completo do Tibia |
 | MVP 2C | Manual Adventure + World + NPCs + Quests |
 | MVP 2D | Story/Campaign Foundation |
 | MVP 2E | Server Authority + Networking; exige ADR antes de autoridade remota |
 | MVP 2F | PvP Vertical Slice, sobre a autoridade validada |
+
+O treino 2B.2 é uma exceção explícita de laboratório local, aprovada pelo usuário.
+Não antecipa PvP entre jogadores. A sequência 2C→2D→2E→2F permanece inalterada;
+o plano de fidelidade mecânica incremental está em TACTICAL_RUNES.md.
 
 2B não inicia Adventure, NPCs, quests, campanha, servidor ou PvP. Weapon e armor
 são o núcleo; helmet/amulet e drag-and-drop ficam fora desta entrega.

@@ -261,3 +261,13 @@ alterados.
 - 16 testes unitários.
 - 4 cenários Playwright cobrindo controles, três loops e resoluções.
 - Documentação canônica consolidada em `docs/`.
+## 2026-10-19 — MVP 2B.2: treino tático local
+
+- Cenário Party × Bot selecionável, no mesmo motor; Manual inicial, kit gratuito,
+  sem progressão/loot/saldo/forja ou Loop automático.
+- Magic Wall/Fire Field por 4/5 + clique: range/LoS, cargas e exhaust de domínio;
+  parede reativa, burning não cumulativo, expiração e cleanup no relógio lógico.
+- Quinas/footprint revalidados em movimento comprometido no treino; inversão
+  rápida por tecla mais recente sem filas. Hunts/baselines anteriores preservados.
+- Efeitos próprios, testes e roteiro de fidelidade incremental em TACTICAL_RUNES.
+  Não é PvP online nem conversão completa de magias/passivas/Wheel do Tibia.

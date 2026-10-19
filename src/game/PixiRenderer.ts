@@ -88,6 +88,7 @@ export class PixiRenderer {
   beforeTick?:(time:number) => void;
   readonly units = new Map<string, Unit>();
   private rubble=new Map<string,Graphics>();
+  private runeVisuals=new Map<string,{graphic:Graphics;startedAt:number;runeId:string}>();
   /** Picking uses rendered footpoints; commands still validate only logical tiles. */
   pickEntity(clientX:number,clientY:number) {
     const p=this.canvasPoint(clientX,clientY);
@@ -279,7 +280,7 @@ export class PixiRenderer {
         this.debugSyncLayer,
       );
     }
-    this.floorText = this.label('PREPARAÇÃO', 13, '#f0d77a');
+    this.floorText = this.label(this.engine.trainingMode?'TREINO LOCAL · PARTY × BOT':'PREPARAÇÃO', 13, '#f0d77a');
     this.floorText.position.set(18, 14);
     this.floorText.zIndex = 60;
     this.overlayLayer.addChild(this.floorText);
@@ -340,6 +341,7 @@ export class PixiRenderer {
     this.impactPool.clear((graphics) => graphics.destroy());
     this.spellEffectPool.clear(sprite=>sprite.destroy());
     this.rubble.clear();
+    this.runeVisuals.clear();
     this.bossFill = undefined;
     this.app.ticker?.remove(this.tickerHandler);
     try {
@@ -1040,6 +1042,25 @@ export class PixiRenderer {
   }
 
   private applyEvent(event: CombatEvent) {
+    if(event.type==='rune_placed'&&event.data?.tile&&event.data.castId){
+      const source=this.units.get(event.sourceId!);if(source)this.castPulse(source);
+      const tile=event.data.tile,id=event.data.castId;
+      this.runeVisuals.get(id)?.graphic.destroy();
+      const graphic=new Graphics();
+      if(event.data.runeId==='magic_wall'){
+        graphic.roundRect(-15,-27,30,36,3).fill({color:0x7956bc,alpha:.65}).stroke({color:0xc9b0ff,width:2});
+        for(let x=-9;x<=9;x+=9)graphic.moveTo(x,-23).lineTo(x,5).stroke({color:0xeadfff,width:1,alpha:.75});
+      }else{
+        graphic.ellipse(0,0,14,8).fill({color:0xd64b21,alpha:.65});
+        for(let x=-9;x<=9;x+=9)graphic.poly([x-5,1,x-4,-10,x,-21,x+3,-8,x+5,1]).fill({color:0xffb64e,alpha:.85});
+      }
+      graphic.position.set(tile.x*32,tile.y*32);this.terrainLayer.addChild(graphic);
+      this.runeVisuals.set(id,{graphic,startedAt:event.time,runeId:event.data.runeId??''});
+    }
+    if(event.type==='rune_removed'&&event.data?.castId){
+      const visual=this.runeVisuals.get(event.data.castId);
+      if(visual){this.runeVisuals.delete(event.data.castId);const alpha=visual.graphic.alpha;this.tween(250,p=>visual.graphic.alpha=alpha*(1-p),()=>visual.graphic.destroy());}
+    }
     if(this.parent){this.parent.dataset.monsterDecisions=String(this.engine.encounterMetrics.monsterDecisionEvaluations);this.parent.dataset.temporaryBlockedTiles=String(this.engine.encounterMetrics.temporaryBlockedTiles);}
     if(event.type==='map_changed') {
       for(const tile of event.data?.logicalTiles??[]) {
@@ -1580,6 +1601,7 @@ export class PixiRenderer {
   }
 
   private syncPresentation() {
+    for(const rune of this.runeVisuals.values())rune.graphic.alpha=.85+.15*Math.sin((this.player.time-rune.startedAt)/180);
     const startedAt = performance.now();
     for (const [id, state] of this.presentation.entities) {
       const unit = this.units.get(id);
@@ -1675,6 +1697,8 @@ export class PixiRenderer {
 
   private syncDiagnostics() {
     if (!this.parent || this.destroyed) return;
+    this.parent.dataset.activeRuneTiles=String(this.runeVisuals.size);
+    this.parent.dataset.runeConditions=String(this.engine.runeConditionCount);
     for (const [key,value] of Object.entries(this.engine.metrics)) this.parent.dataset[key] = String(value);
     const bounds = RENDER_CONFIG.arena.cameraBounds;
     const outOfBounds = [...this.units.values()].filter(

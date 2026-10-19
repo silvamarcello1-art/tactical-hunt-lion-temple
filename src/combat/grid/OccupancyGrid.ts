@@ -136,6 +136,10 @@ export class OccupancyGrid {
     return this.occupiedTiles.get(gridKey(position));
   }
 
+  footprintOf(entityId:string):EntityFootprint {
+    return {...(this.footprints.get(entityId)??{width:1,height:1})};
+  }
+
   reservedBy(position: GridPosition) {
     return this.reservedTiles.get(gridKey(position));
   }

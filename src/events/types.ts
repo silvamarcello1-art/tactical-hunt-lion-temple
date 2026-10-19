@@ -1,6 +1,8 @@
 import type { HeroProgress } from '../data/progression';
 import type { ItemInstance } from '../combat/Equipment';
 export type EventType =
+  | 'rune_placed'
+  | 'rune_removed'
   | 'equipment_drop'
   | 'map_changed'
   | 'boss_phase'
@@ -59,6 +61,8 @@ export interface CombatEvent {
   sourceId?: string;
   targetId?: string;
   data?: {
+    runeId?: 'magic_wall'|'fire_field';
+    expiresAt?:number;
     equipment?: ItemInstance;
     requiresTelegraph?: boolean;
     blocked?: boolean;
