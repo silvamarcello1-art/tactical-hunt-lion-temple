@@ -11,6 +11,12 @@ Estado visual de runas só consome rune_placed/rune_removed e relógio existente
 main.ts bloqueia aplicações de eventos econômicos no treino; saves não são
 limpos nem normalizados. Contrato, fontes e limites: TACTICAL_RUNES.md.
 
+LineOfSightResolver visita o mesmo supercover em ordem, com retorno antecipado
+no primeiro bloqueio. hasLineOfSight não materializa array/Set; trace continua
+retornando uma cópia independente para projéteis/debug. Não há cache de LoS:
+paredes, ocupação e opções são revalidadas a cada consulta. Isso reduz trabalho
+repetido nas pesquisas de wave sem alterar caminhos, RNG, hashes ou deadlines.
+
 Stack existente preservada; nenhum motor paralelo/backend. `AssistanceStore`
 guarda só opções por herói; `PlayerCommand.assistance` valida/aplica no domínio.
 `actionBindings` é a única tabela de slot/ID/tecla; define binding, label e ícone.

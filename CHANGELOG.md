@@ -271,3 +271,7 @@ alterados.
   rápida por tecla mais recente sem filas. Hunts/baselines anteriores preservados.
 - Efeitos próprios, testes e roteiro de fidelidade incremental em TACTICAL_RUNES.
   Não é PvP online nem conversão completa de magias/passivas/Wheel do Tibia.
+- LoS percorre supercover sem materializar caminhos descartados, interrompendo
+  no primeiro bloqueio; verificações dinâmicas e hashes de combate preservados.
+- README com controles do treino e smoke real-clock reutilizável em
+  scripts/qa-training.mjs (funciona também no base path do GitHub Pages).

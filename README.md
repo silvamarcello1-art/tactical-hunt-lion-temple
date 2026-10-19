@@ -14,6 +14,19 @@ O próximo combate utiliza os stats efetivos. Reload preserva XP, equipamentos,
 ouro e Boss Tokens. Mochila cheia envia recompensas para uma reserva visível.
 Regras e recuperação de save: [Equipment and Loot](docs/EQUIPMENT_AND_LOOT.md).
 
+## Treino de movimento e runas — MVP 2B.2
+
+Clique em **Treino de runas** entre sessões, ou abra `/?training=1` no servidor
+local. A party começa em Manual contra um bot. Selecione um herói; WASD, setas
+ou Numpad movem; **4 + clique** coloca Magic Wall; **5 + clique** coloca Fire
+Field. ESC cancela a seleção. As teclas 1–3 continuam as magias da vocação.
+Parede bloqueia caminhada/tiros; campo causa burning no bot. Pausa e velocidades
+compartilham o relógio lógico. Reiniciar repõe o kit gratuito de cada herói.
+
+Sem recompensas persistentes, Loop ou PvP online. Não é o catálogo completo de
+magias/passivas/Wheel do Tibia atual; parâmetros e próximos passos estão em
+[Tactical Runes](docs/TACTICAL_RUNES.md). Arte original, sem sprites copiados.
+
 ## Executar
 
 No Windows, também é possível usar `INICIAR_JOGO.bat`.
@@ -48,7 +61,7 @@ pnpm build
 
 ## Estado
 
-O MVP 0 é histórico; a etapa atual é MVP 2B. Consulte:
+O MVP 0 é histórico; a etapa atual é MVP 2B.2 (treino local). Consulte:
 
 - `docs/CURRENT_STATE.md`
 - `docs/ACCEPTANCE_MVP0.md`

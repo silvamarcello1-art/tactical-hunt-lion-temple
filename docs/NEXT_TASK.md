@@ -1,4 +1,22 @@
-# Próxima tarefa — concluir gates/QA do treino 2B.2 — 19/10/2026
+# Próxima tarefa — publicação verificada do treino 2B.2 — 19/10/2026
+
+Na retomada, 231 unitários/36 E2E, typecheck/build/diff, instalação e arte
+reproduzível passaram. LoS otimizada com geometria e hashes preservados; não
+reimplementar runas ou repetir gates sem alteração de runtime. Ler o novo topo
+do SESSION_CHECKPOINT e TACTICAL_RUNES. Branch feature/gameplay-first-mvp2a.
+
+1. Smoke real-clock local de treino (três ciclos) e hunt normal PASS na sessão
+   88872. Publicar por push normal; acompanhar CI/Pages, manifest e smoke público do SHA
+   exato. scripts/qa-training.mjs aceita URL base, SHA e label; preserva base path.
+2. Atualizar checkpoint com CI/manifest/QA confirmados, sem alegar publicação
+   enquanto estiver pendente. Não fazer merge nem usar Sites.
+3. Após a entrega: catálogo versionado e verificável das magias/áreas/condições
+   das três vocações. Passivas/Wheel em slice próprio, não apenas ícones/nomes.
+   Não implementar Paladin/Monk ou networking incidentalmente. 2C→2D→2E→2F.
+
+## Histórico — retomada anterior ainda sem gates verdes
+
+# Próxima tarefa anterior — concluir gates/QA do treino 2B.2 — 19/10/2026
 
 Manter feature/gameplay-first-mvp2a, sem Helper individual, merge ou Sites.
 Núcleo de runas/movimento já implementado; não reimplementar. Ler TACTICAL_RUNES

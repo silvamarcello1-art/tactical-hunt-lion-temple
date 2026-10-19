@@ -17,13 +17,13 @@ export class LineOfSightResolver {
 
   trace(from: GridPosition, to: GridPosition) {
     const points: GridPosition[] = [];
-    const seen = new Set<string>();
-    const add = (position: GridPosition) => {
-      const key = gridKey(position);
-      if (seen.has(key)) return;
-      seen.add(key);
-      points.push(position);
-    };
+    this.visitSupercover(from, to, (tile) => { points.push(tile); return true; });
+    return points;
+  }
+
+  // Walk the identical ordered supercover, stopping at the first obstruction.
+  // Visibility needs no materialized path/Set and never caches mutable grid state.
+  private visitSupercover(from: GridPosition, to: GridPosition, visit: (tile: GridPosition) => boolean) {
     let x = from.x;
     let y = from.y;
     const deltaX = to.x - from.x;
@@ -34,7 +34,7 @@ export class LineOfSightResolver {
     const stepY = Math.sign(deltaY);
     let horizontalProgress = 0;
     let verticalProgress = 0;
-    add({ x,y });
+    if (!visit({ x,y })) return false;
 
     while (
       horizontalProgress < horizontalSteps ||
@@ -44,24 +44,23 @@ export class LineOfSightResolver {
         (1 + horizontalProgress * 2) * verticalSteps -
         (1 + verticalProgress * 2) * horizontalSteps;
       if (decision === 0) {
-        add({ x:x + stepX,y });
-        add({ x,y:y + stepY });
+        if (!visit({ x:x + stepX,y }) || !visit({ x,y:y + stepY })) return false;
         x += stepX;
         y += stepY;
         horizontalProgress++;
         verticalProgress++;
-        add({ x,y });
+        if (!visit({ x,y })) return false;
       } else if (decision < 0) {
         x += stepX;
         horizontalProgress++;
-        add({ x,y });
+        if (!visit({ x,y })) return false;
       } else {
         y += stepY;
         verticalProgress++;
-        add({ x,y });
+        if (!visit({ x,y })) return false;
       }
     }
-    return points;
+    return true;
   }
 
   hasLineOfSight(
@@ -69,20 +68,19 @@ export class LineOfSightResolver {
     to: GridPosition,
     options: LineOfSightOptions = {},
   ) {
-    const ignored = new Set(options.ignoreEntityIds ?? []);
-    for (const tile of this.trace(from, to)) {
+    return this.visitSupercover(from, to, (tile) => {
       const origin = sameGridPosition(tile, from);
       const endpoint = sameGridPosition(tile, to);
-      if (origin && !options.blockOrigin) continue;
+      if (origin && !options.blockOrigin) return true;
       if (!(endpoint && options.allowBlockedEndpoint) && !this.map.isWalkable(tile)) {
         return false;
       }
       if (options.blockUnits) {
         const occupantId = this.occupancy.occupantAt(tile);
-        if (occupantId && !ignored.has(occupantId)) return false;
+        if (occupantId && !options.ignoreEntityIds?.includes(occupantId)) return false;
       }
-    }
-    return true;
+      return true;
+    });
   }
 
   visibleTiles(

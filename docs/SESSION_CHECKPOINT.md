@@ -1,3 +1,51 @@
+# Checkpoint — MVP 2B.2: gates locais verdes — retomada 19/10/2026
+
+Entrada em 2378cb5f51f9013b95fa839e8b20a620d354bfd9, local=origin, worktree
+limpa, branch feature/gameplay-first-mvp2a e base visual 58d9720 confirmadas.
+Fetch/health aprovados; nenhum trabalho existente descartado.
+
+## Fechamento da implementação e gates
+
+- A execução antiga 66046 terminou com 4 timeouts e 2 erros de RPC do worker;
+  NÃO foi considerada um gate verde nem prova de regressão funcional.
+- Profiling local apontou alocações repetidas na LoS. visitSupercover mantém a
+  ordem/quinas da geometria e interrompe no primeiro bloqueio; trace retorna
+  dados independentes. Sem cache de visibilidade ou alteração de A*/regras.
+- A/B seed 803: hash JSON completo idêntico
+  edcf9f6d0aa4488bda430a900d74003401d5f924d48fc6b5627da8a5f87a554b em batch e
+  frames 73/1000. Na amostra desta máquina: baseline 1254/1274/1300 ms e atual
+  983/1024/986 ms. É custo de simulação, não FPS ou benchmark universal.
+- pnpm typecheck; 231/231 unitários (20 arquivos, 103,02 s); pnpm build
+  (769 módulos); 36/36 E2E (7,8 min, Edge, 1 worker); git diff --check: PASS.
+  Auto baseline de 24 cenários e os três loops progressivos antigos preservados.
+  Nenhum timeout/assertion antigo ou snapshot foi afrouxado/regenerado.
+- pnpm install --frozen-lockfile e pnpm art:generate com diff vazio dos assets:
+  PASS. Nenhuma dependência/lockfile alterada. Warning de chunk >500 kB permanece.
+- E2E de treino: targeting, colisão, quina, burning, pausa, expiração, reset,
+  três vitórias sem recompensas/alteração econômica, limpeza e três resoluções.
+  Screenshot training-runes-gameplay.png inspecionado: party, barras, kit e
+  runas legíveis. Imagens/trace/profile ficam em test-results (fora do bundle).
+- Smoke real-clock local PASS: runas/pausa/expiração/reset e três treinos,
+  1522 eventos, economia inalterada, zero console/overlap/out-of-bounds/reservas/
+  projéteis/condições/VFX residuais. scripts/qa-training.mjs é reutilizável no
+  base path Pages, em contexto isolado sem tocar saves do usuário.
+- Smoke da hunt normal 1x→4x PASS: vitória em 52350 ms lógicos, 19 kills,
+  4240 XP, 1489 ouro e um Boss Token; zero erros/warnings e lifecycle encerrado.
+  Sync da apresentação: treino média 0,110 ms / pico 2 ms / 590 objetos finais;
+  hunt média 0,126 ms / pico 2,9 ms / 594 objetos. Callback rAF na hunt teve picos
+  115,4 ms (1x) e 67,7 ms (4x): continua sendo gap de profiling, não FPS medido.
+
+## Pendências deste checkpoint
+
+Commit/push normal do runtime; aguardar CI/Pages,
+conferir version.json e smoke público. Não chamar o WIP 2378cb5 de publicado.
+Não reabrir toda a implementação nem ampliar o escopo para catálogo/Wheel/rede.
+Computer Use nativo não foi usado para contornar a interrupção anterior; o QA
+executa testes do próprio repositório em contexto isolado do navegador.
+Não houve merge, Sites, force push, mudança de permissões ou Helper individual.
+
+## Histórico — checkpoint parcial anterior
+
 # Checkpoint parcial — MVP 2B.2 — 19/10/2026
 
 Base local/origin 41477b948bdbda6079477ffb2163c01211b9f494, limpa na entrada;
