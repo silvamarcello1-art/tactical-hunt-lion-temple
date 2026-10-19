@@ -1,18 +1,25 @@
-# Próxima tarefa — publicação verificada do treino 2B.2 — 19/10/2026
+# Próxima tarefa — catálogo verificável de magias/condições — 19/10/2026
 
 Na retomada, 231 unitários/36 E2E, typecheck/build/diff, instalação e arte
 reproduzível passaram. LoS otimizada com geometria e hashes preservados; não
 reimplementar runas ou repetir gates sem alteração de runtime. Ler o novo topo
 do SESSION_CHECKPOINT e TACTICAL_RUNES. Branch feature/gameplay-first-mvp2a.
 
-1. Smoke real-clock local de treino (três ciclos) e hunt normal PASS na sessão
-   88872. Publicar por push normal; acompanhar CI/Pages, manifest e smoke público do SHA
-   exato. scripts/qa-training.mjs aceita URL base, SHA e label; preserva base path.
-2. Atualizar checkpoint com CI/manifest/QA confirmados, sem alegar publicação
-   enquanto estiver pendente. Não fazer merge nem usar Sites.
-3. Após a entrega: catálogo versionado e verificável das magias/áreas/condições
-   das três vocações. Passivas/Wheel em slice próprio, não apenas ícones/nomes.
-   Não implementar Paladin/Monk ou networking incidentalmente. 2C→2D→2E→2F.
+1. Entrega 2B.2 fechada: runtime 88d3fc6256666038b0581c0674717cb20e45e79c,
+   CI push 39311311231 / PR 39311319743 e deploy PASS, manifest e smoke público
+   confirmados. Três treinos preservaram economia; hunt normal venceu o boss,
+   sem erros/resíduos. Checkpoint posterior é só documentação [skip ci].
+2. Não reimplementar runas, movimento, inventário/equipamento ou Helper. Fazer
+   pre-flight e conferir SHA real. scripts/qa-training.mjs aceita base URL, SHA
+   e label; scripts/qa-preview.mjs verifica a hunt normal, não o treino.
+3. Próximo incremento: fixar revisão/data e fontes verificáveis do Tibia para
+   magias/áreas/condições das três vocações existentes. Catalogar cooldowns
+   individuais/grupos, range/LoS/facing/máscaras, mana, requisitos, condições e
+   modificadores PvE/PvP. Não preencher valores não confirmados por memória.
+   Preservar IDs/saves e arte original; testar no mesmo domínio antes de UI.
+4. Passivas/Wheel em slice próprio, não apenas ícones/nomes. Paladin/Monk,
+   Energy/Poison Field e regras de world type exigem etapas próprias. PvP online
+   apenas após autoridade/rede; manter 2C→2D→2E→2F. Sem merge estável/Sites.
 
 ## Histórico — retomada anterior ainda sem gates verdes
 

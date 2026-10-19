@@ -1,4 +1,4 @@
-# Checkpoint — MVP 2B.2: gates locais verdes — retomada 19/10/2026
+# Checkpoint — MVP 2B.2 publicado e verificado — retomada 19/10/2026
 
 Entrada em 2378cb5f51f9013b95fa839e8b20a620d354bfd9, local=origin, worktree
 limpa, branch feature/gameplay-first-mvp2a e base visual 58d9720 confirmadas.
@@ -35,11 +35,37 @@ Fetch/health aprovados; nenhum trabalho existente descartado.
   hunt média 0,126 ms / pico 2,9 ms / 594 objetos. Callback rAF na hunt teve picos
   115,4 ms (1x) e 67,7 ms (4x): continua sendo gap de profiling, não FPS medido.
 
-## Pendências deste checkpoint
+## Publicação e QA público concluídos
 
-Commit/push normal do runtime; aguardar CI/Pages,
-conferir version.json e smoke público. Não chamar o WIP 2378cb5 de publicado.
-Não reabrir toda a implementação nem ampliar o escopo para catálogo/Wheel/rede.
+Runtime: 88d3fc6256666038b0581c0674717cb20e45e79c, commit/push normal para
+origin confirmado por ls-remote; worktree limpa e local=remoto. PR #3 continua
+aberta, sem merge. CI push e deploy PASS:
+https://github.com/silvamarcello1-art/tactical-hunt-lion-temple/actions/runs/39311311231
+CI PR PASS:
+https://github.com/silvamarcello1-art/tactical-hunt-lion-temple/actions/runs/39311319743
+Logs confirmam 231 unitários/36 E2E em ambas; push 36 E2E em 28,9 min, PR em
+22,4 min. A retomada do ambiente foi posterior à conclusão remota; não houve
+alteração de código durante a espera. Manifest público confirmado em 19/10,
+após 23:00 UTC, no SHA exato 88d3fc6, não no WIP anterior.
+
+Preview: https://silvamarcello1-art.github.io/tactical-hunt-lion-temple/?training=1&v=88d3fc6
+Build compilado local no base path Pages, com manifest 88d3fc6, passou treino e
+hunt normal. Smoke público real-clock também PASS: parede/campo/colisão/burning,
+pausa/expiração/reset e três treinos, 1520 eventos, economia inalterada. Zero
+console, overlaps, out-of-bounds, reservas, projéteis/condições/VFX residuais.
+Screenshot mvp2b2-public-runes.png inspecionado; bot/party/kit e runas visíveis.
+Hunt pública normal 1x→4x: vitória em 52350 ms lógicos, 19 kills, 4240 XP,
+1489 ouro, um Boss Token; zero erros/warnings e lifecycle encerrado.
+
+Amostras públicas: apresentação treino média 0,080 ms/pico 0,9 ms/590 objetos;
+hunt 0,079 ms/1,3 ms/594 objetos. Callback rAF teve pico 59,7 ms em 1x e 45,1 ms
+em 4x. Não é FPS medido ou prova de ganho de renderização. Arte permanece
+blockout, teclado físico/NumLock e aprovação humana de balanceamento são gaps.
+
+Fechamento documental posterior usa [skip ci], sem mudar runtime/dependências;
+não confundir HEAD documental com SHA servido. Não repetir gates completos sem
+alteração de runtime. Próxima etapa está em NEXT_TASK, sem iniciar rede/Wheel
+inteira incidentalmente. Não há release estável aprovada por esta entrega.
 Computer Use nativo não foi usado para contornar a interrupção anterior; o QA
 executa testes do próprio repositório em contexto isolado do navegador.
 Não houve merge, Sites, force push, mudança de permissões ou Helper individual.

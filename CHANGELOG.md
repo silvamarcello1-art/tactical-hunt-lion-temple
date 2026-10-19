@@ -275,3 +275,6 @@ alterados.
   no primeiro bloqueio; verificações dinâmicas e hashes de combate preservados.
 - README com controles do treino e smoke real-clock reutilizável em
   scripts/qa-training.mjs (funciona também no base path do GitHub Pages).
+- Fechamento: 231 unitários/36 E2E, CI push/PR e deploy aprovados. Runtime
+  88d3fc6 verificado no Pages; smoke público passou três treinos isolados e
+  hunt normal até o boss, sem erros de console ou resíduos de lifecycle.

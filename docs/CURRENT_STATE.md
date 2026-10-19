@@ -1,4 +1,4 @@
-# Estado vigente — MVP 2B.2 validado localmente — 19/10/2026
+# Estado vigente — MVP 2B.2 publicado e verificado — 19/10/2026
 
 Treino local Party × Bot em ?training=1, no mesmo motor, Manual inicial e sem
 recompensas persistentes. Magic Wall/Fire Field por 4/5 + clique, com cargas,
@@ -12,12 +12,18 @@ Gates locais aprovados na retomada: 231 unitários, 36 E2E, typecheck, build e
 diff --check. Instalação frozen e arte reproduzível aprovadas. LoS passou a
 percorrer o supercover sem arrays/Set descartados; mesmos hashes e regras,
 paredes/unidades revalidadas em cada chamada. Não foram elevados timeouts.
-Publicação/CI e smoke do SHA servido ainda pendentes neste checkpoint.
+Runtime publicado: 88d3fc6256666038b0581c0674717cb20e45e79c. CI push
+39311311231 e PR 39311319743 aprovadas (231 unitários/36 E2E); deploy Pages
+aprovado e version.json público confirmado. Smoke público de runas/três treinos
+sem alteração econômica e hunt normal 1x→4x até o boss: PASS, console e cleanup
+limpos. Preview compartilhado: https://silvamarcello1-art.github.io/tactical-hunt-lion-temple/?training=1
+O checkpoint documental posterior [skip ci] não muda o runtime publicado nem
+representa novo build/merge estável. Detalhes: SESSION_CHECKPOINT.
 Playtest via navegador real automatizado, com inspeção das imagens; não equivale
 a teste de teclado físico. Computer Use nativo não foi contornado após a
 interrupção registrada na sessão anterior. Ver SESSION_CHECKPOINT/NEXT_TASK.
 
-## Última entrega publicada — 10/10/2026
+## Histórico — entrega anterior publicada em 10/10/2026
 
 # Estado anterior — MVP 2B.1 — retomada 10/10/2026
 
