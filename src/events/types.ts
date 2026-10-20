@@ -133,6 +133,8 @@ export interface CombatEvent {
 export type Role = 'knight' | 'druid' | 'sorcerer' | 'monster' | 'boss';
 
 export interface EntitySnapshot {
+  /** Opposing training team, never a player-owned hero or a reward source. */
+  trainingVocation?: 'knight'|'druid'|'sorcerer';
   pushable?:boolean;
   description?: string;
   archetype?: 'bruiser'|'hunter'|'flanker'|'caster'|'protector'|'artillery';

@@ -52,21 +52,23 @@ dialog footer, .dialog-actions { display: flex; justify-content: flex-end; gap: 
 .topbar{height:38px;padding-inline:14px}
 .game-layout{grid-template-columns:178px minmax(0,1fr);gap:12px;padding:4px 12px;min-height:0}
 .party-rail{position:static;padding-top:8px}.party-rail>header{margin-bottom:8px}
-.party{display:grid;gap:8px}.hero-card{width:100%;grid-template-columns:24px minmax(0,1fr);min-height:100px;padding:8px;gap:4px}
-.portrait.vocation-mark{width:24px;height:34px;grid-row:1/3;display:grid;place-items:center;background:none;font-size:24px;color:var(--selection)}
+.party{display:grid;gap:8px}.hero-card{width:100%;grid-template-columns:32px minmax(0,1fr);min-height:100px;padding:8px;gap:4px}
+.portrait.vocation-mark{width:32px;height:32px;grid-row:1/3;display:block;background-size:400% 400%;background-position:0 0;background-repeat:no-repeat;background-color:transparent;image-rendering:pixelated}
 .hero-title{grid-column:2;min-width:0}.hero-title b{font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.hero-level{font-size:9px}
 .vocation{grid-column:2;font-size:9px}.hero-mode{position:static;grid-column:2;font-size:9px;color:var(--selection)}
 .hero-card .bar{grid-column:1/-1;height:7px;margin:0}.hero-vitals{font-size:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .world-column{min-height:0}.hunt-toolbar{min-height:32px}.world-stage{flex:1}
 #game{aspect-ratio:auto;min-height:0;max-height:none;width:100%;height:100%}
 #game canvas{width:100%;height:100%;object-fit:contain;outline:none}
-.player-controls{min-height:44px;padding:4px 0;gap:6px}
-#interaction-status{flex-basis:100%;height:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#c4cbb0}
+.player-controls{grid-column:2/4;grid-row:2;min-height:22px;padding:0;gap:6px;flex-wrap:nowrap;min-width:0}
+#interaction-status{flex:1;min-width:0;height:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#c4cbb0}
 [data-assistance][aria-pressed=true]{border-color:#8bb597;color:#c5ebcb;background:#27382b}
-.action-dock{min-height:96px;grid-template-columns:145px auto minmax(160px,1fr) auto;gap:16px;padding:8px 14px}
+.action-dock{min-height:108px;grid-template-columns:120px auto minmax(160px,1fr) auto;grid-template-rows:auto 24px;column-gap:14px;row-gap:4px;padding:6px 12px}
+.action-strip{display:flex;gap:6px;align-items:center;grid-column:2;grid-row:1}
+.selected-summary{grid-row:1/3}.hero-extras{grid-column:3;grid-row:1}.controls{grid-column:4;grid-row:1/3}
 .selected-summary{gap:3px}.selected-summary strong{font-size:18px}
-.action-bar{gap:8px}.action{width:58px;flex-basis:58px;height:78px;padding:1px}
-.action .skill-icon{width:54px;height:54px}.action .ability-name{display:none}
+.action-bar{gap:6px}.action{width:54px;flex-basis:54px;height:70px;padding:1px;overflow:hidden}
+.action .skill-icon{width:48px;height:48px}.action .ability-name{display:none}
 .action em{position:absolute;bottom:12px;font-size:9px}
 .action .ability-reason{position:absolute;bottom:1px;font-size:8px;max-width:56px;overflow:hidden;text-overflow:ellipsis}
 .action kbd{font-size:11px;top:2px;left:2px}
@@ -75,7 +77,8 @@ dialog footer, .dialog-actions { display: flex; justify-content: flex-end; gap: 
 #ability-config{font-size:9px}.controls{gap:4px}.controls>div{gap:4px}.controls button{font-size:10px;padding:4px 7px}
 .controls .center-tabs{position:static;display:flex}
 .drawer{bottom:108px;top:44px}.rail-hint{font-size:9px;line-height:1.5}
-@media(max-width:1050px){.game-layout{grid-template-columns:158px minmax(0,1fr);gap:8px}.brand small{display:none}.action-dock{grid-template-columns:115px auto 1fr;gap:10px}.hero-extras{grid-column:1/-1;grid-row:2;flex-direction:row}.action-dock{min-height:120px}.live-stats{gap:8px}}
+@media(max-width:1200px){.action-dock{grid-template-columns:100px auto 1fr;column-gap:10px}.controls{grid-column:3}.hero-extras{grid-column:1;grid-row:3;max-width:180px}.player-controls{grid-column:2/4}.action-dock{grid-template-rows:auto 24px auto}.live-stats{gap:8px}}
+@media(max-width:1050px){.game-layout{grid-template-columns:158px minmax(0,1fr);gap:8px}.brand small{display:none}.action-dock{grid-template-columns:80px minmax(0,1fr)}.action-strip{overflow-x:auto;max-width:100%}.controls{grid-column:2;grid-row:3;flex-direction:row;justify-content:flex-end}.hero-extras{grid-column:1/3;grid-row:4;flex-direction:row}.player-controls{grid-column:1/3}.selected-summary{grid-row:1}.live-stats{gap:8px}}
 @media(max-width:700px){.game-layout{grid-template-columns:128px minmax(0,1fr);padding-inline:6px}.topbar{gap:8px;padding-inline:8px}.brand strong{font-size:10px}.hero-title{flex-wrap:wrap}.hero-card{padding:6px;min-height:108px}.player-controls{gap:3px}.player-controls label{font-size:9px}.hero-extras small{display:none}}
 .equipment-drawer{width:min(460px,calc(100vw - 32px));z-index:30;background:#141e1a;color:#e5e8df;padding:20px;box-shadow:-12px 0 45px #0008;overflow:auto}
 .equipment-drawer p{font-size:12px;line-height:1.5;color:#c0cbbd}.equipment-drawer h3{font-size:13px;margin:12px 0 8px}
@@ -92,18 +95,15 @@ dialog footer, .dialog-actions { display: flex; justify-content: flex-end; gap: 
 #reward-notice{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);z-index:5;background:#243329eb;border-color:#ad9866;white-space:nowrap;color:#f2deb1}
 #result{max-height:85vh;overflow:auto}#result h3{font-size:13px}#result .result-list{font-variant-numeric:tabular-nums}
 #equipment-drawer>.drawer-close{position:sticky;top:0;float:right;z-index:2;background:#26372c}
-/* Local tactical training: normal hunt layout and three spell slots stay intact. */
+/* Unified action strip: real spells 1–3, runes 4–7, utilities 8–9. */
 #training-link { color:var(--gold, #d9bd71); font-size:11px; text-decoration:none; white-space:nowrap; }
 #training-link[aria-disabled="true"] { opacity:.45; cursor:not-allowed; }
-#rune-kit:not([hidden]) { display:flex; flex-wrap:wrap; align-items:center; gap:6px; }
-#rune-kit button { min-height:26px; font-size:11px; }
-#rune-kit button[data-rune] { position:relative; overflow:hidden; display:grid; grid-template-columns:auto 1fr; column-gap:4px; text-align:left; min-width:112px; }
-#rune-kit button span { grid-column:2; }
-#rune-kit .rune-cooldown { position:absolute; inset:0; pointer-events:none; background:conic-gradient(#10141b80 var(--cooldown-angle,0deg),transparent 0); }
+#rune-kit:not([hidden]) { display:flex; align-items:center; gap:6px; }
+#rune-kit .rune-cooldown { position:absolute; inset:2px 2px 19px; border-radius:50%; pointer-events:none; background:conic-gradient(#10141bcc var(--cooldown-angle,0deg),transparent 0); }
 #rune-kit [data-category="rune"] { border-color:#6b6585; }
 #rune-kit [data-category="utility"] { border-color:#567361; }
-#rune-kit small { flex-basis:100%; }
-#rune-kit kbd { color:#edcf88; font-weight:700; }
-#rune-kit span { color:#b7c6bd; font-size:10px; }
-#rune-kit small { font-size:10px; color:#aebfb3; }
+.tactical-icon{width:48px;height:48px;flex-shrink:0}
+.rune-charges{position:absolute;bottom:2px;right:5px;color:#d3dacd;font-size:10px;z-index:2}
+.rune-number{position:absolute;top:17px;left:0;right:0;font-size:20px;text-shadow:0 1px 3px black;z-index:2}
+.utility-action em{bottom:2px;color:#b8c7b2}
 [data-scenario="training"] .phase-track { display:none; }

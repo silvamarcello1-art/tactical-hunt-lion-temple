@@ -1,5 +1,18 @@
 # Arquitetura — atualização MVP 2B.1 (10/10/2026)
 
+## Incremento 2B.4 — 19/10
+
+singleHeroControl é configuração da aplicação: transferência exclusiva e rejeição
+de ordens antigas no domínio. trainingTeam cria três inimigos trainingVocation,
+sem ownership de jogador. Compartilham spell/rune/projectile/movement pipelines;
+foco por menor HP é determinístico. Defaults históricos preservam fixtures.
+Treino usa GridMap ampliado (30–52×18), todo piso amarelo caminhável salvo bloqueios
+reais; arenaView fornece dimensões e origem ao renderer/input. Largura é fixada
+na criação da sessão; resize reenquadra, não muda a lógica. Pixi stage contém
+cenário neutro e world; as oito layers anteriores vivem dentro de world.
+Rune-kit e player-controls passam ao dock, sem duplicação. TRAINING_2B4.md detalha
+contratos, evidências requeridas e gaps, inclusive pacote de sprites recebido vazio.
+
 ## Incremento 2B.3 — 19/10
 
 PushSystem.preview devolve vizinhos/cópias/readiness sem mover, reservar ou sortear.

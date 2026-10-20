@@ -1,4 +1,54 @@
-# Checkpoint — MVP 2B.3 publicado — 20/10/2026 UTC
+# Checkpoint — MVP 2B.4 em validação — 19/10/2026 (São Paulo)
+
+## Sessão vigente
+
+- Raiz Documents/Tactical-Hunt-Lion-Temple; branch feature/gameplay-first-mvp2a,
+  base visual58d9720. Entrada70ea598 local=origin, worktree limpa, fetch/health.
+- Antes das edições: typecheck/251unit(22arquivos,66,42s)/build PASS.
+- Implementado: dock1–9, retirada da descrição, retratos e ícones próprios,
+  arena clara/colunas por sessão com TODO piso amarelo acessível, seleção
+  exclusiva no domínio, três bots de vocação/focoHP/spells/runes/cura.
+- TrainingTeam6unit PASS, incluindo cantos/ampliação/MW/ownership/determinismo.
+  Primeiros testes de UI identificaram expectativas históricas de seleção
+  independente; casos de componente preservam fixture isolado explícito, enquanto
+  training-team.spec cobre produção sem interceptação. HMR durante edição
+  invalidou uma execução longa; não é gate verde. Gates finais ainda pendentes.
+- Arquivos: combat/CombatEngine+TrainingTeam.test, control/PlayerControls+Port,
+  data/training, events/types, renderer/SpriteDefinition, app/LiveHuntState,
+  main/HUD/CSS/TacticalIcons, E2E/fixture e documentação afetada.
+- Assets fornecidos: Downloads/rubinot- 2026/assets_rtc possui apenas data/cursors,
+  ZERO arquivos inclusive na inspeção elevada. Nenhuma sprite externa integrada.
+- Não iniciado: sprites Tibia, catálogo completo/Wheel/PvP online, MW/push por
+  bots. Não alterar inventário/economia. Sem merge/Sites/Helper individual.
+- Público anterior bbd0fac. NÃO afirmar novo deploy antes de CI/manifest/smoke.
+  Próximo comando: pnpm typecheck; pnpm exec vitest run; pnpm build;
+  pnpm exec playwright test --reporter=line --workers=1; git diff --check.
+
+### Validação local e limite operacional
+
+- Primeira revisão passou258/258 unitários e build; a última correção sincroniza
+  configuração de controle imediatamente no domínio e mantém ação no tick.
+  Name visibility dos bots também foi corrigida após inspeção da captura.
+- Seleção/bots/layout/runas/assistência:15E2E direcionados passaram antes desse
+  ajuste; smoke real-clock 3×3 passou três vitórias,1267ações/eventos de origem bot,
+  saves iguais e console/cleanup limpos. Não equivale ao gate final da revisão.
+- Nova rodada default:254/258, quatro timeouts de5s, sem falha de assertions de
+  resultado. Streams Auto, lifecycle polido, três hunts e determinismo3×3 foram
+  afetados. Executor threads também excedeu limites; tentativa interrompida.
+  Nenhum timeout foi elevado, teste ignorado ou snapshot regenerado.
+- Diagnóstico somente leitura `node scripts/profile-grid.mjs 70ea598`:
+  timeline completa idêntica ao código anterior nos modos batch/73/1000,
+  hash edcf9f6d0aa4488bda430a900d74003401d5f924d48fc6b5627da8a5f87a554b.
+  Anterior warm/batch/73/1000:5523/3585/3482/1897ms; atual3685/2514/2888/3114ms.
+  São amostras variáveis, não prova de ganho nem baseline determinístico de tempo.
+- Validação independente deve usar CI Windows original, mantendo os gates exatos.
+  Commit/push da feature dispara validate antes de deploy; qualquer falha impede
+  publicação. Não chamar gate completo verde enquanto local/CI não o comprovar.
+- Rodada final de typecheck/build/44E2E ainda em execução; registrar resultado
+  final e IDs de CI. Próximo smoke: qa-training-team.mjs (não scripts legados)
+  e qa-preview.mjs na URL compilada/pública com SHA obrigatório.
+
+## Histórico — MVP 2B.3 publicado — 20/10/2026 UTC
 
 ## Fechamento vigente — prevalece sobre os registros históricos abaixo
 

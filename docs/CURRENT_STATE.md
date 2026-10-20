@@ -1,4 +1,16 @@
-# Estado vigente — incremento 2B.3 publicado — 20/10/2026 UTC
+# Estado vigente — incremento 2B.4 em validação — 19/10/2026 (São Paulo)
+
+Aplicação local: dock 1–9 unificado, descrição lateral removida, arena clara com
+todos os tiles amarelos ligados ao GridMap (largura por sessão, sem fake floor).
+Seleção assume Manual somente no selecionado, companheiros Auto. Três bots de
+vocação com foco por HP, movimento, magia/cura/runas reais e pixel art própria.
+Sem alterações de economia/equipamento/forja nem rede. TRAINING_2B4.md descreve
+contratos, fixtures e limites. assets_rtc indicada contém zero arquivos; sprites
+Tibia NÃO foram integradas. Gates/publicação efetivos: SESSION_CHECKPOINT.md.
+O público anterior bbd0fac NÃO é esta revisão. Não anunciar nova publicação sem
+CI/deploy/manifest/smoke corretos. Próxima ação: finalizar gates, não outro sistema.
+
+## Histórico — incremento 2B.3 publicado — 20/10/2026 UTC
 
 Implementado e validado local/público: quatro runas por 4–7, push por 8/arrastar e Stop por 9 no treino;
 três heróis com pixel art própria maior, sem zoom, mira de tile independente do

@@ -14,24 +14,35 @@ O próximo combate utiliza os stats efetivos. Reload preserva XP, equipamentos,
 ouro e Boss Tokens. Mochila cheia envia recompensas para uma reserva visível.
 Regras e recuperação de save: [Equipment and Loot](docs/EQUIPMENT_AND_LOOT.md).
 
-## Treino de movimento e runas — MVP 2B.3
+## Treino de movimento e runas — MVP 2B.4
 
 Clique em **Treino de runas** entre sessões, ou abra `/?training=1` no servidor
-local. A party começa em Manual contra um bot. Selecione um herói; WASD, setas
+local. Knight começa Manual, magos Auto, contra três bots ativos. Clique no
+herói/card para controlá-lo; os demais voltam ao Auto. O selecionado pode ser
+Manual, Assistido ou Auto. WASD, setas
 ou Numpad movem; **4 + clique** coloca Magic Wall; **5 + clique** coloca Fire
 Field; **6** Sudden Death, **7** Destroy Field. Para empurrar, **segure o botão
 esquerdo sobre uma criatura adjacente e solte num vizinho livre**; a prévia mostra
 destinos permitidos. **8** oferece seleção alternativa, **9** para. Não se arrasta
 sete tiles de distância. ESC cancela a seleção. As teclas 1–3 continuam
 as magias da vocação; Numpad somente movimenta, não conjura.
-Parede bloqueia caminhada/tiros; campo causa burning no bot. Pausa e velocidades
+Magias e runas ficam em sequência 1–9 no dock inferior. Toda a área amarela faz
+parte da grade caminhável, salvo caixas/runas bloqueadoras; largura é calculada
+ao criar a sessão e resize reenquadra sem recriar combate. Bots perseguem o menor
+percentual de vida, usam magias/cura/SD/Fire Field e respeitam custos/cooldowns.
+Parede bloqueia caminhada/tiros; campo causa burning no adversário. Pausa e velocidades
 compartilham o relógio lógico. Reiniciar repõe o kit gratuito de cada herói.
 
 Sem recompensas persistentes, Loop ou PvP online. Não é o catálogo completo de
 magias/passivas/Wheel do Tibia atual; parâmetros e próximos passos estão em
-[Training 2B.3](docs/TRAINING_2B3.md). Três heróis em pixel art própria maior,
+[Training 2B.4](docs/TRAINING_2B4.md) e [perfil 2B.3](docs/TRAINING_2B3.md).
+Heróis/bots em pixel art própria maior,
 sem zoom ajustável; prévia de tile facilita colocar MW sem acertar um sprite
 por engano. [Origem da arte e prompts](docs/ART_PROMPTS.md).
+
+Smoke real-clock do cenário atual: `node scripts/qa-training-team.mjs <URL> <SHA> <label>`.
+`qa-training.mjs`/`qa-training-kit.mjs` são ferramentas históricas do fixture parado;
+não representam a nova equipe ativa. O pacote assets_rtc indicado estava vazio.
 
 ## Executar
 

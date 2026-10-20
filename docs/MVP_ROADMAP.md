@@ -8,6 +8,7 @@
 | MVP 2B.1 | Consolidação de 2B: hotkeys, Numpad, Assistido, projéteis contínuos, party/HUD e duas composições; antes de Adventure |
 | MVP 2B.2 | Autorizado em 19/10: treino local Party × Bot, movimento reativo e Magic Wall/Fire Field; não é PvP online nem o catálogo completo do Tibia |
 | MVP 2B.3 | Extensão autorizada do treino: SD/Destroy Field, push e 1–9, pixel heroes maiores sem zoom; perfil de magias parcial, sem Wheel completa |
+| MVP 2B.4 | Layout claro com hotbar unificada, toda arena amarela acessível, controle exclusivo do selecionado e três bots ativos; laboratório local, não networking |
 | MVP 2C | Manual Adventure + World + NPCs + Quests |
 | MVP 2D | Story/Campaign Foundation |
 | MVP 2E | Server Authority + Networking; exige ADR antes de autoridade remota |

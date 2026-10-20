@@ -3,14 +3,15 @@ import { heroes } from '../data/config';
 import { passives, type PartyProgress, type Vocation } from '../data/progression';
 import type { EntitySnapshot } from '../events/types';
 import {abilityCatalog} from '../data/trainingSpells';
+import {assetUrl} from '../game/assetUrl';
 
 import { abilityReasons, iconMarkup, actionSlots } from '../data/actionBar';
 /** Screen-space DOM only. No renderer, transforms or entity display objects. */
 export class GameplayHUD {
   constructor(private training=false){}
   renderParty(selected:string) {
-    document.querySelector('#party')!.innerHTML=heroes.map((hero,index)=>`<button class="hero-card ${hero.id===selected?'selected':''}" id="card-${hero.id}" data-hero-id="${hero.id}" aria-pressed="${hero.id===selected}" aria-label="Selecionar ${hero.name}">
-      <span class="portrait vocation-mark" aria-hidden="true">${['♜','❧','✦'][index]}</span>
+    document.querySelector('#party')!.innerHTML=heroes.map(hero=>`<button class="hero-card ${hero.id===selected?'selected':''}" id="card-${hero.id}" data-hero-id="${hero.id}" aria-pressed="${hero.id===selected}" aria-label="Selecionar ${hero.name}">
+      <span class="portrait vocation-mark" style="background-image:url('${assetUrl(`/assets/original/pixel/${hero.id}-v1.png`)}')" aria-hidden="true"></span>
       <span class="hero-title"><b>${hero.name}</b><small class="hero-level">Lv. 1</small></span>
       <span class="vocation">${hero.role}</span><span class="hero-mode">AUTO</span>
       <span class="bar hp"><i></i></span><span class="bar mp"><i></i></span>

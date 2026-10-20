@@ -22,6 +22,7 @@ import type { CombatEvent, HuntResult } from './events/types';
 import { PixiRenderer } from './game/PixiRenderer';
 import {runeDefinitions,type RuneId} from './data/runes';
 import {abilityCatalog} from './data/trainingSpells';
+import {tacticalIcon} from './ui/TacticalIcons';
 
 type SessionPhase =
   | 'preparing'
@@ -56,14 +57,16 @@ trainingLink.title='Troque de cenário entre sessões. O treino é local, sem XP
 document.querySelector('.topbar')!.append(trainingLink);
 trainingLink.onclick=event=>{if(!['idle','completed','defeated','error'].includes(sessionPhase))event.preventDefault();};
 const runeKit=document.createElement('div');runeKit.id='rune-kit';runeKit.hidden=!trainingMode;
-runeKit.setAttribute('aria-label','Runas 4–7 e ações 8–9');runeKit.innerHTML=Object.values(runeDefinitions).map(r=>`<button data-rune="${r.id}" data-action-slot="${r.key}" data-category="rune" title="Runa · ${r.name}: ${r.purpose}. ${r.key} + clique; ESC cancela. Kit gratuito."><kbd>${r.key}</kbd> ${r.name} <span></span><i class="rune-cooldown" aria-hidden="true"></i></button>`).join('')+'<button id="push-action" data-action-slot="8" data-category="utility" title="Empurrar: selecione um alvo adjacente e um tile ao lado dele, ou arraste a criatura."><kbd>8</kbd> Empurrar</button><button id="stop-action" data-action-slot="9" data-category="utility" title="Parar novas ordens; passos comprometidos concluem após revalidação."><kbd>9</kbd> Parar</button><small>Magias 1–3 · Runas 4–7 · Ações 8–9 · Numpad move · kit gratuito</small>';
-document.querySelector('#player-controls')!.prepend(runeKit);
+runeKit.setAttribute('aria-label','Runas 4–7 e ações 8–9');runeKit.innerHTML=Object.values(runeDefinitions).map(r=>`<button class="action rune-action" data-rune="${r.id}" data-action-slot="${r.key}" data-category="rune" aria-label="${r.name}" title="Runa · ${r.name}: ${r.purpose}. ${r.key} + clique; ESC cancela. Kit gratuito.">${tacticalIcon(r.id)}<kbd>${r.key}</kbd><span class="rune-charges"></span><strong class="rune-number"></strong><i class="rune-cooldown" aria-hidden="true"></i></button>`).join('')+`<button class="action utility-action" id="push-action" data-action-slot="8" data-category="utility" title="Empurrar: arraste a criatura até um vizinho livre; tecla 8 é alternativa." aria-label="Empurrar">${tacticalIcon('push')}<kbd>8</kbd><em>Empurrar</em></button><button class="action utility-action" id="stop-action" data-action-slot="9" data-category="utility" title="Parar novas ordens; passos comprometidos concluem após revalidação." aria-label="Parar">${tacticalIcon('stop')}<kbd>9</kbd><em>Parar</em></button>`;
+const actionStrip=document.createElement('div');actionStrip.className='action-strip';actionStrip.setAttribute('aria-label','Barra de ações');
+const spellBar=document.querySelector('#action-bar')!;spellBar.before(actionStrip);actionStrip.append(spellBar,runeKit);
+document.querySelector('.action-dock')!.append(document.querySelector('#player-controls')!);
+document.querySelector('.rail-hint')?.remove();
 if(trainingMode){
   document.querySelector('.brand small')!.textContent='TREINO LOCAL · NÃO É PVP ONLINE';
   document.querySelector('#repeat')!.textContent='Repetir treino';
   document.querySelector('#restart')!.setAttribute('title','Reiniciar treino');
   document.querySelector('.phase-track')!.setAttribute('hidden','');
-  document.querySelector('.rail-hint')!.textContent='Party em Manual contra bot. Magias 1–3; runas 4–7 + clique. Empurrar: segure o botão esquerdo na criatura e solte num vizinho verde; 8 é alternativo. 9 para; WASD/Numpad move. Sem zoom ou recompensas persistentes.';
 }
 let casting: {id:string; until:number} | undefined;
 const debugEnabled =
@@ -210,7 +213,8 @@ function updateHUD() {
   if(trainingMode)for(const button of Array.from(runeKit.querySelectorAll<HTMLButtonElement>('[data-rune]'))){
     const status=engine?.runeStatus(selectedHeroId,button.dataset.rune as RuneId);
     button.disabled=!status||['idle','completed','defeated','error'].includes(sessionPhase)||!engine?.entities.find(h=>h.id===selectedHeroId)?.alive||status.charges===0;
-    button.querySelector('span')!.textContent=`${status?.charges??runeDefinitions[button.dataset.rune as RuneId].charges} cargas${status?.remaining?` · ${Math.ceil(status.remaining/1000)}s`:''}`;
+    button.querySelector('.rune-charges')!.textContent=`×${status?.charges??runeDefinitions[button.dataset.rune as RuneId].charges}`;
+    button.querySelector('.rune-number')!.textContent=status?.remaining?String(Math.ceil(status.remaining/1000)):'';
     button.dataset.charges=String(status?.charges??0);button.dataset.remaining=String(status?.remaining??0);
     button.querySelector<HTMLElement>('.rune-cooldown')?.style.setProperty('--cooldown-angle',`${Math.min(1,(status?.remaining??0)/runeDefinitions[button.dataset.rune as RuneId].cooldown)*360}deg`);
   }
@@ -335,7 +339,7 @@ async function createRenderer() {
   playerControls = undefined;
   renderer?.destroy();
   renderer = undefined;
-  const nextRenderer = new PixiRenderer(new CombatEngine(803, preferences, huntSessionId, trainingMode?undefined:progressionStore.snapshot(), trainingMode?{}:equipmentStore.loadout(),true,true,trainingMode), {
+  const nextRenderer = new PixiRenderer(new CombatEngine(803, preferences, huntSessionId, trainingMode?undefined:progressionStore.snapshot(), trainingMode?{}:equipmentStore.loadout(),true,true,trainingMode,{singleHeroControl:true,trainingTeam:true,trainingColumns:18*$('#game').clientWidth/Math.max(1,$('#game').clientHeight)}), {
     debugEnabled,
     selectedHeroId,
   });
@@ -349,6 +353,7 @@ async function createRenderer() {
       get time() { return nextRenderer.engine.time; },
       get running() { return nextRenderer.player.isRunning; },
       training:trainingMode,
+      singleHeroControl:true,
       runePreview:(actor,id,tile)=>nextRenderer.engine.runePreview(actor,id,tile),
       pushPreview:(actor,target)=>nextRenderer.engine.pushPreview(actor,target),
       showPushPreview:preview=>nextRenderer.showPushPreview(preview),
@@ -365,7 +370,7 @@ async function createRenderer() {
       showDestination:tile=>nextRenderer.showDestination(tile),
       beforeTick:callback => { nextRenderer.beforeTick = callback; },
     },(id) => selectHero(id));
-    playerControls.selectActor(rememberedHero);
+    playerControls.selectActor(rememberedHero,trainingMode&&rememberedHero!=='knight');
     updateHUD();
   } catch (error) {
     nextRenderer.destroy();
@@ -754,14 +759,14 @@ $('#ability-config').onclick = () => showAbilityModal();
 $('#party-config').onclick = () => showAbilityModal();
 $('#party').onclick = (event) => {
   const card = (event.target as Element).closest<HTMLElement>('[data-hero-id]');
-  if (card?.dataset.heroId) selectHero(card.dataset.heroId);
+  if (card?.dataset.heroId) playerControls?.selectActor(card.dataset.heroId);
 };
 $('#party').onkeydown = (event) => {
   if (event.key !== 'Enter' && event.key !== ' ') return;
   const card = (event.target as Element).closest<HTMLElement>('[data-hero-id]');
   if (!card?.dataset.heroId) return;
   event.preventDefault();
-  selectHero(card.dataset.heroId);
+  playerControls?.selectActor(card.dataset.heroId);
 };
 $('#action-bar').onclick = (event) => {
   if(!equipmentRoot.hidden) return;

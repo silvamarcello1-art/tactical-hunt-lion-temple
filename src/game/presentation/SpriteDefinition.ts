@@ -32,6 +32,7 @@ export const spriteAction = (state:VisualAnimationState):SpriteAction => {
 
 /** Compatibility mapping; domain IDs and baseline event names do not change. */
 export function spriteId(entity:EntitySnapshot):string {
+  if(entity.trainingVocation)return entity.trainingVocation;
   if (['knight','druid','sorcerer'].includes(entity.role)) return entity.role;
   if (entity.role === 'boss') return 'hollow-regent';
   if(entity.archetype==='protector')return 'bronze-bastion';

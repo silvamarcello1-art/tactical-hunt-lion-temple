@@ -1,5 +1,10 @@
 # Pipeline — atualização MVP 2B.1 (05/10/2026)
 
+2B.4: trainingVocation mapeia bots hostis aos atlas próprios existentes, sem
+mudar role/ownership/footprint. TacticalIcons.ts contém SVG originais de runas
+e utilidades; retratos usam esses mesmos PNGs. assets_rtc recebida foi inspecionada
+e continha zero arquivos; nenhum recurso desse pacote entrou no runtime.
+
 ## Pixel heroes 2B.3 (19/10)
 
 SpriteLibrary aplica pixelDefinition apenas a Knight/Druid/Sorcerer: atlas PNG

@@ -1,4 +1,4 @@
-// Real-clock smoke of the new kit; usable on local preview and the public Pages URL.
+// Historical 2B.3 stationary fixture. For current production 3v3 use qa-training-team.mjs.
 import {chromium,expect} from '@playwright/test';
 import {mkdir} from 'node:fs/promises';
 import {resolve} from 'node:path';

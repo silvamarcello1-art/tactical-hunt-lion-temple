@@ -1,4 +1,4 @@
-// Isolated, real-clock browser smoke for local builds and the Pages base path.
+// Historical 2B.2 single-sparring fixture. For current production 3v3 use qa-training-team.mjs.
 import {chromium,expect} from '@playwright/test';
 import {mkdir} from 'node:fs/promises';
 import {resolve} from 'node:path';

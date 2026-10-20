@@ -1,5 +1,14 @@
 # Controle do jogador — contrato vigente (05/10/2026)
 
+## Contrato 2B.4 — 19/10 (substitui seleção independente abaixo)
+
+Na aplicação, clique no card ou no herói assume Manual nele e devolve os demais
+ao Auto pelo domínio. O selecionado pode mudar para Assistido ou Auto; não há
+mais companheiros estacionados em Manual/Assistido. Configuração é síncrona e
+validada no domínio, inclusive em pausa; ataques/movimentos só na decisão lógica. Ordens antigas
+não retomam controle após a troca. Regra e fixtures: TRAINING_2B4.md.
+Teclas 1–9 e Numpad mantidas; runas ficam junto das magias no dock inferior.
+
 ## Treino 2B.3 — 19/10 (prevalece sobre kit 2B.2)
 
 Empurrão: segurar botão ESQUERDO, arrastar criatura e soltar num vizinho livre.

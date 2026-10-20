@@ -16,7 +16,8 @@ test('mouse destinations, chord consumption, HUD ownership and native menu bound
     const p=await tilePoint(page,8,4);await page.mouse.click(p.x,p.y);
     await expect(controls).toHaveAttribute('data-last-intent','move-to');
     const count=await controls.getAttribute('data-command-count');
-    await page.locator('#card-knight').click();expect(await controls.getAttribute('data-command-count')).toBe(count);
+    await page.locator('#card-knight').click();expect(Number(await controls.getAttribute('data-command-count'))).toBe(Number(count)+1);
+    await expect(controls).toHaveAttribute('data-last-intent','control');
     const q=await tilePoint(page,12,5);await page.mouse.move(q.x,q.y);
     await page.mouse.down({button:'right'});await page.mouse.down({button:'left'});await page.mouse.up({button:'left'});await page.mouse.up({button:'right'});
     await expect(controls).toHaveAttribute('data-last-intent','look');

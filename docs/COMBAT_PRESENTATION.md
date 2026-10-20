@@ -1,5 +1,11 @@
 # Apresentação vigente — MVP 2B.1 (05/10/2026)
 
+2B.4: piso claro original no treino, grade amarela inteiramente autoritativa,
+arena larga configurada por sessão e canvas responsivo com escala uniforme.
+Sem margens amarelas inacessíveis: eventual letterbox é pedra neutra. Bottom
+dock reúne slots reais 1–9; descrição lateral removida. Bots usam atlas próprios
+de vocação, nomes hostis e mana/HP, sem virar heróis player-owned. Ver TRAINING_2B4.
+
 Incremento 2B.3: atlas pixel próprio 80×80 dos três heróis, baseline74 e corpo
 idle ~60 px, sem zoom ou mudança do tile32. HP/mana/nomes ancorados acima da
 cabeça. Mira de chão destaca tile válido/inválido, sem ampliar áreas lógicas.

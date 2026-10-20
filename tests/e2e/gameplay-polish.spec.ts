@@ -1,6 +1,8 @@
 import {test,expect,type Page} from '@playwright/test';
 import {installControlledClock,pauseIdleClock} from './controlled-clock';
+import {isolatedCombatFixture} from './isolated-combat-fixture';
 async function boot(page:Page) {
+  await isolatedCombatFixture(page);
   await installControlledClock(page);
   await page.addInitScript(()=>{(window as any).polishEvents=[];(window as any).polishKeys=[];window.addEventListener('hunt-event',e=>(window as any).polishEvents.push((e as CustomEvent).detail));for(const type of ['keydown','keyup'])window.addEventListener(type,e=>{const k=e as KeyboardEvent;(window as any).polishKeys.push({type,code:k.code,key:k.key,location:k.location,numLock:k.getModifierState('NumLock')});});});
   await page.goto('/');await expect(page.locator('html')).toHaveAttribute('data-session-state','idle');await pauseIdleClock(page);

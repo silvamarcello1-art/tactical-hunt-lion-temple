@@ -8,6 +8,7 @@ export interface PlayerControlPort {
   readonly time:number;
   readonly running:boolean;
   readonly training?:boolean;
+  readonly singleHeroControl?:boolean;
   readonly entities:readonly Readonly<EntitySnapshot & {alive:boolean}>[];
   readonly results:readonly CommandResult[];
   controlOf(actorId:string):ControlOwnership;

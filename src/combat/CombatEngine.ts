@@ -7,7 +7,7 @@ import { TemporaryTerrain } from './TemporaryTerrain';
 import {RuneSystem} from './RuneSystem';
 import {runeDefinitions,TRAINING_SD,type RuneId} from '../data/runes';
 import {PushSystem,TRAINING_PUSH,type PendingPush} from './PushSystem';
-import {trainingFloors} from '../data/training';
+import {trainingFloors,trainingTeamFloors,weakestTrainingTarget} from '../data/training';
 import {abilityCatalog} from '../data/trainingSpells';
 import {manaBuffer} from './ManaBuffer';
 import { PROGRESSION, type PartyProgress, type Vocation } from '../data/progression';
@@ -132,7 +132,7 @@ export class CombatEngine {
   get runeConditionCount(){return this.runes?.conditionCount??0;}
   runeStatus(actorId:string,runeId:RuneId,at=this.elapsed){
     const charges=this.runeCharges.get(`${actorId}:${runeId}`)??runeDefinitions[runeId].charges;
-    const actor=this.party.find(h=>h.id===actorId);
+    const actor=[...this.party,...this.enemies].find(h=>h.id===actorId);
     const remaining=Math.max(0,(actor?.groupCooldowns[runeDefinitions[runeId].group]??0)-at,(actor?.cooldowns['rune-item']??0)-at);
     const reason=!this.trainingMode?'training-only':this.disposed||this.finished?'session-ended':!actor?'not-started':!actor.alive?'actor-dead':charges<=0?'no-charges':remaining>0?'cooldown':'ok';
     return {ready:reason==='ok',reason,remaining,charges};
@@ -219,7 +219,22 @@ export class CombatEngine {
   get metrics() { return clone(this.gridMetrics); }
   get controlResults() { return clone(this.commandResults); }
   get entities() { return clone([...this.party, ...this.enemies]); }
+  get arenaView(){
+    const extended=this.trainingMode&&this.options.trainingTeam;
+    return {width:this.gridMap.width*32,height:this.gridMap.height*32,x:extended?-16:0,y:extended?-16:0,columns:this.gridMap.width,rows:this.gridMap.height};
+  }
   controlOf(actorId:string):ControlOwnership { return { ...(this.ownership.get(actorId) ?? {mode:'AI'}) }; }
+
+  private applyControl(actorId:string,mode:ControlOwnership['mode'],ownerId:string) {
+    this.selectedController=actorId;
+    const reset=(id:string,next:ControlOwnership['mode'])=>{
+      this.ownership.set(id,{mode:next,...(next==='AI'?{}:{ownerId})});
+      this.orders.delete(id);this.destinations.delete(id);
+      const hero=this.party.find(h=>h.id===id);if(hero)hero.targetId=undefined;
+    };
+    if(this.options.singleHeroControl)for(const hero of heroes)if(hero.id!==actorId&&this.controlOf(hero.id).mode!=='AI')reset(hero.id,'AI');
+    reset(actorId,mode);
+  }
 
   submit(command:PlayerCommand):CommandResult {
     const reject = (reason:string) => ({commandId:command.commandId,accepted:false,reason});
@@ -236,6 +251,12 @@ export class CombatEngine {
       for (let index=this.commands.length-1;index>=0;index--) {
         if (this.commands[index].actorId===command.actorId && ['move-to','move'].includes(this.commands[index].intent.type)) this.commands.splice(index,1);
       }
+    }
+    // Ownership/configuration is synchronous domain state. It does not execute
+    // movement, casts or AI; those still wait for the next logical decision.
+    if(this.options.singleHeroControl&&command.intent.type==='control') {
+      this.applyControl(command.actorId,command.intent.mode,command.ownerId);
+      return {commandId:command.commandId,accepted:true,reason:'ok'};
     }
     this.commands.push(clone(command));
     return {commandId:command.commandId,accepted:true,reason:'queued'};
@@ -292,12 +313,9 @@ export class CombatEngine {
     for (const command of pending) {
       const actor = party.find(hero => hero.id === command.actorId);
       let reason = 'actor-dead';
-      if (actor?.alive) {
+      if (actor && (actor.alive||command.intent.type==='control')) {
         if (command.intent.type === 'control') {
-          this.ownership.set(actor.id, {mode:command.intent.mode, ownerId:command.intent.mode === 'AI' ? undefined : command.ownerId});
-          this.orders.delete(actor.id);
-          this.destinations.delete(actor.id);
-          actor.targetId=undefined;
+          this.applyControl(actor.id,command.intent.mode,command.ownerId);
           reason = 'ok';
         } else if(command.intent.type==='assistance') {
           this.assistance.set(actor.id,{autoAttack:command.intent.autoAttack,autoSpells:command.intent.autoSpells});reason='ok';
@@ -329,6 +347,7 @@ export class CombatEngine {
   }
 
   private resolvePlayerIntent(actor:SimEntity, intent:PlayerIntent, party:SimEntity[], enemies:SimEntity[], floor:number):string {
+    if(this.options.singleHeroControl&&!actor.trainingVocation&&actor.id!==this.selectedController&&intent.type!=='look')return 'not-selected';
     if(intent.type==='rune'){
       if(this.acted.has(actor.id))return 'action-pending';
       const status=this.runeStatus(actor.id,intent.runeId,this.now);
@@ -440,7 +459,8 @@ export class CombatEngine {
   }
 
   private basicAttack(actor:SimEntity, target:SimEntity, floor:number, ai = false) {
-    const ranged = actor.role !== 'knight';
+    const vocation=actor.trainingVocation??actor.role;
+    const ranged = vocation !== 'knight';
     if (!actor.alive || !target.alive || this.distance(actor,target) > (ranged ? 7 : 1) ||
       (this.basicReady.get(actor.id) ?? 0) > this.now ||
       (!ai && !this.lineOfSight.hasLineOfSight(this.tileOf(actor),this.tileOf(target),{ignoreEntityIds:[actor.id,target.id]}))) return false;
@@ -448,7 +468,7 @@ export class CombatEngine {
     this.emit('basic_attack',floor,actor.id,target.id);
     if (ranged) this.queueProjectile(actor,target,floor,{
       castId:'cast-' + (++this.castSequence),attackId:actor.role + '-basic',damage:actor.attack * .55,
-      element:actor.role === 'druid' ? 'ice' : 'energy',collisionPolicy:'walls',lineOfSightPolicy:'required',impactPolicy:'follow-target',
+      element:vocation === 'druid' ? 'ice' : 'energy',collisionPolicy:'walls',lineOfSightPolicy:'required',impactPolicy:'follow-target',
     });
     else this.applyDamage(actor,target,actor.attack * .82,floor);
     return true;
@@ -459,11 +479,12 @@ export class CombatEngine {
     this.cast(druid,heal,floor,wounded.id,[cloneGridPosition(this.tileOf(wounded))],facing);
     const amount = Math.min(wounded.maxHp - wounded.hp, Math.round((170 + (druid.magicPower ?? druid.attack) * heal.power)*(1+passiveAmount('druid',this.progress?.[druid.id]?.level??1,'healing'))));
     wounded.hp += amount;
-    this.healing += amount;
+    if(!druid.trainingVocation)this.healing += amount;
     this.emit('heal',floor,druid.id,wounded.id,{amount,element:'healing'});
     for (const enemy of enemies) enemy.threat[druid.id] = (enemy.threat[druid.id] ?? 0) + amount * .02;
   }
   private now = 0;
+  private selectedController='knight';
   private sequence = 0;
   private damage: Record<string, number> = {
     knight: 0,
@@ -515,11 +536,18 @@ export class CombatEngine {
     equipmentRewards=false,
     private polishedRules=false,
     readonly trainingMode=false,
+    private readonly options:{singleHeroControl?:boolean;trainingTeam?:boolean;trainingColumns?:number}={},
   ) {
     this.sessionId = sessionId ?? `hunt-${seed}`;
+    this.options={...options};
+    if(trainingMode&&options.trainingTeam){
+      const columns=Number.isFinite(options.trainingColumns)?Math.max(30,Math.min(52,Math.round(options.trainingColumns!))):36;
+      this.gridMap=new GridMap(columns,18,undefined,[...HUNT_LAYOUT_CONFIG.blockedTiles]);
+      this.resetGridContext();
+    }
     this.loadout=clone(loadout);
     this.runes=new RuneSystem(this.gridMap,this.occupancy);
-    if(trainingMode)for(const hero of heroes)this.ownership.set(hero.id,{mode:'MANUAL',ownerId:'local-player'});
+    if(trainingMode)for(const hero of heroes)this.ownership.set(hero.id,{mode:!options.singleHeroControl||hero.id==='knight'?'MANUAL':'AI',...(!options.singleHeroControl||hero.id==='knight'?{ownerId:'local-player'}:{})});
     if(equipmentRewards&&!trainingMode) this.equipmentDrops=new EquipmentDrops(seed ^ 0x7e91,this.sessionId);
     if (progression&&!trainingMode) this.progress=Object.fromEntries(heroes.map(hero=>[hero.id,progressFromTotal(progression[hero.id]?.totalXp??0)]));
   }
@@ -611,7 +639,7 @@ export class CombatEngine {
 
   private canCast(entity: SimEntity, ability: AbilityDefinition) {
     return (
-      this.enabled(ability.id) &&
+      (entity.trainingVocation||this.enabled(ability.id)) &&
       entity.mana >= ability.manaCost &&
       (entity.cooldowns[ability.id] ?? 0) <= this.now &&
       (entity.groupCooldowns[ability.group] ?? 0) <= this.now &&
@@ -1019,7 +1047,7 @@ export class CombatEngine {
       this.emit('critical', floor, source.id, target.id, { amount, castId });
     }
     const oldHp=target.hp;
-    const buffer=this.trainingMode&&['druid','sorcerer'].includes(target.role)?manaBuffer(target.hp,target.mana,target.maxMana,amount,this.now,target.cooldowns['mana-buffer']??0):undefined;
+    const buffer=this.trainingMode&&['druid','sorcerer'].includes(target.trainingVocation??target.role)?manaBuffer(target.hp,target.mana,target.maxMana,amount,this.now,target.cooldowns['mana-buffer']??0):undefined;
     target.hp = buffer?.hp??Math.max(0, target.hp - amount);
     this.emit('damage', floor, source.id, target.id, { amount, element, castId,...(buffer?.activated?{healthDamage:oldHp-target.hp}:{}) });
     if(buffer?.activated){target.mana=buffer.mana;target.cooldowns['mana-buffer']=buffer.surchargeUntil;this.emit('mana_buffer',floor,target.id,target.id,{mana:target.mana,amount:buffer.manaSpent,entity:clone(target),sessionId:this.sessionId});}
@@ -1163,6 +1191,12 @@ export class CombatEngine {
         (enemy.forcedTargetUntil ?? 0) > this.now,
     );
     if (forced) return forced;
+    if(enemy.trainingVocation) {
+      enemy.forcedTargetUntil=undefined;
+      const target=weakestTrainingTarget(enemy,party);
+      if(target)this.setTarget(enemy,target,floor,'lowest-hp');
+      return target;
+    }
     const reason =
       enemy.forcedTargetUntil && enemy.forcedTargetUntil <= this.now
         ? 'forced_expired'
@@ -1900,6 +1934,39 @@ export class CombatEngine {
     }
   }
 
+  /** Training opponents share cast/area/projectile/rune/movement validation. */
+  private trainingBotAction(bot:SimEntity, allies:SimEntity[], opponents:SimEntity[], floor:number) {
+    const target=this.monsterTarget(bot,opponents.filter(h=>h.alive),floor);
+    if(!target||this.movement.pendingEntries().some(m=>m.entityId===bot.id))return;
+    const spells=this.abilityDefinitions.filter(a=>a.vocation===bot.trainingVocation);
+    const heal=spells.find(a=>a.group==='healing');
+    const wounded=allies.filter(a=>a.alive&&a.id!==bot.id&&a.hp/a.maxHp<.6).sort((a,b)=>a.hp/a.maxHp-b.hp/b.maxHp)[0];
+    if(heal&&wounded&&this.canCast(bot,heal)&&this.distance(bot,wounded)<=heal.rangeTiles&&this.lineOfSight.hasLineOfSight(this.tileOf(bot),this.tileOf(wounded),{ignoreEntityIds:[bot.id,wounded.id]})) {
+      this.healFriend(bot,wounded,heal,floor,opponents);return;
+    }
+    // Bounded cadence; actual item/group cooldown and charges still gate each use.
+    if(this.now>=3000&&(bot.cooldowns['bot-rune-decision']??0)<=this.now) {
+      bot.cooldowns['bot-rune-decision']=this.now+4000;
+      const underfoot=this.runes!.tiles.some(r=>r.runeId==='fire_field'&&gridKey(r.tile)===gridKey(this.tileOf(bot)));
+      const runeId: RuneId=underfoot?'destroy_field':bot.trainingVocation==='druid'?'fire_field':'sudden_death';
+      const tile=underfoot?this.tileOf(bot):this.tileOf(target);
+      if(this.resolvePlayerIntent(bot,{type:'rune',runeId,tile},allies,opponents,floor)==='ok')return;
+    }
+    const action=spells.filter(a=>a.group==='attack'&&this.canCast(bot,a)).map(ability=>({ability,targeting:this.abilityTargets(bot,target,ability,opponents),score:0}))
+      .filter(a=>a.targeting.targets.length>=a.ability.hardMinTargets).sort((a,b)=>b.targeting.targets.length-a.targeting.targets.length||a.ability.manaCost-b.ability.manaCost)[0];
+    if(action){this.performOffensiveAction(bot,action,floor);return;}
+    if(this.basicAttack(bot,target,floor))return;
+    const range=bot.trainingVocation==='knight'?1:3,origin=this.tileOf(bot),destination=this.tileOf(target);
+    if(this.distance(bot,target)>range){this.move(bot,destination,floor,false,range,true);return;}
+    if(!this.lineOfSight.hasLineOfSight(origin,destination,{ignoreEntityIds:[bot.id,target.id]})) {
+      const tile=findReachableFiringTile({entityId:bot.id,origin,map:this.gridMap,occupancy:this.occupancy,
+        reachableTiles:this.movement.reachableTiles(bot.id,origin,this.now),
+        isCandidateAllowed:p=>!this.movement.isDestinationCoolingDown(bot.id,p,this.now),
+        isValidFiringTile:p=>gridDistance(p,destination)<=range&&this.lineOfSight.hasLineOfSight(p,destination,{ignoreEntityIds:[bot.id,target.id]})});
+      if(tile)this.move(bot,tile,floor,true,0,true,'bot-firing-position');
+    }
+  }
+
   private monsterActions(
     enemies: SimEntity[],
     party: SimEntity[],
@@ -1910,6 +1977,7 @@ export class CombatEngine {
     const aliveParty = party.filter((hero) => hero.alive);
     for (const enemy of enemies.filter((entity) => entity.alive)) {
       if (!aliveParty.length) break;
+      if(enemy.trainingVocation){this.trainingBotAction(enemy,enemies,party,floor);continue;}
       const target = this.monsterTarget(enemy, aliveParty, floor);
       if (!target) continue;
       const boss=enemy.role==='boss';
@@ -2175,7 +2243,7 @@ export class CombatEngine {
   private *simulate():Generator<number,HuntResult,void> {
     const party = heroes.map((hero) => this.entity(hero));
     this.party = party;
-    const encounterFloors=this.trainingMode?trainingFloors:this.polishedRules?polishedFloors:floors;
+    const encounterFloors=this.trainingMode?this.options.trainingTeam?trainingTeamFloors:trainingFloors:this.polishedRules?polishedFloors:floors;
     for (let floorIndex = 0; floorIndex < encounterFloors.length; floorIndex++) {
       this.resetGridContext();
       const floor = floorIndex + 1;

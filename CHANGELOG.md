@@ -1,3 +1,12 @@
+## 2026-10-19 — treino 2B.4 (São Paulo)
+
+- Hotbar unificada 1–9 no rodapé, sem descrição lateral; arena clara mais larga,
+  todo piso amarelo caminhável salvo obstáculos/runas reais.
+- Seleção controla apenas esse herói; companheiros Auto. Três bots de vocação
+  atacam por menor HP, perseguem e usam magia/cura/runas no motor existente.
+- Ícones/retratos próprios. Pacote assets_rtc vazio, nenhuma sprite Tibia integrada.
+- Contratos/limites em TRAINING_2B4; gates/SHA em SESSION_CHECKPOINT.
+
 ## 2026-10-19 — treino 2B.3
 
 - Fechamento em20/10UTC: runtimebbd0fac publicado no Pages, CI push/PR e deploy

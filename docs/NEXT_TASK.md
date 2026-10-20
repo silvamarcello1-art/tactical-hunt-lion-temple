@@ -1,4 +1,22 @@
-# Próxima tarefa — após entrega pública 2B.3 — 20/10/2026 UTC
+# Próxima tarefa — concluir incremento 2B.4 — 19/10/2026 (São Paulo)
+
+Não iniciar outra funcionalidade. Implementados dock unificado, seleção exclusiva,
+arena clara inteiramente acessível e três bots. Contratos em TRAINING_2B4.md.
+Entrada70ea598 limpa/local=origin, branch feature/gameplay-first-mvp2a.
+Base antes das edições: typecheck/251unit/build PASS. TrainingTeam6unit PASS.
+Gates finais em SESSION_CHECKPOINT; público anterior bbd0fac não é a nova revisão.
+
+1. Fechar E2E de produção 3×3/bordas e regressões com fixtures estacionários
+   explícitos; não enfraquecer assertions/timeout. Testes de fixture não substituem
+   seleção exclusiva/bots reais. Rodar typecheck, unit, build, Edge1worker/diff.
+2. Validar compilado/publicação Pages no SHA correto, três treinos/hunt até boss,
+   saves/cleanup/console. Depois checkpoint/commit/push normal; nunca merge/Sites.
+3. assets_rtc recebida está vazia (zero arquivos); pedir pacote real antes de
+   integrar imagens. Não fingir sprites Tibia/passivas/Wheel completos.
+4. Após fechamento: coletar playtest/balanceamento humano. Manter2C→2D→2E→2F,
+   sem rede/PvP online incidental. Helper individual continua pausado.
+
+## Histórico — após entrega pública 2B.3 — 20/10/2026 UTC
 
 Follow-up do usuário: botão esquerdo segurado → soltar em tile vizinho livre,
 não distância7. Arraste já funcionava em15cc18b; agora ganha preview dos vizinhos

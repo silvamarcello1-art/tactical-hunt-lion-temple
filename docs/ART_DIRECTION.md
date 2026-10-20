@@ -1,5 +1,11 @@
 # Direção de arte — atualização 2B.1 (05/10/2026)
 
+2B.4: referência clara fornecida pelo usuário orienta piso areia/grade e hotbar,
+sem copiar a captura. TacticalIcons cria quatro runas e duas utilidades originais;
+bots reutilizam os atlas próprios de heróis. assets_rtc indicada em Downloads
+contém zero arquivos (só data/cursors); não houve integração de sprites Tibia.
+Não substituir ícones/passivas por imagens sem correspondência/proveniência.
+
 Incremento 2B.3 (19/10): três heróis agora usam pixel art original gerada no modo
 builtin, atlases RGBA 4×4, maiores e com pés registrados, sem zoom. Arte raw fora
 do bundle, PNGs finais versionados. ART_PROMPTS.md registra prompts/importação;

@@ -32,11 +32,11 @@ export class PlayerControls {
   assumeManual() {
     if (this.mode==='MANUAL') return;
     this.mode='MANUAL';this.modeSelect.value=this.mode;
-    this.send({type:'control',mode:'MANUAL'});this.sync();
+    this.send({type:'control',mode:'MANUAL'});this.onSelect(this.actorId);this.sync();
   }
   returnAuto() {
     this.clear();this.mode='AI';this.modeSelect.value='AI';
-    this.send({type:'control',mode:'AI'});this.sync();
+    this.send({type:'control',mode:'AI'});this.onSelect(this.actorId);this.sync();
   }
   private actorId = 'knight';
   private mode:ControlMode = 'AI';
@@ -57,6 +57,7 @@ export class PlayerControls {
     const listen = (target:EventTarget, name:string, callback:EventListener, capture = false) =>
       target.addEventListener(name,callback,{signal,capture});
     this.actorSelect.value = this.actorId;
+    this.mode=this.port.controlOf(this.actorId).mode;
     this.modeSelect.value = this.mode;
     for(const id of ['knight','druid','sorcerer']) {
       const o=this.assistanceStore.get(id);const sequence=++this.sequence;
@@ -76,6 +77,7 @@ export class PlayerControls {
       this.clear();
       this.mode = this.modeSelect.value as ControlMode;
       this.send({type:'control',mode:this.mode});
+      this.onSelect(this.actorId);
       this.sync();
       this.modeSelect.blur();
       this.focusGame();
@@ -232,12 +234,15 @@ export class PlayerControls {
     this.held.clear();this.pendingStep=undefined;this.interaction.armRune(runeId);
     this.status.textContent=`${runeDefinitions[runeId].name}: ${runeDefinitions[runeId].target==='enemy'?'clique no inimigo':'clique no tile'} (até ${runeDefinitions[runeId].range} tiles). ESC cancela.`;this.sync();this.focusGame();
   }
-  selectActor(actorId:string) {
+  selectActor(actorId:string, takeControl=true) {
     if (!heroes.some(hero => hero.id === actorId)) return;
     this.clear();
     this.actorId = actorId;
     this.actorSelect.value = actorId;
     this.mode = this.port.controlOf(actorId).mode;
+    if(this.port.singleHeroControl&&takeControl) {
+      this.mode='MANUAL';this.send({type:'control',mode:this.mode});
+    }
     this.modeSelect.value = this.mode;
     this.onSelect(actorId);
     this.sync();
@@ -291,6 +296,7 @@ export class PlayerControls {
     return this.target?.kind === 'entity' ? `Alvo: ${this.target.entityId}` : this.target?.kind === 'tile' ? `Tile ${this.target.tile.x}, ${this.target.tile.y}` : 'Selecione um alvo.';
   }
   private reasonLabel(reason:string) {
+    if(reason==='not-selected')return 'Este herói voltou ao Auto; selecione-o para dar ordens.';
     const tactical:Record<string,string>={'no-field':'Nenhum campo removível neste tile. Magic Wall não é removível.','not-pushable':'Esta criatura não pode ser empurrada.','self-push':'Use movimento para deslocar seu próprio herói.','push-cooldown':'Aguarde a recarga do empurrão.','push-pending':'Já existe um empurrão pendente.','target-moved':'O alvo se moveu; empurrão cancelado.'};if(tactical[reason])return tactical[reason];
     const labels:Record<string,string> = {'training-only':'Runas disponíveis no treino local.','no-charges':'Sem cargas neste kit de treino.','ownership':'Assuma o controle Manual deste personagem.', 'session-ended':'A hunt terminou.', 'actor-dead':'Personagem derrotado.', 'invalid-target':'Alvo inválido.', 'out-of-range':'Alvo fora do alcance.', 'blocked':'Destino bloqueado por parede, criatura ou reserva.', 'invalid-destination':'Destino fora da arena.', 'ability-unavailable':'Habilidade indisponível: mana, cooldown ou configuração.', 'unsupported-interaction':'Esta interação ainda não está disponível.', 'action-pending':'Aguarde o próximo passo.'};
     return abilityReasons[reason] ?? labels[reason] ?? 'Comando indisponível.';

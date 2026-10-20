@@ -1,5 +1,6 @@
 import {test,expect,type Page} from '@playwright/test';
 import {installControlledClock,pauseIdleClock} from './controlled-clock';
+import {isolatedCombatFixture} from './isolated-combat-fixture';
 async function pos(page:Page,id='knight'){
   const entry=(await page.locator('#game').getAttribute('data-logical-positions'))!.split(',').find(s=>s.startsWith(id+':'))!.split(':');
   return {x:Number(entry[1]),y:Number(entry[2])};
@@ -13,6 +14,7 @@ async function point(page:Page,p:{x:number;y:number}){
   return {x:b.x+(b.width-960*s)/2+p.x*32*s,y:b.y+(b.height-576*s)/2+p.y*32*s};
 }
 async function boot(page:Page){
+  await isolatedCombatFixture(page);
   const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});
   await installControlledClock(page);await page.addInitScript(()=>{(window as any).runeEvents=[];window.addEventListener('hunt-event',e=>(window as any).runeEvents.push((e as CustomEvent).detail));});
   await page.goto('/?training=1');await expect(page.locator('html')).toHaveAttribute('data-session-state','idle');await pauseIdleClock(page);

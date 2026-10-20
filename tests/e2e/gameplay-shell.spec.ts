@@ -41,7 +41,9 @@ test('compact slots follow selected hero; WASD and hotkeys submit real commands'
   await expect(page.locator('#action-bar [data-hero="knight"]')).toHaveCount(3);
   await page.locator('#card-sorcerer').click();
   await expect(page.locator('#action-bar [data-hero="sorcerer"]')).toHaveCount(3);
-  await expect(page.locator('#player-controls')).toHaveAttribute('data-control-mode','AI');
+  await expect(page.locator('#player-controls')).toHaveAttribute('data-control-mode','MANUAL');
+  await page.clock.runFor(250);
+  await expect(page.locator('#card-druid')).toHaveAttribute('data-control-mode','AI');
   expect(await page.locator('#player-attack,#player-follow,#player-stop').count()).toBe(0);
   await expect(page.locator('#game')).toHaveAttribute('data-max-visual-sync-error','0');
   expect(errors).toEqual([]);

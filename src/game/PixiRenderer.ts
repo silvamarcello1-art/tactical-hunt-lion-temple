@@ -11,6 +11,7 @@ import {
   Graphics,
   Rectangle,
   Sprite,
+  TilingSprite,
   Text,
   TextStyle,
   Texture,
@@ -61,6 +62,7 @@ type Unit = {
   maxMana: number;
   currentMana: number;
   hero: boolean;
+  alwaysShowName:boolean;
   definition: SpriteDefinition;
   animationStartedAt: number;
   animationKey: string;
@@ -87,6 +89,10 @@ export class PixiRenderer {
   get result():HuntResult { return this.engine.result; }
   beforeTick?:(time:number) => void;
   readonly units = new Map<string, Unit>();
+  private readonly world=new Container();
+  private scenery?:TilingSprite;
+  private trainingGround?:Texture;
+  private viewportObserver?:ResizeObserver;
   private rubble=new Map<string,Graphics>();
   private runeVisuals=new Map<string,{graphic:Graphics;startedAt:number;runeId:string}>();
   /** Picking uses rendered footpoints; commands still validate only logical tiles. */
@@ -101,10 +107,10 @@ export class PixiRenderer {
   }
   canvasPoint(clientX:number,clientY:number) {
     const b=this.app.canvas.getBoundingClientRect();
-    const scale=Math.min(b.width/RENDER_CONFIG.arena.width,b.height/RENDER_CONFIG.arena.height);
-    const x=(clientX-b.left-(b.width-RENDER_CONFIG.arena.width*scale)/2)/scale;
-    const y=(clientY-b.top-(b.height-RENDER_CONFIG.arena.height*scale)/2)/scale;
-    return x>=0&&y>=0&&x<RENDER_CONFIG.arena.width&&y<RENDER_CONFIG.arena.height?{x,y}:undefined;
+    const view=this.engine.arenaView,scale=Math.min(b.width/view.width,b.height/view.height);
+    const x=(clientX-b.left-(b.width-view.width*scale)/2)/scale+view.x;
+    const y=(clientY-b.top-(b.height-view.height*scale)/2)/scale+view.y;
+    return x>=view.x&&y>=view.y&&x<view.x+view.width&&y<view.y+view.height?{x,y}:undefined;
   }
   showDestination(tile:GridPoint) {
     const marker=new Graphics().ellipse(tile.x*32,tile.y*32,8,4).stroke({color:0xbacfaf,width:1,alpha:.7});
@@ -278,7 +284,7 @@ export class PixiRenderer {
     this.entityLayer.sortableChildren = true;
     this.unitUiLayer.sortableChildren = true;
     this.overlayLayer.sortableChildren = true;
-    this.app.stage.addChild(
+    this.world.addChild(
       this.terrainLayer,
       this.telegraphLayer,
       this.shadowLayer,
@@ -288,6 +294,13 @@ export class PixiRenderer {
       this.unitUiLayer,
       this.overlayLayer,
     );
+    this.world.sortableChildren=true;
+    this.scenery=new TilingSprite({texture:this.tileTextures.get('floorStone')!,width:1,height:1});
+    this.scenery.tint=0x878d83;
+    this.app.stage.addChild(this.scenery,this.world);
+    this.viewportObserver=new ResizeObserver(()=>this.resizeViewport());
+    this.viewportObserver.observe(parent);
+    this.resizeViewport();
     this.drawArena();
     this.targetRing.visible = false;
     this.shadowLayer.addChild(this.targetRing);
@@ -299,7 +312,7 @@ export class PixiRenderer {
         this.debugSyncLayer,
       );
     }
-    this.floorText = this.label(this.engine.trainingMode?'TREINO LOCAL · PARTY × BOT':'PREPARAÇÃO', 13, '#f0d77a');
+    this.floorText = this.label(this.engine.trainingMode?'TREINO LOCAL · 3 × 3':'PREPARAÇÃO', 13, this.engine.trainingMode?'#4b3b1d':'#f0d77a');
     this.floorText.position.set(18, 14);
     this.floorText.zIndex = 60;
     this.overlayLayer.addChild(this.floorText);
@@ -346,6 +359,7 @@ export class PixiRenderer {
   destroy() {
     if (this.destroyed) return;
     this.destroyed = true;
+    this.viewportObserver?.disconnect();
     this.player.dispose();
     this.tweens = [];
     this.units.clear();
@@ -368,6 +382,7 @@ export class PixiRenderer {
     try {
       this.sprites.destroy();
       this.effectSheet.destroy();
+      this.trainingGround?.destroy(true);
       this.app.destroy(true, { children:true });
     } catch {
       // Pixi may not be fully initialized when a restart interrupts asset loading.
@@ -395,6 +410,21 @@ export class PixiRenderer {
     if (this.parent) this.parent.dataset.selectedHero = heroId;
   }
 
+  /** Uniform camera fit; every yellow tile is part of the authoritative arena.
+   * Any resize letterboxing uses neutral stone, never fake playable yellow. */
+  private resizeViewport() {
+    if(!this.parent||this.destroyed)return;
+    const width=Math.max(1,this.parent.clientWidth),height=Math.max(1,this.parent.clientHeight);
+    this.app.renderer.resize(width,height);
+    const view=this.engine.arenaView,scale=Math.min(width/view.width,height/view.height);
+    this.world.scale.set(scale);
+    this.world.position.set((width-view.width*scale)/2-view.x*scale,(height-view.height*scale)/2-view.y*scale);
+    if(this.scenery){this.scenery.width=width;this.scenery.height=height;this.scenery.tileScale.set(scale);this.scenery.tilePosition.copyFrom(this.world.position);}
+    this.parent.dataset.viewportScale=scale.toFixed(4);
+    this.parent.dataset.arenaWidth=String(view.width);this.parent.dataset.arenaHeight=String(view.height);
+    this.parent.dataset.arenaOrigin=`${view.x}:${view.y}`;
+  }
+
   private async loadAssets() {
     await this.sprites.load();
     if(this.destroyed) return;
@@ -410,9 +440,30 @@ export class PixiRenderer {
         this.tileTextures.set(key, await Assets.load<Texture>(assetUrl(source)));
       }),
     );
+    if(this.engine.trainingMode){
+      const tile=new Graphics().rect(0,0,32,32).fill(0xd7c387);
+      tile.moveTo(1,1).lineTo(31,1).moveTo(1,1).lineTo(1,31).stroke({color:0x9b895d,width:1,alpha:.65});
+      for(let i=0;i<9;i++){const x=(i*13+5)%30+1,y=(i*7+3)%30+1;tile.rect(x,y,1+(i%2),1).fill({color:i%2?0xf4e4b1:0x9d8d62,alpha:.28});}
+      this.trainingGround=this.app.renderer.generateTexture({target:tile,frame:new Rectangle(0,0,32,32),resolution:1});tile.destroy();
+    }
+  }
+
+  private drawTrainingArena(){
+    const view=this.engine.arenaView;
+    const floor=new TilingSprite({texture:this.trainingGround!,width:view.width,height:view.height});
+    floor.position.set(view.x,view.y);
+    this.terrainLayer.addChild(floor);
+    const barriers=new Graphics();
+    for(const tile of HUNT_LAYOUT_CONFIG.blockedTiles){
+      const x=tile.x*32,y=tile.y*32;
+      barriers.roundRect(x-14,y-14,28,28,2).fill(0x9b8660).stroke({color:0x62553c,width:2});
+      barriers.moveTo(x-9,y-10).lineTo(x-9,y+10).moveTo(x+9,y-10).lineTo(x+9,y+10).moveTo(x-12,y-8).lineTo(x+12,y-8).stroke({color:0xd4be85,width:2});
+    }
+    this.terrainLayer.addChild(barriers);
   }
 
   private drawArena() {
+    if(this.engine.trainingMode){this.drawTrainingArena();return;}
     const terrain = new Container();
     terrain.zIndex = 0;
     const { walkableBounds,ceremonialPath } = HUNT_LAYOUT_CONFIG;
@@ -800,6 +851,7 @@ export class PixiRenderer {
     ui.zIndex = body.zIndex;
 
     const hero = this.isHero(snapshot);
+    const humanoid=hero||!!snapshot.trainingVocation;
     const boss = snapshot.role === 'boss';
     const definition = this.sprites.definition(spriteId(snapshot));
     const shadow = new Graphics()
@@ -808,23 +860,23 @@ export class PixiRenderer {
     shadow.position.set(position.x, position.y);
     shadow.zIndex = 1;
     this.shadowLayer.addChild(shadow);
-    const hpWidth = hero ? 34 : boss ? 44 : 26;
+    const hpWidth = humanoid ? 34 : boss ? 44 : 26;
     const hpY = definition.effectAnchors.head.y * definition.scale - 10;
-    const manaY = hero ? hpY + 8 : undefined;
+    const manaY = humanoid ? hpY + 8 : undefined;
     const sprite = this.createSprite(snapshot);
-    const name = this.label(snapshot.name, hero || boss ? 10 : 8, '#f4f5e9');
+    const name = this.label(snapshot.name, humanoid || boss ? 10 : 8, snapshot.trainingVocation?'#ffb1a3':'#f4f5e9');
     name.anchor.set(.5);
     name.position.y = hpY - 12;
     const hpBackground = new Graphics()
       .rect(-hpWidth / 2 - 1, hpY - 1, hpWidth + 2, 7)
       .fill(0x080a07);
     const hp = new Graphics();
-    const manaBackground = hero
+    const manaBackground = humanoid
       ? new Graphics()
           .rect(-hpWidth / 2 - 1, manaY! - 1, hpWidth + 2, 6)
           .fill(0x080a07)
       : undefined;
-    const mana = hero ? new Graphics() : undefined;
+    const mana = humanoid ? new Graphics() : undefined;
     const selection = hero
       ? new Graphics()
           .ellipse(0, 0, 17, 6)
@@ -833,7 +885,7 @@ export class PixiRenderer {
     if (selection) selection.visible = snapshot.id === this.selectedHeroId;
     const visual=new Container();
     visual.addChild(sprite);body.addChild(visual);
-    name.visible=hero || boss;
+    name.visible=humanoid || boss;
     ui.addChild(name, hpBackground, hp);
     if (manaBackground && mana) ui.addChild(manaBackground, mana);
     if (selection) body.addChildAt(selection, 0);
@@ -886,6 +938,7 @@ export class PixiRenderer {
       maxMana:snapshot.maxMana,
       currentMana:snapshot.mana,
       hero,
+      alwaysShowName:humanoid||boss,
       definition,
       animationStartedAt:this.presentation.time,
       animationKey:'idle',
@@ -1640,7 +1693,7 @@ export class PixiRenderer {
       const step=Math.sin(p*Math.PI);
       unit.visual.y=-step*1.5;
       unit.visual.rotation=step*(state.facing==='west'?-.025:state.facing==='east'?.025:0);
-      unit.name.visible=unit.hero || unit.spriteKey==='hollow-regent' || id===this.selectedTargetId;
+      unit.name.visible=unit.alwaysShowName || id===this.selectedTargetId;
       const sortKey = visualSortKey(
         { x:state.position.x / TILE_SIZE,y:state.position.y / TILE_SIZE },
         id,
@@ -1728,7 +1781,8 @@ export class PixiRenderer {
     this.parent.dataset.runeConditions=String(this.engine.runeConditionCount);
     this.parent.dataset.pendingPushes=String(this.engine.pendingPushCount);
     for (const [key,value] of Object.entries(this.engine.metrics)) this.parent.dataset[key] = String(value);
-    const bounds = RENDER_CONFIG.arena.cameraBounds;
+    const view=this.engine.arenaView;
+    const bounds={x:view.x,y:view.y,width:view.width,height:view.height};
     const outOfBounds = [...this.units.values()].filter(
       (unit) =>
         unit.body.x < bounds.x ||
@@ -1778,6 +1832,7 @@ export class PixiRenderer {
     this.parent.dataset.unitStates = [...this.units.entries()]
       .map(([id, unit]) => `${id}:${unit.state}`)
       .join(',');
+    this.parent.dataset.visibleUnitNames=[...this.units.entries()].filter(([,u])=>u.name.visible&&u.currentHp>0).map(([id])=>id).join(',');
     this.parent.dataset.visualFacings = [...this.units.entries()]
       .map(([id, unit]) => `${id}:${unit.facing}`)
       .join(',');
