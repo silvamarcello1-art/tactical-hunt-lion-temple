@@ -1,5 +1,13 @@
 # Estado vigente — incremento 2B.4 em validação — 19/10/2026 (São Paulo)
 
+Publicação ainda bloqueada (20/10): runtime1860ba8 tem gates locais verdes e
+PR CI258unit/44E2E/build PASS, mas push CI43/44E2E falhou na matriz de inspeção
+equipment.spec.ts:74/95 com timeout220s/session closed/valor de select vazio.
+Não é a antiga falha da segunda hunt, que foi corrigida. Causa da divergência
+ainda não estabelecida; nenhum timeout/assertion/código foi modificado pelo
+monitor. Deploy SKIPPED, manifest público ainda bbd0fac. Acompanhamento pausado
+aguardando direção. Detalhes/runIDs/continuação em SESSION_CHECKPOINT/NEXT_TASK.
+
 Correção autorizada em20/10: o timeout de equipamento era uma derrota real da
 segunda hunt, não apenas lentidão. Abas do inventário chamavam seleção de herói
 de combate e assumiam Manual no Druid. Agora a inspeção tem estado separado,

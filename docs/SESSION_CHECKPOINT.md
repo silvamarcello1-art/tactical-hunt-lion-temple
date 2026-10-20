@@ -1,5 +1,32 @@
 # Checkpoint — MVP 2B.4 em validação — 19/10/2026 (São Paulo)
 
+## Novo bloqueio de publicação — 20/10, 01:29 (São Paulo)
+
+Runtime1860ba8107efa8b936636ec1f11d651e75e4b4bd, nenhum código alterado no monitor.
+PR39364777345/job118438994590 SUCCESS:258unit23arquivos,44/44E2E(38,2min),
+typecheck/build/build:preview/arte/diff/upload aprovados. Deploy da PR SKIPPED
+por política normal do workflow. Não basta para afirmar publicação.
+
+Push39364771626/job118438976608 FAILURE:258unit PASS;43/44E2E(52,4min).
+Falha diferente da antiga: equipment.spec.ts:74, matriz de inspeção/layout,
+linha95, esperava valor MANUAL em #control-mode e recebeu string vazia;
+log contém Protocol error Runtime.callFunctionOn: Internal server error,
+session closed e timeout total original220000ms. Sem screenshot registrado no
+log dessa falha; trace/context preservados em playwright-failure-diagnostics.
+O cenário antigo de duas hunts/equipar/forjar/reload NÃO é a falha desta rodada.
+Local e PR passaram essa mesma matriz; causa da divergência ainda não comprovada.
+Não afirmar bug de gameplay, falha transitória ou infraestrutura como fato sem
+inspecionar trace. Não aumentar timeout nem mudar assertions/limites/proteções.
+
+Build/build:preview/upload do push SKIPPED; deploy118454584336 SKIPPED. Manifest
+público permanece bbd0fac90bbc5ba27be4c9189f36513e1d59ee93, sem smoke da nova
+versão pública. Gates locais/compilado1860ba8 aprovados continuam válidos, mas
+não substituem o gate do push. Acompanhamento PAUSADO conforme pedido, sem
+rerun/cancelamento/alteração de código automáticos. Próxima decisão: autorizar
+diagnóstico do trace e eventual reexecução integral do job que libera deploy,
+sem alterar código nem enfraquecer os44testes. Se aprovado, conferir ambos os
+runs e SHA do artefato antes de publicar; checkpoint docs-only não é novo runtime.
+
 ## Correção autorizada — 20/10
 
 Runtime corrigido1860ba8107efa8b936636ec1f11d651e75e4b4bd commitado/push normal,

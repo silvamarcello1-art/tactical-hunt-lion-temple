@@ -1,5 +1,20 @@
 # Próxima tarefa — concluir incremento 2B.4 — 19/10/2026 (São Paulo)
 
+## Agora — aguardando direção após divergência de CI
+
+1860ba8:PR39364777345/job118438994590 passou258unit/44E2E(38,2min)/build/diff.
+Push39364771626/job118438976608 falhou43/44E2E(52,4min), embora258unit PASS:
+equipment.spec.ts:74 linha95, controle MANUAL esperado/valor vazio, erro de
+protocolo session closed e timeout original220s. O antigo cenário duas hunts/
+equipar/forjar/reload não voltou a falhar. Inspecionar trace/context do artefato
+playwright-failure-diagnostics antes de afirmar causa; local/PR passaram a matriz.
+Deploy118454584336 SKIPPED; público continua bbd0fac. Monitor PAUSADO por instrução.
+Nenhuma mudança de gameplay/testes/scripts/workflows/proteções foi feita neste
+acompanhamento. Pedir direção para analisar evidências e eventual reexecução do
+job completo, sem elevar limites ou pular testes. Só após verde: manifest1860ba8,
+smokes públicos existentes, screenshot e link final. OTSP/merge/Sites proibidos
+nesta continuação. Histórico de gates/correção abaixo não é aprovação pública.
+
 ## Agora — correção autorizada em validação
 
 ALVO ATUAL:1860ba8107efa8b936636ec1f11d651e75e4b4bd. Push39364771626/
