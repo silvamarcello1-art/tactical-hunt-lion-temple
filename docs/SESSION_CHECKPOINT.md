@@ -1,5 +1,32 @@
 # Checkpoint — MVP 2B.4 em validação — 19/10/2026 (São Paulo)
 
+## BLOQUEIO CONFIRMADO — 20/10, 00:12 (São Paulo)
+
+Código/testes a5e8e5b4ba9f6ae9597128306a149a400bec1877; checkpoint posterior
+somente docs [skip ci]. PR3/run39358581542/job118422167504 terminou FAILURE:
+258/258 unitários(23arquivos) PASS;43/44 E2E PASS(31,2min). Falha exclusiva:
+`tests/e2e/equipment.spec.ts:4`, timeout original CI360000ms, ao aguardar
+`data-session-state=completed` na segunda hunt, linha41/controlled-clock.ts:26,
+depois de equipar/forjar/reload, selecionar Druid no inventário e fechá-lo.
+O trace/screenshot/context foram preservados no artefato playwright-failure-diagnostics
+do run. Ainda NÃO se estabeleceu se a causa é estado/controle ou custo de execução;
+não aumentar timeout, ignorar assertion ou afirmar lentidão como diagnóstico.
+
+O mesmo cenário excedeu180s localmente. Novo layout/bordas/controle exclusivo/bots,
+três vitórias e todas as demais43verificações passaram no CI da PR. Build,
+build:preview e upload foram SKIPPED após a falha; deploy da PR também SKIPPED.
+Run push39358574939/job118422458146 ainda em E2E na última consulta; não cancelar
+nem rerodar automaticamente. Uma aprovação isolada dele não elimina a falha da PR.
+Manifest público permanece bbd0fac90bbc5ba27be4c9189f36513e1d59ee93; sem smoke
+da nova versão pública, pois não há nova publicação validada.
+
+Escopo deste acompanhamento é somente validar/publicar/docs. Não foi alterado
+gameplay/testes/workflow. Acompanhamento pausado para pedir autorização de uma
+correção pontual do bloqueio, seguida de todos os gates originais e smoke público.
+Próximo comando diagnóstico: pnpm exec playwright test tests/e2e/equipment.spec.ts
+--grep "real hunt" --reporter=line --workers=1. Inspecionar estado/modos/ordens na
+segunda hunt e trace; preservar save/inventário/clock e fronteiras do domínio.
+
 ## Acompanhamento vigente — 19/10, 23:39 (São Paulo)
 
 - Código/testes da entrega: a5e8e5b4ba9f6ae9597128306a149a400bec1877.

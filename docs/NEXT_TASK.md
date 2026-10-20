@@ -1,5 +1,22 @@
 # Próxima tarefa — concluir incremento 2B.4 — 19/10/2026 (São Paulo)
 
+## BLOQUEIO — aprovação necessária para corrigir
+
+PR CI39358581542/job118422167504 FAILURE no código/testes a5e8e5b:
+258unit PASS;43/44E2E PASS(31,2min). equipment.spec.ts:4 excedeu360s CI na
+linha41 aguardando fim da segunda hunt, após equipamento/forja/reload e seleção
+de Druid no inventário. Mesma etapa excedeu180s local. Causa ainda não comprovada;
+diagnosticar estado/controle/custo via trace, não elevar limites nem pular teste.
+Build/deploy da PR SKIPPED; push39358574939 ainda em E2E na última consulta.
+Público continua bbd0fac, não a nova arena. Monitor pausado conforme instruções:
+correção de gameplay/teste está fora do acompanhamento autorizado. Pedir direção
+antes de implementar; depois reproduzir isolado, corrigir causa, todos os gates,
+CI/manifest/smokes existentes. Não integrar OTSP junto desta correção.
+
+Diagnóstico recomendado: pnpm exec playwright test tests/e2e/equipment.spec.ts
+--grep "real hunt" --reporter=line --workers=1. Evidências em SESSION_CHECKPOINT
+e artefato playwright-failure-diagnostics do run da PR. Nenhum gate foi enfraquecido.
+
 ## Continuação exata do acompanhamento
 
 Validar o código/testes a5e8e5b4ba9f6ae9597128306a149a400bec1877 (runtime bbb8755).
