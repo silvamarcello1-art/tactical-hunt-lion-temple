@@ -2,6 +2,17 @@
 
 ## Agora — correção autorizada em validação
 
+ALVO ATUAL:1860ba8107efa8b936636ec1f11d651e75e4b4bd. Push39364771626/
+job118438976608;PR39364777345/job118438994590. Local258unit/44E2E/build verdes;
+smokes compilados1860ba8 passaram3treinos (1221eventos bot/economia intacta) e
+hunt real até boss(19kills/4240XP/1489gold/1token),console/lifecycle limpos;
+captura da arena inspecionada. Aguardar esses novos CI e deploy. Não usar runs
+a5e8e5b/bbb8755 nem checkpoint docs-only posterior como SHA do runtime validado.
+Depois version.json exato1860ba8 e qa-training-team/qa-preview públicos, screenshot,
+docs/PR e commit/push docs-only [skip ci], source intacto, limpo/local=origin,
+link pronto ao usuário. Heartbeat retomado; pausar no sucesso ou falha que exija
+ação. Nenhuma nova alteração de gameplay/OTSP/Helper/Sites/merge nesta espera.
+
 Gates locais finalizados PASS:258unit/44E2E(8,7min)/typecheck/build/frozen install/
 arte sem diff/diff-check. Correção pronta para commit/push normal e CI novo.
 Não reutilizar a5e8e5b falho como gate do novo código. Depois manifest e scripts

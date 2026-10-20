@@ -2,6 +2,25 @@
 
 ## Correção autorizada — 20/10
 
+Runtime corrigido1860ba8107efa8b936636ec1f11d651e75e4b4bd commitado/push normal,
+local=origin limpo. NOVOS CI push39364771626/job118438976608 e PR39364777345/
+job118438994590 em execução; checkout/install/health/typecheck PASS, unit em curso
+na última consulta. Não usar runs anteriores como gates deste código. Próximo
+checkpoint é docs-only [skip ci], não outro build.
+
+Build:preview compilado com manifest1860ba8 PASS; smoke real-clock3×3 PASS:
+3vitórias,1221ações/eventos bot,economia igual,console vazio,zero overlap/OOB/
+reserva órfã/projétil/efeito/push/terrain residual. Estado final48displayObjects,
+max129visuais/15efeitos,update avg0,117ms/max1,4ms (amostra, não alegação de FPS).
+Hunt compilada PASS:boss morto,19kills,4240XP,1489gold,1token,52352,5ms lógico,
+console errors/warnings vazios e lifecycle limpo. qa-preview retorna ao Auto
+explicitamente após card Druid;3card modes AI conferidos antes de iniciar.
+Screenshot mvp2b4-compiled-fix-arena.png inspecionado:mapa amarelo real ocupa a
+arena,3bots nomeados,barras/dock1–9 visíveis. Capturas só em test-results,fora do
+bundle. Público ainda não validado; acompanhar CI→deploy→manifest→smokes públicos.
+Heartbeat existente retomado a cada5min com SHA/runs novos, sem gameplay e
+silencioso no estado inalterado. Avisar somente conclusão/falha/ação necessária.
+
 Gates finais locais PASS: frozen install;health;typecheck;258/258unit23arquivos
 (126,10s);build774módulos(9,67s;warning548kB mantido);arte reprodutível sem diff;
 44/44EdgeE2E1worker(8,7min);git diff --check. Cenário principal equipado/forjado
