@@ -1,5 +1,13 @@
 # Roadmap
 
+## Escopo autorizado em20/10/2026
+
+O pedido atual chama MVP2C de Outfit Customization & Addon System. Este slice
+implementa atelier/catálogo/persistência/fallback sem iniciar World/NPC/quests.
+OUTFITS_2C.md distingue infraestrutura funcional e produção artística pendente.
+Adventure descrita na sequência histórica abaixo fica adiada, não implicitamente
+implementada ou renumerada por este incremento. Sem economia/loja/rede nova.
+
 ## Sequência vigente — decisão do usuário em 30/09/2026
 
 | Marco | Escopo |

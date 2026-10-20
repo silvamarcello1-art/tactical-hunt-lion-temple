@@ -1,5 +1,16 @@
 # Arquitetura — atualização MVP 2B.1 (10/10/2026)
 
+## MVP2C cosmético —20/10
+
+AppearanceStore guarda namespace versionado independente de economia. Outfits
+é catálogo data-driven com slots revisados e fallback explícito. OutfitPanel
+inspeciona herói sem selecionar/assumir controle; draft só salva em Aplicar.
+main injeta resolver de sprite ao PixiRenderer; refreshAppearance troca apenas
+textura/âncora/definição no Unit existente,sem engine/relógio/ordens. PlayerControls
+suspende gestos no modal sem apagar alvo. Palette swapping exige máscaras reais;
+nenhuma está pronta nos assets recebidos. Ver OUTFITS_2C.md para
+contratos e pendências de arte,sem recoloração global/facings inventados.
+
 ## Isolamento de inspeção — 20/10
 
 main mantém equipmentHeroId independente de selectedHeroId. EquipmentPanel usa

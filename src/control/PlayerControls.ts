@@ -84,7 +84,7 @@ export class PlayerControls {
     });
     listen(window,'keydown',(raw) => {
       const event = raw as KeyboardEvent;
-      if(document.querySelector('.drawer:not([hidden]),dialog[open]')) {this.clear();return;}
+      if(document.querySelector('.drawer:not([hidden]),dialog[open]')) {this.clearOverlayInput();return;}
       if (editableTarget(event.target)) return;
       if(event.ctrlKey||event.metaKey||event.altKey)return;
       if (event.key === 'Escape') {
@@ -107,9 +107,9 @@ export class PlayerControls {
       }
     });
     listen(window,'keyup',(raw) => { this.held.release((raw as KeyboardEvent).code); this.sync(); });
-    listen(window,'blur',() => this.clear());
+    listen(window,'blur',() => this.clearOverlayInput());
     listen(document,'visibilitychange',() => { if (document.hidden) this.clear(); });
-    listen(document,'focusin',(event) => { if (editableTarget(event.target)) this.clear(); });
+    listen(document,'focusin',(event) => { if (editableTarget(event.target)) this.clearOverlayInput(); });
     listen(window,'hunt-event',(raw) => {
       const event = (raw as CustomEvent<CombatEvent>).detail;
       if(event.type==='push_cancelled'&&event.sourceId===this.actorId)this.status.textContent=this.reasonLabel(event.data?.reason??'blocked');
@@ -209,7 +209,7 @@ export class PlayerControls {
     });
     listen(this.port.canvas,'pointercancel',() => this.clear());
     this.port.beforeTick(() => {
-      if(document.querySelector('.drawer:not([hidden]),dialog[open]')) {this.clear();return;}
+      if(document.querySelector('.drawer:not([hidden]),dialog[open]')) {this.clearOverlayInput();return;}
       if (this.mode === 'AI') return;
       const held=this.held.direction();
       const {x:dx,y:dy}=held.x||held.y?held:this.pendingStep??held;
@@ -267,6 +267,15 @@ export class PlayerControls {
     this.held.clear(); this.mouse.clear();this.dragActor=undefined;this.pushHover=undefined;this.pendingStep=undefined; this.inputAt=0; this.interaction.cancel(); this.target = undefined; this.menu.hidden = true;
     this.status.textContent = '';
     this.sync();
+  }
+  /** Cosmetic modal captures held gestures without changing the selected target
+   * or sending stop/control intents. Actual death/reset still uses clear(). */
+  suspendInput(){
+    this.held.clear();this.mouse.clear();this.dragActor=undefined;this.pushHover=undefined;
+    this.pendingStep=undefined;this.inputAt=0;this.interaction.cancel();this.menu.hidden=true;this.sync();
+  }
+  private clearOverlayInput(){
+    if(document.querySelector('#outfit-dialog[open]'))this.suspendInput();else this.clear();
   }
   destroy() {
     if (this.abort.signal.aborted) return;

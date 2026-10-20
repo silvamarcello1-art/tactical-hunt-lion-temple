@@ -81,6 +81,7 @@ type Tween = {
 type RendererOptions = {
   debugEnabled?: boolean;
   selectedHeroId?: string;
+  appearanceSprite?:(heroId:string)=>string;
 };
 
 export class PixiRenderer {
@@ -162,6 +163,7 @@ export class PixiRenderer {
   private destroyed = false;
   private selectedHeroId: string;
   private readonly debugEnabled: boolean;
+  private readonly appearanceSprite?:(heroId:string)=>string;
   private maskMismatchCount = 0;
   private maxActiveVisualObjects = 0;
   private presentationUpdateSamples = 0;
@@ -229,6 +231,7 @@ export class PixiRenderer {
   };
 
   constructor(engine: CombatEngine, options: RendererOptions = {}) {
+    this.appearanceSprite=options.appearanceSprite;
     this.debugEnabled =
       options.debugEnabled ?? RENDER_CONFIG.arena.debugEnabled;
     this.selectedHeroId = options.selectedHeroId ?? 'knight';
@@ -853,7 +856,7 @@ export class PixiRenderer {
     const hero = this.isHero(snapshot);
     const humanoid=hero||!!snapshot.trainingVocation;
     const boss = snapshot.role === 'boss';
-    const definition = this.sprites.definition(spriteId(snapshot));
+    const definition = this.sprites.definition(this.visualSpriteId(snapshot));
     const shadow = new Graphics()
       .ellipse(0, 0, definition.shadowProfile.width, definition.shadowProfile.height)
       .fill({color:0x000000,alpha:definition.shadowProfile.alpha});
@@ -923,7 +926,7 @@ export class PixiRenderer {
       ui,
       shadow,
       sprite,
-      spriteKey:spriteId(snapshot),
+      spriteKey:this.visualSpriteId(snapshot),
       facing:'south' as DirectionName,
       state:'idle' as EntityVisualState,
       hp,
@@ -944,6 +947,7 @@ export class PixiRenderer {
       animationKey:'idle',
     };
     this.units.set(snapshot.id, unit);
+    this.syncAppearanceDiagnostics();
     this.syncDiagnostics();
     this.drawVitals(unit);
     this.tween(RENDER_CONFIG.entity.spawnDuration, (progress) => {
@@ -965,7 +969,7 @@ export class PixiRenderer {
   }
 
   private createSprite(snapshot: EntitySnapshot): Sprite {
-    const id = spriteId(snapshot);
+    const id = this.visualSpriteId(snapshot);
     const definition = this.sprites.definition(id);
     const sprite = new Sprite(this.sprites.texture(id,'idle','south',0));
     sprite.anchor.set(definition.footAnchor.x,definition.footAnchor.y);
@@ -974,6 +978,23 @@ export class PixiRenderer {
       definition.visualHeight / definition.frameSize * definition.scale,
     );
     return sprite;
+  }
+
+  private visualSpriteId(snapshot:EntitySnapshot){
+    return this.isHero(snapshot)?this.appearanceSprite?.(snapshot.id)??spriteId(snapshot):spriteId(snapshot);
+  }
+  /** Cosmetic-only: no engine calls, orders, selection, animation clock or reset. */
+  refreshAppearance(heroId:string){
+    const unit=this.units.get(heroId);if(!unit?.hero)return;
+    const id=this.appearanceSprite?.(heroId)??heroId;
+    unit.definition=this.sprites.definition(id);unit.spriteKey=id;
+    unit.sprite.anchor.set(unit.definition.footAnchor.x,unit.definition.footAnchor.y);
+    unit.sprite.scale.set(unit.definition.visualWidth/unit.definition.frameSize*unit.definition.scale,unit.definition.visualHeight/unit.definition.frameSize*unit.definition.scale);
+    unit.sprite.texture=this.sprites.texture(id,unit.state,unit.facing,this.presentation.time-unit.animationStartedAt);
+    this.syncAppearanceDiagnostics();
+  }
+  private syncAppearanceDiagnostics(){
+    if(this.parent)this.parent.dataset.appearanceSprites=JSON.stringify(Object.fromEntries([...this.units].filter(([,u])=>u.hero).map(([id,u])=>[id,u.spriteKey])));
   }
 
   private face(unit: Unit, direction: DirectionName) {

@@ -1,3 +1,13 @@
+## 2026-10-20 — MVP 2C: atelier de aparência com fallback explícito
+
+- Modal Outfits, catálogo12referências+3sprites originais aplicáveis,addons0/1/2
+  cumulativos e DLC independentes,preferências/paletas versionadas por herói.
+- Aplicação cosmética no Unit existente; sem alterações de engine/economia.
+  Preview cardinais/idle/walk/attack/cast do sprite real,nearest-neighbour.
+- Prancha frontal intacta só como referência. Novos sprites/addons animados e
+  máscaras5regiões PENDENTES; cores salvas não recolorem assets sem máscara.
+  Limites e contratos em docs/OUTFITS_2C.md; nenhum frame inexistente declarado.
+
 ## 2026-10-20 — correção do bloqueio de equipamento
 
 - Navegar entre heróis do inventário não assume Manual nem altera a seleção de

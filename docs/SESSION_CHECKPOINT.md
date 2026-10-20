@@ -1,4 +1,33 @@
-# Checkpoint — MVP 2B.4 publicado e validado — 20/10/2026 (São Paulo)
+# Checkpoint — MVP2C atelier com fallback — 20/10/2026 (São Paulo)
+
+## Implementação2C — gates locais em curso
+
+Entradafba9825a63c9fb105bfdd66d8d65c2826e8daa51,feature/gameplay-first-mvp2a,
+origin/local iguais,worktree limpa;fetch/health PASS. Pedido atual volta a exigir
+AGENTS e autoriza implementação cosmética,commit/push/preview após gates,sem merge.
+Não reutilizar monitor antigo2B.4 como autoridade para mutações ou CI deste2C.
+
+Modelo/registro,persistência isolada,modal com draft por herói,preview2D das
+mesmas animações nativas,aplicação imediata de3sprites já revisados e fallback
+para12referências. Addons2 incluem1;DLC independente. Paletas5regiões persistem,
+mas máscaras e novos sprites/addons/direções continuam PENDENTES (UI explícita).
+PNG recebida1122×1402/2330784bytes,opaca,uma vista por versão,copiada intacta
+só como referência CSS. Nenhuma produção de arte/backframes/diagonais fictícias.
+Contratos,proveniência,pendências e desempenho estrutural:OUTFITS_2C.md.
+
+Frozen install,typecheck,279/279unit24arquivos(98,32s),build777módulos(7,90s)
+PASS. Chunk560,62kB mantém warning>500kB;nenhum limite alterado.21novos unit e
+4novos E2E PASS(32,8s):catálogo/addons/DLC/persistência,preview/facings/3viewports,
+troca de todos os heróis durante combate pausado sem mudar party/posições/clock/
+target/modo/comandos/objetos;hunt personalizada vence;reset preserva;WASD/facing
+com sprite trocado. Na primeira execução houve edição de fonte durante o teste
+e o cenário terminou idle,não completed;ela NÃO conta como gate verde. Repetição
+sobre fonte estável PASS,sem aumento de timeout/assertion.
+Suíte integral48/48E2E PASS(8,8min);CI/deploy/publicsmokes ainda pendentes,não anunciar
+o antigo preview2B.4 como2C. Scripts existentes preservados;qa-outfits.mjs novo
+exige manifestSHA exato e separa referências de sprites/máscaras prontos.
+
+## Histórico —2B.4 abaixo
 
 ## Encerramento — publicação pública confirmada
 

@@ -1,4 +1,7 @@
 import { GameplayHUD } from './ui/GameplayHUD';
+import {AppearanceStore} from './app/AppearanceStore';
+import {OutfitPanel} from './ui/OutfitPanel';
+import {resolveOutfit} from './data/outfits';
 import { EquipmentStore } from './app/EquipmentStore';
 import { EquipmentPanel, itemName } from './ui/EquipmentPanel';
 import { itemById } from './data/items';
@@ -44,6 +47,7 @@ const storageKey = 'tactical-hunt-ability-preferences';
 const liveState = new LiveHuntState();
 const progressionStore = new ProgressionStore();
 const equipmentStore = new EquipmentStore(localStorage);
+const appearanceStore=new AppearanceStore(localStorage);
 const trainingMode=new URLSearchParams(location.search).get('training')==='1';
 const abilities=abilityCatalog(trainingMode);
 const abilityNames=Object.fromEntries(abilities.map(a=>[a.id,a.name]));
@@ -126,6 +130,13 @@ equipmentRoot.addEventListener('keydown',event=>{
   event.stopPropagation();if(event.key==='Escape') $('#close-equipment').click();
 });
 function refreshEquipment(){if(!equipmentRoot.hidden) equipmentPanel.render();}
+
+const outfitPanel=new OutfitPanel(appearanceStore,hero=>renderer?.refreshAppearance(hero));
+const outfitButton=document.createElement('button');outfitButton.id='open-outfits';
+outfitButton.textContent='♙';outfitButton.title='Outfits · aparência do personagem';
+outfitButton.setAttribute('aria-label','Outfits');
+document.querySelector('.topbar')!.insertBefore(outfitButton,trainingLink);
+outfitButton.onclick=()=>{playerControls?.suspendInput();outfitPanel.open(selectedHeroId);};
 
 function loadPreferences(): AbilityPreferences {
   try {
@@ -343,6 +354,7 @@ async function createRenderer() {
   renderer?.destroy();
   renderer = undefined;
   const nextRenderer = new PixiRenderer(new CombatEngine(803, preferences, huntSessionId, trainingMode?undefined:progressionStore.snapshot(), trainingMode?{}:equipmentStore.loadout(),true,true,trainingMode,{singleHeroControl:true,trainingTeam:true,trainingColumns:18*$('#game').clientWidth/Math.max(1,$('#game').clientHeight)}), {
+    appearanceSprite:id=>resolveOutfit(appearanceStore.get(id),id).spriteId,
     debugEnabled,
     selectedHeroId,
   });

@@ -1,4 +1,21 @@
-# Próxima tarefa — incremento 2B.4 concluído — 20/10/2026 (São Paulo)
+# Próxima tarefa — validar/publicar fundação2C — 20/10/2026 (São Paulo)
+
+## Agora — gates integrais e preview2C
+
+Implementação de aparência pronta para validação:279unit/typecheck/build/frozen
+install e4novos E2E PASS. Suíte integral48/48E2E PASS(8,8min). Após todos verdes:
+arte reprodutível/diff-check/revisão,commit/push normal na feature atual,CI e
+deploy autorizados,version.json SHA real,qa-outfits/qa-training-team/qa-preview
+públicos,capturas inspecionadas,checkpoint/PR. Não declarar publicação antes.
+
+IMPORTANTE:3sprites originais existentes aplicáveis;12trajes da prancha são
+REFERÊNCIAS,com addons0/1/2/DLC salvos,mas sem camadas animadas/cardinais/máscaras
+novas. Paleta planejada não recolore os assets atuais. OUTFITS_2C.md lista arte
+pendente e slots,sem gerar costas/diagonais fictícias. Fallback explícito mantém
+o sprite do herói. Próxima etapa artística exige produzir/revisar esses arquivos,
+não relaxar esse estado no catálogo. Sem loja/economia/Adventure/Sites/merge.
+
+## Histórico —2B.4 abaixo
 
 ## Agora — entregar preview e encerrar acompanhamento
 

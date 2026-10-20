@@ -1,4 +1,19 @@
-# Estado vigente — incremento 2B.4 publicado e validado — 20/10/2026 (São Paulo)
+# Estado vigente — MVP2C atelier com fallback — 20/10/2026 (São Paulo)
+
+## MVP2C — implementação local, publicação ainda não confirmada
+
+OutfitPanel compacto com12referências/3sprites originais aplicáveis,addons
+cumulativos0/1/2,DLC Neymar/Mbappé,paletas5canais e save versionado por herói.
+Aplicação cosmética no Unit existente,sem engine/economia/control/target/reset.
+Os12novos trajes são ilustrações frontais:camadas animadas/cardinais/máscaras
+PENDENTES. Paletas são salvas mas não recolorem imagens sem máscaras revisadas.
+Fallback e “Paleta planejada” explícitos; sem facings inventados/tint global.
+Ver OUTFITS_2C.md. Nenhuma nova arte gerada; referência1122×1402 intacta.
+Gates locais até agora:typecheck,279unit24arquivos,frozen install,build PASS;
+4novos E2E PASS,incluindo hunt personalizada até boss. Suíte integral48/48E2E
+PASS(8,8min);CI/deploy/manifest/smoke2C ainda pendentes. Público2B.4 histórico abaixo.
+
+## Histórico —2B.4 publicado
 
 ## Atual — preview público aprovado
 
