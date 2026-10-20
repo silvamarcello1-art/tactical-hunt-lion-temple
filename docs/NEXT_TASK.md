@@ -1,5 +1,23 @@
 # Próxima tarefa — concluir incremento 2B.4 — 19/10/2026 (São Paulo)
 
+## Continuação exata do acompanhamento
+
+Validar o código/testes a5e8e5b4ba9f6ae9597128306a149a400bec1877 (runtime bbb8755).
+Checkpoint posterior somente docs [skip ci] NÃO substitui o SHA de build.
+CI push39358574939/job118422458146 e PR39358581542/job118422167504 estão em44E2E;
+install/health/typecheck/unit/art PASS, build/deploy pendentes. Runs bbb8755 foram
+substituídos e seu cancelamento foi autorizado; não contam como gate vigente.
+Local final42/44 PASS: timeout180s de equipment e ECONNRESET do fixture de runes.
+Não alterar gameplay/workflows/timeouts neste acompanhamento. Publicado ainda
+bbd0fac. Em sucesso, verificar manifest e rodar smokes existentes de3treinos/hunt;
+em falha, registrar logs e pedir direção. Não publicar antes dos gates.
+
+Pacote OTSP real agora recebido e inspecionado (PNGs/dat/spr/otfi/mapa e créditos,
+README declara CC BY4.0). Não integrado; importação é tarefa separada após fechar
+a revisão atual. A referência abaixo a assets_rtc vazio é histórica.
+
+## Registro anterior à correção do teste de mouse
+
 Não iniciar outra funcionalidade. Implementados dock unificado, seleção exclusiva,
 arena clara inteiramente acessível e três bots. Contratos em TRAINING_2B4.md.
 Entrada70ea598 limpa/local=origin, branch feature/gameplay-first-mvp2a.

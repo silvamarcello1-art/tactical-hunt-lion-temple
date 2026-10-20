@@ -1,5 +1,31 @@
 # Checkpoint — MVP 2B.4 em validação — 19/10/2026 (São Paulo)
 
+## Acompanhamento vigente — 19/10, 23:39 (São Paulo)
+
+- Código/testes da entrega: a5e8e5b4ba9f6ae9597128306a149a400bec1877.
+  Runtime sem alteração desde bbb8755; checkpoint posterior é somente docs
+  [skip ci], não outro build. Branch feature/gameplay-first-mvp2a, base58d9720.
+- CI vigente push39358574939/job118422458146 e PR39358581542/job118422167504:
+  install/health/typecheck/unit/art reprodutível PASS; ambos em44E2E, build/deploy
+  ainda pendentes. Não usar os runs antigos como aprovação deste HEAD.
+- Com autorização explícita do usuário, cancelamento solicitado somente para
+  runs substituídos39357334801/39357338333; a fila atual foi liberada. Nenhuma
+  proteção, workflow, assertion ou timeout foi alterado.
+- Gate local final da5e8e5b:42/44E2E PASS(13,3min), NÃO gate verde.
+  equipment.spec.ts:4 excedeu180s no segundo combate; runes.spec.ts:23 falhou
+  em route.fetch com ECONNRESET ao carregar main.ts. Os4novos E2E de produção,
+  incluindo bordas amarelas, seleção exclusiva e3vitórias3×3, passaram.
+  Nenhuma mudança de gameplay é autorizada neste acompanhamento.
+- Manifest público continua bbd0fac90bbc5ba27be4c9189f36513e1d59ee93. Não entregar
+  o site anterior como atualização. Smokes públicos da revisão aguardam CI/deploy.
+- Novo pacote OTSP fornecido pelo usuário foi inspecionado sem integração:
+  README/GUIDE/AUTHORS/LICENSE, PNGs, dat/spr/otfi e mapa existem; README declara
+  arte comunitária CC BY4.0. Não são sprites oficiais CipSoft; adequação/atribuição
+  e importação exigem outra etapa. assets_rtc vazio citado abaixo é histórico.
+- Próximo acompanhamento: conferir os dois runs a5e8e5b. Se aprovados, manifest
+  exato e scripts qa-training-team.mjs + qa-preview.mjs no público. Se falharem,
+  coletar diagnóstico, registrar bloqueio e avisar; não corrigir gameplay aqui.
+
 ## Sessão vigente
 
 - Raiz Documents/Tactical-Hunt-Lion-Temple; branch feature/gameplay-first-mvp2a,
