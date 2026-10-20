@@ -26,6 +26,21 @@
 
 ### Validação local e limite operacional
 
+Follow-up da revisão: mouse-first2/2 PASS(39,8s) após atualizar somente a
+contagem exata: seleção envia1control e gesto combinado envia1look, total2.
+O teste anterior comparava total1 mesmo após a nova seleção explícita. Nenhuma
+assertion foi removida nem timeout alterado. Gate local44 interrompido após
+2falhas: equipment excedeu180s na segunda hunt; mouse-first era essa expectativa
+desatualizada. CI bbb8755 ainda em execução; novo commit só corrige teste/docs,
+sem alteração dos bytes de src/public. Não registrar gate completo verde.
+
+Código bbb87558101068cbdf84da23aee8c204907eba34 commitado/push normal confirmado
+por ls-remote, local=origin. CI push39357334801 / PR39357338333 em execução,
+validate da PR118415059837. PR3 atualizada, aberta e sem merge. Typecheck/build
+da revisão final PASS (774 módulos; warning de chunk548kB);44E2E finais locais
+na execução35799. Configuração de controle agora síncrona no domínio, sem
+avançar clock/ações; bots mantêm nomes visíveis em todos os frames.
+
 - Primeira revisão passou258/258 unitários e build; a última correção sincroniza
   configuração de controle imediatamente no domínio e mantém ação no tick.
   Name visibility dos bots também foi corrigida após inspeção da captura.

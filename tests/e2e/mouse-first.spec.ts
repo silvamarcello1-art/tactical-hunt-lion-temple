@@ -21,7 +21,8 @@ test('mouse destinations, chord consumption, HUD ownership and native menu bound
     const q=await tilePoint(page,12,5);await page.mouse.move(q.x,q.y);
     await page.mouse.down({button:'right'});await page.mouse.down({button:'left'});await page.mouse.up({button:'left'});await page.mouse.up({button:'right'});
     await expect(controls).toHaveAttribute('data-last-intent','look');
-    expect(Number(await controls.getAttribute('data-command-count'))).toBe(Number(count)+1);
+    // One control request from the card, then exactly one look request from the chord.
+    expect(Number(await controls.getAttribute('data-command-count'))).toBe(Number(count)+2);
     await expect(page.locator('#interaction-status')).toContainText('Pilar da Vigília');
   }
   const boundary=await page.evaluate(()=>{

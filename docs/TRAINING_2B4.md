@@ -4,7 +4,7 @@
 
 Referência visual fornecida pelo usuário: piso claro em grade, heróis legíveis e
 hotbar no rodapé. Não copiamos a captura. A pasta indicada
-`C:/Users/Joao/Downloads/rubinot- 2026/assets_rtc/` foi inspecionada, inclusive
+`rubinot- 2026/assets_rtc/` foi inspecionada, inclusive
 com acesso elevado: apenas `data/cursors/`, zero arquivos. Portanto NÃO houve
 importação de sprites de Tibia. Heróis/bots usam os três atlas próprios existentes;
 runas/utilidades recebem ícones vetoriais originais em TacticalIcons.ts.

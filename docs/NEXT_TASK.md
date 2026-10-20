@@ -6,6 +6,12 @@ Entrada70ea598 limpa/local=origin, branch feature/gameplay-first-mvp2a.
 Base antes das edições: typecheck/251unit/build PASS. TrainingTeam6unit PASS.
 Gates finais em SESSION_CHECKPOINT; público anterior bbd0fac não é a nova revisão.
 
+Runtime novo bbb87558101068cbdf84da23aee8c204907eba34 no origin, CI push39357334801/
+PR39357338333 pendentes. Local final unit tem4timeouts de5s (threads também),
+nenhuma assert de resultado divergente; não elevar limites. A/B com70ea598 mantém
+hash/timeline normal, tempos variáveis em ambos. Typecheck/build final PASS;
+44E2E na execução35799. Não publicar como pronto antes de CI/manifest/smoke.
+
 1. Fechar E2E de produção 3×3/bordas e regressões com fixtures estacionários
    explícitos; não enfraquecer assertions/timeout. Testes de fixture não substituem
    seleção exclusiva/bots reais. Rodar typecheck, unit, build, Edge1worker/diff.
