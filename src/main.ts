@@ -63,7 +63,7 @@ if(trainingMode){
   document.querySelector('#repeat')!.textContent='Repetir treino';
   document.querySelector('#restart')!.setAttribute('title','Reiniciar treino');
   document.querySelector('.phase-track')!.setAttribute('hidden','');
-  document.querySelector('.rail-hint')!.textContent='Party em Manual contra bot. Magias 1–3; runas 4–7 + clique; empurrar 8 ou arrastar; parar 9. WASD/Numpad move. Prévia encaixada no tile, sem zoom. Sem recompensas persistentes.';
+  document.querySelector('.rail-hint')!.textContent='Party em Manual contra bot. Magias 1–3; runas 4–7 + clique. Empurrar: segure o botão esquerdo na criatura e solte num vizinho verde; 8 é alternativo. 9 para; WASD/Numpad move. Sem zoom ou recompensas persistentes.';
 }
 let casting: {id:string; until:number} | undefined;
 const debugEnabled =
@@ -350,6 +350,8 @@ async function createRenderer() {
       get running() { return nextRenderer.player.isRunning; },
       training:trainingMode,
       runePreview:(actor,id,tile)=>nextRenderer.engine.runePreview(actor,id,tile),
+      pushPreview:(actor,target)=>nextRenderer.engine.pushPreview(actor,target),
+      showPushPreview:preview=>nextRenderer.showPushPreview(preview),
       showAim:(tile,ready)=>nextRenderer.showAim(tile,ready),
       get entities() { return nextRenderer.engine.entities; },
       get results() { return nextRenderer.engine.controlResults; },

@@ -2,6 +2,10 @@
 
 ## Incremento 2B.3 — 19/10
 
+PushSystem.preview devolve vizinhos/cópias/readiness sem mover, reservar ou sortear.
+O mesmo readiness atende queue; resolve continua revalidando no deadline. DOM
+mantém apenas gesto/hover e Pixi desenha os tiles recebidos, em camada própria.
+
 PushSystem agenda intenções (não move entidades); o scheduler revalida e chama
 MovementSystem, que continua dono de reserva/commit. SD reutiliza ProjectileSystem;
 Destroy Field remove somente campo. trainingSpells/abilityCatalog isolam o perfil

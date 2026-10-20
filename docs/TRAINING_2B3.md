@@ -20,7 +20,16 @@ com IDs estáveis: não renomear dados persistidos para trocar apresentação.
 | Digit9 | Parar; não desfaz um passo já comprometido |
 | Numpad1–9 | Movimento em oito direções; 5 para |
 
-Também é possível arrastar um aliado/inimigo para o destino. Não empurra o
+O gesto principal é segurar o botão esquerdo sobre um aliado/inimigo, arrastar
+e soltar em um tile imediatamente vizinho. Tecla8 é só alternativa acessível
+em dois cliques, nunca pré-requisito. A correção do usuário confirma vizinhos,
+NÃO alcance de sete tiles. Enquanto segura, a grade mostra os oito vizinhos:
+até sete podem estar livres quando o herói ocupa o outro; paredes, quinas,
+reservas e demais criaturas podem reduzir esse número. O tile original não é
+destino. A cor vem de PushSystem.preview, com a mesma validação do comando,
+incluindo recarga/intenção pendente. Segurar não move o alvo; soltar envia uma
+única solicitação e ainda revalida após o atraso. Soltar fora cancela o gesto;
+blur/reset retiram a indicação. Não empurra o
 próprio herói; use movimento. Chefes não são empurráveis por padrão. O domínio
 valida sessão, ownership, orçamento de ação, alvo vivo, distância, destino,
 footprint, ocupação/reserva e quinas. A intenção aguarda 1000 ms lógicos,

@@ -20,5 +20,7 @@ export interface PlayerControlPort {
   showDestination?(tile:{x:number;y:number}):void;
   showAim?(tile?:{x:number;y:number},ready?:boolean):void;
   runePreview?(actorId:string,runeId:import('../data/runes').RuneId,tile:{x:number;y:number}):{ready:boolean;reason:string};
+  pushPreview?(actorId:string,targetId:string):import('../combat/PushSystem').PushPreview|undefined;
+  showPushPreview?(preview?:import('../combat/PushSystem').PushPreview):void;
   beforeTick(callback?:() => void):void;
 }

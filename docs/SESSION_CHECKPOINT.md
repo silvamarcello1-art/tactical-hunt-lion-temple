@@ -1,5 +1,28 @@
 # Checkpoint — MVP 2B.3: fechamento local, publicação pendente — 19/10/2026
 
+## Follow-up — arraste esquerdo e vizinhos
+
+Usuário corrigiu a resposta equivocada: apenas tiles imediatamente vizinhos,
+não7tiles de distância. O código15cc18b já fazia left-drag/drop; follow-up adiciona
+preview de8vizinhos, até7livres, fornecido read-only pelo mesmo domínio/readiness
+da fila de push. Não afrouxa quinas/occupancy/reservas/atraso/clock. Tecla8 é
+alternativa, não pré-requisito. Holding não desloca o alvo. Origem não é destino.
+Typecheck,27unitáriosdirecionados e1E2E de push PASS; executar gates completos.
+Commit15cc18bcc2f9111a80de19960ca1c904a017a7f5 está no origin, CI push39345124901/
+PR39345131120 em execução. Follow-up ainda não commitado; não confundir versões.
+
+### Fechamento local do follow-up
+
+- Health,251/251unitários(22arquivos,54,59s),typecheck/build e full Edge40/40
+  (6,2min,1worker) PASS; subset final de push1/1(9,4s) PASS. Smoke real
+  qa-training-kit validou novamente runas/cura/push por tecla e arraste, pausa/
+  reset e sete destinos no fixture diagonal. Captura dos vizinhos inspecionada,
+  sem erros/resíduos. Renderer não decide validade; holding não move a origem.
+- Publicação anterior15cc18b: push39345124901 e PR39345131120 success; jobs
+  validate118375757677/deploy118381843166 success. version.json público confirmou
+  15cc18bcc2f9111a80de19960ca1c904a017a7f5 em20/10UTC. Isso NÃO confirma deploy
+  do follow-up, que exige novo commit/push/CI/manifest/smoke.
+
 ## Sessão atual
 
 - Entrada dca56a8aff487bd0171b04209f8d7205723abde9, local=origin e limpa;

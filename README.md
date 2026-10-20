@@ -19,8 +19,10 @@ Regras e recuperação de save: [Equipment and Loot](docs/EQUIPMENT_AND_LOOT.md)
 Clique em **Treino de runas** entre sessões, ou abra `/?training=1` no servidor
 local. A party começa em Manual contra um bot. Selecione um herói; WASD, setas
 ou Numpad movem; **4 + clique** coloca Magic Wall; **5 + clique** coloca Fire
-Field; **6** Sudden Death, **7** Destroy Field, **8** empurrar (ou arraste uma
-criatura adjacente), **9** parar. ESC cancela a seleção. As teclas 1–3 continuam
+Field; **6** Sudden Death, **7** Destroy Field. Para empurrar, **segure o botão
+esquerdo sobre uma criatura adjacente e solte num vizinho livre**; a prévia mostra
+destinos permitidos. **8** oferece seleção alternativa, **9** para. Não se arrasta
+sete tiles de distância. ESC cancela a seleção. As teclas 1–3 continuam
 as magias da vocação; Numpad somente movimenta, não conjura.
 Parede bloqueia caminhada/tiros; campo causa burning no bot. Pausa e velocidades
 compartilham o relógio lógico. Reiniciar repõe o kit gratuito de cada herói.

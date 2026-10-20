@@ -18,6 +18,7 @@ export class PlayerControls {
   readonly interaction = new InteractionController();
   private readonly mouse=new MouseGesture();
   private dragActor?:{id:string;x:number;y:number};
+  private pushHover?:{x:number;y:number};
   private abort = new AbortController();
   private sequence = 0;
   private pendingStep?:{x:number;y:number};
@@ -132,9 +133,12 @@ export class PlayerControls {
       this.focusGame();
       if(this.port.training&&event.button===0&&!['rune-targeting','spell-targeting','push-targeting','use-with'].includes(this.interaction.state.kind)){
         const target=this.pointerTarget(event);if(target?.kind==='entity'&&target.entityId!==this.actorId)this.dragActor={id:target.entityId,x:event.clientX,y:event.clientY};
+        this.sync();
       }
       event.stopImmediatePropagation();
       if(this.mouse.down(event.button,event.buttons)==='look') {
+        this.dragActor=undefined;this.pushHover=undefined;this.port.showPushPreview?.();this.port.showAim?.();
+        this.sync();
         const target=this.pointerTarget(event);
         if(target) {this.send({type:'look',target});this.status.textContent=describeWorld(target.kind==='entity'?this.port.entities.find(e=>e.id===target.entityId):undefined,target.kind==='tile'?target.tile:undefined);}
       }
@@ -142,6 +146,7 @@ export class PlayerControls {
     listen(this.port.canvas,'mousemove',(raw)=>{
       const event=raw as MouseEvent,point=this.port.worldPoint?.(event.clientX,event.clientY);
       const state=this.interaction.state;
+      if(this.dragActor){this.pushHover=point?{x:Math.round(point.x/32),y:Math.round(point.y/32)}:undefined;this.showPushOptions(this.dragActor.id);return;}
       if(!point||!['rune-targeting','push-targeting'].includes(state.kind)){this.port.showAim?.();return;}
       const pickedId=state.kind==='rune-targeting'&&state.runeId==='sudden_death'?this.port.pickEntity?.(event.clientX,event.clientY):undefined;
       const picked=pickedId?this.port.entities.find(e=>e.id===pickedId):undefined;
@@ -150,12 +155,13 @@ export class PlayerControls {
       this.port.showAim?.(tile,preview?.ready??true);
       if(preview)this.status.textContent=`${runeDefinitions[(state as {runeId:RuneId}).runeId].name} · tile ${tile.x},${tile.y} · ${preview.ready?'clique para usar':this.reasonLabel(preview.reason)}`;
     });
-    listen(this.port.canvas,'mouseleave',()=>this.port.showAim?.());
+    listen(this.port.canvas,'mouseleave',()=>{this.pushHover=undefined;this.port.showAim?.();});
     listen(window,'mouseup',(raw) => {
       if(document.querySelector('#equipment-drawer:not([hidden])')) {this.mouse.clear();return;}
       const event = raw as MouseEvent;
       const gesture=this.mouse.up(event.button);
       const drag=this.dragActor;this.dragActor=undefined;
+      this.pushHover=undefined;this.port.showPushPreview?.();if(drag)this.sync();
       if(gesture==='select'&&drag&&event.target===this.port.canvas&&Math.hypot(event.clientX-drag.x,event.clientY-drag.y)>=6){
         const point=this.port.worldPoint?.(event.clientX,event.clientY);
         if(point)this.send({type:'push',targetId:drag.id,tile:{x:Math.round(point.x/32),y:Math.round(point.y/32)}});
@@ -253,7 +259,7 @@ export class PlayerControls {
     this.sync();
   }
   clear() {
-    this.held.clear(); this.mouse.clear();this.dragActor=undefined;this.pendingStep=undefined; this.inputAt=0; this.interaction.cancel(); this.target = undefined; this.menu.hidden = true;
+    this.held.clear(); this.mouse.clear();this.dragActor=undefined;this.pushHover=undefined;this.pendingStep=undefined; this.inputAt=0; this.interaction.cancel(); this.target = undefined; this.menu.hidden = true;
     this.status.textContent = '';
     this.sync();
   }
@@ -289,6 +295,13 @@ export class PlayerControls {
     const labels:Record<string,string> = {'training-only':'Runas disponíveis no treino local.','no-charges':'Sem cargas neste kit de treino.','ownership':'Assuma o controle Manual deste personagem.', 'session-ended':'A hunt terminou.', 'actor-dead':'Personagem derrotado.', 'invalid-target':'Alvo inválido.', 'out-of-range':'Alvo fora do alcance.', 'blocked':'Destino bloqueado por parede, criatura ou reserva.', 'invalid-destination':'Destino fora da arena.', 'ability-unavailable':'Habilidade indisponível: mana, cooldown ou configuração.', 'unsupported-interaction':'Esta interação ainda não está disponível.', 'action-pending':'Aguarde o próximo passo.'};
     return abilityReasons[reason] ?? labels[reason] ?? 'Comando indisponível.';
   }
+  private showPushOptions(targetId:string){
+    const preview=this.port.pushPreview?.(this.actorId,targetId);this.port.showPushPreview?.(preview);
+    const hover=this.pushHover,valid=preview?.destinations.find(d=>d.tile.x===hover?.x&&d.tile.y===hover?.y);
+    this.port.showAim?.(hover,valid?.ready??false);
+    const count=preview?.destinations.filter(d=>d.ready).length??0;
+    this.status.textContent=`Arrastando: ${count} destinos vizinhos válidos. Solte o botão esquerdo em um tile verde.${hover&&!valid?.ready?' '+this.reasonLabel(valid?.reason??'invalid-destination'):''}`;
+  }
   private sync() {
     const options=this.assistanceStore.get(this.actorId);
     for(const category of ['autoAttack','autoSpells'] as const) {
@@ -306,8 +319,9 @@ export class PlayerControls {
     const targetStatus=document.querySelector('#target-status');
     if(targetStatus) targetStatus.textContent=target?`${target.name} · ${target.hp}/${target.maxHp} HP`:'';
     const aiming=['spell-targeting','rune-targeting','push-targeting'].includes(this.interaction.state.kind);
-    this.port.canvas.style.cursor = aiming ? 'crosshair' : '';
-    if(!aiming)this.port.showAim?.();
+    this.port.canvas.style.cursor = this.dragActor?'grabbing':aiming ? 'crosshair' : '';
+    if(this.dragActor)this.showPushOptions(this.dragActor.id);
+    else {this.port.showPushPreview?.();if(!aiming)this.port.showAim?.();}
     if(this.debug)this.debug.textContent=`${this.actorId} ${this.mode} | ${this.panel.dataset.resolvedBinding??'-'} | ${this.panel.dataset.lastIntent??'-'}:${this.panel.dataset.lastCommandResult??'-'} | attack:${options.autoAttack} spells:${options.autoSpells} | t:${this.port.time.toFixed(0)}ms input:${this.panel.dataset.inputLatencyMs??'-'}ms`;
   }
 }

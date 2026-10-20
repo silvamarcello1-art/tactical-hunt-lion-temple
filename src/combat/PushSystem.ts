@@ -5,6 +5,7 @@ import {gridDistance,sameGridPosition,type GridPosition} from './grid/GridTypes'
 export const TRAINING_PUSH={delay:1000,cooldown:2000,skipAttack:2000};
 export interface PushActor {id:string;alive:boolean;tileX:number;tileY:number;pushable?:boolean;moving?:boolean}
 export interface PendingPush {id:string;sessionId:string;sourceId:string;targetId:string;origin:GridPosition;destination:GridPosition;completesAt:number}
+export interface PushPreview {origin:GridPosition;destinations:{tile:GridPosition;ready:boolean;reason:string}[]}
 const pos=(a:PushActor)=>({x:a.tileX,y:a.tileY});
 const copy=(p:PendingPush)=>({...p,origin:{...p.origin},destination:{...p.destination}});
 /** Delayed intent only. Actual displacement is reserved/committed by MovementSystem. */
@@ -22,10 +23,23 @@ export class PushSystem {
     if(!can(to)||to.x!==target.tileX&&to.y!==target.tileY&&(!can({x:to.x,y:target.tileY})||!can({x:target.tileX,y:to.y})))return 'blocked';
     return 'ok';
   }
+  private readiness(source:PushActor|undefined,target:PushActor|undefined,to:GridPosition,now:number){
+    const reason=this.validate(source,target,to);if(reason!=='ok')return reason;
+    if((this.cooldowns.get(source!.id)??0)>now)return 'push-cooldown';
+    if([...this.pending.values()].some(p=>p.sourceId===source!.id||p.targetId===target!.id))return 'push-pending';
+    return 'ok';
+  }
+  preview(source:PushActor|undefined,target:PushActor|undefined,now:number):PushPreview|undefined{
+    if(!target)return;
+    const destinations=[];
+    for(let y=-1;y<=1;y++)for(let x=-1;x<=1;x++)if(x||y){
+      const tile={x:target.tileX+x,y:target.tileY+y},reason=this.readiness(source,target,tile,now);
+      destinations.push({tile,reason,ready:reason==='ok'});
+    }
+    return {origin:pos(target),destinations};
+  }
   queue(id:string,sessionId:string,source:PushActor,target:PushActor,to:GridPosition,now:number){
-    const reason=this.validate(source,target,to);if(reason!=='ok')return {reason};
-    if((this.cooldowns.get(source.id)??0)>now)return {reason:'push-cooldown'};
-    if([...this.pending.values()].some(p=>p.sourceId===source.id||p.targetId===target.id))return {reason:'push-pending'};
+    const reason=this.readiness(source,target,to,now);if(reason!=='ok')return {reason};
     const push={id,sessionId,sourceId:source.id,targetId:target.id,origin:pos(target),destination:{...to},completesAt:now+TRAINING_PUSH.delay};
     this.pending.set(id,push);this.cooldowns.set(source.id,now+TRAINING_PUSH.cooldown);
     return {reason:'ok',push:copy(push)};

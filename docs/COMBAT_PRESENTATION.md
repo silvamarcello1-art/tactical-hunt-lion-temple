@@ -7,6 +7,12 @@ SD usa animação de death original e trajetória/eventos existentes; Druid no
 treino usa gelo nas duas habilidades, ícones separados e Mana Buffer visível.
 Objetos de mira são removidos na saída do targeting/reset. TRAINING_2B3.md.
 
+Follow-up: segurar botão esquerdo sobre criatura exibe vizinhos fornecidos pelo
+PushSystem.preview. Origem dourada, destinos válidos/verdes ou bloqueados;
+hover recebe mira. Nenhuma entidade acompanha o cursor ou muda de transform.
+Soltar/blur/Look/reset removem a prévia; uma única Graphics é reutilizada, sem
+timer ou tweens por tile. Rótulo mostra a contagem real, não sete fixos.
+
 `GAMEPLAY_POLISH.md` contém o contrato atual. Projéteis interpolam diretamente
 `visualOrigin` → `visualImpact`, emitidos pelo domínio junto de castId/sessionId,
 startedAt/impactAt e pathTiles. Rotação usa o vetor constante de viagem. PathTiles

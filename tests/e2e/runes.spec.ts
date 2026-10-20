@@ -112,9 +112,18 @@ test('push targeting and drag use delayed revalidated grid steps, pause and rese
   await page.locator('#pause').click();await page.clock.runFor(1500);expect(await pos(page,'druid')).toEqual({x:9,y:8});
   await expect(page.locator('#game')).toHaveAttribute('data-pending-pushes','0');await page.clock.runFor(500);
   const from=await point(page,{x:9,y:8}),to=await point(page,{x:9,y:7});
-  await page.mouse.move(from.x,from.y);await page.mouse.down();await page.mouse.move(to.x,to.y,{steps:6});await page.mouse.up();await page.clock.runFor(1500);
+  await page.mouse.move(from.x,from.y);await page.mouse.down();await page.mouse.move(to.x,to.y,{steps:6});
+  const options=JSON.parse((await page.locator('#game').getAttribute('data-push-destinations'))!);
+  expect(options).toHaveLength(8);expect(options.filter((o:{ready:boolean})=>o.ready)).toHaveLength(7);
+  await expect(page.locator('#game')).toHaveAttribute('data-aim-tile','9:7:valid');
+  expect(await pos(page,'druid')).toEqual({x:9,y:8}); // Holding never teleports the creature.
+  await page.clock.runFor(32); // Render the new Graphics before capturing the held gesture.
+  await expect(page.locator('#game')).toHaveAttribute('data-telegraph-layer-count','2');
+  await page.screenshot({path:'test-results/training-push-neighbours.png'});
+  await page.mouse.up();await page.clock.runFor(1500);
   expect(await pos(page,'druid')).toEqual({x:9,y:7});
   expect(await page.evaluate(()=>(window as any).runeEvents.filter((e:any)=>e.type==='push_resolved').length)).toBe(2);
+  await expect(page.locator('#game')).toHaveAttribute('data-push-destinations','');
   await page.locator('#restart').click();await expect(page.locator('#game')).toHaveAttribute('data-pending-pushes','0');
   for(const metric of ['reservation-count','logical-overlaps','out-of-bounds'])await expect(page.locator('#game')).toHaveAttribute('data-'+metric,'0');expect(errors).toEqual([]);
 });

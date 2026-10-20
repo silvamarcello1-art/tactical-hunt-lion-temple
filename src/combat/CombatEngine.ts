@@ -122,6 +122,11 @@ export class CombatEngine {
   private pushes?:PushSystem;
   private readonly pushMotion=new Map<string,PendingPush>();
   get pendingPushCount(){return (this.pushes?.size??0)+this.pushMotion.size;}
+  pushPreview(actorId:string,targetId:string){
+    if(!this.trainingMode||this.finished||this.disposed)return;
+    const source=this.party.find(h=>h.id===actorId),target=[...this.party,...this.enemies].find(e=>e.id===targetId);
+    return this.pushes?.preview(source,target?{...target,pushable:target.pushable??target.role!=='boss'}:undefined,this.elapsed);
+  }
   private readonly runeCharges=new Map<string,number>();
   get runeTiles(){return this.runes?.tiles??[];}
   get runeConditionCount(){return this.runes?.conditionCount??0;}

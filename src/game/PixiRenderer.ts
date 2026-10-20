@@ -112,6 +112,14 @@ export class PixiRenderer {
   }
   readonly player: LiveEventPlayer;
   private readonly aimTile=new Graphics();
+  private readonly pushHints=new Graphics();
+  showPushPreview(preview?:import('../combat/PushSystem').PushPreview){
+    this.pushHints.clear();if(this.parent)this.parent.dataset.pushDestinations=preview?JSON.stringify(preview.destinations):'';
+    if(!preview){this.pushHints.removeFromParent();return;}
+    if(!this.pushHints.parent)this.telegraphLayer.addChild(this.pushHints);
+    for(const {tile,ready} of preview.destinations)this.pushHints.rect(tile.x*32-15,tile.y*32-15,30,30).fill({color:ready?0x8ddac4:0xd77a69,alpha:ready ? .12 : .06}).stroke({color:ready?0x8ddac4:0xd77a69,width:1,alpha:.6});
+    this.pushHints.rect(preview.origin.x*32-15,preview.origin.y*32-15,30,30).stroke({color:0xedcf88,width:2});
+  }
   showAim(tile?:GridPoint,ready=true){
     this.aimTile.clear();if(this.parent)this.parent.dataset.aimTile=tile?`${tile.x}:${tile.y}:${ready?'valid':'invalid'}`:'';
     if(!tile){this.aimTile.removeFromParent();return;}
@@ -354,6 +362,7 @@ export class PixiRenderer {
     this.rubble.clear();
     this.runeVisuals.clear();
     this.aimTile.removeFromParent();this.aimTile.destroy();
+    this.pushHints.removeFromParent();this.pushHints.destroy();
     this.bossFill = undefined;
     this.app.ticker?.remove(this.tickerHandler);
     try {

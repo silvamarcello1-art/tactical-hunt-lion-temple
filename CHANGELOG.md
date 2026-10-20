@@ -1,5 +1,9 @@
 ## 2026-10-19 — treino 2B.3
 
+- Confirmação do gesto de empurrar: botão esquerdo segurado e soltura num vizinho
+  livre, não7tiles de distância. Preview dos destinos vem do domínio; tecla8
+  continua alternativa. Holding não move/teleporta a criatura.
+
 - SD/Destroy Field reais no domínio de treino, grupos/cargas e projétil existente.
 - Push atrasado/revalidado por MovementSystem, hotkey8 e drag; Stop9. Digit1–3
   magias,4–7 runas, Numpad movimento; sem slots fictícios ou controle de zoom.

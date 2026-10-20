@@ -1,5 +1,11 @@
 # Próxima tarefa — fechar validação/publicação 2B.3 — 19/10/2026
 
+Follow-up do usuário: botão esquerdo segurado → soltar em tile vizinho livre,
+não distância7. Arraste já funcionava em15cc18b; agora ganha preview dos vizinhos
+autorizados pelo domínio. Gates novos passaram251unitários/40E2E e smoke
+qa-training-kit com holding/7destinos no fixture diagonal. Não publicar como
+concluído enquanto CI/deploy/SHA do commit mais recente não forem conferidos.
+
 Implementação atual descrita em TRAINING_2B3.md; ART_PROMPTS.md conserva a origem
 da pixel art. Não reimplementar quatro runas/push/slots/mira. Sem zoom ajustável.
 Entrada dca56a8, branch feature/gameplay-first-mvp2a, local=origin limpo antes

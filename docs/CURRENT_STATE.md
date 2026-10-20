@@ -5,8 +5,11 @@ três heróis com pixel art própria maior, sem zoom, mira de tile independente 
 sprite. Perfil de nove magias de referência, Heal Friend ally-only e Mana Buffer
 dos magos; hunt normal/saves preservados. TRAINING_2B3.md define regras/fontes e
 limites. ART_PROMPTS.md registra o modo builtin e fontes/atlas. Não é PvP online
-nem Wheel completa.250unitários/40E2E +8direcionados finais PASS. Publicação nova
-ainda pendente; confirmar CI/deploy/version.json antes de chamar de público.
+nem Wheel completa. Após confirmação do usuário, left-drag ganha prévia dos
+vizinhos autorizados (não distância7); tecla8 continua alternativa.251unitários/
+40E2E PASS no follow-up; confirmar CI/deploy/version.json do próximo commit.
+Runtime15cc18b anterior do mesmo incremento já teve CI/deploy/manifest confirmados;
+não confundir com a revisão posterior da prévia dos vizinhos.
 
 ## Histórico — MVP 2B.2 publicado
 

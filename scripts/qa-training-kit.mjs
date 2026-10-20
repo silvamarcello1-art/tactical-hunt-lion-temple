@@ -51,7 +51,12 @@ try{
   await page.locator('#pause').click();await expect.poll(()=>pos('druid')).toEqual({x:9,y:8});
   await expect(page.locator('#game')).toHaveAttribute('data-pending-pushes','0');
   await page.waitForTimeout(500);const from=await point({x:9,y:8}),to=await point({x:9,y:7});
-  await page.mouse.move(from.x,from.y);await page.mouse.down();await page.mouse.move(to.x,to.y,{steps:5});await page.mouse.up();
+  await page.mouse.move(from.x,from.y);await page.mouse.down();await page.mouse.move(to.x,to.y,{steps:5});
+  const neighbours=JSON.parse(await page.locator('#game').getAttribute('data-push-destinations'));
+  expect(neighbours).toHaveLength(8);expect(neighbours.filter(d=>d.ready)).toHaveLength(7);
+  expect(await pos('druid')).toEqual({x:9,y:8});
+  await page.screenshot({path:resolve(output,`mvp2b3-${label}-drag-neighbours.png`)});
+  await page.mouse.up();
   await expect.poll(()=>pos('druid')).toEqual({x:9,y:7});
   await page.keyboard.press('Digit9');await expect(page.locator('#player-controls')).toHaveAttribute('data-last-intent','stop');
   await page.screenshot({path:resolve(output,`mvp2b3-${label}-kit.png`)});

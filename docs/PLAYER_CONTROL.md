@@ -2,6 +2,12 @@
 
 ## Treino 2B.3 — 19/10 (prevalece sobre kit 2B.2)
 
+Empurrão: segurar botão ESQUERDO, arrastar criatura e soltar num vizinho livre.
+Não é distância7. Preview read-only do domínio destaca os oito vizinhos,
+até7livres se o pusher ocupa outro; quinas/obstáculos/reservas podem reduzir.
+Holding não move o ator. Tecla8 é alternativa, não requisito. Soltar fora,
+blur, morte/reset não deixam preview/comando pendente de gesto.
+
 Digit1–3 magias, 4 MW, 5 Fire Field, 6 SD (inimigo), 7 Destroy Field (chão),
 8 push (alvo→destino ou arrastar), 9 Stop. Numpad continua movimento. Sem zoom.
 Mira no tile do cursor, não na hitbox do sprite alto; SD usa entidade clicada.

@@ -9,6 +9,17 @@ const setup=()=>{
   return {map,occupancy,pushes,source,target};
 };
 describe('delayed authoritative push intents',()=>{
+  it('previews only eight neighbours, up to seven free when the pusher occupies one; never seven tiles away',()=>{
+    const {pushes,source,target,occupancy}=setup();source.tileY=1;occupancy.occupy(source.id,{x:2,y:1});
+    const preview=pushes.preview(source,target,0)!;
+    expect(preview.destinations).toHaveLength(8);expect(preview.destinations.filter(d=>d.ready)).toHaveLength(7);
+    expect(preview.destinations.some(d=>d.tile.x===3&&d.tile.y===2)).toBe(false);
+    expect(pushes.validate(source,target,{x:10,y:2})).toBe('invalid-destination');
+    expect(pushes.validate(source,target,{x:2,y:1})).toBe('blocked');
+    preview.destinations[0].tile.x=99;expect(pushes.preview(source,target,0)!.destinations[0].tile.x).not.toBe(99);
+    pushes.queue('p','s',source,target,{x:4,y:2},0);
+    expect(pushes.preview(source,target,10)!.destinations.every(d=>!d.ready)).toBe(true);expect(pushes.size).toBe(1);
+  });
   it('waits a logical second, returns copies and leaves displacement to MovementSystem',()=>{
     const {pushes,source,target,occupancy}=setup();const result=pushes.queue('p','s',source,target,{x:4,y:2},0);
     expect(result.reason).toBe('ok');result.push!.destination.x=10;
