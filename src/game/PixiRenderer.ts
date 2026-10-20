@@ -988,6 +988,10 @@ export class PixiRenderer {
     const unit=this.units.get(heroId);if(!unit?.hero)return;
     const id=this.appearanceSprite?.(heroId)??heroId;
     unit.definition=this.sprites.definition(id);unit.spriteKey=id;
+    // Move only name/vitals above the new adornment envelope. Logical footpoint,
+    // selection ring and stored combat values do not move or get reconstructed.
+    unit.ui.pivot.y=unit.hpY-(unit.definition.effectAnchors.head.y*unit.definition.scale-10);
+    if(unit.debugLabel)unit.debugLabel.position.y=38+unit.ui.pivot.y;
     unit.sprite.anchor.set(unit.definition.footAnchor.x,unit.definition.footAnchor.y);
     unit.sprite.scale.set(unit.definition.visualWidth/unit.definition.frameSize*unit.definition.scale,unit.definition.visualHeight/unit.definition.frameSize*unit.definition.scale);
     unit.sprite.texture=this.sprites.texture(id,unit.state,unit.facing,this.presentation.time-unit.animationStartedAt);

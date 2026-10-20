@@ -1,4 +1,20 @@
-# MVP 2C — atelier de aparência e catálogo com fallback
+# MVP 2C — atelier de aparência e sprites de produção
+
+## Continuação — arte aplicada no mundo
+
+O usuário confirmou que os novos visuais precisam estar nos personagens reais.
+Foram produzidos/revisados/importados38atlas:12trajes×base/addon1/addon2 e2DLC.
+O resolver agora usa IDs e PNGs próprios,não o sprite nativo como substituto.
+Quatro direções,dois passos,pose de ataque/conjuração,footpoint fixo e composição
+cumulativa dos acessórios. OUTFIT_ART_2C.md contém promptset,proveniência,
+revisão/formato e limites;SESSION_CHECKPOINT contém gates/publicação reais.
+
+Addons usam atlas compostos,não camadas alpha independentes. Paletas continuam
+planejadas: máscaras seletivas5regiões ainda pendentes,sem tint global. Fonte
+recebida permanece referência intacta;as novas folhas são arte gerada/revisada.
+O histórico abaixo descreve a fundação6ff5b24 anterior,não limita o novo registro.
+
+## Histórico — fundação com fallback
 
 ## Verificação pública final
 

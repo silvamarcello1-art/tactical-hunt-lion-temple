@@ -1,0 +1,116 @@
+{
+  "generator": "builtin imagegen",
+  "sourceFile": "trump-base-source.png",
+  "sourceSha256": "447b33a2ecb51b136ae09dd866f80dfc00284f7d42bdbfe6d7f29c536a73da66",
+  "sourceSize": [
+    1254,
+    1254
+  ],
+  "runtimeSize": [
+    448,
+    448
+  ],
+  "cell": 112,
+  "baseline": 104,
+  "bodyScaleFactor": 1,
+  "visualTop": 68,
+  "scale": 0.2446043165467626,
+  "boxes": [
+    {
+      "left": 70,
+      "top": 56,
+      "width": 197,
+      "height": 275
+    },
+    {
+      "left": 398,
+      "top": 56,
+      "width": 158,
+      "height": 278
+    },
+    {
+      "left": 688,
+      "top": 56,
+      "width": 186,
+      "height": 276
+    },
+    {
+      "left": 1007,
+      "top": 57,
+      "width": 156,
+      "height": 277
+    },
+    {
+      "left": 79,
+      "top": 360,
+      "width": 188,
+      "height": 270
+    },
+    {
+      "left": 386,
+      "top": 361,
+      "width": 176,
+      "height": 266
+    },
+    {
+      "left": 690,
+      "top": 361,
+      "width": 177,
+      "height": 269
+    },
+    {
+      "left": 996,
+      "top": 361,
+      "width": 181,
+      "height": 269
+    },
+    {
+      "left": 79,
+      "top": 660,
+      "width": 182,
+      "height": 264
+    },
+    {
+      "left": 380,
+      "top": 660,
+      "width": 182,
+      "height": 262
+    },
+    {
+      "left": 690,
+      "top": 659,
+      "width": 171,
+      "height": 266
+    },
+    {
+      "left": 998,
+      "top": 658,
+      "width": 185,
+      "height": 264
+    },
+    {
+      "left": 71,
+      "top": 946,
+      "width": 201,
+      "height": 256
+    },
+    {
+      "left": 353,
+      "top": 949,
+      "width": 262,
+      "height": 252
+    },
+    {
+      "left": 675,
+      "top": 949,
+      "width": 226,
+      "height": 254
+    },
+    {
+      "left": 948,
+      "top": 950,
+      "width": 254,
+      "height": 252
+    }
+  ]
+}

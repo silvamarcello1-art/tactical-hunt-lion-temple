@@ -1,0 +1,116 @@
+{
+  "generator": "builtin imagegen",
+  "sourceFile": "assassin-addon2-source.png",
+  "sourceSha256": "6ab34d3110cdfed975e1d7f8d5053fd5a58d9311433d5b12b8ba9b55806159ce",
+  "sourceSize": [
+    1254,
+    1254
+  ],
+  "runtimeSize": [
+    448,
+    448
+  ],
+  "cell": 112,
+  "baseline": 104,
+  "bodyScaleFactor": 1,
+  "visualTop": 67,
+  "scale": 0.23255813953488372,
+  "boxes": [
+    {
+      "left": 26,
+      "top": 38,
+      "width": 289,
+      "height": 284
+    },
+    {
+      "left": 364,
+      "top": 39,
+      "width": 217,
+      "height": 284
+    },
+    {
+      "left": 631,
+      "top": 38,
+      "width": 292,
+      "height": 284
+    },
+    {
+      "left": 986,
+      "top": 39,
+      "width": 219,
+      "height": 285
+    },
+    {
+      "left": 42,
+      "top": 339,
+      "width": 258,
+      "height": 283
+    },
+    {
+      "left": 356,
+      "top": 343,
+      "width": 230,
+      "height": 280
+    },
+    {
+      "left": 650,
+      "top": 343,
+      "width": 264,
+      "height": 280
+    },
+    {
+      "left": 980,
+      "top": 343,
+      "width": 227,
+      "height": 280
+    },
+    {
+      "left": 36,
+      "top": 634,
+      "width": 270,
+      "height": 290
+    },
+    {
+      "left": 366,
+      "top": 636,
+      "width": 205,
+      "height": 284
+    },
+    {
+      "left": 638,
+      "top": 640,
+      "width": 272,
+      "height": 283
+    },
+    {
+      "left": 995,
+      "top": 636,
+      "width": 204,
+      "height": 284
+    },
+    {
+      "left": 47,
+      "top": 934,
+      "width": 245,
+      "height": 273
+    },
+    {
+      "left": 340,
+      "top": 938,
+      "width": 265,
+      "height": 271
+    },
+    {
+      "left": 631,
+      "top": 940,
+      "width": 301,
+      "height": 270
+    },
+    {
+      "left": 965,
+      "top": 935,
+      "width": 255,
+      "height": 274
+    }
+  ]
+}

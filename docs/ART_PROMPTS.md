@@ -1,5 +1,9 @@
 # Pixel heroes v1 — origem e prompts — 19/10/2026
 
+Continuação2C dos12trajes e addons/DLC:ver OUTFIT_ART_2C.md para o novo promptset,
+38fontes builtin imagegen preservadas e38PNGs448²RGBA aplicadas no mundo.
+O documento abaixo registra somente os três heróis nativos anteriores.
+
 Modo: **builtin imagegen**, três gerações novas, fundo transparente, sem imagens
 de referência e sem sprites/marcas de Tibia. A skill imagegen guiou prompts,
 inspeção e conservação dos originais. Não requer chave OpenAI no projeto.

@@ -1,5 +1,16 @@
 # Arquitetura — atualização MVP 2B.1 (10/10/2026)
 
+## Continuação2C — sprites reais
+
+outfitSprites registra38atlas compostos revisados(12×3níveis+2DLC),fora do
+manifesto de blockouts reproduzidos por art:generate. SpriteLibrary aplica
+outfitDefinition com112px/footpoint104 e os mesmos clips/timings nativos;novos
+IDs não alteram o domínio. refreshAppearance troca textura e desloca só a UI
+visual para caber adornos,sem recriar Unit/display objects. Atelier usa as mesmas
+células e cache limitado a8imagens. DLC independente do addon salvo. Máscaras de
+paleta continuam pendentes;sem recoloração global. OUTFIT_ART_2C.md registra
+fontes,importação técnica e limites dos ciclos/atlas compostos.
+
 ## MVP2C cosmético —20/10
 
 AppearanceStore guarda namespace versionado independente de economia. Outfits

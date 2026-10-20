@@ -4,6 +4,7 @@ import {activeAddons,defaultAppearance,normalizeAppearance,outfits,resolveOutfit
 import {swapOutfitPalette} from '../game/presentation/OutfitPalette';
 import {pixelPreviewFrame,pixelDefinition} from '../game/presentation/pixelSprites';
 import type {SpriteDefinition,SpriteAction} from '../game/presentation/SpriteDefinition';
+import {outfitSpriteAssets} from '../data/outfitSprites';
 
 const storage=()=>{const data=new Map<string,string>();return {data,getItem:(key:string)=>data.get(key)??null,setItem:(key:string,value:string)=>{data.set(key,value);}};};
 describe('cosmetic appearance contracts',()=>{
@@ -49,12 +50,31 @@ describe('cosmetic appearance contracts',()=>{
     expect(store.set('knight',{...defaultAppearance('knight'),outfitId:'mage'})).toBe(false);
     expect(store.get('knight').outfitId).toBe('mage');expect(store.warning).toContain('sessão');
   });
-  it('resolves pending reference to actual hero, never fabricating a direction or accessory',()=>{
-    expect(resolveOutfit({...defaultAppearance('druid'),outfitId:'citizen',addonLevel:2},'druid').spriteId).toBe('druid');
+  it('uses only exact reviewed directions/actions, never fabricating a missing accessory or facing',()=>{
     const slots=[{facing:'south' as const,actions:['walk' as const],asset:'approved.png',reviewed:true}];
     expect(reviewedSlot(slots,'north','walk')).toBeUndefined();expect(reviewedSlot(slots,'south-east','walk')).toBeUndefined();
     expect(reviewedSlot(slots,'south','cast')).toBeUndefined();expect(reviewedSlot(slots,'south','walk')?.asset).toBe('approved.png');
     expect(reviewedSlot([{...slots[0],reviewed:false}],'south','walk')).toBeUndefined();
+  });
+  it('ships all twelve outfits at all three addon levels and two independent DLC costumes',()=>{
+    expect(outfitSpriteAssets).toHaveLength(38);
+    for(const outfit of outfits.filter(o=>o.reference))for(const level of [0,1,2] as const){
+      const result=resolveOutfit({...defaultAppearance('knight'),outfitId:outfit.id,addonLevel:level},'knight');
+      expect(result.fallback).toBe(false);expect(result.spriteId).toBe(`outfit-${outfit.id}-${level?'addon'+level:'base'}`);
+    }
+    for(const id of ['neymar','mbappe'])for(const level of [0,1,2] as const){
+      const result=resolveOutfit({...defaultAppearance('knight'),outfitId:id,addonLevel:level,variantId:'dlc'},'knight');
+      expect(result.spriteId).toBe(`outfit-${id}-dlc`);expect(result.appearance.addonLevel).toBe(level);
+    }
+  });
+  it('resolves every reviewed production atlas to its own sprite, not a renamed native fallback',()=>{
+    expect(outfitSpriteAssets.length).toBeGreaterThan(0);
+    expect(new Set(outfitSpriteAssets.map(a=>a.spriteId)).size).toBe(outfitSpriteAssets.length);
+    for(const asset of outfitSpriteAssets){
+      const resolved=resolveOutfit({...defaultAppearance('druid'),...asset},'druid');
+      expect(resolved.spriteId).toBe(asset.spriteId);expect(resolved.fallback).toBe(false);
+      expect(resolved.asset?.path).toBe(asset.path);expect(asset.path).toMatch(/^\/assets\/outfits\/pixel-v1\//);
+    }
   });
   it('masked palette swaps ONLY declared regions and preserves protected pixels, alpha and source',()=>{
     const pixels=new Uint8ClampedArray([220,170,130,255,255,255,255,128,90,90,90,0]);

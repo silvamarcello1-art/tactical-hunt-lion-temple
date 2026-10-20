@@ -1,4 +1,21 @@
-# Estado vigente — MVP2C atelier com fallback — 20/10/2026 (São Paulo)
+# Estado vigente — MVP2C sprites no mundo — 20/10/2026 (São Paulo)
+
+## Atual — nova arte em gates locais
+
+Continuação autorizada sobre2c7c89a:38atlas builtin imagegen reais importados,
+12trajes com3níveis cumulativos e2DLC independentes. Todos com4cardinais/16poses,
+RGBA448²/células112²/footpoint104,registro data-driven e mesmo relógio nativo.
+Os sprites novos realmente trocam no mundo;3originais continuam disponíveis.
+17E2E focados PASS(1,3min),incluindo12trajes/WASD/facing e hunt Warrior/Druid/Mage
+novos até vitória,sem alterar combate. Gates locais integrais PASS:283unit25files,
+61E2E(8,2min),typecheck/build/frozen install/arte/diff. Somente teste de captura
+reforçado depois:17E2E(1,5min),PNG pausada precisa mudar sem alterar snapshot do
+combate;imagem nova inspecionada. Runtime intacto. CI/deploy ainda pendentes;
+runtime público6ff5b24 abaixo NÃO contém a nova arte. Ver OUTFIT_ART_2C.md.
+Addons são atlas compostos,cores seletivas continuam pendentes de máscaras.
+Sem tint global,economia nova,Adventure,backend,merge estável ou Sites.
+
+## Histórico — fundação anterior
 
 ## Atual — preview2C publicado e verificado
 

@@ -1,4 +1,43 @@
-# Checkpoint — MVP2C atelier com fallback — 20/10/2026 (São Paulo)
+# Checkpoint — MVP2C sprites no mundo — 20/10/2026 (São Paulo)
+
+## Continuação autorizada —38atlas locais em validação integral
+
+Entrada2c7c89abd31d92a65b2bbac44cad27ad504b9c20,local=origin/worktree limpa,
+fetch/health PASS. Usuário confirmou os12trajes aplicados ao personagem real.
+Novos atlas builtin imagegen,registro data-driven/importação/renderer/preview
+em implementação local.38atlas importados/revisados:12trajes×3níveis+2DLC.
+NÃO considerar concluído/publicado: runtime público ainda6ff5b24 anterior.
+OUTFIT_ART_2C.md registra promptset,proveniência,descartes e limites. Máscaras
+continuam pendentes;sem tint global. Nenhum novo monitor/merge/Sites.
+
+Intermediários:typecheck PASS após tipar a borda Node do teste sem dependência
+nova;23unit focados antes da ampliação do catálogo;5E2E atelier PASS(24,7s),
+mais3E2E Citizen/Warrior/Druid completos com margem112 PASS(14,1s). Novo teste
+inicial consultava unidades no idle antes do spawn;falhou corretamente e teve
+preparação ajustada para treino pausado,sem enfraquecer assertions/timeout.
+Gates integrais/CI/deploy/smokes públicos ainda PENDENTES para esta continuação.
+Depois:17E2E focados PASS(1,3min),12trajes no mundo/WASD/facing e nova hunt com
+Warrior/Druid/MageAddon2 até boss19kills4240XP1489gold1token,capturas inspecionadas.
+Typecheck e24unit focados PASS no catálogo38 antes da adição do teste puro de
+definição/footpoint. Gates integrais rodando em fonte estável;sem testes/timeout
+relaxados. Margem112/footpoint104 e fatores por atlas preservam corpo sob adornos.
+
+Gates locais finais: frozen install/typecheck PASS;283/283unit25arquivos(57,38s),
+build778módulos(4,82s),arte original reproduzível semdiff,diff-check PASS.
+Suíte integral61/61E2E PASS(8,2min). Depois,somente teste de captura reforçado:
+o relógio controlado deixava a imagemGPU antiga até próximo RAF;32ms de browser
+com player PAUSADO renderizam a textura nova SEM avançar domínio. Snapshot
+completo continua igual e PNG do canvas precisa mudar.17/17outfit E2E repetidos
+PASS(1,5min),nova PNG pausada inspecionada com Warrior/Druid/MageAddon2 reais.
+Nenhuma mudança de runtime depois da suíte integral;apenas prova visual de QA.
+
+38fontes SHA256 conferidas,38PNGs runtime distintas presentes na build;
+fontes brutas na build=0. PNGs runtime4669452bytes;raws51498741bytes fora do public.
+Bundle566,87kB conserva warning>500kB.38texturas448²RGBA representam~30,5MB de
+pixels decodificados antes de overhead,não medição totalGPU/FPS. Assets são
+precarregados;preview2D guarda no máximo8imagens. Novos display objects ao
+aplicar=0,domínio/eventos/controle/workflow/deps intactos no diff. Smokes
+compilados,commit/push/CI/deploy/manifest/smokes públicos AINDA PENDENTES.
 
 ## Encerramento2C — preview público aprovado
 

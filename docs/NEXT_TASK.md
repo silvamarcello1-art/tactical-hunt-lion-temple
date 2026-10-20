@@ -1,6 +1,19 @@
-# Próxima tarefa — fundação2C publicada, arte pendente — 20/10/2026 (São Paulo)
+# Próxima tarefa — validar/publicar sprites2C — 20/10/2026 (São Paulo)
 
-## Agora — fundação2C publicada; produção artística pendente
+## Agora — concluir sprites reais dos12trajes autorizados
+
+Continuação ativa sobre2c7c89a:usuário confirmou que quer a arte no personagem
+do mundo.38atlas importados/revisados(12×3níveis+2DLC).17E2E focados PASS,
+incluindo hunt personalizada nova. Gates locais integrais PASS:283unit25files,
+61E2E(8,2min),typecheck/build/frozen install/arte/diff. Captura reforçada passou
+17E2E(1,5min),sem mudar runtime;imagemGPU pausada agora verificada por pixels.
+Próximo:commit coerente,build:preview/smokes compilados com SHA real,normalpush,
+CI/Pages/manifest/smokes exatos e
+capturas públicas. Não entregar o antigo6ff5b24 como nova arte nem parar apenas
+no fallback. OUTFIT_ART_2C.md registra formatos/prompts/limites; máscaras de cores
+continuam pendentes,sem tint global. Não merge/Sites/economia/Adventure/backend.
+
+## Histórico — fundação2C publicada; produção artística antes pendente
 
 Publicação encerrada:runtime6ff5b24f15ede1d0b2981892dd91bc5abdb987c9;CI push
 39378261786/job118481194930 e PR39378266572/job118481210536 verdes279unit/

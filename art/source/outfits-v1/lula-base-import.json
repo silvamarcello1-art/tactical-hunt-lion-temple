@@ -1,0 +1,116 @@
+{
+  "generator": "builtin imagegen",
+  "sourceFile": "lula-base-source.png",
+  "sourceSha256": "73a83ebc8b381967a140a126c01fcb4fbd869896d35f50018f4518d6e99fcd70",
+  "sourceSize": [
+    1254,
+    1254
+  ],
+  "runtimeSize": [
+    448,
+    448
+  ],
+  "cell": 112,
+  "baseline": 104,
+  "bodyScaleFactor": 1,
+  "visualTop": 68,
+  "scale": 0.2518518518518518,
+  "boxes": [
+    {
+      "left": 82,
+      "top": 79,
+      "width": 192,
+      "height": 259
+    },
+    {
+      "left": 392,
+      "top": 78,
+      "width": 169,
+      "height": 266
+    },
+    {
+      "left": 681,
+      "top": 77,
+      "width": 183,
+      "height": 267
+    },
+    {
+      "left": 996,
+      "top": 78,
+      "width": 169,
+      "height": 266
+    },
+    {
+      "left": 80,
+      "top": 373,
+      "width": 188,
+      "height": 266
+    },
+    {
+      "left": 381,
+      "top": 372,
+      "width": 192,
+      "height": 267
+    },
+    {
+      "left": 681,
+      "top": 373,
+      "width": 180,
+      "height": 269
+    },
+    {
+      "left": 986,
+      "top": 372,
+      "width": 190,
+      "height": 270
+    },
+    {
+      "left": 81,
+      "top": 675,
+      "width": 187,
+      "height": 262
+    },
+    {
+      "left": 381,
+      "top": 673,
+      "width": 192,
+      "height": 263
+    },
+    {
+      "left": 681,
+      "top": 673,
+      "width": 180,
+      "height": 264
+    },
+    {
+      "left": 986,
+      "top": 673,
+      "width": 190,
+      "height": 266
+    },
+    {
+      "left": 81,
+      "top": 964,
+      "width": 195,
+      "height": 247
+    },
+    {
+      "left": 367,
+      "top": 965,
+      "width": 227,
+      "height": 249
+    },
+    {
+      "left": 675,
+      "top": 967,
+      "width": 207,
+      "height": 244
+    },
+    {
+      "left": 943,
+      "top": 964,
+      "width": 233,
+      "height": 250
+    }
+  ]
+}

@@ -1,3 +1,14 @@
+## 2026-10-20 — MVP2C: novos trajes aplicados no mundo
+
+- 38atlas pixel art gerados/revisados:12trajes com base/addons1/2 e2DLC. Quatro
+ cardinais/16poses,RGBA/nearest-neighbour,pés fixos,margem para penas/cajados/capas.
+- Registro data-driven com IDs próprios;mesmo renderer/relógio/entidades,sem
+ alterar stats/alvo/controle/economia. Preview usa a mesma arte e cache limitado.
+- Addon2 conserva1 em atlas compostos;DLC não apaga nível da base. Máscaras de
+ cores continuam pendentes,não há tint global. Fontes/prompts em OUTFIT_ART_2C.
+- Testes ampliados para cada traje no mundo,arquivos/footpoint,38combinações e
+ vitória com party usando arte nova. Gates/publicação reais no checkpoint.
+
 ## 2026-10-20 — MVP 2C: atelier de aparência com fallback explícito
 
 - Preview6ff5b24 publicado/verificado:CI279unit/48E2E/build/diff e smokes públicos

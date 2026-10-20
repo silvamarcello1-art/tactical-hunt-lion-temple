@@ -1,5 +1,6 @@
 import type { Vocation } from './progression';
 import type { SpriteAction, SpriteFacing } from '../game/presentation/SpriteDefinition';
+import {outfitSpriteAsset} from './outfitSprites';
 
 export type AddonLevel = 0 | 1 | 2;
 export const colorRegions = ['head','primary','secondary','legs','detail'] as const;
@@ -58,7 +59,7 @@ export const outfits:readonly OutfitDefinition[] = [
   ...references.map(([id,name,row,column,first,second]):OutfitDefinition=>({
     id,name,reference:{row,column},
     addons:[{id:`${id}-1`,level:1,accessories:[first],slots:[]},{id:`${id}-2`,level:2,accessories:[second],slots:[]}],
-    variants:[{id:'base',label:'Base',slots:[]},...(['neymar','mbappe'].includes(id)?[{id:'dlc' as const,label:'DLC · referência',slots:[]}]:[])],
+    variants:[{id:'base',label:'Base',slots:[]},...(['neymar','mbappe'].includes(id)?[{id:'dlc' as const,label:outfitSpriteAsset(id,0,'dlc')?'DLC':'DLC · referência',slots:[]}]:[])],
     recolorableRegions:[],unlock:{source:'test',availableForTest:true},
   })),
 ];
@@ -80,7 +81,8 @@ export function normalizeAppearance(value:unknown,hero:string):CharacterAppearan
 export const activeAddons=(appearance:CharacterAppearance)=>outfitById(appearance.outfitId)!.addons.filter(a=>a.level<=appearance.addonLevel);
 export function resolveOutfit(appearance:CharacterAppearance,hero:string) {
   const safe=normalizeAppearance(appearance,hero),def=outfitById(safe.outfitId)!;
-  return {spriteId:def.nativeSprite??hero,fallback:!def.nativeSprite,definition:def,appearance:safe};
+  const asset=outfitSpriteAsset(def.id,safe.addonLevel,safe.variantId);
+  return {spriteId:asset?.spriteId??def.nativeSprite??hero,fallback:!asset&&!def.nativeSprite,asset,definition:def,appearance:safe};
 }
 export function reviewedSlot(slots:readonly OutfitAssetSlot[],facing:SpriteFacing,action:SpriteAction) {
   // Missing north/diagonal means missing, not a mirrored asymmetric front frame.

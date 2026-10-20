@@ -1,0 +1,116 @@
+{
+  "generator": "builtin imagegen",
+  "sourceFile": "citizen-base-source.png",
+  "sourceSha256": "e7fb2c0bcbd1dc92ba15c4bd7faee3ae6674d2b13da8c0bff083aeac0fa4664d",
+  "sourceSize": [
+    1254,
+    1254
+  ],
+  "runtimeSize": [
+    448,
+    448
+  ],
+  "cell": 112,
+  "baseline": 104,
+  "bodyScaleFactor": 1,
+  "visualTop": 68,
+  "scale": 0.22442244224422442,
+  "boxes": [
+    {
+      "left": 72,
+      "top": 34,
+      "width": 189,
+      "height": 302
+    },
+    {
+      "left": 404,
+      "top": 34,
+      "width": 151,
+      "height": 302
+    },
+    {
+      "left": 686,
+      "top": 33,
+      "width": 180,
+      "height": 303
+    },
+    {
+      "left": 1008,
+      "top": 33,
+      "width": 147,
+      "height": 303
+    },
+    {
+      "left": 79,
+      "top": 351,
+      "width": 191,
+      "height": 286
+    },
+    {
+      "left": 379,
+      "top": 352,
+      "width": 190,
+      "height": 285
+    },
+    {
+      "left": 680,
+      "top": 353,
+      "width": 181,
+      "height": 284
+    },
+    {
+      "left": 995,
+      "top": 352,
+      "width": 184,
+      "height": 285
+    },
+    {
+      "left": 74,
+      "top": 651,
+      "width": 186,
+      "height": 283
+    },
+    {
+      "left": 379,
+      "top": 651,
+      "width": 198,
+      "height": 285
+    },
+    {
+      "left": 679,
+      "top": 651,
+      "width": 174,
+      "height": 286
+    },
+    {
+      "left": 997,
+      "top": 651,
+      "width": 191,
+      "height": 286
+    },
+    {
+      "left": 63,
+      "top": 947,
+      "width": 193,
+      "height": 278
+    },
+    {
+      "left": 352,
+      "top": 943,
+      "width": 251,
+      "height": 280
+    },
+    {
+      "left": 668,
+      "top": 944,
+      "width": 238,
+      "height": 281
+    },
+    {
+      "left": 964,
+      "top": 946,
+      "width": 249,
+      "height": 276
+    }
+  ]
+}
