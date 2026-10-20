@@ -1,4 +1,22 @@
-# Estado vigente — incremento 2B.4 em validação — 19/10/2026 (São Paulo)
+# Estado vigente — incremento 2B.4 publicado e validado — 20/10/2026 (São Paulo)
+
+## Atual — preview público aprovado
+
+Publicado a5be307b18ee3656143e945f0d34df9379f6c1d8 (checkout/health do CI e
+version.json público coincidem). Este SHA é docs-only sobre o código1860ba8;
+diff de src/public/tests/scripts/dependências/workflows vazio. Reexecução única
+autorizada do push39364771626: job118457324904 SUCCESS,258unit/44E2E(30,5min),
+typecheck/build/build:preview/arte/diff; deploy118466631698 SUCCESS. PR39364777345
+também aprovada. Não houve alteração de código, assertions, timeout ou workflow.
+Smokes públicos existentes com SHA exato PASS:3vitórias de treino,1224eventos de
+bots,economia intacta; hunt boss19kills/4240XP/1489gold/1token. Console sem erros
+ou warnings; cleanup sem resíduos, overlap/OOB/reservas/projéteis ativos zero.
+PNG mvp2b4-public-final-arena.png inspecionado: arena ampla,6atores,nomes/barras
+e dock1–9 legíveis. Preview compartilhado, não merge/release estável/PvP online;
+OTSP não integrado. Encerramento somente docs [skip ci], sem novo build.
+Link: https://silvamarcello1-art.github.io/tactical-hunt-lion-temple/?training=1&v=a5be307b18ee3656143e945f0d34df9379f6c1d8
+
+## Histórico — bloqueio anterior à reexecução autorizada
 
 Publicação ainda bloqueada (20/10): runtime1860ba8 tem gates locais verdes e
 PR CI258unit/44E2E/build PASS, mas push CI43/44E2E falhou na matriz de inspeção

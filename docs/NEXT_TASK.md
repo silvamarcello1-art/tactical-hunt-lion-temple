@@ -1,4 +1,20 @@
-# Próxima tarefa — concluir incremento 2B.4 — 19/10/2026 (São Paulo)
+# Próxima tarefa — incremento 2B.4 concluído — 20/10/2026 (São Paulo)
+
+## Agora — entregar preview e encerrar acompanhamento
+
+CI da reexecução única autorizada39364771626/job118457324904 PASS258unit/44E2E
+(30,5min)/typecheck/build/arte/diff; deploy118466631698 SUCCESS. Publicado e
+conferido a5be307b18ee3656143e945f0d34df9379f6c1d8, checkout docs-only equivalente
+ao código1860ba8. Não exigir CI novo para o checkpoint final docs-only [skip ci].
+Smokes públicos qa-training-team/qa-preview com SHA exato PASS:3vitórias,
+1224eventos bot,economia intacta,boss19kills4240XP1489gold1token;console/cleanup
+limpos. PNG público inspecionado. SESSION_CHECKPOINT contém métricas/limites.
+Fazer apenas commit/push normal destes registros, conferir local=origin/limpo e
+source inalterado, enviar link abaixo e pausar automação existente. Não há nova
+reexecução/fix autorizada; OTSP/Helper/merge/Sites ficam fora deste encerramento.
+https://silvamarcello1-art.github.io/tactical-hunt-lion-temple/?training=1&v=a5be307b18ee3656143e945f0d34df9379f6c1d8
+
+## Histórico — instruções anteriores superadas pelo encerramento acima
 
 ## Agora — aguardando direção após divergência de CI
 

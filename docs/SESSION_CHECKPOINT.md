@@ -1,4 +1,36 @@
-# Checkpoint — MVP 2B.4 em validação — 19/10/2026 (São Paulo)
+# Checkpoint — MVP 2B.4 publicado e validado — 20/10/2026 (São Paulo)
+
+## Encerramento — publicação pública confirmada
+
+ÚNICA reexecução integral autorizada: push39364771626/job118457324904 SUCCESS;
+258/258unit(23arquivos),44/44E2E(30,5min),typecheck/arte/build/build:preview/diff
+e upload PASS. Deploy118466631698 SUCCESS. PR39364777345/job118438994590 já
+aprovado258unit/44E2E. O job antigo118438976608 falhou e não é o gate atual.
+Checkout e health da nova tentativa confirmam a5be307b18ee3656143e945f0d34df9379f6c1d8;
+stamp usa git HEAD, não o SHA original do evento1860ba8. version.json público
+confere exatamente a5be307. Diff de src/public/tests/scripts/package.json/
+pnpm-lock.yaml/.github contra1860ba8107efa8b936636ec1f11d651e75e4b4bd vazio.
+
+qa-training-team.mjs público com SHA exato PASS:3vitórias,1224eventos de bots,
+economia inalterada,errors[],48displayObjects finais,zero overlap/OOB/reserva/
+projétil/push/terrain/efeito residual. Update médio0,189ms/max16,4ms é amostra,
+não promessa de FPS. qa-preview.mjs público PASS:boss morto,19kills,4240XP,
+1489gold,1token,52387,2ms lógico; errors[]/warnings[],cleanup limpo. Custo RAF
+amostrado1x2,727ms/4x5,688ms não é benchmark comparativo. Ambos exit0.
+PNG test-results/mvp2b4-public-final-arena.png inspecionado: arena amarela ampla,
+3heróis/3bots com nomes/HP/mana,dock1–9 e modos selecionados visíveis.
+
+Diagnóstico do primeiro push: trace do artefato12240608790 mostra assertion
+MANUAL aprovada antes do timeout total220s; contexto fecha pelo timeout e só
+depois aparece valor vazio/session closed. Causa última do custo não comprovada.
+Relatório local CI_RETRY_DIAGNOSIS.md na workspace de acompanhamento. Nenhum
+código/teste/script/timeout/workflow/proteção foi alterado na reexecução.
+Sem merge/forcepush/Sites/OTSP. Preview público, não release estável/PvP online.
+Checkpoint final docs-only [skip ci], não novo SHA servido; monitor deve ser
+pausado no encerramento. Link verificado:
+https://silvamarcello1-art.github.io/tactical-hunt-lion-temple/?training=1&v=a5be307b18ee3656143e945f0d34df9379f6c1d8
+
+## Histórico — estados abaixo anteriores ao encerramento
 
 ## Novo bloqueio de publicação — 20/10, 01:29 (São Paulo)
 
