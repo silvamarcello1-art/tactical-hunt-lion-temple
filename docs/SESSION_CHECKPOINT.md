@@ -1,5 +1,50 @@
 # Checkpoint — MVP2C atelier com fallback — 20/10/2026 (São Paulo)
 
+## Encerramento2C — preview público aprovado
+
+Códigoedcc846401540d804c8c660167181c4816217a1e;ajuste visual6ff5b24f15ede1d0b2981892dd91bc5abdb987c9.
+SHA REAL publicado6ff5b24 confirmado no checkout/health dos dois CI e no
+version.json público. Push39378261786/job118481194930 SUCCESS:279unit24arquivos,
+48/48E2E(53,6min),typecheck/frozen install/arte/build/build:preview/diff/upload.
+Deploy118499012439 SUCCESS. PR39378266572/job118481210536 SUCCESS279unit/
+48E2E(33,4min),build/diff;deployPR SKIPPED por política. Nenhuma reexecução,
+cancelamento,alteração de timeout/assertion/snapshot/workflow/proteção nesta rodada.
+LocalHEAD6ff5b24 repetiu48/48E2E PASS(7,2min),limpo/local=origin antes do fechamento.
+
+qa-outfits público com SHA exato PASS:6fantasias de referência/3níveis,paleta
+planejada,4cardinais do fallback,save/reload,nativo aplicado e troca em combate
+pausado sem mudança de party/posição/clock/modo/comandos. PNG pública HTTP200,
+2330784bytes,1122×1402. Primeiro screenshot ocorreu antes do background carregar;
+o smoke foi FORTALECIDO para aguardar image.decode e validar dimensões antes da
+captura. Reexecução do smoke PASS,PNG agora visível/inspecionada. Isso é mudança
+apenas de QA em scripts/qa-outfits.mjs,não código incluído no bundle/runtime.
+Capturas:test-results/mvp2c-public-final-outfits.png e mvp2c-public-final-customized.png.
+
+qa-training-team público PASS3vitórias,1211eventosbot,economia intacta,errors[],
+zero overlap/OOB/reservas/projéteis/terreno/push/resíduos. Snapshot imediato tinha
+1tween transitório;checagem complementar real-clock de3treinos públicos exigiu
+TODOS os contadores,tweens inclusive,em0 e passou com economia igual/console limpo.
+Não omitir essa distinção. Script complementar e galeria14referências frontais
+inspecionadas ficam na workspace de acompanhamento,não no bundle.
+qa-preview público PASS:boss morto,19kills,4240XP,1489gold,1token,52374,9ms lógico,
+errors[]/warnings[],cleanup0. Update médio0,043ms/max0,8ms no sample da hunt;
+RAF1x0,652ms/4x0,566ms são amostras,não benchmark/FPS garantido. Chunk preview
+560,83kB conserva warning>500kB,prancha2,3MB sob demanda;sem trabalho novo no
+loop de mundo ou novos display objects ao aplicar.
+
+LIMITES REAIS:3sprites nativos existentes reutilizados;12trajes novos apenas
+referências frontais com slots/addons0/1/2 cumulativos e DLC independentes salvos.
+Novas camadas/frames/facings/máscaras5regiões ainda PENDENTES. Sem tint global,
+costas/diagonais inventadas,arte oficial/OTSP,loja,economia,Adventure,rede ou merge.
+Entrega é fundação funcional com fallback explícito,não conclusão da produção
+artística. OUTFITS_2C.md detalha contratos. Checkpoint final docs+QA-only [skip ci]
+não exige novo build nem muda SHA servido;confirmar source src/public/deps/
+workflows/testes intactos desde6ff5b24,normalpush/local=origin/limpo.
+Link público verificado:
+https://silvamarcello1-art.github.io/tactical-hunt-lion-temple/?training=1&v=6ff5b24f15ede1d0b2981892dd91bc5abdb987c9
+
+## Histórico — implementação e validações anteriores
+
 ## Implementação2C — gates locais em curso
 
 Entradafba9825a63c9fb105bfdd66d8d65c2826e8daa51,feature/gameplay-first-mvp2a,

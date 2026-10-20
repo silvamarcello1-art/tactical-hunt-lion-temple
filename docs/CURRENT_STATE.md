@@ -1,5 +1,27 @@
 # Estado vigente — MVP2C atelier com fallback — 20/10/2026 (São Paulo)
 
+## Atual — preview2C publicado e verificado
+
+Runtime público6ff5b24f15ede1d0b2981892dd91bc5abdb987c9,checkout/health do CI e
+version.json exatos. Push39378261786/job118481194930 PASS279unit24arquivos/
+48E2E(53,6min)/typecheck/arte/build/build:preview/diff;deploy118499012439 SUCCESS.
+PR39378266572/job118481210536 também PASS279unit/48E2E(33,4min)/build/diff.
+HEAD final local repetiu48E2E PASS(7,2min). Sem modificar timeouts/assertions.
+Smokes públicos PASS:atelier com referênciaPNG1122×1402 decodificada,persistência,
+troca cosmética sem alterar estado;3treinos1211eventosbot/economia intacta;hunt
+boss19kills4240XP1489gold1token,errors[]/warnings[]. Cleanup zero;um tween
+transitório no snapshot imediato foi reconferido em3treinos adicionais e todos
+os contadores drenaram a0. Capturas públicas do atelier/personagem inspecionadas.
+Registro final somente docs+QA [skip ci],não outro runtime;source do jogo intacto.
+
+IMPORTANTE:fundação funcional com3sprites nativos aplicáveis e12REFERÊNCIAS.
+Addons/DLC/paletas persistem,mas camadas animadas e máscaras dos12trajes novos
+continuam PENDENTES. Paletas planejadas não recolorem assets atuais. Não declarar
+spritesheets/direções/addons de produção inexistentes como concluídos.
+Link: https://silvamarcello1-art.github.io/tactical-hunt-lion-temple/?training=1&v=6ff5b24f15ede1d0b2981892dd91bc5abdb987c9
+
+## Histórico — validação local anterior à publicação
+
 ## MVP2C — implementação local, publicação ainda não confirmada
 
 OutfitPanel compacto com12referências/3sprites originais aplicáveis,addons

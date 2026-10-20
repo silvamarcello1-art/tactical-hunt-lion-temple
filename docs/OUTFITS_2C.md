@@ -1,5 +1,15 @@
 # MVP 2C — atelier de aparência e catálogo com fallback
 
+## Verificação pública final
+
+Runtime6ff5b24f15ede1d0b2981892dd91bc5abdb987c9 publicado em20/10/2026;
+CI push/PR279unit/48E2E/build/diff aprovados,manifest e3smokes públicos com
+SHA exato aprovados. Atelier/PNG decodificada e personagem no mundo inspecionados;
+3treinos com economia intacta,huntboss19kills4240XP1489gold1token ecleanup
+complementar(tweens inclusive)zero. SESSION_CHECKPOINT contém IDs/métricas.
+Isso verifica a fundação COM fallback,não transforma as12referências em arte
+de produção. Próximo checkpoint é apenas documentação e QA,sem outro runtime.
+
 ## Entrega funcional e limite de arte
 
 Solicitação de20/10/2026: este slice2C é Outfit Customization, não Adventure.

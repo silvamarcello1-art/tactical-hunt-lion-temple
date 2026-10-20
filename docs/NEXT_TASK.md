@@ -1,4 +1,25 @@
-# Próxima tarefa — validar/publicar fundação2C — 20/10/2026 (São Paulo)
+# Próxima tarefa — fundação2C publicada, arte pendente — 20/10/2026 (São Paulo)
+
+## Agora — fundação2C publicada; produção artística pendente
+
+Publicação encerrada:runtime6ff5b24f15ede1d0b2981892dd91bc5abdb987c9;CI push
+39378261786/job118481194930 e PR39378266572/job118481210536 verdes279unit/
+48E2E/build/diff;deploy118499012439 SUCCESS;manifest exato e smokes públicos
+atelier/3treinos/huntboss PASS. Cleanup complementar3treinos com tweens0 PASS.
+Capturas públicas inspecionadas;QA aguarda PNG.decode antes da imagem. Sem novo
+runtime no checkpoint docs+QA-only [skip ci]. Finalizar normalpush desses registros,
+local=origin/limpo e runtime intacto,PR/relatório com link real abaixo.
+
+Próximo trabalho real:produzir/revisar spritesheets dos12trajes e2DLCs,camadas
+incrementais1/2,cardinais/ações/footpoint e máscaras5regiões. Referências frontais
+não são assets animados;fallback3nativos permanece. Paletas só planejadas/salvas,
+sem recoloração visual nos atuais. Não declarar MVP artístico completo nem
+ativar slots reviewed sem arquivos/QA. OUTFITS_2C.md lista a entrega e pendências.
+Nenhum novo monitor foi criado/retomado;antigo2B.4 permanece pausado. Sem merge,
+Sites,economia/loja,Adventure ou networking nesta entrega.
+https://silvamarcello1-art.github.io/tactical-hunt-lion-temple/?training=1&v=6ff5b24f15ede1d0b2981892dd91bc5abdb987c9
+
+## Histórico — etapas abaixo anteriores à publicação
 
 ## Agora — gates integrais e preview2C
 

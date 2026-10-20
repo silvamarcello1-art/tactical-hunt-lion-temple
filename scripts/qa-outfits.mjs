@@ -23,6 +23,9 @@ try{
     await expect(page.locator('#outfit-preview')).toHaveAttribute('data-rendered-sprite','knight');
   }
   await page.locator('[data-outfit="warrior"]').click();await page.locator('[data-addon="2"]').click();
+  const referenceImage=await page.locator('.outfit-reference').evaluate(el=>getComputedStyle(el).backgroundImage.slice(5,-2));
+  const referenceSize=await page.evaluate(async url=>{const image=new Image();image.src=url;await image.decode();return {width:image.naturalWidth,height:image.naturalHeight};},referenceImage);
+  expect(referenceSize).toEqual({width:1122,height:1402});
   for(const facing of ['east','north','west','south']){
     await page.locator('[data-rotate="1"]').click();await expect(page.locator('#outfit-preview')).toHaveAttribute('data-facing',facing);
   }
@@ -41,5 +44,5 @@ try{
   await page.screenshot({path:`test-results/mvp2c-${label}-customized.png`});
   await expect(page.locator('#game')).toHaveAttribute('data-logical-overlaps','0');await expect(page.locator('#game')).toHaveAttribute('data-out-of-bounds','0');
   expect(errors).toEqual([]);
-  console.log(JSON.stringify({url:url.href,sha,referencesChecked:catalog,referenceArtPending:true,productionSprites:3,paletteMasksPending:true,cosmeticStateUnchanged:true,errors}));
+  console.log(JSON.stringify({url:url.href,sha,referencesChecked:catalog,referenceSize,referenceArtPending:true,productionSprites:3,paletteMasksPending:true,cosmeticStateUnchanged:true,errors}));
 }finally{await browser.close();}

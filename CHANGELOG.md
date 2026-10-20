@@ -1,5 +1,9 @@
 ## 2026-10-20 — MVP 2C: atelier de aparência com fallback explícito
 
+- Preview6ff5b24 publicado/verificado:CI279unit/48E2E/build/diff e smokes públicos
+  atelier/três treinos/huntboss aprovados;referências frontais continuam pendentes
+  de spritesheets/camadas/máscaras,não são novos outfits animados prontos.
+
 - Modal Outfits, catálogo12referências+3sprites originais aplicáveis,addons0/1/2
   cumulativos e DLC independentes,preferências/paletas versionadas por herói.
 - Aplicação cosmética no Unit existente; sem alterações de engine/economia.
