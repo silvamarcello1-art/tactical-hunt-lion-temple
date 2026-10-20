@@ -27,6 +27,14 @@ Suíte integral48/48E2E PASS(8,8min);CI/deploy/publicsmokes ainda pendentes,não
 o antigo preview2B.4 como2C. Scripts existentes preservados;qa-outfits.mjs novo
 exige manifestSHA exato e separa referências de sprites/máscaras prontos.
 
+Compiladoedcc846401540d804c8c660167181c4816217a1e:qa-outfits PASS;3treinos
+PASS1219eventosbot/economiaintacta/console e cleanup limpos;hunt boss19kills/
+4240XP/1489gold/1token,errors[]/warnings[],52350,8ms lógico. Imagem do atelier
+inspecionada;recorte CSS do Warrior cortava o topo do adorno e foi ajustado
+em follow-up visual,sem alterar PNG/motor. DLC passa a explicitar referência
+única (addons da base preservados na preferência). Revalidar4E2E/compilado do
+follow-up antes de push;CI ainda exigirá os48integrais no HEAD publicado.
+
 ## Histórico —2B.4 abaixo
 
 ## Encerramento — publicação pública confirmada
