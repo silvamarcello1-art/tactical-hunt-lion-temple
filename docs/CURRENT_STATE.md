@@ -1,5 +1,14 @@
 # Estado vigente — incremento 2B.4 em validação — 19/10/2026 (São Paulo)
 
+Correção autorizada em20/10: o timeout de equipamento era uma derrota real da
+segunda hunt, não apenas lentidão. Abas do inventário chamavam seleção de herói
+de combate e assumiam Manual no Druid. Agora a inspeção tem estado separado,
+sem comandos/modos/seleção de combate; abrir começa no herói da HUD. Testes novos
+mantêm todas as assertions e verificam os3modos/foco/vitória após reload/forja.
+Gates finais em execução; não anunciar publicação antes de CI/manifest/smoke.
+Pacote OTSP real foi recebido depois da pasta vazia descrita abaixo, identificado
+como arte comunitária declarada CC BY4.0, mas NÃO integrado nesta correção.
+
 Aplicação local: dock 1–9 unificado, descrição lateral removida, arena clara com
 todos os tiles amarelos ligados ao GridMap (largura por sessão, sem fake floor).
 Seleção assume Manual somente no selecionado, companheiros Auto. Três bots de

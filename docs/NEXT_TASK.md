@@ -1,5 +1,21 @@
 # Próxima tarefa — concluir incremento 2B.4 — 19/10/2026 (São Paulo)
 
+## Agora — correção autorizada em validação
+
+Gates locais finalizados PASS:258unit/44E2E(8,7min)/typecheck/build/frozen install/
+arte sem diff/diff-check. Correção pronta para commit/push normal e CI novo.
+Não reutilizar a5e8e5b falho como gate do novo código. Depois manifest e scripts
+qa-training-team/qa-preview públicos, revisão visual, checkpoint e link final.
+
+Usuário aprovou corrigir o bloqueio. Causa estabelecida: seleção das abas do
+inventário assumia Manual no Druid e a segunda hunt terminava defeated. main
+agora separa equipmentHeroId de selectedHeroId/controle; inspeção não emite
+comando, abrir começa no herói da HUD. E2E preserva assertions e cobre3modos,
+3abas/foco e vitória equipada. Typecheck PASS; gates unit/build/44E2E finais em
+execução. Não aumentar limites. Após verdes: commit/push normal, CI do SHA novo,
+Pages/manifest exato, scripts públicos qa-training-team e qa-preview, checkpoint.
+Sem merge/Sites/Helper individual/OTSP nesta fatia. Monitor antigo está pausado.
+
 ## BLOQUEIO — aprovação necessária para corrigir
 
 PR CI39358581542/job118422167504 FAILURE no código/testes a5e8e5b:

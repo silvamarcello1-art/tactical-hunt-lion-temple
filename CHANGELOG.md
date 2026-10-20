@@ -1,3 +1,13 @@
+## 2026-10-20 — correção do bloqueio de equipamento
+
+- Navegar entre heróis do inventário não assume Manual nem altera a seleção de
+  combate. Antes, inspecionar Druid desativava sua cura na próxima hunt Auto,
+  derrotava a party e o E2E esperava vitória até o timeout. Estado de inspeção
+  isolado; nenhuma fórmula/save/loot alterada.
+- Regressão exige zero comandos/alteração de modo/seleção ao inspecionar e cobre
+  Auto/Manual/Assistido, foco ao fechar e vitória após equipamento/forja/reload.
+- Sem aumentar timeout, pular assertions ou importar sprites junto da correção.
+
 ## 2026-10-19 — treino 2B.4 (São Paulo)
 
 - Hotbar unificada 1–9 no rodapé, sem descrição lateral; arena clara mais larga,

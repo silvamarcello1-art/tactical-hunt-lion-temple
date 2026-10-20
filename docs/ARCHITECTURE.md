@@ -1,5 +1,12 @@
 # Arquitetura — atualização MVP 2B.1 (10/10/2026)
 
+## Isolamento de inspeção — 20/10
+
+main mantém equipmentHeroId independente de selectedHeroId. EquipmentPanel usa
+esse contexto somente para visualizar/comparar o loadout; callback da aba atualiza
+esse estado e renderiza o drawer. Não passa por selectHero/PlayerControls nem
+assume controle no domínio. Abrir o drawer inicia no herói selecionado da HUD.
+
 ## Incremento 2B.4 — 19/10
 
 singleHeroControl é configuração da aplicação: transferência exclusiva e rejeição

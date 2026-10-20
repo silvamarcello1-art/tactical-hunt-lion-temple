@@ -101,9 +101,11 @@ equipmentRoot.id='equipment-drawer';equipmentRoot.className='drawer equipment-dr
 equipmentRoot.setAttribute('aria-label','Inventário e equipamento');equipmentRoot.tabIndex=-1;
 equipmentRoot.innerHTML='<button id="close-equipment" class="drawer-close" aria-label="Fechar inventário">×</button><div id="equipment-content"></div>';
 document.querySelector('.app-shell')!.append(equipmentRoot);
+// Inspecting another loadout must not assume combat control or change the HUD hero.
+let equipmentHeroId:Vocation='knight';
 const equipmentPanel=new EquipmentPanel($('#equipment-content'),equipmentStore,()=>({
-  hero:selectedHeroId as Vocation,progress:progressionStore.snapshot(),allowed:!trainingMode&&!loopEnabled&&['idle','completed','defeated'].includes(sessionPhase),
-}),id=>selectHero(id),()=>{
+  hero:equipmentHeroId,progress:progressionStore.snapshot(),allowed:!trainingMode&&!loopEnabled&&['idle','completed','defeated'].includes(sessionPhase),
+}),id=>{equipmentHeroId=id;refreshEquipment();},()=>{
   if(sessionPhase==='idle') renderer?.engine.configureLoadout(equipmentStore.loadout());
 });
 const inventoryButton=document.createElement('button');inventoryButton.id='open-equipment';inventoryButton.textContent='Inventário';
@@ -115,6 +117,7 @@ const rewardNotice=document.createElement('button');rewardNotice.id='reward-noti
 document.querySelector('.world-stage')!.append(rewardNotice);
 function openEquipment(itemId?:string) {
   ($('#result') as HTMLDialogElement).close();$('#view-summary').hidden=true;
+  equipmentHeroId=selectedHeroId as Vocation;
   playerControls?.clear();equipmentRoot.hidden=false;equipmentPanel.focusItem(itemId);equipmentRoot.focus();
 }
 inventoryButton.onclick=()=>openEquipment();

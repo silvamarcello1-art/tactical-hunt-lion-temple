@@ -29,7 +29,11 @@ test('real hunt → drop → compare → equip → forge → reload → equipped
   await expect(page.locator('#inventory-gold')).toHaveText(`${goldBefore-200} ouro`);
   await expect(page.locator('.equipment-slots')).toContainText('+1');
   const attack=Number(await page.locator('[data-stat="attack"]').textContent());expect(attack).toBeGreaterThan(before);
+  const commandsBeforeInspection=await page.locator('#player-controls').getAttribute('data-command-count');
   await page.locator('[data-equipment-hero="druid"]').click();await expect(page.locator('#equipment-content h2')).toHaveText('Equipamento · Lyra');
+  await expect(page.locator('html')).toHaveAttribute('data-selected-hero','knight');
+  await expect(page.locator('#control-mode')).toHaveValue('AI');
+  expect(await page.locator('#player-controls').getAttribute('data-command-count')).toBe(commandsBeforeInspection);
   await page.locator(`[data-item-id="${id}"]`).click();await expect(page.locator('[data-action="equip"]')).toBeDisabled();
   await page.locator('#close-equipment').click();await page.locator('[data-speed="4"]').click();await page.locator('#start').click();
   await page.clock.runFor(500);await page.locator('#open-equipment').click();
@@ -76,6 +80,23 @@ test('inventory panels keep three desktop viewports readable and capture clicks'
     await expect(page.locator('#equipment-content h2')).toHaveText('Equipamento · Orin');
     expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
     await page.locator('#close-equipment').click();
+  }
+  // Inventory tabs inspect loadouts only, in every combat mode; closing restores
+  // gameplay focus without assuming another hero or sending a control command.
+  for(const mode of ['AI','MANUAL','ASSISTED']) {
+    await page.locator('#control-mode').selectOption(mode);
+    const commands=await page.locator('#player-controls').getAttribute('data-command-count');
+    await page.locator('#open-equipment').click();
+    await expect(page.locator('#equipment-content h2')).toHaveText('Equipamento · Aldric');
+    for(const [hero,name] of [['druid','Lyra'],['sorcerer','Orin'],['knight','Aldric']]) {
+      await page.locator(`[data-equipment-hero="${hero}"]`).click();
+      await expect(page.locator('#equipment-content h2')).toHaveText(`Equipamento · ${name}`);
+      await expect(page.locator('html')).toHaveAttribute('data-selected-hero','knight');
+      await expect(page.locator('#control-mode')).toHaveValue(mode);
+      await expect(page.locator('#player-controls')).toHaveAttribute('data-command-count',commands!);
+    }
+    await page.locator('#close-equipment').click();
+    await expect(page.locator('#game canvas')).toBeFocused();
   }
 });
 

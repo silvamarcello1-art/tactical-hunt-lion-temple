@@ -1,5 +1,34 @@
 # Checkpoint — MVP 2B.4 em validação — 19/10/2026 (São Paulo)
 
+## Correção autorizada — 20/10
+
+Gates finais locais PASS: frozen install;health;typecheck;258/258unit23arquivos
+(126,10s);build774módulos(9,67s;warning548kB mantido);arte reprodutível sem diff;
+44/44EdgeE2E1worker(8,7min);git diff --check. Cenário principal equipado/forjado
+agora vence a segunda hunt, matriz de inspeção preserva3modos e foco, reserva
+com mochila cheia preservada,3treinos e bordas amarelas passaram. Nenhum timeout
+foi alterado. Smoke qa-preview agora retorna explicitamente o Druid selecionado
+ao Auto antes de medir uma hunt Auto: card assume Manual por contrato2B.4.
+Próxima etapa é CI/deploy do commit da correção e smokes no manifest exato.
+Não confundir aprovação local com publicação confirmada.
+
+Usuário autorizou corrigir o bloqueio e enviar link só depois de pronto. Entrada
+ea0465b limpa/local=origin; fetch/health confirmados. Causa comprovada pelo fluxo
+de callbacks e snapshot local: aba de equipamento→selectHero→selectActor→Manual;
+Druid com mana cheia, party KO e estado defeated, não completed esperado pelo
+teste. Não se trata de mero custo/timeout. Correção em main: equipmentHeroId de
+inspeção independente; callback não chama controle; abrir sincroniza somente
+contexto do drawer. Seleção card/mundo exclusiva permanece intacta.
+
+Regressão equipment.spec: após inspecionar Druid exige seleção Knight/Auto e
+mesma contagem de comandos (inclusive atributo inicialmente ausente); matriz
+AI/MANUAL/ASSISTED inspeciona3heróis, preserva controle e devolve foco ao canvas.
+Primeira rodada3/4 PASS: cenário principal parou na nova assertion porque
+toHaveAttribute não aceita null; corrigido comparando valor nullable exato.
+Nenhuma regra, timeout, assertion original, save ou baseline foi relaxado.
+Typecheck PASS; unit/build e44E2E finais em execução. Monitor antigo permanece
+pausado; esta sessão executa a correção autorizada. Sem integração OTSP nem merge.
+
 ## BLOQUEIO CONFIRMADO — 20/10, 00:12 (São Paulo)
 
 Código/testes a5e8e5b4ba9f6ae9597128306a149a400bec1877; checkpoint posterior

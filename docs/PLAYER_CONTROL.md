@@ -1,5 +1,14 @@
 # Controle do jogador — contrato vigente (05/10/2026)
 
+## Correção de isolamento do inventário — 20/10
+
+Abas de herói dentro do inventário inspecionam somente equipamento: não mudam
+herói de combate, modo, alvo nem enviam comando control. Ao abrir, o painel
+mostra o herói selecionado da HUD; mudanças internas usam equipmentHeroId local
+ao painel. Fechar preserva modos/ordens e devolve foco ao canvas. Somente seleção
+nos cards/mundo/controle de herói assume Manual pela regra2B.4. Isso evita deixar
+o Druid em Manual após comparação e iniciar uma hunt Auto sem cura.
+
 ## Contrato 2B.4 — 19/10 (substitui seleção independente abaixo)
 
 Na aplicação, clique no card ou no herói assume Manual nele e devolve os demais

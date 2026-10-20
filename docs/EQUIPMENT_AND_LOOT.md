@@ -44,6 +44,11 @@ histórico nem convertidos silenciosamente em ouro ou equipamento.
 
 ## Equipamento / forja
 
+Seleção de abas do inventário é somente inspeção de loadouts. Não é seleção de
+controle da party, não chama PlayerControls.selectActor e não altera Auto/Manual/
+Assistido nem o herói da HUD. Abrir sincroniza o painel com o herói da HUD; navegar
+internamente usa estado próprio. Fechar retorna o foco sem emitir ordem de combate.
+
 Somente idle/completed/defeated, Loop OFF. Pausa não conta como intervalo.
 Loadout é copiado para o motor; durante a hunt, não pode ser reconfigurado.
 Comparação usa effectiveStats como o motor; retirar/equipar recompõe do zero.

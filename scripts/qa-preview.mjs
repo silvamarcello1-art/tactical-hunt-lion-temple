@@ -29,6 +29,11 @@ try {
   await expect(page.locator('html')).toHaveAttribute('data-session-state','idle');
   await expect(page.locator('#start')).toBeEnabled();
   await page.locator('#loop-toggle').click();await page.locator('#card-druid').click();
+  // 2B.4 card selection deliberately takes Manual control. This smoke measures
+  // a complete Auto hunt, so explicitly return the selected hero to Auto.
+  await expect(page.locator('#card-druid')).toHaveAttribute('data-control-mode','MANUAL');
+  await page.locator('#control-mode').selectOption('AI');
+  for(const hero of ['knight','druid','sorcerer'])await expect(page.locator(`#card-${hero}`)).toHaveAttribute('data-control-mode','AI');
   await page.locator('[data-speed="1"]').click();await page.locator('#start').click();
   await page.waitForTimeout(5000);
   await page.screenshot({path:resolve(output,`mvp2b1-${label}-gameplay.png`)});
