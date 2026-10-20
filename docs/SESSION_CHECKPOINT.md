@@ -1,4 +1,49 @@
-# Checkpoint — MVP 2B.3: fechamento local, publicação pendente — 19/10/2026
+# Checkpoint — MVP 2B.3 publicado — 20/10/2026 UTC
+
+## Fechamento vigente — prevalece sobre os registros históricos abaixo
+
+Runtime público: bbd0fac90bbc5ba27be4c9189f36513e1d59ee93.
+Branch feature/gameplay-first-mvp2a, origin GitHub, PR3 aberta sem merge.
+CI push39347671213: validate118384098380 e deploy118395034330 SUCCESS.
+CI PR39347675576: validate118384113457 SUCCESS (deploy PR é skipped por desenho).
+Manifest público exato conferido em20/10UTC após01:02. Local251/251 unitários,
+40/40 E2E Edge, typecheck/build, frozen install, health, arte reproduzível e
+diff --check PASS; gates remotos também aprovados. Nenhum timeout/assert foi
+afrouxado. Warning de chunk >500kB permanece; não há lint configurado.
+
+Smokes públicos em Edge isolado, relógio real e SHA obrigatório:
+
+- qa-training-kit: MW/mira, rejeição de Destroy Field sobre MW sem gastar carga,
+  remoção de fogo, SD/projétil, Heal Friend em aliado, dois pushes (tecla/arraste),
+  pausa/reset PASS. Oito vizinhos/sete livres no fixture, alvo imóvel ao segurar,
+  soltura no vizinho autorizado. Console/resíduos zerados. Captura dos vizinhos
+  inspecionada; runtime correto, sem zoom ajustável.
+- qa-training: três vitórias, 1441 eventos, economia inalterada, zero console,
+  overlap/OOB/reservas/projéteis/condições/pushes/VFX residuais. Variação de um
+  evento contra amostra anterior de 1442 não foi usada como baseline determinístico:
+  o smoke usa relógio real. Ruleset sem diff, testes/baselines determinísticos verdes.
+- qa-preview: vitória real contra boss,19kills/4240XP/1489gold/1BossToken,
+  simulação de52350ms (clock apresentado52363ms pelo frame real),1x→4x PASS.
+  Zero console/warnings/overlap/OOB/reservas/projéteis/pushes/VFX residuais.
+  Apresentação média0,075ms/pico1,1ms;594display objects,máximo97objetos visuais
+  ativos/13efeitos. Callback rAF1x média0,920ms/pico56,1ms;4x média1,159ms/
+  pico46,2ms. Amostras desta execução, não FPS nem prova de melhoria comparável.
+  Screenshots em test-results/mvp2b3-public-final-* e mvp2b1-public-final-gameplay.png,
+  fora do bundle. Smokes executados via scripts do repositório, não perfil do usuário.
+
+scripts/qa-training-kit.mjs passou local compilado e público após trocar espera
+arbitrária de500ms por deadline lógico queuedPush.time+2000 antes do segundo
+gesto. É ajuste apenas do teste reutilizável; src/public/dependências/workflow
+continuam exatamente no runtimebbd0fac. Fechamento doc/QA usa [skip ci] para não
+disparar outra publicação idêntica. O SHA servido é do runtime, não desse checkpoint.
+
+Usuário autorizou acompanhamento automático de5min; não foi necessário criar
+agenda porque CI/deploy terminaram e a verificação foi concluída nesta sessão.
+Sem merge, force push, Sites, ampliação de permissões ou Helper individual.
+Treino Party × Bot, não PvP online; catálogo/Wheel/fórmulas/máscaras completos e
+teclado físico manual continuam gaps documentados. Próxima fatia: NEXT_TASK.md.
+
+## Histórico da implementação e espera (não é pendência atual)
 
 ## Follow-up — arraste esquerdo e vizinhos
 
@@ -12,6 +57,15 @@ Commit15cc18bcc2f9111a80de19960ca1c904a017a7f5 está no origin, CI push393451249
 PR39345131120 em execução. Follow-up ainda não commitado; não confundir versões.
 
 ### Fechamento local do follow-up
+
+Estado operacional: runtimebbd0fac90bbc5ba27be4c9189f36513e1d59ee93 commitado e
+push normal, local=origin confirmado. CI push39347671213/PR39347675576 em
+validação E2E. Build:preview do bbd0fac e smoke compilado de kit/vizinhos + hunt
+normal até boss PASS, manifest local correto, zero erros/resíduos. Única mudança
+posterior ao runtime: qa-training-kit espera o deadline lógico de2000ms do push,
+em vez de500ms de parede, antes do segundo gesto; sintaxe e execução compilada
+PASS. É tooling de QA, não bundle/combate. Falta CI/deploy/manifest/smoke público
+do bbd0fac; depois registrar, commit checkpoint doc/QA e push sem novo runtime.
 
 - Health,251/251unitários(22arquivos,54,59s),typecheck/build e full Edge40/40
   (6,2min,1worker) PASS; subset final de push1/1(9,4s) PASS. Smoke real

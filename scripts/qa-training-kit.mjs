@@ -50,7 +50,9 @@ try{
   await page.locator('#pause').click();await page.waitForTimeout(1200);expect(await pos('druid')).toEqual({x:8,y:8});
   await page.locator('#pause').click();await expect.poll(()=>pos('druid')).toEqual({x:9,y:8});
   await expect(page.locator('#game')).toHaveAttribute('data-pending-pushes','0');
-  await page.waitForTimeout(500);const from=await point({x:9,y:8}),to=await point({x:9,y:7});
+  const queuedPush=events.filter(e=>e.type==='push_queued').at(-1);expect(queuedPush).toBeTruthy();
+  await expect.poll(async()=>Number(await page.locator('#game').getAttribute('data-logical-time'))).toBeGreaterThanOrEqual(queuedPush.time+2000);
+  const from=await point({x:9,y:8}),to=await point({x:9,y:7});
   await page.mouse.move(from.x,from.y);await page.mouse.down();await page.mouse.move(to.x,to.y,{steps:5});
   const neighbours=JSON.parse(await page.locator('#game').getAttribute('data-push-destinations'));
   expect(neighbours).toHaveLength(8);expect(neighbours.filter(d=>d.ready)).toHaveLength(7);

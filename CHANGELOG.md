@@ -1,5 +1,9 @@
 ## 2026-10-19 — treino 2B.3
 
+- Fechamento em20/10UTC: runtimebbd0fac publicado no Pages, CI push/PR e deploy
+  aprovados, manifest exato e smokes públicos verificados. Checkpoint doc/QA
+  posterior não muda o bundle. Evidências em SESSION_CHECKPOINT.md.
+
 - Confirmação do gesto de empurrar: botão esquerdo segurado e soltura num vizinho
   livre, não7tiles de distância. Preview dos destinos vem do domínio; tecla8
   continua alternativa. Holding não move/teleporta a criatura.

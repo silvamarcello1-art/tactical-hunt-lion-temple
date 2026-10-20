@@ -1,23 +1,28 @@
-# Próxima tarefa — fechar validação/publicação 2B.3 — 19/10/2026
+# Próxima tarefa — após entrega pública 2B.3 — 20/10/2026 UTC
 
 Follow-up do usuário: botão esquerdo segurado → soltar em tile vizinho livre,
 não distância7. Arraste já funcionava em15cc18b; agora ganha preview dos vizinhos
 autorizados pelo domínio. Gates novos passaram251unitários/40E2E e smoke
-qa-training-kit com holding/7destinos no fixture diagonal. Não publicar como
-concluído enquanto CI/deploy/SHA do commit mais recente não forem conferidos.
+qa-training-kit com holding/7destinos no fixture diagonal. Entrega pública
+confirmada no SHA abaixo; não reimplementar o kit ou repetir gates sem mudança.
+
+Runtime publicado bbd0fac90bbc5ba27be4c9189f36513e1d59ee93. CI push
+39347671213/PR39347675576 aprovadas; deploy118395034330 aprovado. Manifest público
+bbd0fac confirmado. Smokes públicos de kit e três treinos PASS, saves preservados;
+hunt normal e detalhes em SESSION_CHECKPOINT. qa-training-kit agora espera o
+deadline lógico do push, não 500ms de parede: tooling testado, sem mudar runtime.
+Checkpoint doc/QA [skip ci] não representa outro build nem merge estável.
 
 Implementação atual descrita em TRAINING_2B3.md; ART_PROMPTS.md conserva a origem
 da pixel art. Não reimplementar quatro runas/push/slots/mira. Sem zoom ajustável.
 Entrada dca56a8, branch feature/gameplay-first-mvp2a, local=origin limpo antes
 das mudanças. Não usar Helper individual/Sites, não mergear.
 
-1. Gates locais fechados:250unitários/40E2E, typecheck/build/diff, frozen install
-   e arte reproduzível. Subset final de runas/sprites8/8 passou após ajuste da
-   mira SD no desenho do alvo. Ver SESSION_CHECKPOINT para evidências/amostras.
-2. Rever diff/arte reproduzível; commit/push normal, confirmar SHA e atualizar
-   PR3. Publicação GitHub Pages autorizada pelo usuário; só afirmar após CI/deploy,
-   version.json e smoke de treino/hunt no SHA real. Não expor o SHA antigo como novo.
-3. Depois: revisar lacunas oficiais listadas em TRAINING_2B3; especialmente máscaras,
+1. Próxima implementação exige revisar lacunas oficiais de TRAINING_2B3 e definir
+   uma fatia verificável, sem prometer toda a versão atual do Tibia de uma vez.
+2. Preservar 251 unitários/40 E2E, economia, inventário cheio/reserva e hashes das
+   hunts não alteradas. Manter fontes, dados e regras autoritativas no domínio.
+3. Revisar especialmente máscaras,
    requisitos, autoaim SD, Challenge encadeado e passivas/Wheel. Não afirmar paridade
    integral. Paladin/Monk e networking permanecem fora desta fatia; manter2C→2D→2E→2F.
 

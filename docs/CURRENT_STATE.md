@@ -1,15 +1,21 @@
-# Estado vigente — incremento 2B.3 — 19/10/2026
+# Estado vigente — incremento 2B.3 publicado — 20/10/2026 UTC
 
-Implementado e validado localmente: quatro runas por 4–7, push por 8/arrastar e Stop por 9 no treino;
+Implementado e validado local/público: quatro runas por 4–7, push por 8/arrastar e Stop por 9 no treino;
 três heróis com pixel art própria maior, sem zoom, mira de tile independente do
 sprite. Perfil de nove magias de referência, Heal Friend ally-only e Mana Buffer
 dos magos; hunt normal/saves preservados. TRAINING_2B3.md define regras/fontes e
 limites. ART_PROMPTS.md registra o modo builtin e fontes/atlas. Não é PvP online
 nem Wheel completa. Após confirmação do usuário, left-drag ganha prévia dos
-vizinhos autorizados (não distância7); tecla8 continua alternativa.251unitários/
-40E2E PASS no follow-up; confirmar CI/deploy/version.json do próximo commit.
-Runtime15cc18b anterior do mesmo incremento já teve CI/deploy/manifest confirmados;
-não confundir com a revisão posterior da prévia dos vizinhos.
+vizinhos autorizados (não distância7); tecla8 continua alternativa. 251 unitários/
+40 E2E PASS local e CI. Runtime publicado bbd0fac90bbc5ba27be4c9189f36513e1d59ee93:
+CI push39347671213 e PR39347675576 aprovadas, deploy118395034330 aprovado e
+version.json público conferido. Kit público passou: runas, cura, pausa/reset,
+dois pushes e sete destinos no fixture diagonal, sem movimento durante holding.
+Três treinos públicos venceram sem alterar saves econômicos; console/cleanup
+limpos. Evidências completas e hunt até boss: SESSION_CHECKPOINT.md.
+Checkpoint posterior altera somente documentação/tooling de QA, não o runtime.
+Preview compartilhado, não merge/release estável:
+https://silvamarcello1-art.github.io/tactical-hunt-lion-temple/?training=1&v=bbd0fac
 
 ## Histórico — MVP 2B.2 publicado
 
