@@ -1,5 +1,16 @@
 # Arquitetura — atualização MVP 2B.1 (10/10/2026)
 
+## Incremento 2B.3 — 19/10
+
+PushSystem agenda intenções (não move entidades); o scheduler revalida e chama
+MovementSystem, que continua dono de reserva/commit. SD reutiliza ProjectileSystem;
+Destroy Field remove somente campo. trainingSpells/abilityCatalog isolam o perfil
+de treino com IDs estáveis e cooldown secundário opcional. ManaBuffer é função
+pura aplicada no pipeline de dano só no treino. healthDamage distingue perda de
+HP do dano bruto no evento de buffer. pixelDefinition substitui as três imagens,
+não altera footprint/clock. Mira Pixi recebe preview read-only e execução sempre
+revalida. Contratos completos: TRAINING_2B3.md e ART_PROMPTS.md.
+
 ## Incremento 2B.2 — 19/10: treino local no mesmo domínio
 
 O 8º parâmetro trainingMode do CombatEngine seleciona um roster de sparring,

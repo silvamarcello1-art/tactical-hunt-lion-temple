@@ -93,6 +93,7 @@ const skillArt={
 };
 await mkdir(resolve(root,'ui'),{recursive:true});
 for(const [id,[color,art]] of Object.entries(skillArt)) await writeFile(resolve(root,'ui',`${id}.svg`),`<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48"><rect width="48" height="48" rx="3" fill="#18211d"/><g fill="none" stroke="${color}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">${art}</g></svg>\n`);
+for(const [id,art] of Object.entries({strong_ice_wave:'<path d="M 6 38 L 18 14 24 34 31 8 42 38 M 9 25 H 39 M 13 17 L 36 35 M 35 16 L 12 35"/>',eternal_winter:'<path d="M 24 4 V 44 M 4 24 H 44 M 9 9 L 39 39 M 9 39 L 39 9 M 17 5 L 24 12 31 5 M 17 43 L 24 36 31 43"/>'}))await writeFile(resolve(root,'ui',`training-${id}.svg`),`<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48"><rect width="48" height="48" rx="3" fill="#18212b"/><g stroke="#9fdaee" stroke-width="2" fill="none" stroke-linejoin="round">${art}</g></svg>\n`);
 await mkdir(resolve(root,'terrain'),{recursive:true});
 for (const [id,color,detail] of [
   ['floor-stone','#343b3d','<path d="M 2 2 H 30 V 30 H 2 Z M 3 4 H 27"/>'],

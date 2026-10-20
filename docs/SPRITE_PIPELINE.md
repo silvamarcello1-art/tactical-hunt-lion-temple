@@ -1,5 +1,16 @@
 # Pipeline — atualização MVP 2B.1 (05/10/2026)
 
+## Pixel heroes 2B.3 (19/10)
+
+SpriteLibrary aplica pixelDefinition apenas a Knight/Druid/Sorcerer: atlas PNG
+320×320, células80×80, pés(40,74), idle ~60px, escala1 e nearest. Colunas S/E/N/W;
+linhas idle/passo1/passo2/cast. Morte usa fade existente. Footprint continua1×1.
+Raws em art/source/pixel-v1 fora do bundle; finais em public/assets/original/pixel.
+Importação técnica opcional por scripts/import-pixel-atlas.mjs com Sharp externo;
+CI não instala Sharp nem chama IA. ART_PROMPTS.md contém origem e prompt set.
+pnpm art:generate não sobrescreve os PNG. O contrato vetorial antigo abaixo
+continua válido para os sete monstros e fixtures do manifesto, não para heróis.
+
 `pnpm art:generate` reproduz dez atores (incluindo bronze-bastion e wandering-ballista)
 e nove ícones individuais em `public/assets/original/ui/<abilityId>.svg`.
 Os SVG de UI são 48×48, consumidos em slots de tamanho fixo; não derivar ícone

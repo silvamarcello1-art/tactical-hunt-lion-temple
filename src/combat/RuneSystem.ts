@@ -1,9 +1,9 @@
-import {TRAINING_FIELD,type RuneId} from '../data/runes';
+import {TRAINING_FIELD,type TerrainRuneId} from '../data/runes';
 import {GridMap} from './grid/GridMap';
 import {OccupancyGrid} from './grid/OccupancyGrid';
 import {gridKey,type GridPosition} from './grid/GridTypes';
 
-export interface RuneTile {id:string;runeId:RuneId;sourceId:string;sessionId:string;tile:GridPosition;startedAt:number;expiresAt:number}
+export interface RuneTile {id:string;runeId:TerrainRuneId;sourceId:string;sessionId:string;tile:GridPosition;startedAt:number;expiresAt:number}
 type Actor = {id:string;tileX:number;tileY:number;alive:boolean;role:string};
 export interface RuneHit {sourceId:string;targetId:string;amount:number;castId:string}
 type Burn={sourceId:string;targetId:string;castId:string;until:number;nextTick:number};
@@ -27,6 +27,11 @@ export class RuneSystem {
       this.active.delete(key);removed.push({...rune,tile:{...rune.tile}});
     }
     return removed;
+  }
+  destroyField(tile:GridPosition){
+    const key=gridKey(tile),field=this.active.get(key);
+    if(field?.runeId!=='fire_field')return undefined;
+    this.active.delete(key);return {...field,tile:{...field.tile}};
   }
   resolve(now:number,actors:readonly Actor[]):RuneHit[] {
     const hits:RuneHit[]=[];

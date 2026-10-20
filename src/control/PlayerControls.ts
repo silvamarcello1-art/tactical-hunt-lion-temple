@@ -1,7 +1,7 @@
 import { bindingForCode, abilityReasons } from '../data/actionBar';
 import { AssistanceStore } from '../app/AssistanceStore';
 import { heroes } from '../data/config';
-import { abilities } from '../data/abilities';
+import {abilityCatalog} from '../data/trainingSpells';
 import {runeDefinitions,type RuneId} from '../data/runes';
 import type { CombatEvent } from '../events/types';
 import type { PlayerControlPort } from './PlayerControlPort';
@@ -17,6 +17,7 @@ export class PlayerControls {
   readonly held:HeldInput;
   readonly interaction = new InteractionController();
   private readonly mouse=new MouseGesture();
+  private dragActor?:{id:string;x:number;y:number};
   private abort = new AbortController();
   private sequence = 0;
   private pendingStep?:{x:number;y:number};
@@ -85,12 +86,14 @@ export class PlayerControls {
       if(event.ctrlKey||event.metaKey||event.altKey)return;
       if (event.key === 'Escape') {
         event.preventDefault();
-        if(['spell-targeting','use-with','rune-targeting'].includes(this.interaction.state.kind)) {this.interaction.cancel();this.status.textContent='Escolha de alvo cancelada.';this.sync();return;}
+        if(['spell-targeting','use-with','rune-targeting','push-targeting'].includes(this.interaction.state.kind)) {this.interaction.cancel();this.status.textContent='Escolha de alvo cancelada.';this.sync();return;}
         this.stop();this.status.textContent='Parado.';return;
       }
       if (editableTarget(event.target) || !this.port.running || event.ctrlKey || event.metaKey || event.altKey) return;
       const rune=Object.values(runeDefinitions).find(r=>r.code===event.code);
       if(this.port.training&&rune){event.preventDefault();if(!event.repeat)this.armRune(rune.id);return;}
+      if(this.port.training&&event.code==='Digit8'){event.preventDefault();if(!event.repeat)this.armPush();return;}
+      if(this.port.training&&event.code==='Digit9'){event.preventDefault();if(!event.repeat)this.stop();return;}
       const slot=bindingForCode(this.actorId,event.code);
       if(slot) {event.preventDefault();if(!event.repeat) {this.panel.dataset.resolvedBinding=`${event.code}:${this.actorId}:${slot.ability.id}`;this.cast(slot.ability.id,event.shiftKey);}return;}
       if(event.code==='Numpad5') {event.preventDefault();if(!event.repeat)this.stop();return;}
@@ -106,6 +109,7 @@ export class PlayerControls {
     listen(document,'focusin',(event) => { if (editableTarget(event.target)) this.clear(); });
     listen(window,'hunt-event',(raw) => {
       const event = (raw as CustomEvent<CombatEvent>).detail;
+      if(event.type==='push_cancelled'&&event.sourceId===this.actorId)this.status.textContent=this.reasonLabel(event.data?.reason??'blocked');
       if (event.type === 'floor_complete' || event.type === 'hunt_complete' ||
         (event.type === 'death' && (event.targetId === this.actorId || (this.target?.kind === 'entity' && this.target.entityId === event.targetId)))) this.clear();
     });
@@ -126,25 +130,49 @@ export class PlayerControls {
       if(document.querySelector('#equipment-drawer:not([hidden])')) return;
       const event=raw as MouseEvent;
       this.focusGame();
+      if(this.port.training&&event.button===0&&!['rune-targeting','spell-targeting','push-targeting','use-with'].includes(this.interaction.state.kind)){
+        const target=this.pointerTarget(event);if(target?.kind==='entity'&&target.entityId!==this.actorId)this.dragActor={id:target.entityId,x:event.clientX,y:event.clientY};
+      }
       event.stopImmediatePropagation();
       if(this.mouse.down(event.button,event.buttons)==='look') {
         const target=this.pointerTarget(event);
         if(target) {this.send({type:'look',target});this.status.textContent=describeWorld(target.kind==='entity'?this.port.entities.find(e=>e.id===target.entityId):undefined,target.kind==='tile'?target.tile:undefined);}
       }
     },true);
+    listen(this.port.canvas,'mousemove',(raw)=>{
+      const event=raw as MouseEvent,point=this.port.worldPoint?.(event.clientX,event.clientY);
+      const state=this.interaction.state;
+      if(!point||!['rune-targeting','push-targeting'].includes(state.kind)){this.port.showAim?.();return;}
+      const pickedId=state.kind==='rune-targeting'&&state.runeId==='sudden_death'?this.port.pickEntity?.(event.clientX,event.clientY):undefined;
+      const picked=pickedId?this.port.entities.find(e=>e.id===pickedId):undefined;
+      const tile=picked?{x:picked.tileX,y:picked.tileY}:{x:Math.round(point.x/32),y:Math.round(point.y/32)};
+      const preview=state.kind==='rune-targeting'?this.port.runePreview?.(this.actorId,state.runeId,tile):undefined;
+      this.port.showAim?.(tile,preview?.ready??true);
+      if(preview)this.status.textContent=`${runeDefinitions[(state as {runeId:RuneId}).runeId].name} · tile ${tile.x},${tile.y} · ${preview.ready?'clique para usar':this.reasonLabel(preview.reason)}`;
+    });
+    listen(this.port.canvas,'mouseleave',()=>this.port.showAim?.());
     listen(window,'mouseup',(raw) => {
       if(document.querySelector('#equipment-drawer:not([hidden])')) {this.mouse.clear();return;}
       const event = raw as MouseEvent;
       const gesture=this.mouse.up(event.button);
+      const drag=this.dragActor;this.dragActor=undefined;
+      if(gesture==='select'&&drag&&event.target===this.port.canvas&&Math.hypot(event.clientX-drag.x,event.clientY-drag.y)>=6){
+        const point=this.port.worldPoint?.(event.clientX,event.clientY);
+        if(point)this.send({type:'push',targetId:drag.id,tile:{x:Math.round(point.x/32),y:Math.round(point.y/32)}});
+        this.interaction.cancel();this.sync();return;
+      }
       if(!gesture || event.target!==this.port.canvas) return;
       event.stopImmediatePropagation();
       let target = this.pointerTarget(event);
       if (!target) return;
-      // A ground-target rune uses the authoritative tile of a picked actor, never an enemy cast.
-      if(this.interaction.state.kind==='rune-targeting'&&target.kind==='entity'){
-        const targetId=target.entityId;
-        const entity=this.port.entities.find(e=>e.id===targetId);
+      // Terrain targeting always uses the pointed tile, not the taller sprite's hitbox.
+      const state=this.interaction.state;
+      if(state.kind==='rune-targeting'||state.kind==='push-targeting'&&state.targetId){
+        const point=this.port.worldPoint?.(event.clientX,event.clientY);
+        const pickedId=target.kind==='entity'?target.entityId:undefined;
+        const entity=state.kind==='rune-targeting'&&state.runeId==='sudden_death'&&pickedId?this.port.entities.find(e=>e.id===pickedId):undefined;
         if(entity)target={kind:'tile',tile:{x:entity.tileX,y:entity.tileY}};
+        else if(point)target={kind:'tile',tile:{x:Math.round(point.x/32),y:Math.round(point.y/32)}};
       }
       if(gesture==='engage') {
         if(target.kind==='entity'&&!heroes.some(h=>h.id===target.entityId)) {
@@ -152,7 +180,7 @@ export class PlayerControls {
         }
         return;
       }
-      const targeting = ['spell-targeting','use-with','rune-targeting'].includes(this.interaction.state.kind);
+      const targeting = ['spell-targeting','use-with','rune-targeting','push-targeting'].includes(this.interaction.state.kind);
       const command = this.interaction.target(target);
       if (command) this.send(command);
       if (!targeting && target.kind==='entity' && heroes.some(hero=>hero.id===target.entityId)) {this.selectActor(target.entityId);return;}
@@ -163,7 +191,7 @@ export class PlayerControls {
         this.port.showDestination?.(target.tile);
       }
       this.menu.hidden = true;
-      this.status.textContent = targeting ? 'Comando enviado.' : this.targetLabel();
+      this.status.textContent = this.interaction.state.kind==='push-targeting'?'Agora clique no tile de destino, ao lado do alvo.':targeting ? 'Comando enviado.' : this.targetLabel();
       this.sync();
     },true);
     listen(this.port.canvas,'contextmenu',(raw) => {
@@ -191,10 +219,12 @@ export class PlayerControls {
   }
 
   get manual() { return this.mode !== 'AI'; }
+  armPush(){if(!this.port.training||!this.port.running)return;this.held.clear();this.pendingStep=undefined;this.interaction.armPush();this.status.textContent='Empurrar: clique numa criatura/personagem adjacente e depois no tile de destino. Ou arraste o alvo.';this.sync();this.focusGame();}
+  stopAction(){this.stop();this.focusGame();}
   armRune(runeId:RuneId){
     if(!this.port.training||!this.port.running)return;
     this.held.clear();this.pendingStep=undefined;this.interaction.armRune(runeId);
-    this.status.textContent=`${runeDefinitions[runeId].name}: clique no chão (até 7 tiles). ESC cancela.`;this.sync();this.focusGame();
+    this.status.textContent=`${runeDefinitions[runeId].name}: ${runeDefinitions[runeId].target==='enemy'?'clique no inimigo':'clique no tile'} (até ${runeDefinitions[runeId].range} tiles). ESC cancela.`;this.sync();this.focusGame();
   }
   selectActor(actorId:string) {
     if (!heroes.some(hero => hero.id === actorId)) return;
@@ -207,7 +237,7 @@ export class PlayerControls {
     this.sync();
   }
   cast(abilityId:string, targeting = false) {
-    const ability = abilities.find(ability => ability.id === abilityId);
+    const ability = abilityCatalog(!!this.port.training).find(ability => ability.id === abilityId);
     const hero = heroes.find(hero => hero.id === this.actorId);
     if (!ability || ability.vocation !== hero?.role) {
       this.status.textContent = 'Selecione o personagem desta habilidade.';
@@ -215,15 +245,15 @@ export class PlayerControls {
     }
     const targetId=ability.group==='healing'||ability.group==='support'?this.actorId:this.target?.kind==='entity'?this.target.entityId:undefined;
     const available=this.port.abilityStatus(this.actorId,abilityId,targetId);
-    if(targeting || (!targetId && available.reason==='no-target')) {
+    if(targeting || available.reason==='ally-required' || (!targetId && available.reason==='no-target')) {
       this.held.clear();this.pendingStep=undefined;this.interaction.armSpell(abilityId);
-      this.status.textContent='Clique no alvo da habilidade. ESC cancela.';
+      this.status.textContent=ability.targetRule==='ally-only'?'Heal Friend: escolha outro aliado; não funciona em você. ESC cancela.':'Clique no alvo da habilidade. ESC cancela.';
     } else if(!available.ready) this.status.textContent=abilityReasons[available.reason]??this.reasonLabel(available.reason);
     else {this.send({type:'cast',abilityId,targetId:targetId??this.actorId});this.status.textContent=`${ability.name}: solicitada.`;}
     this.sync();
   }
   clear() {
-    this.held.clear(); this.mouse.clear();this.pendingStep=undefined; this.inputAt=0; this.interaction.cancel(); this.target = undefined; this.menu.hidden = true;
+    this.held.clear(); this.mouse.clear();this.dragActor=undefined;this.pendingStep=undefined; this.inputAt=0; this.interaction.cancel(); this.target = undefined; this.menu.hidden = true;
     this.status.textContent = '';
     this.sync();
   }
@@ -255,6 +285,7 @@ export class PlayerControls {
     return this.target?.kind === 'entity' ? `Alvo: ${this.target.entityId}` : this.target?.kind === 'tile' ? `Tile ${this.target.tile.x}, ${this.target.tile.y}` : 'Selecione um alvo.';
   }
   private reasonLabel(reason:string) {
+    const tactical:Record<string,string>={'no-field':'Nenhum campo removível neste tile. Magic Wall não é removível.','not-pushable':'Esta criatura não pode ser empurrada.','self-push':'Use movimento para deslocar seu próprio herói.','push-cooldown':'Aguarde a recarga do empurrão.','push-pending':'Já existe um empurrão pendente.','target-moved':'O alvo se moveu; empurrão cancelado.'};if(tactical[reason])return tactical[reason];
     const labels:Record<string,string> = {'training-only':'Runas disponíveis no treino local.','no-charges':'Sem cargas neste kit de treino.','ownership':'Assuma o controle Manual deste personagem.', 'session-ended':'A hunt terminou.', 'actor-dead':'Personagem derrotado.', 'invalid-target':'Alvo inválido.', 'out-of-range':'Alvo fora do alcance.', 'blocked':'Destino bloqueado por parede, criatura ou reserva.', 'invalid-destination':'Destino fora da arena.', 'ability-unavailable':'Habilidade indisponível: mana, cooldown ou configuração.', 'unsupported-interaction':'Esta interação ainda não está disponível.', 'action-pending':'Aguarde o próximo passo.'};
     return abilityReasons[reason] ?? labels[reason] ?? 'Comando indisponível.';
   }
@@ -274,7 +305,9 @@ export class PlayerControls {
     const target=this.port.entities.find(entity=>entity.id===this.selectedTarget);
     const targetStatus=document.querySelector('#target-status');
     if(targetStatus) targetStatus.textContent=target?`${target.name} · ${target.hp}/${target.maxHp} HP`:'';
-    this.port.canvas.style.cursor = ['spell-targeting','rune-targeting'].includes(this.interaction.state.kind) ? 'crosshair' : '';
+    const aiming=['spell-targeting','rune-targeting','push-targeting'].includes(this.interaction.state.kind);
+    this.port.canvas.style.cursor = aiming ? 'crosshair' : '';
+    if(!aiming)this.port.showAim?.();
     if(this.debug)this.debug.textContent=`${this.actorId} ${this.mode} | ${this.panel.dataset.resolvedBinding??'-'} | ${this.panel.dataset.lastIntent??'-'}:${this.panel.dataset.lastCommandResult??'-'} | attack:${options.autoAttack} spells:${options.autoSpells} | t:${this.port.time.toFixed(0)}ms input:${this.panel.dataset.inputLatencyMs??'-'}ms`;
   }
 }

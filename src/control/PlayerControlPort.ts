@@ -18,5 +18,7 @@ export interface PlayerControlPort {
   pickEntity?(clientX:number,clientY:number):string|undefined;
   worldPoint?(clientX:number,clientY:number):{x:number;y:number}|undefined;
   showDestination?(tile:{x:number;y:number}):void;
+  showAim?(tile?:{x:number;y:number},ready?:boolean):void;
+  runePreview?(actorId:string,runeId:import('../data/runes').RuneId,tile:{x:number;y:number}):{ready:boolean;reason:string};
   beforeTick(callback?:() => void):void;
 }

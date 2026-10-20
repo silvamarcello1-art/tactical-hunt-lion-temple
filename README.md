@@ -14,18 +14,22 @@ O próximo combate utiliza os stats efetivos. Reload preserva XP, equipamentos,
 ouro e Boss Tokens. Mochila cheia envia recompensas para uma reserva visível.
 Regras e recuperação de save: [Equipment and Loot](docs/EQUIPMENT_AND_LOOT.md).
 
-## Treino de movimento e runas — MVP 2B.2
+## Treino de movimento e runas — MVP 2B.3
 
 Clique em **Treino de runas** entre sessões, ou abra `/?training=1` no servidor
 local. A party começa em Manual contra um bot. Selecione um herói; WASD, setas
 ou Numpad movem; **4 + clique** coloca Magic Wall; **5 + clique** coloca Fire
-Field. ESC cancela a seleção. As teclas 1–3 continuam as magias da vocação.
+Field; **6** Sudden Death, **7** Destroy Field, **8** empurrar (ou arraste uma
+criatura adjacente), **9** parar. ESC cancela a seleção. As teclas 1–3 continuam
+as magias da vocação; Numpad somente movimenta, não conjura.
 Parede bloqueia caminhada/tiros; campo causa burning no bot. Pausa e velocidades
 compartilham o relógio lógico. Reiniciar repõe o kit gratuito de cada herói.
 
 Sem recompensas persistentes, Loop ou PvP online. Não é o catálogo completo de
 magias/passivas/Wheel do Tibia atual; parâmetros e próximos passos estão em
-[Tactical Runes](docs/TACTICAL_RUNES.md). Arte original, sem sprites copiados.
+[Training 2B.3](docs/TRAINING_2B3.md). Três heróis em pixel art própria maior,
+sem zoom ajustável; prévia de tile facilita colocar MW sem acertar um sprite
+por engano. [Origem da arte e prompts](docs/ART_PROMPTS.md).
 
 ## Executar
 
@@ -61,7 +65,7 @@ pnpm build
 
 ## Estado
 
-O MVP 0 é histórico; a etapa atual é MVP 2B.2 (treino local). Consulte:
+O MVP 0 é histórico; a etapa atual é MVP 2B.3 (treino local). Consulte:
 
 - `docs/CURRENT_STATE.md`
 - `docs/ACCEPTANCE_MVP0.md`
@@ -72,4 +76,5 @@ O MVP 0 é histórico; a etapa atual é MVP 2B.2 (treino local). Consulte:
 - Arena limitada; ainda sem Adventure, NPCs, quests ou campanha.
 - Save local, sem backend, contas, multiplayer ou anticheat de economia online.
 - Dois slots por herói, melhoria até +1; sem venda, descarte ou drag-and-drop.
-- Sprites originais ainda são blockouts; referências legadas ficam fora do build.
+- Heróis usam pixel art original v1; monstros continuam blockouts. Referências
+  legadas e fontes raw da arte ficam fora do build.

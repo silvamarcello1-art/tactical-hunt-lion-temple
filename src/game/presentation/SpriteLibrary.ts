@@ -3,6 +3,7 @@ import { Assets, Rectangle, Texture } from 'pixi.js';
 import type { AnimationClipDefinition } from './AnimationSet';
 import { spriteAction, type SpriteDefinition } from './SpriteDefinition';
 import type { VisualAnimationState, VisualFacing } from './CombatPresentationSystem';
+import {pixelDefinition} from './pixelSprites';
 
 export function clipFrame(clip:AnimationClipDefinition,elapsed:number):string {
   const index = Math.floor(Math.max(0,elapsed)/clip.frameDuration);
@@ -16,7 +17,7 @@ export class SpriteLibrary {
   private frames = new Map<string,Texture>();
   async load() {
     const definitions = await Assets.load<SpriteDefinition[]>(assetUrl('/assets/original/manifests/sprites.json'));
-    await Promise.all(definitions.map(async definition => {
+    await Promise.all(definitions.map(pixelDefinition).map(async definition => {
       const sheet = await Assets.load<Texture>(assetUrl(definition.spriteSet));
       if (this.disposed) return;
       sheet.source.scaleMode = 'nearest';

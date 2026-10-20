@@ -1,5 +1,12 @@
 # Apresentação vigente — MVP 2B.1 (05/10/2026)
 
+Incremento 2B.3: atlas pixel próprio 80×80 dos três heróis, baseline74 e corpo
+idle ~60 px, sem zoom ou mudança do tile32. HP/mana/nomes ancorados acima da
+cabeça. Mira de chão destaca tile válido/inválido, sem ampliar áreas lógicas.
+SD usa animação de death original e trajetória/eventos existentes; Druid no
+treino usa gelo nas duas habilidades, ícones separados e Mana Buffer visível.
+Objetos de mira são removidos na saída do targeting/reset. TRAINING_2B3.md.
+
 `GAMEPLAY_POLISH.md` contém o contrato atual. Projéteis interpolam diretamente
 `visualOrigin` → `visualImpact`, emitidos pelo domínio junto de castId/sessionId,
 startedAt/impactAt e pathTiles. Rotação usa o vetor constante de viagem. PathTiles

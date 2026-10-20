@@ -1,4 +1,52 @@
-# Checkpoint — MVP 2B.2 publicado e verificado — retomada 19/10/2026
+# Checkpoint — MVP 2B.3: fechamento local, publicação pendente — 19/10/2026
+
+## Sessão atual
+
+- Entrada dca56a8aff487bd0171b04209f8d7205723abde9, local=origin e limpa;
+  branch feature/gameplay-first-mvp2a/base visual58d9720. Fetch/health feitos.
+- Concluído: SD/Destroy Field, push atrasado por MovementSystem, teclas1–9,
+  mira de chão independente de sprites maiores e pixel art original três heróis.
+  Perfil de nove magias, cooldown secundário e Mana Buffer dos magos só no treino.
+  Sem zoom; sem alterar economia/saves/hunt normal. TRAINING_2B3 e ART_PROMPTS.
+- Base antes das edições: typecheck/231 unit/build PASS. Novos E2E direcionados
+  4/4 e regressão inicial de runas/sprites4/4 PASS. Imagens dos três atlas e captura
+  do gameplay inspecionadas. São testes reais Edge do repositório, não teclado
+  físico manual. Gate completo atual na execução70587; registrar resultado final.
+- Não iniciado: Wheel completa, catálogo de cinco vocações, PvP online. Dano,
+  requisitos, autoaim e máscaras ainda parcialmente de protótipo, documentados.
+- Arquivos: combat/control/data/events, renderer/presentation, HUD/main/CSS,
+  testes RuneSystem/Push/ManaBuffer/sprites/E2E, importador/gerador e docs.
+  Raws fora do bundle em art/source/pixel-v1; runtime public/assets/original/pixel.
+- Publicação nova NÃO confirmada ainda; público anterior88d3fc6. Usuário autorizou
+  Pages depois dos gates. Não merge/Sites. Próximo comando: pnpm typecheck;
+  pnpm exec vitest run; pnpm build; pnpm exec playwright test --reporter=line --workers=1.
+
+## Evidência local consolidada
+
+- pnpm install --frozen-lockfile, health, typecheck, build e diff --check PASS.
+  Suíte final de 250/250 unitários,22 arquivos,88,66s. Full Edge40/40,1worker,
+  7,1min; após ajuste restrito à mira SD no sprite, typecheck/build e subset de
+  runas/sprites8/8 PASS(44s). Nenhum timeout/assert antigo ou baseline afrouxado.
+- Acrescentados casos de CD secundário/grupo attack e SD com impacto real; fixture
+  de baixo HP confirma Mana Buffer no pipeline de dano (restaura dados após uso).
+- scripts/qa-training-kit.mjs local (relógio real): mira MW, rejeição de remoção de
+  MW sem gastar carga, Destroy Field, SD, Heal Friend em aliado, dois pushes por
+  hotkey/drag, pausa e reset; zero erros/resíduos. Não usa relógio simulado.
+- scripts/qa-training.mjs: três vitórias,1442eventos, saves econômicos idênticos;
+  zero overlap/OOB/reserva/projétil/condição/push órfãos. Fim:590display objects,
+  máximo6VFX ativos, update apresentação médio0,093ms/máximo1,6ms na amostra.
+- scripts/qa-preview.mjs: hunt normal 1x→4x, boss real,19kills/4240XP/1489gold/
+  1token,52.350ms lógicos; zero erros/warnings/resíduos. Apresentação média0,112ms,
+  máximo2,4ms,594objetos. Instrumentação rAF: 1x média1,50/max122,3ms;4x
+  média1,34/max48,4ms. Custo de callback, não FPS; coleta concorrente a unitários,
+  sem baseline comparável para afirmar ganho. Chunk >500kB continua warning.
+- Reimportação dos três raw PNGs produziu SHA256 idêntico aos runtime PNGs;
+  art:generate deixou assets rastreados sem diff. Raw art não está em dist.
+  Capturas de mira/kit/gameplay e os três atlas inspecionados.
+- Lint não configurado; teclado físico/NumLock manual não foi certificado. QA
+  usa Edge real automatizado do repositório. Sem workaround de Computer Use.
+
+## Histórico — MVP 2B.2 publicado e verificado
 
 Entrada em 2378cb5f51f9013b95fa839e8b20a620d354bfd9, local=origin, worktree
 limpa, branch feature/gameplay-first-mvp2a e base visual 58d9720 confirmadas.

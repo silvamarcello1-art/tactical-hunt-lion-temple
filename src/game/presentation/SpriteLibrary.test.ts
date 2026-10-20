@@ -2,9 +2,22 @@ import { describe, expect, it } from 'vitest';
 import manifestText from '../../../public/assets/original/manifests/sprites.json?raw';
 import { clipFrame } from './SpriteLibrary';
 import { spriteAction, type SpriteDefinition } from './SpriteDefinition';
+import {pixelDefinition} from './pixelSprites';
 
 const definitions = JSON.parse(manifestText) as SpriteDefinition[];
 describe('original sprite export contract',() => {
+  it('replaces the three hero images with larger pixel sheets without enlarging logical footprints',()=>{
+    for(const base of definitions){
+      const pixel=pixelDefinition(base);
+      if(base.entityType!=='character'){expect(pixel).toBe(base);continue;}
+      expect(pixel.frameSize).toBe(80);expect(pixel.footAnchor).toEqual({x:.5,y:74/80});
+      expect(pixel.footprint.logicalTiles).toEqual({width:1,height:1});expect(pixel.id).toBe(base.id);
+      expect(pixel.spriteSet).toBe(`/assets/original/pixel/${base.id}-v1.png`);
+      for(const action of Object.values(pixel.animations.clips))for(const clip of Object.values(action!)){
+        for(const frame of clip!.frames)expect(frame.split(':').every(n=>Number(n)>=0&&Number(n)<4)).toBe(true);
+      }
+    }
+  });
   it('keeps grounded envelopes and shadows inside one logical tile',()=>{
     for(const {footprint:f} of definitions){
       expect(f.logicalTiles).toEqual({width:1,height:1});

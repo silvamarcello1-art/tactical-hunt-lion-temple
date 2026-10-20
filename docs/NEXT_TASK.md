@@ -1,4 +1,21 @@
-# Próxima tarefa — catálogo verificável de magias/condições — 19/10/2026
+# Próxima tarefa — fechar validação/publicação 2B.3 — 19/10/2026
+
+Implementação atual descrita em TRAINING_2B3.md; ART_PROMPTS.md conserva a origem
+da pixel art. Não reimplementar quatro runas/push/slots/mira. Sem zoom ajustável.
+Entrada dca56a8, branch feature/gameplay-first-mvp2a, local=origin limpo antes
+das mudanças. Não usar Helper individual/Sites, não mergear.
+
+1. Gates locais fechados:250unitários/40E2E, typecheck/build/diff, frozen install
+   e arte reproduzível. Subset final de runas/sprites8/8 passou após ajuste da
+   mira SD no desenho do alvo. Ver SESSION_CHECKPOINT para evidências/amostras.
+2. Rever diff/arte reproduzível; commit/push normal, confirmar SHA e atualizar
+   PR3. Publicação GitHub Pages autorizada pelo usuário; só afirmar após CI/deploy,
+   version.json e smoke de treino/hunt no SHA real. Não expor o SHA antigo como novo.
+3. Depois: revisar lacunas oficiais listadas em TRAINING_2B3; especialmente máscaras,
+   requisitos, autoaim SD, Challenge encadeado e passivas/Wheel. Não afirmar paridade
+   integral. Paladin/Monk e networking permanecem fora desta fatia; manter2C→2D→2E→2F.
+
+## Histórico — catálogo após 2B.2
 
 Na retomada, 231 unitários/36 E2E, typecheck/build/diff, instalação e arte
 reproduzível passaram. LoS otimizada com geometria e hashes preservados; não

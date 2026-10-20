@@ -2,6 +2,9 @@ export type AbilityGroup = 'attack' | 'healing' | 'support' | 'focus';
 export type AbilityShape = 'single' | 'circle' | 'wave' | 'pull';
 
 export interface AbilityDefinition {
+  targetRule?:'ally-only';
+  secondaryGroup?:AbilityGroup;
+  secondaryGroupCooldown?:number;
   id: string;
   name: string;
   words: string;

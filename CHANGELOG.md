@@ -1,3 +1,14 @@
+## 2026-10-19 — treino 2B.3
+
+- SD/Destroy Field reais no domínio de treino, grupos/cargas e projétil existente.
+- Push atrasado/revalidado por MovementSystem, hotkey8 e drag; Stop9. Digit1–3
+  magias,4–7 runas, Numpad movimento; sem slots fictícios ou controle de zoom.
+- Pixel art original maior para três heróis; mira do tile não seleciona hitbox
+  do sprite por engano. IDs/saves/footprint/cenário normal preservados.
+- Nove magias no perfil de referência, Heal Friend ally-only, grupos secundários
+  e Mana Buffer de treino. Não é Wheel completa/PvP online. TRAINING_2B3.md.
+- Resultados de gates/preview somente no checkpoint após execução/verificação.
+
 ## 2026-10-10 — retomada MVP 2B.1
 
 - Código d51361c: CI push/PR e deploy Pages aprovados; manifest público no SHA

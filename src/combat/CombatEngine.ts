@@ -5,13 +5,14 @@ import { monsterProfiles,bossSpecial,monsterWave,committedAttacks } from '../dat
 import { chooseDirectionalAttack } from './DirectionalTactics';
 import { TemporaryTerrain } from './TemporaryTerrain';
 import {RuneSystem} from './RuneSystem';
-import {runeDefinitions,type RuneId} from '../data/runes';
+import {runeDefinitions,TRAINING_SD,type RuneId} from '../data/runes';
+import {PushSystem,TRAINING_PUSH,type PendingPush} from './PushSystem';
 import {trainingFloors} from '../data/training';
+import {abilityCatalog} from '../data/trainingSpells';
+import {manaBuffer} from './ManaBuffer';
 import { PROGRESSION, type PartyProgress, type Vocation } from '../data/progression';
 import { validIntent, defaultAssistance, type AssistanceOptions, type PlayerCommand, type PlayerIntent, type CommandResult, type ControlOwnership } from '../control/PlayerCommand';
 import {
-  abilities,
-  abilitiesByVocation,
   defaultAbilityPreferences,
   type AbilityDefinition,
   type AbilityPreferences,
@@ -96,6 +97,8 @@ const isHero = (entity: SimEntity) =>
   entity.role === 'sorcerer';
 
 export class CombatEngine {
+  private get abilityDefinitions(){return abilityCatalog(this.trainingMode);}
+  private vocationAbilities(vocation:AbilityDefinition['vocation'],preferences=this.preferences){return this.abilityDefinitions.filter(a=>a.vocation===vocation&&(preferences[a.id]?.enabled??true)).slice().sort((a,b)=>(preferences[a.id]?.priority??99)-(preferences[b.id]?.priority??99));}
   private events: CombatEvent[] = [];
   private iterator?:Generator<number, HuntResult, void>;
   private nextTick = 0;
@@ -116,15 +119,29 @@ export class CombatEngine {
   private readonly destinations = new Map<string, GridPosition>();
   private temporaryTerrain?:TemporaryTerrain;
   private runes?:RuneSystem;
+  private pushes?:PushSystem;
+  private readonly pushMotion=new Map<string,PendingPush>();
+  get pendingPushCount(){return (this.pushes?.size??0)+this.pushMotion.size;}
   private readonly runeCharges=new Map<string,number>();
   get runeTiles(){return this.runes?.tiles??[];}
   get runeConditionCount(){return this.runes?.conditionCount??0;}
   runeStatus(actorId:string,runeId:RuneId,at=this.elapsed){
     const charges=this.runeCharges.get(`${actorId}:${runeId}`)??runeDefinitions[runeId].charges;
     const actor=this.party.find(h=>h.id===actorId);
-    const remaining=Math.max(0,(actor?.groupCooldowns.attack??0)-at);
+    const remaining=Math.max(0,(actor?.groupCooldowns[runeDefinitions[runeId].group]??0)-at,(actor?.cooldowns['rune-item']??0)-at);
     const reason=!this.trainingMode?'training-only':this.disposed||this.finished?'session-ended':!actor?'not-started':!actor.alive?'actor-dead':charges<=0?'no-charges':remaining>0?'cooldown':'ok';
     return {ready:reason==='ok',reason,remaining,charges};
+  }
+  runePreview(actorId:string,runeId:RuneId,tile:GridPosition){
+    const status=this.runeStatus(actorId,runeId),actor=this.party.find(h=>h.id===actorId);
+    let reason=status.reason;
+    if(status.ready&&actor){
+      reason=!this.gridMap.isInside(tile)?'invalid-destination':gridDistance(this.tileOf(actor),tile)>runeDefinitions[runeId].range?'out-of-range':!this.lineOfSight.hasLineOfSight(this.tileOf(actor),tile)?'line-of-sight':
+        runeId==='sudden_death'?!this.enemies.some(e=>e.alive&&gridKey(this.tileOf(e))===gridKey(tile))?'invalid-target':'ok':
+        runeId==='destroy_field'?!this.runes?.tiles.some(r=>r.runeId==='fire_field'&&gridKey(r.tile)===gridKey(tile))?'no-field':'ok':
+        !this.gridMap.isWalkable(tile)||this.runes?.tiles.some(r=>gridKey(r.tile)===gridKey(tile))||runeId==='magic_wall'&&!!this.occupancy.occupantAt(tile)?'blocked':'ok';
+    }
+    return {ready:reason==='ok',reason};
   }
   private monsterDecisions=0;
   get encounterMetrics(){return {monsterDecisionEvaluations:this.monsterDecisions,temporaryBlockedTiles:this.temporaryTerrain?.size??0};}
@@ -145,26 +162,27 @@ export class CombatEngine {
   /** Read-only domain availability for input/slot feedback. Execution revalidates. */
   cooldownState(actorId:string,abilityId:string) {
     const actor=this.party.find(hero=>hero.id===actorId);
-    const ability=abilities.find(a=>a.id===abilityId&&a.vocation===actor?.role);
+    const ability=this.abilityDefinitions.find(a=>a.id===abilityId&&a.vocation===actor?.role);
     if(!actor||!ability)return {remaining:0,duration:0};
-    const individual=actor.cooldowns[ability.id]??0,group=actor.groupCooldowns[ability.group]??0;
-    return {remaining:Math.max(0,Math.max(individual,group)-this.elapsed),duration:individual>=group?ability.cooldown:ability.groupCooldown};
+    const individual=actor.cooldowns[ability.id]??0,group=actor.groupCooldowns[ability.group]??0,secondary=ability.secondaryGroup?actor.groupCooldowns[ability.secondaryGroup]??0:0;
+    return {remaining:Math.max(0,Math.max(individual,group,secondary)-this.elapsed),duration:secondary>Math.max(individual,group)?ability.secondaryGroupCooldown??0:individual>=group?ability.cooldown:ability.groupCooldown};
   }
   abilityStatus(actorId:string,abilityId:string,targetId?:string,at=this.now) {
     const actor = this.party.find(hero => hero.id === actorId);
-    const ability = abilities.find(candidate => candidate.id === abilityId && candidate.vocation === actor?.role);
+    const ability = this.abilityDefinitions.find(candidate => candidate.id === abilityId && candidate.vocation === actor?.role);
     const status = (reason:string,remaining=0) => ({ready:reason==='ok',reason,remaining});
     if (this.disposed || this.finished) return status('session-ended');
     if (!actor) return status('not-started');
     if (!actor.alive) return status('actor-dead');
     if (!ability || !this.enabled(abilityId)) return status('disabled');
-    const remaining = Math.max(actor.cooldowns[abilityId]??0,actor.groupCooldowns[ability.group]??0)-at;
+    const remaining = Math.max(actor.cooldowns[abilityId]??0,actor.groupCooldowns[ability.group]??0,ability.secondaryGroup?actor.groupCooldowns[ability.secondaryGroup]??0:0)-at;
     if (remaining>0) return status('cooldown',remaining);
     if (actor.mana<ability.manaCost) return status('mana');
     if (ability.group==='support') return status(this.enemies.some(enemy=>enemy.alive && this.distance(actor,enemy)<=ability.rangeTiles)?'ok':'out-of-range');
     const candidates = ability.group==='healing'?this.party:this.enemies;
     const target=candidates.find(entity=>entity.id===(targetId??(ability.group==='healing'?actorId:undefined)) && entity.alive);
     if (!target) return status(targetId?'invalid-target':'no-target');
+    if(ability.targetRule==='ally-only'&&target.id===actor.id)return status('ally-required');
     if (this.distance(actor,target)>ability.rangeTiles) return status('out-of-range');
     if (!this.lineOfSight.hasLineOfSight(this.tileOf(actor),this.tileOf(target),{ignoreEntityIds:[actor.id,target.id]})) return status('line-of-sight');
     if (ability.group!=='healing' && this.abilityTargets(actor,target,ability,this.enemies).targets.length<ability.hardMinTargets) return status('not-enough-targets');
@@ -315,13 +333,37 @@ export class CombatEngine {
       if(gridDistance(this.tileOf(actor),intent.tile)>definition.range)return 'out-of-range';
       if(!this.lineOfSight.hasLineOfSight(this.tileOf(actor),intent.tile))return 'line-of-sight';
       const rune={id:`rune-${++this.castSequence}`,runeId:intent.runeId,sourceId:actor.id,sessionId:this.sessionId,tile:{...intent.tile},startedAt:this.now,expiresAt:this.now+definition.duration};
-      if(!this.runes!.place(rune))return 'blocked';
+      if(intent.runeId==='sudden_death'){
+        const target=enemies.find(e=>e.alive&&gridKey(this.tileOf(e))===gridKey(intent.tile));
+        if(!target)return 'invalid-target';
+        if(!this.queueProjectile(actor,target,floor,{castId:rune.id,attackId:'sudden_death',damage:TRAINING_SD.baseDamage+(actor.magicPower??actor.attack)*TRAINING_SD.magicMultiplier,element:'death',travelTime:TRAINING_SD.travelTime}))return 'line-of-sight';
+        this.emit('rune_used',floor,actor.id,target.id,{runeId:rune.runeId,castId:rune.id,tile:rune.tile,sessionId:this.sessionId});
+      }else if(intent.runeId==='destroy_field'){
+        const removed=this.runes!.destroyField(intent.tile);if(!removed)return 'no-field';
+        this.emit('rune_removed',floor,removed.sourceId,undefined,{runeId:removed.runeId,tile:removed.tile,castId:removed.id,sessionId:this.sessionId,reason:'destroy-field'});
+        this.emit('rune_used',floor,actor.id,undefined,{runeId:rune.runeId,castId:rune.id,tile:rune.tile,sessionId:this.sessionId});
+      }else{
+        if(!this.runes!.place({...rune,runeId:intent.runeId}))return 'blocked';
+        this.emit('rune_placed',floor,actor.id,undefined,{runeId:rune.runeId,tile:rune.tile,startedAt:rune.startedAt,expiresAt:rune.expiresAt,castId:rune.id,sessionId:this.sessionId});
+      }
       this.runeCharges.set(`${actor.id}:${intent.runeId}`,status.charges-1);
-      actor.groupCooldowns.attack=this.now+definition.cooldown;
-      this.emit('rune_placed',floor,actor.id,undefined,{runeId:rune.runeId,tile:rune.tile,startedAt:rune.startedAt,expiresAt:rune.expiresAt,castId:rune.id,sessionId:this.sessionId});
+      actor.groupCooldowns[definition.group]=this.now+definition.cooldown;
+      actor.cooldowns['rune-item']=this.now+1000;
+      this.acted.add(actor.id);return 'ok';
+    }
+    if(intent.type==='push'){
+      if(!this.trainingMode)return 'training-only';
+      if(this.acted.has(actor.id))return 'action-pending';
+      const target=[...party,...enemies].find(e=>e.id===intent.targetId);
+      if(!target)return 'invalid-target';
+      const result=this.pushes!.queue(`push-${++this.castSequence}`,this.sessionId,actor,{...target,pushable:target.pushable??target.role!=='boss'},intent.tile,this.now);
+      if(!result.push)return result.reason;
+      this.basicReady.set(actor.id,Math.max(this.basicReady.get(actor.id)??0,this.now+TRAINING_PUSH.skipAttack));
+      this.emit('push_queued',floor,actor.id,target.id,{castId:result.push.id,fromTile:result.push.origin,toTile:result.push.destination,completesAt:result.push.completesAt,sessionId:this.sessionId});
       this.acted.add(actor.id);return 'ok';
     }
     if (intent.type === 'stop') {
+      for(const p of this.pushes?.cancelSource(actor.id)??[])this.emit('push_cancelled',floor,p.sourceId,p.targetId,{castId:p.id,reason:'player-stop',sessionId:this.sessionId});
       this.orders.delete(actor.id);
       this.destinations.delete(actor.id);
       const previousTargetId = actor.targetId;
@@ -363,7 +405,7 @@ export class CombatEngine {
     }
     if (intent.type === 'cast') {
       if (this.acted.has(actor.id)) return 'action-pending';
-      const ability = abilities.find(candidate => candidate.id === intent.abilityId && candidate.vocation === actor.role);
+      const ability = this.abilityDefinitions.find(candidate => candidate.id === intent.abilityId && candidate.vocation === actor.role);
       if (!ability) return 'ability-unavailable';
       const availability=this.abilityStatus(actor.id,ability.id,intent.targetId);
       if (!availability.ready) return availability.reason;
@@ -539,6 +581,7 @@ export class CombatEngine {
   private resetGridContext() {
     this.temporaryTerrain?.restore();
     this.runes?.clear();
+    this.pushes?.clear();this.pushMotion.clear();
     this.occupancy = new OccupancyGrid(this.gridMap);
     this.movement = new MovementSystem(
       this.gridMap,
@@ -548,12 +591,13 @@ export class CombatEngine {
     this.lineOfSight = new LineOfSightResolver(this.gridMap, this.occupancy);
     this.temporaryTerrain=new TemporaryTerrain(this.gridMap,this.occupancy);
     this.runes=new RuneSystem(this.gridMap,this.occupancy);
+    this.pushes=new PushSystem(this.gridMap,this.occupancy);
     this.spellArea = new SpellAreaResolver(this.gridMap, this.lineOfSight);
     this.projectiles = new ProjectileSystem(this.lineOfSight, this.gridMetrics);
   }
 
   private ability(id: string) {
-    return abilities.find((candidate) => candidate.id === id)!;
+    return this.abilityDefinitions.find((candidate) => candidate.id === id)!;
   }
 
   private enabled(id: string) {
@@ -565,12 +609,13 @@ export class CombatEngine {
       this.enabled(ability.id) &&
       entity.mana >= ability.manaCost &&
       (entity.cooldowns[ability.id] ?? 0) <= this.now &&
-      (entity.groupCooldowns[ability.group] ?? 0) <= this.now
+      (entity.groupCooldowns[ability.group] ?? 0) <= this.now &&
+      (!ability.secondaryGroup||(entity.groupCooldowns[ability.secondaryGroup]??0)<=this.now)
     );
   }
 
   private element(ability: AbilityDefinition) {
-    if (ability.vocation==='druid'&&ability.group!=='healing')return 'earth';
+    if (!this.trainingMode&&ability.vocation==='druid'&&ability.group!=='healing')return 'earth';
     if (ability.id.includes('ice') || ability.id === 'eternal_winter') return 'ice';
     if (ability.id.includes('flame')) return 'fire';
     if (ability.vocation === 'sorcerer') return 'energy';
@@ -588,6 +633,7 @@ export class CombatEngine {
   ) {
     entity.cooldowns[ability.id] = this.now + ability.cooldown;
     entity.groupCooldowns[ability.group] = this.now + ability.groupCooldown;
+    if(ability.secondaryGroup)entity.groupCooldowns[ability.secondaryGroup]=this.now+(ability.secondaryGroupCooldown??0);
     entity.mana = Math.max(0, entity.mana - ability.manaCost);
     const castId = `cast-${++this.castSequence}`;
     this.emit('cast', floor, entity.id, targetId, {
@@ -926,6 +972,8 @@ export class CombatEngine {
           sessionId:movement.sessionId,
         });
       }
+      const pushed=this.pushMotion.get(movement.entityId);
+      if(pushed){this.pushMotion.delete(movement.entityId);this.emit(resolution.status==='completed'&&entity?.alive?'push_resolved':'push_cancelled',floor,pushed.sourceId,movement.entityId,{castId:pushed.id,fromTile:movement.from,toTile:movement.to,reason:resolution.reason,sessionId:this.sessionId});}
     }
   }
 
@@ -965,8 +1013,11 @@ export class CombatEngine {
     if (critical) {
       this.emit('critical', floor, source.id, target.id, { amount, castId });
     }
-    target.hp = Math.max(0, target.hp - amount);
-    this.emit('damage', floor, source.id, target.id, { amount, element, castId });
+    const oldHp=target.hp;
+    const buffer=this.trainingMode&&['druid','sorcerer'].includes(target.role)?manaBuffer(target.hp,target.mana,target.maxMana,amount,this.now,target.cooldowns['mana-buffer']??0):undefined;
+    target.hp = buffer?.hp??Math.max(0, target.hp - amount);
+    this.emit('damage', floor, source.id, target.id, { amount, element, castId,...(buffer?.activated?{healthDamage:oldHp-target.hp}:{}) });
+    if(buffer?.activated){target.mana=buffer.mana;target.cooldowns['mana-buffer']=buffer.surchargeUntil;this.emit('mana_buffer',floor,target.id,target.id,{mana:target.mana,amount:buffer.manaSpent,entity:clone(target),sessionId:this.sessionId});}
     if (isHero(source)) {
       this.damage[source.id] += amount;
       target.threat[source.id] =
@@ -977,6 +1028,8 @@ export class CombatEngine {
     }
     if (target.hp === 0) {
       target.alive = false;
+      const pushed=this.pushMotion.get(target.id);
+      if(pushed){this.pushMotion.delete(target.id);this.emit('push_cancelled',floor,pushed.sourceId,target.id,{castId:pushed.id,reason:'target-dead',sessionId:this.sessionId});}
       const cancelledMovement = this.movement.cancel(target.id, 'entity-dead');
       if (cancelledMovement) {
         const movement = cancelledMovement.movement;
@@ -1179,7 +1232,7 @@ export class CombatEngine {
     candidates: SimEntity[],
     floor: number,
   ): OffensiveAction[] {
-    return abilitiesByVocation(caster.role as AbilityDefinition['vocation'], this.preferences)
+    return this.vocationAbilities(caster.role as AbilityDefinition['vocation'], this.preferences)
       .filter((ability) => ability.group !== 'healing' && ability.group !== 'support')
       .filter((ability) => this.canCast(caster, ability))
       .filter((ability) => caster.role!=='druid'||caster.mana-ability.manaCost>=360)
@@ -1302,7 +1355,7 @@ export class CombatEngine {
     position: GridPosition,
     enemies: SimEntity[],
   ) {
-    const waves = abilitiesByVocation(
+    const waves = this.vocationAbilities(
       caster.role as AbilityDefinition['vocation'],
       this.preferences,
     ).filter((ability) => ability.shape === 'wave');
@@ -1332,7 +1385,7 @@ export class CombatEngine {
   ) {
     let hits = 0;
     let geometry = 0;
-    for (const ability of abilitiesByVocation(
+    for (const ability of this.vocationAbilities(
       caster.role as AbilityDefinition['vocation'],
       this.preferences,
     ).filter((candidate) => candidate.shape === 'wave')) {
@@ -1455,7 +1508,7 @@ export class CombatEngine {
     enemies: SimEntity[],
     floor: number,
   ) {
-    return abilitiesByVocation(
+    return this.vocationAbilities(
       caster.role as AbilityDefinition['vocation'],
       this.preferences,
     )
@@ -1772,7 +1825,7 @@ export class CombatEngine {
 
     if (druid.alive && this.aiControls(druid.id)) {
       const wounded = party
-        .filter((hero) => hero.alive && hero.hp / hero.maxHp < 0.58)
+        .filter((hero) => hero.alive && (!this.trainingMode||hero.id!==druid.id) && hero.hp / hero.maxHp < 0.58)
         .sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp)[0];
       const heal = this.ability('heal_friend');
       if (
@@ -2094,6 +2147,17 @@ export class CombatEngine {
     const removed=all?this.runes!.clear():this.runes!.expire(this.now);
     for(const rune of removed)this.emit('rune_removed',floor,rune.sourceId,undefined,{runeId:rune.runeId,tile:rune.tile,castId:rune.id,sessionId:this.sessionId,reason:all?'floor-complete':'expired'});
   }
+  private resolvePushes(party:SimEntity[],enemies:SimEntity[],floor:number){
+    if(!this.trainingMode)return;
+    const pending=this.movement.pendingEntries();
+    const actors=[...party,...enemies].map(e=>({...e,pushable:e.pushable??e.role!=='boss',moving:pending.some(p=>p.entityId===e.id)}));
+    for(const {push,reason} of this.pushes!.resolve(this.now,this.sessionId,actors)){
+      const target=[...party,...enemies].find(e=>e.id===push.targetId)!;
+      if(reason==='ok'&&this.move(target,push.destination,floor,true,0,true,'player-push')){
+        this.pushMotion.set(target.id,push);this.emit('push_started',floor,push.sourceId,push.targetId,{castId:push.id,fromTile:push.origin,toTile:push.destination,sessionId:this.sessionId});
+      }else this.emit('push_cancelled',floor,push.sourceId,push.targetId,{castId:push.id,reason:reason==='ok'?'blocked':reason,sessionId:this.sessionId});
+    }
+  }
   private resolveRuneDamage(party:SimEntity[],enemies:SimEntity[],floor:number){
     if(!this.trainingMode)return;
     const actors=[...party,...enemies];
@@ -2176,6 +2240,7 @@ export class CombatEngine {
         if(restored.length) this.emit('map_changed',floor,undefined,undefined,{blocked:false,logicalTiles:restored,pathRevision:this.gridMap.revision});
         this.expireRunes(floor);
         this.resolvePendingMovements(party, enemies, floor);
+        this.resolvePushes(party,enemies,floor);
         this.resolveRuneDamage(party,enemies,floor);
         this.resolvePendingProjectiles(party, enemies);
         hazards = this.resolveHazards(hazards, party, enemies);
@@ -2191,11 +2256,12 @@ export class CombatEngine {
           // Schedule committed lifecycles in timestamp order, independent of
           // display frame size. Intermediate deadlines never sample new input.
           for(;;) {
-            const deadlines=[...this.movement.pendingEntries().map(p=>p.completesAt),...this.projectiles.pendingEntries().map(p=>p.impactAt),...hazards.map(h=>h.detonateAt),...(this.trainingMode?this.runes!.deadlines(this.now):[])].filter(t=>t>this.now&&t<nextDecision);
+            const deadlines=[...this.movement.pendingEntries().map(p=>p.completesAt),...this.projectiles.pendingEntries().map(p=>p.impactAt),...hazards.map(h=>h.detonateAt),...(this.trainingMode?[...this.runes!.deadlines(this.now),...this.pushes!.deadlines()]:[])].filter(t=>t>this.now&&t<nextDecision);
             if(!deadlines.length)break;
             this.now=Math.min(...deadlines);yield this.now;
             this.expireRunes(floor);
             this.resolvePendingMovements(party,enemies,floor);
+            this.resolvePushes(party,enemies,floor);
             this.resolveRuneDamage(party,enemies,floor);
             this.resolvePendingProjectiles(party,enemies);
             hazards=this.resolveHazards(hazards,party,enemies);
@@ -2217,6 +2283,7 @@ export class CombatEngine {
       yield this.now;
       this.resolvePendingMovements(party, enemies, floor);
       this.cancelPendingMovements(floor, 'floor-complete');
+      for(const p of [...(this.pushes?.clear()??[]),...this.pushMotion.values()])this.emit('push_cancelled',floor,p.sourceId,p.targetId,{castId:p.id,reason:'floor-complete',sessionId:this.sessionId});this.pushMotion.clear();
       this.resolvePendingProjectiles(party, enemies);
       this.cancelPendingProjectiles(floor, 'floor-complete');
       hazards = this.resolveHazards(hazards, party, enemies);

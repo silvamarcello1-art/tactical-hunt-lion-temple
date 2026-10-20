@@ -93,7 +93,10 @@ export class PixiRenderer {
   pickEntity(clientX:number,clientY:number) {
     const p=this.canvasPoint(clientX,clientY);
     if(!p)return;
-    return [...this.units.entries()].filter(([,u])=>u.currentHp>0 && Math.abs(p.x-u.body.x)<15 && p.y>=u.body.y-45 && p.y<=u.body.y+9)
+    const alive=[...this.units.entries()].filter(([,u])=>u.currentHp>0);
+    const feet=alive.filter(([,u])=>Math.hypot(p.x-u.body.x,p.y-u.body.y)<=12).sort((a,b)=>Math.hypot(p.x-a[1].body.x,p.y-a[1].body.y)-Math.hypot(p.x-b[1].body.x,p.y-b[1].body.y));
+    if(feet.length)return feet[0][0];
+    return alive.filter(([,u])=>Math.abs(p.x-u.body.x)<18 && p.y>=u.body.y+u.definition.effectAnchors.head.y-8 && p.y<=u.body.y+9)
       .sort((a,b)=>b[1].body.y-a[1].body.y)[0]?.[0];
   }
   canvasPoint(clientX:number,clientY:number) {
@@ -108,6 +111,14 @@ export class PixiRenderer {
     this.effectLayer.addChild(marker);this.tween(450,p=>marker.alpha=1-p,()=>marker.destroy());
   }
   readonly player: LiveEventPlayer;
+  private readonly aimTile=new Graphics();
+  showAim(tile?:GridPoint,ready=true){
+    this.aimTile.clear();if(this.parent)this.parent.dataset.aimTile=tile?`${tile.x}:${tile.y}:${ready?'valid':'invalid'}`:'';
+    if(!tile){this.aimTile.removeFromParent();return;}
+    if(!this.aimTile.parent)this.telegraphLayer.addChild(this.aimTile);
+    this.aimTile.rect(tile.x*32-16,tile.y*32-16,32,32).fill({color:ready?0x8ddac4:0xd77a69,alpha:.2}).stroke({color:ready?0xc8fff0:0xffa090,width:2});
+    this.aimTile.moveTo(tile.x*32-5,tile.y*32).lineTo(tile.x*32+5,tile.y*32).moveTo(tile.x*32,tile.y*32-5).lineTo(tile.x*32,tile.y*32+5).stroke({color:0xffffff,width:1});
+  }
 
   private floorText!: Text;
   private bossFill?: Graphics;
@@ -342,6 +353,7 @@ export class PixiRenderer {
     this.spellEffectPool.clear(sprite=>sprite.destroy());
     this.rubble.clear();
     this.runeVisuals.clear();
+    this.aimTile.removeFromParent();this.aimTile.destroy();
     this.bossFill = undefined;
     this.app.ticker?.remove(this.tickerHandler);
     try {
@@ -1042,6 +1054,11 @@ export class PixiRenderer {
   }
 
   private applyEvent(event: CombatEvent) {
+    if(event.type==='mana_buffer'&&event.data?.entity){const unit=this.units.get(event.targetId!);if(unit){unit.currentHp=event.data.entity.hp;unit.currentMana=event.data.entity.mana;this.drawVitals(unit);this.spellLabel(unit.body.x,unit.body.y-76,'Mana Buffer');}}
+    if(event.type==='rune_used'){
+      const source=this.units.get(event.sourceId!);if(source)this.castPulse(source);
+      if(event.data?.runeId==='destroy_field'&&event.data.tile)this.spellLabel(event.data.tile.x*32,event.data.tile.y*32-18,'Destroy Field');
+    }
     if(event.type==='rune_placed'&&event.data?.tile&&event.data.castId){
       const source=this.units.get(event.sourceId!);if(source)this.castPulse(source);
       const tile=event.data.tile,id=event.data.castId;
@@ -1163,7 +1180,7 @@ export class PixiRenderer {
       const unit = this.units.get(event.targetId!);
       if (unit) {
         const amount = this.safeAmount(event.data?.amount);
-        unit.currentHp = Math.max(0, unit.currentHp - amount);
+        unit.currentHp = Math.max(0, unit.currentHp - (event.data?.healthDamage??amount));
         this.drawVitals(unit);
         this.animateHurt(unit);
         this.floatingText(event.targetId!, `-${amount}`, '#ff746d', 'damage');
@@ -1366,6 +1383,7 @@ export class PixiRenderer {
   }
 
   private effectKey(event: CombatEvent) {
+    if(this.engine.trainingMode&&['strong_ice_wave','eternal_winter'].includes(event.data?.abilityId??''))return 'ice';
     const abilityMap: Record<string, string> = {
       challenge:'holy',
       berserk:'physical',
@@ -1699,6 +1717,7 @@ export class PixiRenderer {
     if (!this.parent || this.destroyed) return;
     this.parent.dataset.activeRuneTiles=String(this.runeVisuals.size);
     this.parent.dataset.runeConditions=String(this.engine.runeConditionCount);
+    this.parent.dataset.pendingPushes=String(this.engine.pendingPushCount);
     for (const [key,value] of Object.entries(this.engine.metrics)) this.parent.dataset[key] = String(value);
     const bounds = RENDER_CONFIG.arena.cameraBounds;
     const outOfBounds = [...this.units.values()].filter(

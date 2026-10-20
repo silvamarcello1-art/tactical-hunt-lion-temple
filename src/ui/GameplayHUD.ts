@@ -1,11 +1,13 @@
-import { abilities, type AbilityPreferences } from '../data/abilities';
+import { type AbilityPreferences } from '../data/abilities';
 import { heroes } from '../data/config';
 import { passives, type PartyProgress, type Vocation } from '../data/progression';
 import type { EntitySnapshot } from '../events/types';
+import {abilityCatalog} from '../data/trainingSpells';
 
-import { abilityNames, abilityReasons, iconMarkup, actionSlots } from '../data/actionBar';
+import { abilityReasons, iconMarkup, actionSlots } from '../data/actionBar';
 /** Screen-space DOM only. No renderer, transforms or entity display objects. */
 export class GameplayHUD {
+  constructor(private training=false){}
   renderParty(selected:string) {
     document.querySelector('#party')!.innerHTML=heroes.map((hero,index)=>`<button class="hero-card ${hero.id===selected?'selected':''}" id="card-${hero.id}" data-hero-id="${hero.id}" aria-pressed="${hero.id===selected}" aria-label="Selecionar ${hero.name}">
       <span class="portrait vocation-mark" aria-hidden="true">${['♜','❧','✦'][index]}</span>
@@ -18,8 +20,8 @@ export class GameplayHUD {
     const hero=heroes.find(hero=>hero.id===selected)!;
     document.querySelector('#selected-hero-name')!.textContent=hero.name;
     document.querySelector('#selected-hero-vocation')!.textContent=hero.role;
-    document.querySelector('#action-bar')!.innerHTML=actionSlots(selected).map(({key,ability})=>`<button class="action" data-ability="${ability.id}" data-hotkey="${key}" data-hero="${selected}" aria-label="${abilityNames[ability.id]}" title="${abilityNames[ability.id]}">
-      ${iconMarkup(ability.id)}<kbd>${key}</kbd><span class="ability-name">${abilityNames[ability.id]}</span>
+    document.querySelector('#action-bar')!.innerHTML=actionSlots(selected,this.training).map(({key,ability})=>`<button class="action" data-ability="${ability.id}" data-hotkey="${key}" data-action-slot="${key}" data-category="spell" data-hero="${selected}" aria-label="${ability.name}" title="${ability.name}">
+      ${iconMarkup(ability.id,this.training)}<kbd>${key}</kbd><span class="ability-name">${ability.name}</span>
       <em>${ability.manaCost} MP</em><span class="cooldown-mask" aria-hidden="true"></span><strong class="cooldown-number"></strong>
       <span class="ability-reason">${preferences[ability.id]?.enabled===false?'Desativada':''}</span></button>`).join('');
     const passive=passives.find(passive=>passive.vocation===selected)!;
@@ -49,13 +51,17 @@ export class GameplayHUD {
     const unlocked=(current?.level??1)>=passive.unlockLevel;
     document.querySelector('#passive-state')!.textContent=unlocked?'ATIVA':`Lv. ${passive.unlockLevel}`;
     document.querySelector('#passives')!.classList.toggle('locked',!unlocked);
+    if(this.training&&['druid','sorcerer'].includes(selected)){
+      const root=document.querySelector<HTMLElement>('#passives')!;root.classList.remove('locked');root.querySelector('b')!.textContent='Mana Buffer';root.querySelector('small')!.textContent='Dano letal excedente → mana ×8; custo extra de 25% a cada 2s.';root.querySelector('#passive-state')!.textContent='TREINO';
+    }
   }
   availability(statusOf:(abilityId:string)=>{ready:boolean;reason:string;remaining:number},castingId?:string) {
     document.querySelectorAll<HTMLButtonElement>('#action-bar [data-ability]').forEach(button=>{
       const id=button.dataset.ability!;const state=statusOf(id);
       button.disabled=['not-started','actor-dead','session-ended'].includes(state.reason);
       button.dataset.unavailableReason=state.reason;button.classList.toggle('casting',id===castingId);
-      button.title=`${abilityNames[id]} · Tecla ${button.dataset.hotkey} · ${abilityReasons[state.reason]??state.reason}${state.remaining>0?` (${Math.ceil(state.remaining/1000)}s)`:''} · ${abilities.find(a=>a.id===id)!.group==='healing'?'Padrão: você; Shift permite aliado':'Alvo selecionado / área'} · Shift + tecla: escolher alvo`;
+      const a=abilityCatalog(this.training).find(a=>a.id===id)!;
+      button.title=`${a.name} · ${a.words} · Tecla ${button.dataset.hotkey} · ${abilityReasons[state.reason]??state.reason}${state.remaining>0?` (${Math.ceil(state.remaining/1000)}s)`:''} · ${a.targetRule==='ally-only'?'Outro aliado; nunca você':a.group==='healing'?'Padrão: você; Shift permite aliado':'Alvo selecionado / área'} · Shift + tecla: escolher alvo`;
       button.querySelector('.ability-reason')!.textContent=state.reason==='ok'?'':abilityReasons[state.reason]??state.reason;
     });
   }

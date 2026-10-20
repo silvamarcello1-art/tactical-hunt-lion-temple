@@ -108,8 +108,8 @@ export class CombatPresentationSystem {
     if (event.type === 'movement_cancelled' && event.sourceId) {
       this.cancelMovement(event.sourceId, event.data?.fromTile);
     }
-    if ((event.type === 'basic_attack' || event.type === 'cast' || event.type === 'rune_placed') && event.sourceId) {
-      this.startAction(event.sourceId, event.type==='rune_placed'?{...event,type:'cast'}:event);
+    if ((event.type === 'basic_attack' || event.type === 'cast' || event.type === 'rune_placed'||event.type==='rune_used') && event.sourceId) {
+      this.startAction(event.sourceId, event.type==='rune_placed'||event.type==='rune_used'?{...event,type:'cast'}:event);
     }
     if (event.type === 'projectile') this.startProjectile(event);
     if (event.type === 'projectile_cancelled' && event.data?.castId) this.cancelProjectile(event.data.castId);

@@ -1,5 +1,10 @@
 # MVP 2B.2 — laboratório local de movimentação e runas — 19/10/2026
 
+Atualização 2B.3: TRAINING_2B3.md prevalece sobre o kit/atalhos abaixo: 4/5
+mantidos, 6 SD, 7 Destroy Field, 8 push/arrastar, 9 Stop. Sem zoom; pixel heroes
+maiores e mira de tile. Mesmo motor, treinamento sem economia. Sem paridade
+integral de fórmulas/Wheel; fontes e lacunas registradas no novo documento.
+
 ## Decisão e limite
 
 O usuário autorizou começar por treino contra bot, não PvP online. Este incremento

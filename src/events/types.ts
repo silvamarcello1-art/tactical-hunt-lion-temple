@@ -1,6 +1,12 @@
 import type { HeroProgress } from '../data/progression';
 import type { ItemInstance } from '../combat/Equipment';
 export type EventType =
+  | 'mana_buffer'
+  | 'push_queued'
+  | 'push_started'
+  | 'push_resolved'
+  | 'push_cancelled'
+  | 'rune_used'
   | 'rune_placed'
   | 'rune_removed'
   | 'equipment_drop'
@@ -61,7 +67,7 @@ export interface CombatEvent {
   sourceId?: string;
   targetId?: string;
   data?: {
-    runeId?: 'magic_wall'|'fire_field';
+    runeId?: 'magic_wall'|'fire_field'|'sudden_death'|'destroy_field';
     expiresAt?:number;
     equipment?: ItemInstance;
     requiresTelegraph?: boolean;
@@ -69,6 +75,7 @@ export interface CombatEvent {
     progress?: HeroProgress;
     previousLevel?: number;
     amount?: number;
+    healthDamage?:number;
     element?: string;
     position?: Point;
     tiles?: Point[];
@@ -126,6 +133,7 @@ export interface CombatEvent {
 export type Role = 'knight' | 'druid' | 'sorcerer' | 'monster' | 'boss';
 
 export interface EntitySnapshot {
+  pushable?:boolean;
   description?: string;
   archetype?: 'bruiser'|'hunter'|'flanker'|'caster'|'protector'|'artillery';
   rewardSuppressed?: boolean;

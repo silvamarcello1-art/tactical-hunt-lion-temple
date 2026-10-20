@@ -20,6 +20,13 @@ const session=(training=true)=>{
   return {engine,send};
 };
 describe('owned rune terrain and field conditions',()=>{
+  it('Destroy Field removes only the field, not burning, Magic Wall or original terrain',()=>{
+    const {runes,map}=setup();runes.place(wall());runes.place({...wall(4,2),runeId:'fire_field'});
+    runes.resolve(0,[{id:'knight',role:'knight',alive:true,tileX:2,tileY:2},{id:'bot',role:'monster',alive:true,tileX:4,tileY:2}]);
+    expect(runes.destroyField({x:3,y:2})).toBeUndefined();expect(map.isWalkable({x:3,y:2})).toBe(false);
+    expect(runes.destroyField({x:4,y:2})?.runeId).toBe('fire_field');expect(runes.conditionCount).toBe(1);
+    expect(runes.destroyField({x:4,y:2})).toBeUndefined();expect(runes.tiles).toHaveLength(1);
+  });
   it('blocks walking and LoS until the exact logical expiry, returning immutable snapshots',()=>{
     const {map,occupancy,runes}=setup(),los=new LineOfSightResolver(map,occupancy);
     expect(runes.place(wall())).toBe(true);expect(map.isWalkable({x:3,y:2})).toBe(false);
@@ -62,6 +69,48 @@ describe('owned rune terrain and field conditions',()=>{
   });
 });
 describe('training commands reuse the authoritative engine',()=>{
+  it('training ultimate applies attack and secondary focus cooldowns without changing normal catalog',()=>{
+    const {engine,send}=session();engine.advanceTo(0);
+    for(let step=0;step<5;step++){send({type:'move',dx:1,dy:0},'sorcerer');engine.advanceTo(engine.time+500);}
+    send({type:'cast',abilityId:'rage_skies',targetId:'training-sparring'},'sorcerer');engine.advanceTo(2750);
+    expect(engine.controlResults.at(-1)?.reason).toBe('ok');
+    expect(engine.cooldownState('sorcerer','rage_skies').remaining).toBe(40000);
+    expect(engine.cooldownState('sorcerer','flame_strike').remaining).toBe(4000);
+    expect(engine.runeStatus('sorcerer','sudden_death').remaining).toBe(4000);
+  });
+  it('uses SD through the existing projectile lifecycle, not immediate DOM damage',()=>{
+    const {engine,send}=session();
+    send({type:'rune',runeId:'sudden_death',tile:{x:15,y:9}});const events=engine.advanceTo(250);
+    expect(engine.controlResults.at(-1)?.reason).toBe('ok');
+    const used=events.find(e=>e.type==='rune_used')!;expect(used.data?.runeId).toBe('sudden_death');
+    expect(events.find(e=>e.type==='projectile')?.data?.castId).toBe(used.data?.castId);
+    expect(events.some(e=>e.type==='damage'&&e.data?.castId===used.data?.castId)).toBe(false);
+    expect(engine.runeStatus('knight','sudden_death').charges).toBe(11);expect(engine.runeTiles).toEqual([]);
+    engine.advanceTo(1000);expect(engine.result.events.some(e=>['projectile_resolved','projectile_cancelled'].includes(e.type)&&e.data?.castId===used.data?.castId)).toBe(true);
+    engine.advanceTo(2250);const still=engine.entities.find(e=>e.id==='training-sparring')!;
+    send({type:'rune',runeId:'sudden_death',tile:{x:still.tileX,y:still.tileY}});engine.advanceTo(3000);
+    const second=engine.result.events.filter(e=>e.type==='rune_used').at(-1)!;
+    expect(engine.result.events.some(e=>e.type==='damage'&&e.data?.castId===second.data?.castId&&e.data?.element==='death'&&(e.data?.amount??0)>0)).toBe(true);
+    engine.dispose();expect(engine.pendingPushCount).toBe(0);
+  });
+  it('revalidates Destroy Field and consumes charges only when a field actually exists',()=>{
+    const {engine,send}=session();engine.advanceTo(0);
+    send({type:'rune',runeId:'destroy_field',tile:{x:7,y:9}});engine.advanceTo(250);expect(engine.controlResults.at(-1)?.reason).toBe('no-field');
+    send({type:'rune',runeId:'fire_field',tile:{x:7,y:9}});engine.advanceTo(500);engine.advanceTo(1500);
+    send({type:'rune',runeId:'destroy_field',tile:{x:7,y:9}});engine.advanceTo(1750);
+    expect(engine.controlResults.at(-1)?.reason).toBe('ok');expect(engine.runeTiles).toEqual([]);expect(engine.runeStatus('knight','destroy_field').charges).toBe(11);
+    expect(engine.result.events.some(e=>e.type==='rune_removed'&&e.data?.reason==='destroy-field')).toBe(true);
+  });
+  it('queues a delayed push of an adjacent ally and commits it with normal movement events',()=>{
+    const {engine,send}=session();engine.advanceTo(0);
+    for(const [dx,dy] of [[1,1],[1,1],[1,0]]){send({type:'move',dx,dy},'druid');engine.advanceTo(engine.time+500);}
+    expect(engine.entities.find(e=>e.id==='druid')).toMatchObject({tileX:8,tileY:8});
+    send({type:'push',targetId:'druid',tile:{x:9,y:8}});engine.advanceTo(1750);
+    expect(engine.controlResults.at(-1)?.reason).toBe('ok');expect(engine.pendingPushCount).toBe(1);
+    engine.advanceTo(2450);expect(engine.entities.find(e=>e.id==='druid')!.tileX).toBe(8);
+    engine.advanceTo(3000);expect(engine.entities.find(e=>e.id==='druid')).toMatchObject({tileX:9,tileY:8});
+    expect(engine.result.events.filter(e=>e.type==='push_resolved')).toHaveLength(1);expect(engine.pendingPushCount).toBe(0);
+  });
   it('validates rune IDs, integer tiles, explicit ground targeting and cancellation',()=>{
     expect(validIntent({type:'rune',runeId:'magic_wall',tile:{x:2,y:3}})).toBe(true);
     expect(validIntent({type:'rune',runeId:'bad',tile:{x:2,y:3}} as unknown as PlayerIntent)).toBe(false);

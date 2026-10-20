@@ -17,7 +17,7 @@ test('original cardinal sheets and effect frames freeze with the logical clock',
   await page.waitForTimeout(500);
   await expect(page.locator('#game')).toHaveAttribute('data-sprite-frames',frames!);
   await expect(page.locator('#game')).toHaveAttribute('data-effect-frames',effects!);
-  expect(assets.some(url => url.endsWith('/original/characters/knight.svg'))).toBe(true);
+  for(const hero of ['knight','druid','sorcerer'])expect(assets.some(url => url.endsWith(`/original/pixel/${hero}-v1.png`))).toBe(true);
   expect(assets.some(url => /outfits.json|character-atlas.png|tibia\/tiles/.test(url))).toBe(false);
   expect(errors).toEqual([]);
 });

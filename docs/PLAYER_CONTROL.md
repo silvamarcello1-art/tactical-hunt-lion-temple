@@ -1,5 +1,14 @@
 # Controle do jogador — contrato vigente (05/10/2026)
 
+## Treino 2B.3 — 19/10 (prevalece sobre kit 2B.2)
+
+Digit1–3 magias, 4 MW, 5 Fire Field, 6 SD (inimigo), 7 Destroy Field (chão),
+8 push (alvo→destino ou arrastar), 9 Stop. Numpad continua movimento. Sem zoom.
+Mira no tile do cursor, não na hitbox do sprite alto; SD usa entidade clicada.
+Pés têm prioridade no picking de atores sobrepostos. ESC cancela targeting.
+Heal Friend no treino exige outro aliado; na hunt normal mantém regra anterior.
+Nenhum comando altera companheiros/mode implicitamente. TRAINING_2B3.md.
+
 ## Treino 2B.2 (19/10)
 
 No cenário ?training=1, 4/5 armam Magic Wall/Fire Field; clicar no tile envia

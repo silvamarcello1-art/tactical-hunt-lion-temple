@@ -8,6 +8,7 @@ export type InteractionState =
   | {kind:'spell-targeting'; abilityId:string}
   | {kind:'use-with'; itemId:string}
   | {kind:'rune-targeting'; runeId:RuneId}
+  | {kind:'push-targeting'; targetId?:string}
   | {kind:'pressed' | 'dragging'; itemId:string; pointerId:number; origin:Point; position:Point};
 
 /** Pointer state has no inventory authority. A drop is a command for the domain. */
@@ -17,6 +18,7 @@ export class InteractionController {
   select(target:InteractionTarget) { this.state = {kind:'selected',target}; }
   armSpell(abilityId:string) { this.state = {kind:'spell-targeting',abilityId}; }
   armRune(runeId:RuneId){this.state={kind:'rune-targeting',runeId};}
+  armPush(targetId?:string){this.state={kind:'push-targeting',targetId};}
   armItem(itemId:string) { this.state = {kind:'use-with',itemId}; }
   press(itemId:string, pointerId:number, position:Point) {
     this.state = {kind:'pressed',itemId,pointerId,origin:{...position},position:{...position}};
@@ -37,6 +39,11 @@ export class InteractionController {
     const state = this.state;
     this.cancel();
     if(state.kind==='rune-targeting'&&target.kind==='tile')return {type:'rune',runeId:state.runeId,tile:target.tile};
+    if(state.kind==='push-targeting'){
+      if(target.kind==='entity'){this.armPush(target.entityId);return;}
+      if(state.targetId)return {type:'push',targetId:state.targetId,tile:target.tile};
+      this.armPush();return;
+    }
     if (state.kind === 'use-with') return {type:'use-with',itemId:state.itemId,target};
     if (state.kind === 'spell-targeting' && target.kind === 'entity') return {type:'cast',abilityId:state.abilityId,targetId:target.entityId};
     this.select(target);

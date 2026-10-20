@@ -1,4 +1,14 @@
-# Estado vigente — MVP 2B.2 publicado e verificado — 19/10/2026
+# Estado vigente — incremento 2B.3 — 19/10/2026
+
+Implementado e validado localmente: quatro runas por 4–7, push por 8/arrastar e Stop por 9 no treino;
+três heróis com pixel art própria maior, sem zoom, mira de tile independente do
+sprite. Perfil de nove magias de referência, Heal Friend ally-only e Mana Buffer
+dos magos; hunt normal/saves preservados. TRAINING_2B3.md define regras/fontes e
+limites. ART_PROMPTS.md registra o modo builtin e fontes/atlas. Não é PvP online
+nem Wheel completa.250unitários/40E2E +8direcionados finais PASS. Publicação nova
+ainda pendente; confirmar CI/deploy/version.json antes de chamar de público.
+
+## Histórico — MVP 2B.2 publicado
 
 Treino local Party × Bot em ?training=1, no mesmo motor, Manual inicial e sem
 recompensas persistentes. Magic Wall/Fire Field por 4/5 + clique, com cargas,

@@ -1,5 +1,12 @@
 # Direção de arte — atualização 2B.1 (05/10/2026)
 
+Incremento 2B.3 (19/10): três heróis agora usam pixel art original gerada no modo
+builtin, atlases RGBA 4×4, maiores e com pés registrados, sem zoom. Arte raw fora
+do bundle, PNGs finais versionados. ART_PROMPTS.md registra prompts/importação;
+SPRITE_PIPELINE.md define contrato. Monstros continuam nos vetores existentes.
+No treino, duas magias de gelo têm ícones/VFX próprios; não copiar assets Tibia.
+Os parágrafos abaixo descrevem o histórico, não os heróis pixel novos.
+
 Incremento 2B.2 em 19/10: parede violeta geométrica e campo de chamas vetorial,
 ambos originais e amostrados pelo relógio lógico. Bot de treino usa o blockout
 caster existente. Nenhuma cópia de sprites/ícones do Tibia. Arte final pendente.
