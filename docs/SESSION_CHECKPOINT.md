@@ -1,5 +1,41 @@
 # Checkpoint — MVP2C sprites no mundo — 20/10/2026 (São Paulo)
 
+## Encerramento das sprites reais —21/10/2026
+
+Runtime74b3306d4ae17e43d182439fd5e79d8384479118 verificado em checkout/health
+dos CI e manifest público. Push39418552073/job118613470478 SUCCESS283unit/
+61E2E(59,7min)/build/diff;Pages118641078023 SUCCESS. PR primeira tentativa
+118613492080 falhou1inventário/60PASS:timeout220s,contexto fechado antes da
+assertionASSISTED vazia;trace analisado,não prova de regressão nem causa raiz.
+Artefato12266256446 SHA256d17d7725e7154567df80f22f3d73aed12e00fae2456323ede86468d6167ef1f2.
+Uma solicitação inicial de rerun foi bloqueada pelo auto-review;sem contorno.
+Usuário confirmou run/job e revogação limitada;mesmo conector aceitou UMA
+reexecução integral:novo job119043228558/run39418557264 PASS283unit25files/
+61E2E(24,8min)/frozen/typecheck/arte/build/build:preview/diff/upload. PR deploy
+119051066711 SKIPPED;push/deploy aprovados não reexecutados. Nenhum fix,
+snapshot,timeout,assertion,workflow ou proteção alterados.
+
+Smokes públicos existentes todos exit0:qa-outfits38PNG reais448²,12trajes/
+3níveis/2DLC,persistência e estado pausado intactos,errors[];qa-training-team
+3vitórias1303eventosbot,economia intacta,cleanup0;qa-preview vitória19kills/
+4240XP/1489gold/1token,errors[]/warnings[],cleanup0,52355,6ms lógico.
+QA auxiliar workspace qa-customized-party.mjs:Warrior2/Druid2/Mage2 aplicados
+via UI,3vitórias/economia intacta,todos12contadores cleanup0,e mesma party
+persistida até boss19/4240/1489/1,errors[]/warnings[]. Capturas públicas do
+atelier e party nova em treino/hunt inspecionadas. Sem simular vitória/mudar
+economia. Callback rAF médio5,08ms1×/8,53ms4×,pico260,6ms;isso não é FPS.
+
+Pré-fechamento fetch/health PASS:local=origin74b3306,0ahead/behind,CLEAN.
+Fechamento somente documentação [skip ci],não outro runtime;verificar novamente
+local=origin/limpo e diff de src/public/art/tests/scripts/deps/workflows vazio.
+38atlas/608poses builtinImageGen com promptset/proveniência OUTFIT_ART_2C.md;
+cores/máscaras seletivas/diagonais e camadas alpha independentes não entregues.
+Preview compartilhado,não release estável;sem merge/forcepush/Sites/OTSP.
+Automação existente será pausada após registro final. Nenhum monitor duplicado.
+https://silvamarcello1-art.github.io/tactical-hunt-lion-temple/?training=1&v=74b3306d4ae17e43d182439fd5e79d8384479118
+
+## Histórico anterior ao encerramento das sprites
+
 ## Continuação autorizada —38atlas locais em validação integral
 
 Entrada2c7c89abd31d92a65b2bbac44cad27ad504b9c20,local=origin/worktree limpa,

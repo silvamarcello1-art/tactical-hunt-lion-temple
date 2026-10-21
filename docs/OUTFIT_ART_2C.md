@@ -86,6 +86,12 @@ Limite técnico:altura100/largura104 por célula. Nenhuma interpolação bilinea
 
 ## Arquitetura e limites honestos
 
+Verificação pública21/10/2026:runtime74b3306d4ae17e43d182439fd5e79d8384479118,
+38variantes decodificadas/aplicadas no mundo e preview,capturas inspecionadas.
+Party Warrior2/Druid2/Mage2 completou3treinos sem efeito econômico e huntboss
+19kills/4240XP/1489gold/1token,console/cleanup limpos. CI final283unit/61E2E
+verde no push e na única reexecução autorizada da PR. Ver SESSION_CHECKPOINT.md.
+
 `data/outfitSprites.ts` registra apenas arquivos importados/revisados. O resolver
 retorna IDs próprios `outfit-*`,não nomes novos para os três sprites antigos.
 SpriteLibrary carrega esses atlas com o mesmo contrato de animação e relógio;

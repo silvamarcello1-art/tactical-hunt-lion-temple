@@ -1,5 +1,35 @@
 # Estado vigente — MVP2C sprites no mundo — 20/10/2026 (São Paulo)
 
+## Atual — sprites publicados e verificados —21/10/2026
+
+Runtime74b3306d4ae17e43d182439fd5e79d8384479118 confirmado em checkout/health
+dos CI e version.json público. Push39418552073/job118613470478 PASS283unit/
+61E2E(59,7min)/build/build:preview/diff;deploy118641078023 SUCCESS. A primeira
+validação PR falhou60/61E2E por timeout220s em inventário;trace mostrou contexto
+fechando antes da assertion vazia,sem causa raiz comprovada. UMA reexecução
+explicitamente autorizada:PR39418557264/novo job119043228558 PASS283unit25files/
+61E2E(24,8min)/typecheck/frozen install/arte/build/build:preview/diff/upload.
+DeployPR119051066711 SKIPPED por política;nenhum redeploy desnecessário.
+
+Smokes públicos com SHA exato PASS:qa-outfits38variantes/4cardinais/persistência/
+troca pausada sem estado alterado;qa-training-team3vitórias/1303eventosbot/
+economia intacta;qa-preview boss19kills4240XP1489gold1token. QA complementar
+Warrior2/Druid2/Mage2 passou3treinos e boss com saves/economia preservados nos
+treinos,todos12contadores de cleanup0,errors[]/warnings[]. Capturas públicas
+atelier/party personalizada no treino/hunt inspecionadas. Não houve fix,timeout
+relaxado ou assertion ignorada. Originais/defaults preservados;usar♙Outfits,
+escolher traje/addon e Aplicar. Preview compartilhado,não release estável.
+
+38atlas/608poses RGBA448²(células112),12trajes×3níveis+2DLC,builtin ImageGen;
+prompts/proveniência em OUTFIT_ART_2C.md. Addons compostos,não camadas;cores
+seletivas/máscaras e diagonais dedicadas continuam pendentes. Chunk566,93kB
+mantém warning>500kB;~30,5MB é estimativa de pixels,não benchmarkGPU/FPS.
+Smoke público original:callback rAF médio5,08ms(1×)/8,53ms(4×),máximos260,1/
+260,6ms;amostra instrumental isolada,não garantia de fluidez. Domínio intacto.
+Link:https://silvamarcello1-art.github.io/tactical-hunt-lion-temple/?training=1&v=74b3306d4ae17e43d182439fd5e79d8384479118
+
+## Histórico — estados anteriores à publicação das sprites
+
 ## Atual — nova arte em gates locais
 
 Continuação autorizada sobre2c7c89a:38atlas builtin imagegen reais importados,

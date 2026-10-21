@@ -1,3 +1,11 @@
+## 2026-10-21 — MVP2C: sprites publicados e smoke público aprovado
+
+- Runtime74b3306:CI push283unit/61E2E/build/diff e Pages aprovados;PR passou
+  após UMA reexecução integral autorizada,sem alterar código/testes/timeouts.
+- Públicos:38variantes de traje,3treinos/economia intacta,huntboss e party
+  Warrior/Druid/MageAddon2 até vitória;console e cleanup limpos,PNGs inspecionadas.
+- Cores seletivas/diagonais/camadas alpha continuam pendentes;preview,não release.
+
 ## 2026-10-20 — MVP2C: novos trajes aplicados no mundo
 
 - 38atlas pixel art gerados/revisados:12trajes com base/addons1/2 e2DLC. Quatro

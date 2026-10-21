@@ -1,5 +1,26 @@
 # Próxima tarefa — validar/publicar sprites2C — 20/10/2026 (São Paulo)
 
+## Atual — publicação concluída —21/10/2026
+
+Sprites74b3306d4ae17e43d182439fd5e79d8384479118 publicados/manifest exato e
+smokes públicos PASS:38variantes,3treinos1303eventosbot/economia intacta,
+hunt19kills4240XP1489gold1token e party Warrior/Druid/MageAddon2 em3treinos+
+boss,console/cleanup limpos. Capturas públicas inspecionadas. CI push PASS
+283unit/61E2E/build/diff e PagesSUCCESS;PR rerunúnico119043228558 também
+PASS283unit/61E2E(24,8min)/build/diff,sem corrigir/relaxar teste/timeout.
+Falha original de inventário e diagnóstico permanecem no checkpoint.
+
+Finalizar somente checkpointdocs [skip ci]/normalpush,confirmar source/tests/
+scripts/deps/workflows inalterados vs74b e local=origin/limpo;pausar monitor.
+Não exigir build novo para docs-only nem chamar preview de release estável.
+Próximo trabalho artístico SOMENTE sob novo pedido:máscaras5regiões para cores,
+camadas independentes ou ciclos/diagonais dedicados. Addons atuais são atlas
+compostos;4cardinais e16poses por variante. Originais/defaults preservados.
+Não modificar gameplay/economia/Adventure/backend/Sites/OTSP/merge nesta entrega.
+https://silvamarcello1-art.github.io/tactical-hunt-lion-temple/?training=1&v=74b3306d4ae17e43d182439fd5e79d8384479118
+
+## Histórico anterior ao fechamento das sprites
+
 ## Agora — concluir sprites reais dos12trajes autorizados
 
 Continuação ativa sobre2c7c89a:usuário confirmou que quer a arte no personagem
