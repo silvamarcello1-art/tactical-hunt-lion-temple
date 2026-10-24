@@ -1,0 +1,131 @@
+import {test,expect} from '@playwright/test';
+import {tilePoint} from './world-point';
+import {installControlledClock,pauseIdleClock,advanceUntilAttribute,REPEATED_HUNT_TIMEOUT_MS} from './controlled-clock';
+import {outfitSpriteAssets} from '../../src/data/outfitSprites';
+
+test('atelier references, cumulative addons, palettes, DLC and per-hero persistence are honest',async({page})=>{
+  const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
+  await page.goto('/?training=1');await expect(page.locator('html')).toHaveAttribute('data-session-state','idle');
+  await page.locator('#open-outfits').click();
+  for(const id of ['citizen','warrior','mage','druid','assassin','hunter']){
+    await page.locator(`[data-outfit="${id}"]`).click();
+    for(const level of [0,1,2]){
+      await page.locator(`[data-addon="${level}"]`).click();await expect(page.locator(`[data-addon="${level}"]`)).toHaveAttribute('aria-pressed','true');
+    }
+    await expect(page.locator('.outfit-addons p')).toContainText(' + ');
+    await page.locator('[data-color-region="primary"]').selectOption('ember');await page.locator('[data-apply]').click();
+    const asset=outfitSpriteAssets.find(a=>a.outfitId===id&&a.addonLevel===2&&a.variantId==='base');
+    await expect(page.locator('#outfit-status')).toContainText(asset?'Sprite aplicado':'Arte pendente');
+    await expect(page.locator('#outfit-preview')).toHaveAttribute('data-rendered-sprite',asset?.spriteId??'knight');
+    const saved=await page.evaluate(()=>JSON.parse(localStorage.getItem('tactical-hunt-appearance-v1')!).heroes.knight);
+    expect(saved).toMatchObject({outfitId:id,addonLevel:2,colors:{primary:'ember'}});
+  }
+  await page.locator('[data-outfit="neymar"]').click();await page.locator('[data-addon="2"]').click();
+  await page.locator('[data-variant="dlc"]').click();await page.locator('[data-apply]').click();
+  await page.locator('[data-outfit-hero="druid"]').click();await page.locator('[data-outfit="mage"]').click();await page.locator('[data-apply]').click();
+  await page.keyboard.press('Escape');await page.reload();await page.locator('#open-outfits').click();
+  await expect(page.locator('[data-outfit="neymar"]')).toHaveAttribute('aria-pressed','true');
+  await expect(page.locator('[data-addon="2"]')).toHaveAttribute('aria-pressed','true');
+  await expect(page.locator('[data-variant="dlc"]')).toHaveAttribute('aria-pressed','true');
+  await page.locator('[data-outfit-hero="druid"]').click();await expect(page.locator('[data-outfit="mage"]')).toHaveAttribute('aria-pressed','true');
+  expect(errors).toEqual([]);
+});
+
+for(const outfitId of new Set(outfitSpriteAssets.map(a=>a.outfitId)))test(`new ${outfitId} artwork and cardinal poses are actually applied to the world`,async({page})=>{
+  const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
+  await installControlledClock(page);await page.goto('/?training=1');await pauseIdleClock(page);
+  await page.locator('#start').click();await page.clock.runFor(250);await page.locator('#pause').click();
+  await page.locator('#open-outfits').click();
+  for(const asset of outfitSpriteAssets.filter(a=>a.outfitId===outfitId)){
+    await page.locator(`[data-outfit="${asset.outfitId}"]`).click();
+    await page.locator(`[data-addon="${asset.addonLevel}"]`).click();
+    if(asset.variantId==='dlc')await page.locator('[data-variant="dlc"]').click();
+    await expect(page.locator('#outfit-preview')).toHaveAttribute('data-rendered-sprite',asset.spriteId);
+    for(const facing of ['east','north','west','south']){
+      await page.locator('[data-rotate="1"]').click();await expect(page.locator('#outfit-preview')).toHaveAttribute('data-facing',facing);
+    }
+    await page.clock.runFor(160);
+    const pixels=await page.locator('#outfit-preview').evaluate((c:HTMLCanvasElement)=>c.getContext('2d')!.getImageData(0,0,160,160).data.some((value,i)=>i%4===3&&value>0));
+    expect(pixels).toBe(true);
+    await page.locator('[data-apply]').click();
+    await page.clock.runFor(32); // render the changed GPU texture; battle remains paused
+    await expect(page.locator('#game')).toHaveAttribute('data-appearance-sprites',new RegExp(`"knight":"${asset.spriteId}"`));
+  }
+  await page.locator(`[data-outfit="${outfitId}"]`).click();await page.locator('[data-apply]').click();await page.keyboard.press('Escape');
+  await page.locator('#pause').click();await page.clock.runFor(250);
+  await page.locator('#game canvas').focus();await page.keyboard.down('a');await page.clock.runFor(750);await page.keyboard.up('a');await page.clock.runFor(250);
+  await expect(page.locator('#game')).toHaveAttribute('data-visual-facings',/knight:west/);
+  await expect(page.locator('#game')).toHaveAttribute('data-appearance-sprites',new RegExp(`"knight":"outfit-${outfitId}-base"`));
+  await page.screenshot({path:`test-results/mvp2c-new-${outfitId}-world.png`});
+  expect(errors).toEqual([]);
+});
+
+test('preview rotates real cardinal sprites, animates, does not send gameplay input and fits desktop',async({page})=>{
+  await installControlledClock(page);await page.goto('/?training=1');await pauseIdleClock(page);
+  await page.locator('#open-outfits').click();await page.locator('[data-outfit="citizen"]').click();
+  for(const facing of ['east','north','west','south']){
+    await page.locator('[data-rotate="1"]').click();await expect(page.locator('#outfit-preview')).toHaveAttribute('data-facing',facing);
+  }
+  await page.locator('[data-motion="walk"]').click();await page.clock.runFor(120);
+  const frame=await page.locator('#outfit-preview').getAttribute('data-frame');await page.clock.runFor(120);
+  expect(await page.locator('#outfit-preview').getAttribute('data-frame')).not.toBe(frame);
+  const commands=await page.locator('#player-controls').getAttribute('data-command-count');
+  await page.keyboard.press('w');await page.keyboard.press('1');
+  expect(await page.locator('#player-controls').getAttribute('data-command-count')).toBe(commands);
+  for(const size of [{width:1366,height:768},{width:1600,height:900},{width:1920,height:1080}]){
+    await page.setViewportSize(size);const box=await page.locator('#outfit-dialog').boundingBox();expect(box!.x).toBeGreaterThanOrEqual(0);expect(box!.y).toBeGreaterThanOrEqual(0);
+    expect(box!.y+box!.height).toBeLessThanOrEqual(size.height);
+  }
+  await page.screenshot({path:'test-results/mvp2c-outfits-atelier.png'});
+  await page.keyboard.press('Escape');await expect(page.locator('#outfit-dialog')).not.toBeVisible();
+});
+
+for(const scenario of [
+  {id:'legacy',loadout:[['knight','original-druid','druid',0],['druid','original-sorcerer','sorcerer',0],['sorcerer','original-knight','knight',0]]},
+  {id:'new-art',loadout:[['knight','warrior','outfit-warrior-addon2',2],['druid','druid','outfit-druid-addon2',2],['sorcerer','mage','outfit-mage-addon2',2]]},
+] as const)test(`${scenario.id} cosmetics preserve paused combat state and customized hunt wins`,async({page})=>{
+  test.setTimeout(REPEATED_HUNT_TIMEOUT_MS);
+  const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
+  await installControlledClock(page);await page.goto('/');await pauseIdleClock(page);
+  await page.locator('#loop-toggle').click();await page.locator('#start').click();await page.clock.runFor(1000);await page.locator('#pause').click();
+  const targetPosition=(await page.locator('#game').getAttribute('data-logical-positions'))!.split(',').find(p=>p.startsWith('lion-1:'))!.split(':');
+  const screen=await tilePoint(page,Number(targetPosition[1]),Number(targetPosition[2]));await page.mouse.click(screen.x,screen.y);
+  await expect(page.locator('#player-controls')).toHaveAttribute('data-selected-target','lion-1');
+  await page.clock.runFor(32);
+  const state=()=>page.evaluate(()=>({party:document.querySelector('#party')!.textContent,game:document.querySelector<HTMLElement>('#game')!.dataset.logicalPositions,
+    time:document.querySelector('html')!.getAttribute('data-processed-events'),mode:(document.querySelector('#control-mode') as HTMLSelectElement).value,
+    selected:document.documentElement.dataset.selectedHero,commands:document.querySelector<HTMLElement>('#player-controls')!.dataset.commandCount,
+    target:document.querySelector<HTMLElement>('#player-controls')!.dataset.selectedTarget,logicalTime:document.querySelector<HTMLElement>('#game')!.dataset.logicalTime,
+    objects:document.querySelector<HTMLElement>('#game')!.dataset.displayObjectCount}));
+  const before=await state(),beforePixels=await page.locator('#game canvas').screenshot();await page.locator('#open-outfits').click();
+  for(const [hero,outfit,,addon] of scenario.loadout){
+    await page.locator(`[data-outfit-hero="${hero}"]`).click();await page.locator(`[data-outfit="${outfit}"]`).click();await page.locator(`[data-addon="${addon}"]`).click();await page.locator('[data-apply]').click();
+  }
+  expect(await state()).toEqual(before);
+  const expectedSprites=JSON.stringify(Object.fromEntries(scenario.loadout.map(([hero,,sprite])=>[hero,sprite])));
+  await expect(page.locator('#game')).toHaveAttribute('data-appearance-sprites',expectedSprites);
+  await page.keyboard.press('Escape');await page.clock.runFor(32);
+  expect(await state()).toEqual(before);
+  const afterPixels=await page.locator('#game canvas').screenshot();expect(afterPixels.equals(beforePixels)).toBe(false);
+  await page.screenshot({path:`test-results/mvp2c-${scenario.id}-party-paused.png`});
+  await page.locator('[data-speed="4"]').click();await page.locator('#pause').click();
+  await advanceUntilAttribute(page,'data-session-state','completed');await page.clock.runFor(1500);
+  await expect(page.locator('#result-content')).toContainText('Vitória');
+  for(const attr of ['data-logical-overlaps','data-out-of-bounds','data-reservation-count','data-residual-visual-objects'])await expect(page.locator('#game')).toHaveAttribute(attr,'0');
+  await page.screenshot({path:`test-results/mvp2c-${scenario.id}-customized-victory.png`});
+  await page.locator('#close-result').click();await page.locator('#restart').click();await expect(page.locator('html')).toHaveAttribute('data-session-state','idle');
+  await expect(page.locator('#game')).toHaveAttribute('data-appearance-sprites',expectedSprites);
+  expect(errors).toEqual([]);
+});
+
+test('customized native sprite follows WASD/facing while keeping applied appearance',async({page})=>{
+  await installControlledClock(page);await page.goto('/?training=1');await pauseIdleClock(page);
+  await page.locator('#open-outfits').click();await page.locator('[data-outfit="original-druid"]').click();await page.locator('[data-apply]').click();await page.keyboard.press('Escape');
+  await page.locator('#start').click();await page.clock.runFor(250);
+  const before=await page.locator('#game').getAttribute('data-logical-positions');
+  await page.locator('#game canvas').focus();await page.keyboard.down('a');await page.clock.runFor(750);await page.keyboard.up('a');await page.clock.runFor(250);
+  expect(await page.locator('#game').getAttribute('data-logical-positions')).not.toBe(before);
+  await expect(page.locator('#game')).toHaveAttribute('data-visual-facings',/knight:west/);
+  await expect(page.locator('#game')).toHaveAttribute('data-appearance-sprites',/"knight":"druid"/);
+  await page.locator('#open-outfits').click();await expect(page.locator('[data-outfit="original-druid"]')).toHaveAttribute('aria-pressed','true');
+});

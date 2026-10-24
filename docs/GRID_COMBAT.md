@@ -1,5 +1,11 @@
 # MVP 1C — Authoritative Grid Combat
 
+Atualização24/10: Hunt30×18; treino36×18 explícito, independente do viewport.
+Janela visual15×11 não muda bounds/tiles. Footpoints tile×32, limites visuais
+da célula em±16. Approach de push usa A* existente, exclui alvo/destino e agenda
+passos normais, sem reservar o destino por toda a viagem. Contrato completo em
+TACTICAL_CONSOLIDATION.md; regras de ocupação/reservas/quinas abaixo preservadas.
+
 ## Princípio
 
 O estado autoritativo usa `tileX` e `tileY` inteiros. `position` é somente uma

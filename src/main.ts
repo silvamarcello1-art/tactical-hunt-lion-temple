@@ -1,12 +1,23 @@
-import { assetUrl } from './game/assetUrl';
+import { GameplayHUD } from './ui/GameplayHUD';
+import {WORLD_VIEW} from './game/worldViewport';
+import {AppearanceStore} from './app/AppearanceStore';
+import {OutfitPanel} from './ui/OutfitPanel';
+import {resolveOutfit} from './data/outfits';
+import { EquipmentStore } from './app/EquipmentStore';
+import { EquipmentPanel, itemName } from './ui/EquipmentPanel';
+import { itemById } from './data/items';
+import { itemIcon } from './ui/ItemIcons';
+import type { Vocation } from './data/progression';
+import { iconMarkup } from './data/actionBar';
+import { ProgressionStore } from './app/ProgressionStore';
 import { CombatEngine } from './combat/CombatEngine';
 import './style.css';
+document.documentElement.style.setProperty('--world-aspect',String(WORLD_VIEW.columns/WORLD_VIEW.rows));
 import { PlayerControls } from './control/PlayerControls';
 import { CurrencyService } from './app/CurrencyService';
 import { LiveHuntState } from './app/LiveHuntState';
 import { SESSION_CONFIG } from './app/sessionConfig';
 import {
-  abilities,
   abilitiesByVocation,
   defaultAbilityPreferences,
   type AbilityPreferences,
@@ -14,6 +25,9 @@ import {
 import { heroes } from './data/config';
 import type { CombatEvent, HuntResult } from './events/types';
 import { PixiRenderer } from './game/PixiRenderer';
+import {runeDefinitions,type RuneId} from './data/runes';
+import {abilityCatalog} from './data/trainingSpells';
+import {tacticalIcon} from './ui/TacticalIcons';
 
 type SessionPhase =
   | 'preparing'
@@ -33,6 +47,34 @@ const $ = <T extends HTMLElement>(selector: string) =>
 const heroIds = new Set(['knight', 'druid', 'sorcerer']);
 const storageKey = 'tactical-hunt-ability-preferences';
 const liveState = new LiveHuntState();
+const progressionStore = new ProgressionStore();
+const equipmentStore = new EquipmentStore(localStorage);
+const appearanceStore=new AppearanceStore(localStorage);
+const trainingMode=new URLSearchParams(location.search).get('training')==='1';
+const abilities=abilityCatalog(trainingMode);
+const abilityNames=Object.fromEntries(abilities.map(a=>[a.id,a.name]));
+const hud = new GameplayHUD(trainingMode);
+document.documentElement.dataset.scenario=trainingMode?'training':'hunt';
+const trainingLink=document.createElement('a');trainingLink.id='training-link';
+const scenarioUrl=new URL(location.href);
+if(trainingMode)scenarioUrl.searchParams.delete('training');else scenarioUrl.searchParams.set('training','1');
+trainingLink.href=scenarioUrl.href;trainingLink.textContent=trainingMode?'Voltar à hunt':'Treino de runas';
+trainingLink.title='Troque de cenário entre sessões. O treino é local, sem XP, ouro ou drops.';
+document.querySelector('.topbar')!.append(trainingLink);
+trainingLink.onclick=event=>{if(!['idle','completed','defeated','error'].includes(sessionPhase))event.preventDefault();};
+const runeKit=document.createElement('div');runeKit.id='rune-kit';runeKit.hidden=!trainingMode;
+runeKit.setAttribute('aria-label','Runas 4–7 e ações 8–9');runeKit.innerHTML=Object.values(runeDefinitions).map(r=>`<button class="action rune-action" data-rune="${r.id}" data-action-slot="${r.key}" data-category="rune" aria-label="${r.name}" title="Runa · ${r.name}: ${r.purpose}. ${r.key} + clique; ESC cancela. Kit gratuito.">${tacticalIcon(r.id)}<kbd>${r.key}</kbd><span class="rune-charges"></span><strong class="rune-number"></strong><i class="rune-cooldown" aria-hidden="true"></i></button>`).join('')+`<button class="action utility-action" id="push-action" data-action-slot="8" data-category="utility" title="Empurrar: arraste a criatura até um vizinho livre; tecla 8 é alternativa." aria-label="Empurrar">${tacticalIcon('push')}<kbd>8</kbd><em>Empurrar</em></button><button class="action utility-action" id="stop-action" data-action-slot="9" data-category="utility" title="Parar novas ordens; passos comprometidos concluem após revalidação." aria-label="Parar">${tacticalIcon('stop')}<kbd>9</kbd><em>Parar</em></button>`;
+const actionStrip=document.createElement('div');actionStrip.className='action-strip';actionStrip.setAttribute('aria-label','Barra de ações');
+const spellBar=document.querySelector('#action-bar')!;spellBar.before(actionStrip);actionStrip.append(spellBar,runeKit);
+document.querySelector('.action-dock')!.append(document.querySelector('#player-controls')!);
+document.querySelector('.rail-hint')?.remove();
+if(trainingMode){
+  document.querySelector('.brand small')!.textContent='TREINO LOCAL · NÃO É PVP ONLINE';
+  document.querySelector('#repeat')!.textContent='Repetir treino';
+  document.querySelector('#restart')!.setAttribute('title','Reiniciar treino');
+  document.querySelector('.phase-track')!.setAttribute('hidden','');
+}
+let casting: {id:string; until:number} | undefined;
 const debugEnabled =
   new URLSearchParams(window.location.search).get('debug') === '1';
 
@@ -45,11 +87,12 @@ let resumePhase: Extract<
   'running' | 'floor_transition' | 'boss'
 > = 'running';
 let selectedSpeed: number = SESSION_CONFIG.defaultSpeed;
-let loopEnabled = true;
+let loopEnabled = !trainingMode;
 let loopTimer: number | undefined;
 let restartInProgress = false;
 let completedCycles = 0;
 let lastResult: HuntResult | undefined;
+let completedReport:HuntResult | undefined;
 let logicalTime = 0;
 let huntSessionId = createNewHuntSessionId();
 const currencyService = new CurrencyService();
@@ -58,6 +101,44 @@ const abilityCooldowns = new Map<
   string,
   { endsAt: number; duration: number }
 >();
+
+const equipmentRoot=document.createElement('aside');
+equipmentRoot.id='equipment-drawer';equipmentRoot.className='drawer equipment-drawer';equipmentRoot.hidden=true;
+equipmentRoot.setAttribute('aria-label','Inventário e equipamento');equipmentRoot.tabIndex=-1;
+equipmentRoot.innerHTML='<button id="close-equipment" class="drawer-close" aria-label="Fechar inventário">×</button><div id="equipment-content"></div>';
+document.querySelector('.app-shell')!.append(equipmentRoot);
+// Inspecting another loadout must not assume combat control or change the HUD hero.
+let equipmentHeroId:Vocation='knight';
+const equipmentPanel=new EquipmentPanel($('#equipment-content'),equipmentStore,()=>({
+  hero:equipmentHeroId,progress:progressionStore.snapshot(),allowed:!trainingMode&&!loopEnabled&&['idle','completed','defeated'].includes(sessionPhase),
+}),id=>{equipmentHeroId=id;refreshEquipment();},()=>{
+  if(sessionPhase==='idle') renderer?.engine.configureLoadout(equipmentStore.loadout());
+});
+const inventoryButton=document.createElement('button');inventoryButton.id='open-equipment';inventoryButton.textContent='Inventário';
+document.querySelector('.center-tabs')!.append(inventoryButton);
+const reportButton=document.createElement('button');reportButton.id='open-report';reportButton.textContent='Relatório';reportButton.disabled=true;
+document.querySelector('.center-tabs')!.append(reportButton);
+reportButton.onclick=()=>{if(completedReport) {clearLoopTimer();showResult(completedReport);}};
+const rewardNotice=document.createElement('button');rewardNotice.id='reward-notice';rewardNotice.hidden=true;rewardNotice.onclick=reportButton.onclick;
+document.querySelector('.world-stage')!.append(rewardNotice);
+function openEquipment(itemId?:string) {
+  ($('#result') as HTMLDialogElement).close();$('#view-summary').hidden=true;
+  equipmentHeroId=selectedHeroId as Vocation;
+  playerControls?.clear();equipmentRoot.hidden=false;equipmentPanel.focusItem(itemId);equipmentRoot.focus();
+}
+inventoryButton.onclick=()=>openEquipment();
+$('#close-equipment').onclick=()=>{equipmentRoot.hidden=true;playerControls?.clear();playerControls?.focusGame();};
+equipmentRoot.addEventListener('keydown',event=>{
+  event.stopPropagation();if(event.key==='Escape') $('#close-equipment').click();
+});
+function refreshEquipment(){if(!equipmentRoot.hidden) equipmentPanel.render();}
+
+const outfitPanel=new OutfitPanel(appearanceStore,hero=>renderer?.refreshAppearance(hero));
+const outfitButton=document.createElement('button');outfitButton.id='open-outfits';
+outfitButton.textContent='♙';outfitButton.title='Outfits · aparência do personagem';
+outfitButton.setAttribute('aria-label','Outfits');
+document.querySelector('.topbar')!.insertBefore(outfitButton,trainingLink);
+outfitButton.onclick=()=>{playerControls?.suspendInput();outfitPanel.open(selectedHeroId);};
 
 function loadPreferences(): AbilityPreferences {
   try {
@@ -98,6 +179,7 @@ const formatTime = (milliseconds: number) => {
 
 function setSessionPhase(phase: SessionPhase, message?: string) {
   sessionPhase = phase;
+  trainingLink.setAttribute('aria-disabled',String(!['idle','completed','defeated','error'].includes(phase)));
   document.documentElement.dataset.sessionState = phase;
   const startButton = $('#start') as HTMLButtonElement;
   const pauseButton = $('#pause') as HTMLButtonElement;
@@ -126,52 +208,32 @@ function setSessionPhase(phase: SessionPhase, message?: string) {
     error:'Falha ao carregar a arena',
   };
   $('#session-state').textContent = message ?? defaults[phase];
+  if(document.querySelector('#passive-state')) updateHUD();
+  refreshEquipment();
 }
 
-function renderParty() {
-  $('#party').innerHTML = heroes
-    .map((hero) => {
-      const vocation = hero.role as 'knight' | 'druid' | 'sorcerer';
-      const spells = abilitiesByVocation(vocation)
-        .map(
-          (ability) =>
-            `<img class="${preferences[ability.id]?.enabled ? '' : 'disabled'}"
-              src="${assetUrl(ability.icon)}" title="${ability.name} — ${ability.cooldown / 1000}s" alt="">`,
-        )
-        .join('');
-      const roleName =
-        vocation === 'knight' ? 'TANK' : vocation === 'druid' ? 'SUP' : 'DPS';
-      const selected = hero.id === selectedHeroId;
-      return `<article class="hero-card ${selected ? 'selected' : ''}"
-        id="card-${hero.id}" data-hero-id="${hero.id}" role="button"
-        tabindex="0" aria-pressed="${selected}"
-        aria-label="Abrir Helper de ${hero.name}">
-        <div class="hero-title">
-          <span class="role-badge role-${vocation}">${roleName}</span>
-          <b>${hero.name}</b><small>lv 250</small>
-        </div>
-        <div class="bar hp"><i style="width:100%"></i></div>
-        <div class="bar mp"><i style="width:100%"></i></div>
-        <div class="party-spells">${spells}</div>
-      </article>`;
-    })
-    .join('');
-}
-
-function renderActionBar() {
-  $('#action-bar').innerHTML = abilities
-    .map(
-      (ability) => `<button class="action ${
-        preferences[ability.id]?.enabled ? '' : 'disabled'
-      }" data-ability="${ability.id}" title="${ability.name} • ${ability.words}">
-        <img src="${assetUrl(ability.icon)}" alt="${ability.name}">
-        <em>${ability.cooldown / 1000}s</em>
-        <span class="cooldown-mask" aria-hidden="true"></span>
-        <strong class="cooldown-number" aria-hidden="true"></strong>
-      </button>`,
-    )
-    .join('');
-  updateCooldownVisuals(logicalTime);
+function renderParty() { hud.renderParty(selectedHeroId); }
+function renderActionBar() { hud.renderActions(selectedHeroId,preferences); updateCooldownVisuals(logicalTime); }
+function updateHUD() {
+  const engine=renderer?.engine;
+  hud.update(engine?.entities??[],engine?.progression??progressionStore.snapshot(),id=>engine?.controlOf(id).mode??'AI',selectedHeroId);
+  hud.availability(id=>{
+    if(!renderer || ['idle','completed','defeated','error'].includes(sessionPhase)) return {ready:false,reason:sessionPhase==='idle'?'not-started':'session-ended',remaining:0};
+    const ability=abilities.find(a=>a.id===id)!;
+    const target=ability.group==='healing'||ability.group==='support'?selectedHeroId:playerControls?.selectedTarget;
+    return engine!.abilityStatus(selectedHeroId,id,target,engine!.time);
+  },casting && casting.until>logicalTime?casting.id:undefined);
+  $('#compact-time').textContent=formatTime(liveState.time);
+  $('#compact-kills').textContent=liveState.kills+' derrotados';
+  $('#compact-gold').textContent=formatNumber(liveState.gold)+' ouro';
+  if(trainingMode)for(const button of Array.from(runeKit.querySelectorAll<HTMLButtonElement>('[data-rune]'))){
+    const status=engine?.runeStatus(selectedHeroId,button.dataset.rune as RuneId);
+    button.disabled=!status||['idle','completed','defeated','error'].includes(sessionPhase)||!engine?.entities.find(h=>h.id===selectedHeroId)?.alive||status.charges===0;
+    button.querySelector('.rune-charges')!.textContent=`×${status?.charges??runeDefinitions[button.dataset.rune as RuneId].charges}`;
+    button.querySelector('.rune-number')!.textContent=status?.remaining?String(Math.ceil(status.remaining/1000)):'';
+    button.dataset.charges=String(status?.charges??0);button.dataset.remaining=String(status?.remaining??0);
+    button.querySelector<HTMLElement>('.rune-cooldown')?.style.setProperty('--cooldown-angle',`${Math.min(1,(status?.remaining??0)/runeDefinitions[button.dataset.rune as RuneId].cooldown)*360}deg`);
+  }
 }
 
 function updateCooldownVisuals(time: number) {
@@ -179,9 +241,11 @@ function updateCooldownVisuals(time: number) {
   document.querySelectorAll<HTMLButtonElement>('[data-ability]').forEach((button) => {
     const abilityId = button.dataset.ability ?? '';
     const state = abilityCooldowns.get(abilityId);
-    const remaining = state ? Math.max(0, state.endsAt - logicalTime) : 0;
+    const domain=renderer?.engine.cooldownState(selectedHeroId,abilityId);
+    const remaining = domain?.remaining??(state ? Math.max(0, state.endsAt - logicalTime) : 0);
     if (state && remaining === 0) abilityCooldowns.delete(abilityId);
-    const ratio = state && state.duration > 0 ? remaining / state.duration : 0;
+    const duration=domain?.duration??state?.duration??0;
+    const ratio = duration>0 ? Math.min(1,remaining/duration) : 0;
     button
       .querySelector<HTMLElement>('.cooldown-mask')
       ?.style.setProperty('--cooldown-angle', `${Math.round(ratio * 360)}deg`);
@@ -211,12 +275,10 @@ function registerCooldown(event: CombatEvent) {
 }
 
 function renderInventory() {
-  $('#backpack-slots').innerHTML = Array.from(
-    { length:20 },
-    (_, index) =>
-      `<span class="slot" data-slot="${index + 1}" aria-label="Slot ${index + 1}"></span>`,
-  ).join('');
-  $('#backpack-capacity').textContent = '0 / 20 slots';
+  const demo=$('#backpack-slots').closest('details');
+  if(demo) demo.remove();
+  const text=document.querySelector('[data-drawer="loot"] > p');
+  if(text) text.textContent='Ouro vai para o saldo local. Equipamentos e brasas ficam no Inventário; demais troféus são registros desta expedição.';
 }
 
 function healthBarColor(ratio: number) {
@@ -245,7 +307,7 @@ function renderAnalyzer(hunt?: HuntResult) {
   const duration = Math.max(1, hunt?.duration ?? liveState.time);
   const xp = hunt?.xp ?? liveState.xp;
   const damageTaken = hunt?.damageTaken ?? liveState.damageTaken;
-  const bosses = hunt ? (hunt.victory ? 1 : 0) : liveState.bosses;
+  const bosses = hunt?.bosses ?? liveState.bosses;
   $('#analyzer').innerHTML = `<div class="stat-grid">
     <div class="stat"><span>Sessão</span><b id="time">${formatTime(liveState.time)}</b></div>
     <div class="stat"><span>Status</span><b>${status}</b></div>
@@ -277,7 +339,7 @@ function resetInterface() {
   $('#loot').textContent = 'Nenhum item ainda.';
   $('#loot-capacity').textContent = '0 / 64 slots';
   $('#stage-fill').style.width = '0';
-  $('#stage-label').textContent = 'Preparação';
+  $('#stage-label').textContent = trainingMode?'Treino tático · Party × Bot':'Preparação';
   document.querySelectorAll('.phase').forEach((phase, index) => {
     phase.classList.toggle('active', index === 0);
     phase.classList.remove('done');
@@ -288,11 +350,13 @@ function resetInterface() {
 let playerControls:PlayerControls | undefined;
 
 async function createRenderer() {
+  const rememberedHero=selectedHeroId;
   playerControls?.destroy();
   playerControls = undefined;
   renderer?.destroy();
   renderer = undefined;
-  const nextRenderer = new PixiRenderer(new CombatEngine(803, preferences, crypto.randomUUID()), {
+  const nextRenderer = new PixiRenderer(new CombatEngine(803, preferences, huntSessionId, trainingMode?undefined:progressionStore.snapshot(), trainingMode?{}:equipmentStore.loadout(),true,true,trainingMode,{singleHeroControl:true,trainingTeam:true,trainingColumns:WORLD_VIEW.trainingColumns,tacticalControls:true}), {
+    appearanceSprite:id=>resolveOutfit(appearanceStore.get(id),id).spriteId,
     debugEnabled,
     selectedHeroId,
   });
@@ -305,13 +369,28 @@ async function createRenderer() {
       get sessionId() { return nextRenderer.engine.id; },
       get time() { return nextRenderer.engine.time; },
       get running() { return nextRenderer.player.isRunning; },
+      training:trainingMode,
+      singleHeroControl:true,
+      tacticalControls:true,
+      get partyFocusTargetId(){return nextRenderer.engine.partyFocusTargetId;},
+      runePreview:(actor,id,tile)=>nextRenderer.engine.runePreview(actor,id,tile),
+      pushPreview:(actor,target)=>nextRenderer.engine.pushPreview(actor,target),
+      showPushPreview:preview=>nextRenderer.showPushPreview(preview),
+      showAim:(tile,ready)=>nextRenderer.showAim(tile,ready),
       get entities() { return nextRenderer.engine.entities; },
       get results() { return nextRenderer.engine.controlResults; },
       controlOf:id => nextRenderer.engine.controlOf(id),
+      assistanceOf:id=>nextRenderer.engine.assistanceOf(id),
+      abilityStatus:(id,ability,target) => nextRenderer.engine.abilityStatus(id,ability,target,nextRenderer.engine.time),
       submit:command => nextRenderer.engine.submit(command),
       selectTarget:id => nextRenderer.selectTarget(id),
+      pickEntity:(x,y)=>nextRenderer.pickEntity(x,y),
+      worldPoint:(x,y)=>nextRenderer.canvasPoint(x,y),
+      showDestination:tile=>nextRenderer.showDestination(tile),
       beforeTick:callback => { nextRenderer.beforeTick = callback; },
     },(id) => selectHero(id));
+    playerControls.selectActor(rememberedHero,trainingMode&&rememberedHero!=='knight');
+    updateHUD();
   } catch (error) {
     nextRenderer.destroy();
     throw error;
@@ -319,6 +398,8 @@ async function createRenderer() {
 }
 
 function start() {
+  if(!trainingMode&&progressionStore.blocked) {$('#session-state').textContent=progressionStore.warning;return;}
+  if(!trainingMode&&(equipmentStore.blocked || equipmentStore.warning || equipmentStore.pendingCount)) {$('#session-state').textContent=equipmentStore.warning || 'Salve as recompensas pendentes primeiro.';openEquipment();return;}
   if (sessionPhase !== 'idle' || !renderer?.player.play()) return;
   setSessionPhase('running');
   renderAnalyzer();
@@ -373,6 +454,7 @@ function vocationLabel(role: string) {
 
 function selectHero(heroId: string, openHelper = false) {
   if (!heroIds.has(heroId)) return;
+  if(playerControls && playerControls.selectedActor!==heroId) {playerControls.selectActor(heroId);return;}
   selectedHeroId = heroId;
   document.documentElement.dataset.selectedHero = heroId;
   renderer?.selectHero(heroId);
@@ -381,6 +463,9 @@ function selectHero(heroId: string, openHelper = false) {
     card.classList.toggle('selected', selected);
     card.setAttribute('aria-pressed', String(selected));
   });
+  renderActionBar();
+  updateHUD();
+  refreshEquipment();
   if (openHelper) showAbilityModal(heroId);
 }
 
@@ -389,12 +474,12 @@ function renderAbilityModal(heroId = selectedHeroId) {
   const vocation = hero.role as 'knight' | 'druid' | 'sorcerer';
   $('#helper-character-name').textContent = hero.name;
   $('#helper-character-vocation').textContent = vocationLabel(vocation);
-  $('#ability-list').innerHTML = abilitiesByVocation(vocation, preferences)
+  $('#ability-list').innerHTML = (trainingMode?abilities.filter(a=>a.vocation===vocation&&(preferences[a.id]?.enabled??true)).sort((a,b)=>(preferences[a.id]?.priority??99)-(preferences[b.id]?.priority??99)):abilitiesByVocation(vocation, preferences))
     .map((ability) => {
       const current = preferences[ability.id];
       return `<div class="ability-row">
-        <img src="${assetUrl(ability.icon)}" alt="">
-        <div><b>${ability.name}</b><small>${ability.words} • ${ability.cooldown / 1000}s</small></div>
+        ${iconMarkup(ability.id,trainingMode)}
+        <div><b>${abilityNames[ability.id]}</b><small>${ability.manaCost} MP • ${ability.cooldown / 1000}s</small></div>
         <label><input type="checkbox" data-enabled="${ability.id}" ${current.enabled ? 'checked' : ''}> Ativa</label>
         <label>Prioridade
           <select data-priority="${ability.id}">
@@ -427,18 +512,27 @@ function showFutureModule(title: string, description: string) {
 }
 
 function showResult(hunt: HuntResult) {
+  if(trainingMode){
+    $('#result-content').innerHTML=`<h2>${hunt.victory?'Treino concluído':'Treino encerrado'}</h2><p>Party × bot local · ${formatTime(hunt.duration)} · ${hunt.kills} bot derrotado.</p><p>Sem XP, ouro, itens ou Boss Tokens. Kit e arena reiniciam em cada treino.</p>`;
+    const dialog=$('#result') as HTMLDialogElement;if(!dialog.open)dialog.showModal();return;
+  }
   $('#result-content').innerHTML = `<h2>${hunt.victory ? 'Vitória no templo' : 'A expedição falhou'}</h2>
     <div class="result-list">Duração: ${formatTime(hunt.duration)}<br>
     XP total: ${formatNumber(hunt.xp)}<br>Gold: ${formatNumber(hunt.gold)}<br>
     Boss Tokens: ${formatBossToken(hunt.bossTokens)}<br>
     Monstros derrotados: ${hunt.kills}<br>Cura de Lyra: ${formatNumber(hunt.healing)}<br>
-    Recompensa: ${hunt.loot['Lion King fragment'] ? 'Lion King fragment' : '—'}</div>`;
+    Recompensa: ${hunt.loot['Lion King fragment'] ? 'Fragmento do Regente' : '—'}</div>
+    <p>${heroes.map(hero=>`${hero.name}: +${hunt.events.filter(e=>e.type==='level_up'&&e.targetId===hero.id).reduce((sum,e)=>sum+(e.data!.progress!.level-e.data!.previousLevel!),0)} níveis`).join(' · ')}</p>
+    <h3>Encontrados nesta hunt · comparar e equipar</h3><div class="reward-items">${hunt.events.filter(e=>e.type==='equipment_drop'&&e.data?.equipment).map(e=>{const item=e.data!.equipment!,def=itemById(item.definitionId)!;return `<button data-reward-item="${item.id}" class="${def.rarity}">${itemIcon(def.icon)}<span>${itemName(item)}${item.quantity>1?' ×'+item.quantity:''}<small>${def.vocations.join(' / ')} · ${def.description}</small></span></button>`;}).join('')}</div>`;
+  $('#result-content').querySelectorAll<HTMLButtonElement>('[data-reward-item]').forEach(button=>button.onclick=()=>openEquipment(button.dataset.rewardItem));
   const dialog = $('#result') as HTMLDialogElement;
   if (!dialog.open) dialog.showModal();
 }
 
 function scheduleLoop() {
   clearLoopTimer();
+  if(($('#result') as HTMLDialogElement).open) return;
+  if(equipmentStore.warning || equipmentStore.pendingCount) {$('#session-state').textContent=equipmentStore.warning || 'Salve as recompensas pendentes primeiro.';return;}
   if (
     !loopEnabled ||
     (sessionPhase !== 'completed' && sessionPhase !== 'defeated')
@@ -454,11 +548,13 @@ function scheduleLoop() {
 window.addEventListener('hunt-time', (rawEvent) => {
   liveState.setTime((rawEvent as CustomEvent<number>).detail);
   updateCooldownVisuals(liveState.time);
+  updateHUD();
   const element = document.querySelector('#time');
   if (element) element.textContent = formatTime(liveState.time);
 });
 
 window.addEventListener('hunt-floor', (rawEvent) => {
+  if(trainingMode)return;
   const floor = (rawEvent as CustomEvent<number>).detail;
   $('#stage-label').textContent =
     floor === 4 ? 'Boss derrotado' : `Andar ${floor + 1} de 4`;
@@ -491,6 +587,7 @@ window.addEventListener('hunt-event', (rawEvent) => {
       Number(document.documentElement.dataset.bossSpawns ?? 0) + 1;
     document.documentElement.dataset.bossSpawns = String(bossSpawns);
     setSessionPhase('boss');
+    $('#boss-banner').hidden=false;window.setTimeout(()=>$('#boss-banner').hidden=true,2200);
   }
 
   if (event.type === 'boss_reward') {
@@ -507,43 +604,20 @@ window.addEventListener('hunt-event', (rawEvent) => {
     }
   }
 
-  if (event.type === 'spawn' && heroIds.has(event.targetId ?? '')) {
-    const hp = document.querySelector<HTMLElement>(
-      `#card-${event.targetId} .hp i`,
-    );
-    const mp = document.querySelector<HTMLElement>(
-      `#card-${event.targetId} .mp i`,
-    );
-    if (hp) {
-      hp.style.width = '100%';
-      hp.style.background = healthBarColor(1);
-    }
-    if (mp) mp.style.width = '100%';
+  if(!trainingMode)progressionStore.apply(event);
+  if(!trainingMode&&(event.type==='equipment_drop' || event.type==='loot'&&event.data?.item==='Gold coin')) {
+    equipmentStore.apply(event,huntSessionId);refreshEquipment();
+    if(equipmentStore.warning) {$('#session-state').textContent=equipmentStore.warning;}
   }
-
-  if (event.type === 'damage' || event.type === 'heal') {
-    const unit = renderer?.units.get(event.targetId!);
-    const bar = document.querySelector<HTMLElement>(
-      `#card-${event.targetId} .hp i`,
-    );
-    if (bar && unit) {
-      const ratio = unit.maxHp > 0 ? unit.currentHp / unit.maxHp : 0;
-      bar.style.width = `${100 * ratio}%`;
-      bar.style.background = healthBarColor(ratio);
-    }
-  }
-
-  if (event.type === 'cast' && heroIds.has(event.sourceId ?? '')) {
+  if(event.type==='cast' && heroIds.has(event.sourceId??'')) {
     registerCooldown(event);
-    const unit = renderer?.units.get(event.sourceId!);
-    const bar = document.querySelector<HTMLElement>(
-      `#card-${event.sourceId} .mp i`,
-    );
-    if (bar && unit) {
-      const ratio = unit.maxMana > 0 ? unit.currentMana / unit.maxMana : 0;
-      bar.style.width = `${100 * ratio}%`;
-    }
+    if(event.sourceId===selectedHeroId) casting={id:event.data?.abilityId??'',until:event.time+400};
   }
+  if(event.type==='level_up') {
+    const notice=$('#level-notice');notice.textContent=heroes.find(h=>h.id===event.targetId)?.name+' · Nível '+event.data?.progress?.level;notice.hidden=false;
+    window.setTimeout(()=>notice.hidden=true,2200);
+  }
+  updateHUD();
 
   if (
     [
@@ -600,7 +674,7 @@ function labelEvent(event: CombatEvent) {
   if (event.type === 'dodge') return `${event.targetId}: esquiva.`;
   if (event.type === 'death') return `${event.targetId} foi derrotado.`;
   if (event.type === 'aggro') {
-    return 'Aldric desafiou os inimigos com exeta res.';
+    return 'Aldric lançou o Chamado do Ferro.';
   }
   if (event.type === 'reposition') {
     return `${event.sourceId} reposicionou-se.`;
@@ -636,15 +710,20 @@ function showBossTokenNotification(amount: number) {
 window.addEventListener('hunt-complete', (rawEvent) => {
   const hunt = (rawEvent as CustomEvent<HuntResult>).detail;
   lastResult = hunt;
+  completedReport=hunt;reportButton.disabled=false;
   completedCycles++;
   document.documentElement.dataset.completedCycles = String(completedCycles);
   renderAnalyzer(hunt);
   $('#stage-fill').style.width = '100%';
-  $('#stage-label').textContent = hunt.victory
+  $('#stage-label').textContent = trainingMode?'Treino encerrado':hunt.victory
     ? 'Hunt concluída'
     : 'Equipe derrotada';
   setSessionPhase(hunt.victory ? 'completed' : 'defeated');
-  if (loopEnabled) scheduleLoop();
+  if (loopEnabled) {
+    const count=hunt.events.filter(e=>e.type==='equipment_drop').length;
+    rewardNotice.textContent=`${hunt.victory?'Vitória':'Expedição encerrada'} · +${hunt.gold} ouro · ${count} drops · Ver relatório`;
+    rewardNotice.hidden=false;scheduleLoop();
+  }
   else showResult(hunt);
 });
 
@@ -670,7 +749,9 @@ $('#repeat').onclick = () => void restart(true);
 $('#close-result').onclick = () => {
   ($('#result') as HTMLDialogElement).close();
 };
+$('#result').addEventListener('close',()=>{if(loopEnabled) scheduleLoop();});
 $('#loop-toggle').onclick = () => {
+  if(trainingMode)return;
   loopEnabled = !loopEnabled;
   const button = $('#loop-toggle');
   button.classList.toggle('active', loopEnabled);
@@ -697,29 +778,22 @@ $('#ability-config').onclick = () => showAbilityModal();
 $('#party-config').onclick = () => showAbilityModal();
 $('#party').onclick = (event) => {
   const card = (event.target as Element).closest<HTMLElement>('[data-hero-id]');
-  if (card?.dataset.heroId) selectHero(card.dataset.heroId, true);
+  if (card?.dataset.heroId) playerControls?.selectActor(card.dataset.heroId);
 };
 $('#party').onkeydown = (event) => {
   if (event.key !== 'Enter' && event.key !== ' ') return;
   const card = (event.target as Element).closest<HTMLElement>('[data-hero-id]');
   if (!card?.dataset.heroId) return;
   event.preventDefault();
-  selectHero(card.dataset.heroId, true);
+  playerControls?.selectActor(card.dataset.heroId);
 };
 $('#action-bar').onclick = (event) => {
+  if(!equipmentRoot.hidden) return;
   const button = (event.target as Element).closest<HTMLButtonElement>(
     '[data-ability]',
   );
   if (!button) return;
-  if (playerControls?.manual && button.dataset.ability) {
-    playerControls.cast(button.dataset.ability);
-    return;
-  }
-  const ability = abilities.find(
-    (candidate) => candidate.id === button.dataset.ability,
-  );
-  const hero = heroes.find((candidate) => candidate.role === ability?.vocation);
-  showAbilityModal(hero?.id ?? selectedHeroId);
+  if(button.dataset.ability) playerControls?.cast(button.dataset.ability);
 };
 $('#save-abilities').onclick = (event) => {
   event.preventDefault();
@@ -775,7 +849,7 @@ window.addEventListener('hunt-select-character', (rawEvent) => {
   const heroId = (rawEvent as CustomEvent<string>).detail;
   // Manual pointer selection belongs to PlayerControls; Pixi tap also fires on right click.
   if (playerControls?.manual) return;
-  selectHero(heroId, true);
+  selectHero(heroId);
 });
 
 document.querySelectorAll<HTMLButtonElement>('[data-view]').forEach((button) => {
@@ -786,17 +860,8 @@ document.querySelectorAll<HTMLButtonElement>('[data-view]').forEach((button) => 
       item.setAttribute('aria-selected', String(active));
     });
     const view = button.dataset.view;
-    const summary = $('#view-summary');
-    if (view === 'general') {
-      summary.hidden = true;
-      summary.textContent = '';
-    } else {
-      summary.hidden = false;
-      summary.textContent =
-        view === 'combat'
-          ? 'A análise detalhada de dano e ameaças será ampliada no MVP 1.'
-          : 'A gestão de loot e filtros pertence ao MVP de inventário.';
-    }
+    $('#view-summary').hidden=view==='general';
+    document.querySelectorAll<HTMLElement>('[data-drawer]').forEach(panel=>panel.hidden=panel.dataset.drawer!==view);
   };
 });
 
@@ -812,7 +877,10 @@ document.querySelectorAll<HTMLButtonElement>('[data-collapse]').forEach((button)
   };
 });
 
-$('#supply-config').onclick = () => {
+$('#close-drawer').onclick=()=>{ $('#view-summary').hidden=true;playerControls?.clear();playerControls?.focusGame(); };
+
+const supplyConfig=document.querySelector<HTMLButtonElement>('#supply-config');
+if(supplyConfig) supplyConfig.onclick = () => {
   showFutureModule(
     'Supply Pouch — próximo MVP',
     'Configuração e consumo persistente de supplies serão implementados no MVP de inventário.',
@@ -835,13 +903,18 @@ document.querySelectorAll<HTMLButtonElement>('[data-speed]').forEach((button) =>
   };
 });
 
-window.addEventListener('beforeunload', () => {
+window.addEventListener('pagehide', (event) => {
+  if(event.persisted) return;
   clearLoopTimer();
   playerControls?.destroy();
   renderer?.destroy();
 });
+window.addEventListener('beforeunload',event=>{
+  if(equipmentStore.pendingCount) {event.preventDefault();event.returnValue='';}
+});
 
 async function initialize() {
+  if(trainingMode){const loop=$('#loop-toggle') as HTMLButtonElement;loop.disabled=true;loop.classList.remove('active');loop.setAttribute('aria-pressed','false');loop.innerHTML='Loop OFF · treino';}
   document.documentElement.dataset.completedCycles = '0';
   document.documentElement.dataset.playbackSpeed = String(selectedSpeed);
   document.documentElement.dataset.processedEvents = '0';
@@ -863,3 +936,7 @@ async function initialize() {
 }
 
 void initialize();
+
+runeKit.querySelectorAll<HTMLButtonElement>('[data-rune]').forEach(button=>button.onclick=()=>playerControls?.armRune(button.dataset.rune as RuneId));
+document.querySelector<HTMLButtonElement>('#push-action')!.onclick=()=>playerControls?.armPush();
+document.querySelector<HTMLButtonElement>('#stop-action')!.onclick=()=>playerControls?.stopAction();

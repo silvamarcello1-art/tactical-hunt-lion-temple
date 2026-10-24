@@ -1,6 +1,124 @@
+# Arquitetura — consolidação tática (24/10/2026)
+
+Contrato atual de controles/apresentação: TACTICAL_CONSOLIDATION.md.
+main ativa `tacticalControls` no MESMO CombatEngine: foco ofensivo explícito,
+controle exclusivo e approach efêmero, sem Pixi/DOM no domínio. Defaults antigos
+preservam fixtures e hashes, não constituem um segundo motor de produção.
+`pushApproach` consulta Pathfinder com tiles proibidos; MovementSystem continua
+autoridade de reserva/commit. Ordem síncrona por ID substituível, sem callback A*.
+`worldViewport` compartilha câmera/inversa/política de15×11 e tile32 já existente;
+treino36×18 fixo, sem ler CSS para criar GridMap. Stage: cenário neutro, world e
+uma máscara permanente; oito layers dentro de world. Hunt/treino usam essa base.
+Inspeção de equipamento/outfits mantém contexto local e não envia combate.
+
+## Histórico arquitetural anterior a24/10
+
+Descrições datadas abaixo de câmera fixa, largura derivada do viewport ou seleção
+independente são histórico, não contratos simultaneamente vigentes.
+
+## Continuação2C — sprites reais
+
+outfitSprites registra38atlas compostos revisados(12×3níveis+2DLC),fora do
+manifesto de blockouts reproduzidos por art:generate. SpriteLibrary aplica
+outfitDefinition com112px/footpoint104 e os mesmos clips/timings nativos;novos
+IDs não alteram o domínio. refreshAppearance troca textura e desloca só a UI
+visual para caber adornos,sem recriar Unit/display objects. Atelier usa as mesmas
+células e cache limitado a8imagens. DLC independente do addon salvo. Máscaras de
+paleta continuam pendentes;sem recoloração global. OUTFIT_ART_2C.md registra
+fontes,importação técnica e limites dos ciclos/atlas compostos.
+
+## MVP2C cosmético —20/10
+
+AppearanceStore guarda namespace versionado independente de economia. Outfits
+é catálogo data-driven com slots revisados e fallback explícito. OutfitPanel
+inspeciona herói sem selecionar/assumir controle; draft só salva em Aplicar.
+main injeta resolver de sprite ao PixiRenderer; refreshAppearance troca apenas
+textura/âncora/definição no Unit existente,sem engine/relógio/ordens. PlayerControls
+suspende gestos no modal sem apagar alvo. Palette swapping exige máscaras reais;
+nenhuma está pronta nos assets recebidos. Ver OUTFITS_2C.md para
+contratos e pendências de arte,sem recoloração global/facings inventados.
+
+## Isolamento de inspeção — 20/10
+
+main mantém equipmentHeroId independente de selectedHeroId. EquipmentPanel usa
+esse contexto somente para visualizar/comparar o loadout; callback da aba atualiza
+esse estado e renderiza o drawer. Não passa por selectHero/PlayerControls nem
+assume controle no domínio. Abrir o drawer inicia no herói selecionado da HUD.
+
+## Incremento 2B.4 — 19/10
+
+singleHeroControl é configuração da aplicação: transferência exclusiva e rejeição
+de ordens antigas no domínio. trainingTeam cria três inimigos trainingVocation,
+sem ownership de jogador. Compartilham spell/rune/projectile/movement pipelines;
+foco por menor HP é determinístico. Defaults históricos preservam fixtures.
+Treino usa GridMap ampliado (30–52×18), todo piso amarelo caminhável salvo bloqueios
+reais; arenaView fornece dimensões e origem ao renderer/input. Largura é fixada
+na criação da sessão; resize reenquadra, não muda a lógica. Pixi stage contém
+cenário neutro e world; as oito layers anteriores vivem dentro de world.
+Rune-kit e player-controls passam ao dock, sem duplicação. TRAINING_2B4.md detalha
+contratos, evidências requeridas e gaps, inclusive pacote de sprites recebido vazio.
+
+## Incremento 2B.3 — 19/10
+
+PushSystem.preview devolve vizinhos/cópias/readiness sem mover, reservar ou sortear.
+O mesmo readiness atende queue; resolve continua revalidando no deadline. DOM
+mantém apenas gesto/hover e Pixi desenha os tiles recebidos, em camada própria.
+
+PushSystem agenda intenções (não move entidades); o scheduler revalida e chama
+MovementSystem, que continua dono de reserva/commit. SD reutiliza ProjectileSystem;
+Destroy Field remove somente campo. trainingSpells/abilityCatalog isolam o perfil
+de treino com IDs estáveis e cooldown secundário opcional. ManaBuffer é função
+pura aplicada no pipeline de dano só no treino. healthDamage distingue perda de
+HP do dano bruto no evento de buffer. pixelDefinition substitui as três imagens,
+não altera footprint/clock. Mira Pixi recebe preview read-only e execução sempre
+revalida. Contratos completos: TRAINING_2B3.md e ART_PROMPTS.md.
+
+## Incremento 2B.2 — 19/10: treino local no mesmo domínio
+
+O 8º parâmetro trainingMode do CombatEngine seleciona um roster de sparring,
+ownership Manual inicial e ausência de progressão/recompensas. Não cria outro
+motor. RuneSystem possui o terreno de runas e condições; PlayerIntent.rune passa
+pela mesma fila/validação. Expiração/burning entram no scheduler de deadlines.
+Movimento reativo revalida também quinas/footprint no commit (opt-in no treino).
+Estado visual de runas só consome rune_placed/rune_removed e relógio existente.
+main.ts bloqueia aplicações de eventos econômicos no treino; saves não são
+limpos nem normalizados. Contrato, fontes e limites: TACTICAL_RUNES.md.
+
+LineOfSightResolver visita o mesmo supercover em ordem, com retorno antecipado
+no primeiro bloqueio. hasLineOfSight não materializa array/Set; trace continua
+retornando uma cópia independente para projéteis/debug. Não há cache de LoS:
+paredes, ocupação e opções são revalidadas a cada consulta. Isso reduz trabalho
+repetido nas pesquisas de wave sem alterar caminhos, RNG, hashes ou deadlines.
+
+Stack existente preservada; nenhum motor paralelo/backend. `AssistanceStore`
+guarda só opções por herói; `PlayerCommand.assistance` valida/aplica no domínio.
+`actionBindings` é a única tabela de slot/ID/tecla; define binding, label e ícone.
+Seleção não altera ownership. Comandos de configuração precedem casts explícitos,
+que precedem automação; `acted` impede duas ações/cobranças no mesmo turno.
+
+A sessão de produção ativa `polishedRules` (7º parâmetro do CombatEngine), com
+rosters 2B.1, projectile original-tile e scheduler de deadlines entre decisões.
+O default antigo preserva fixtures/hashes Auto e a prova de não regressão. Os
+novos cenários são separados e comparam timelines completas; não regenerar hashes.
+Deadline de movimento/projétil/perigo usa o mesmo relógio e revalidação existente;
+nenhum input é amostrado em deadline intermediário. Renderer não resolve colisão.
+
+Auto Druid usa o resolver de firing-position também para recuperar linha de cura,
+antes de fallback ofensivo, com tiles alcançáveis/seguros e MovementSystem normal.
+Não se aplica ao Assistido. Regressão de três loops exige os três heróis vivos.
+
+`visualOrigin`/`visualImpact` autorizam trajetória; `pathTiles` mantém supercover.
+Reforços `rewardSuppressed` contam kills mas não avançam RNG/XP/loot/equipmentdrops.
+Persistência de equipamento/XP/currency permanece intacta, sem restaurar ordens.
+Vitest serializa arquivos para cumprir os mesmos deadlines sob CPU Windows;
+Playwright permanece um worker. Nenhum timeout/assertion/snapshot foi afrouxado.
+Contrato detalhado: `GAMEPLAY_POLISH.md`.
+
+## Arquitetura base e histórico
+
 # Arquitetura canônica
 
-Atualizada em 19 de setembro de 2026 para o MVP 1D.
+Atualizada em 26 de setembro de 2026 — Mouse-first / Encounter Depth.
 
 ## Stack
 
@@ -12,7 +130,7 @@ Atualizada em 19 de setembro de 2026 para o MVP 1D.
 | Interface | HTML, CSS e DOM imperativo |
 | Testes unitários | Vitest |
 | Testes de navegador | Playwright com Edge |
-| Persistência | `localStorage` apenas para preferências de habilidades |
+| Persistência | `localStorage`: preferências, Boss Tokens e progressão demonstrativa |
 | Backend | Nenhum |
 | Hospedagem | Preview GitHub Pages após gates; site Sites estável preservado |
 
@@ -62,6 +180,12 @@ ela agrega os eventos emitidos e apresenta o `HuntResult` no encerramento.
 | Relógio ao vivo, pausa, velocidade e descarte | `src/events/LiveEventPlayer.ts` |
 | Replay de timeline pré-calculada | `src/events/EventPlayer.ts` |
 | Comandos, teclado, seleção e targeting/drag | `src/control/` |
+| Roteamento de chord sem cliques duplicados | `src/control/MouseGesture.ts` |
+| XP, crescimento e passivas locais | `src/combat/Progression.ts`, `src/app/ProgressionStore.ts` |
+| Papéis inimigos e especiais de boss | `src/data/encounters.ts` |
+| Pontuação determinística de orientações/candidatos | `src/combat/DirectionalTactics.ts` |
+| Terreno temporário com ownership e restauração | `src/combat/TemporaryTerrain.ts` |
+| HUD compacto e slots reais | `src/ui/GameplayHUD.ts`, `src/data/actionBar.ts` |
 | Agregação segura da sessão | `src/app/LiveHuntState.ts` |
 | Velocidades e repetição | `src/app/sessionConfig.ts` |
 | Heróis, monstros, boss, formação e spawns | `src/data/config.ts` |
@@ -118,8 +242,8 @@ ela agrega os eventos emitidos e apresenta o `HuntResult` no encerramento.
 6. Reinício e loop descartam player, tweens, unidades e canvas antigos.
 7. A velocidade selecionada é reaplicada à nova instância.
 8. Erro de inicialização gera fallback controlado e permite nova tentativa.
-9. Selecionar uma entidade da party emite `hunt-select-character`; `main.ts`
-   atualiza a seleção e abre o Helper sem transferir regra de jogo ao renderer.
+9. Selecionar uma entidade da party atualiza seleção/slots sem abrir o Helper
+   nem mudar o modo. Helper continua explícito no botão de configuração.
 10. Estados visuais do renderer representam a timeline e nunca decidem o
     resultado lógico.
 
@@ -203,9 +327,11 @@ continua na borda; nenhum import de DOM/Pixi foi acrescentado ao domínio.
 O renderer consome SpriteDefinition pelo manifesto. Animações de personagens,
 efeitos e projéteis são amostradas no tempo lógico, incluindo pausa. Piso e
 personagens originais substituem os antigos sprites carregados no mapa.
-Efeitos/ícones legados ainda aguardam substituição; ver ART_DIRECTION.md.
+Efeitos usam OriginalEffects e ícones usam atlas original. Build e build:preview
+excluem as cópias legadas de public/assets/wiki, tibia e character-atlas de dist.
+Arquivos-fonte antigos permanecem como referências, fora do runtime publicado.
 
-Para 1E, objetos de mundo devem ter IDs estáveis, tile/footprint e resolvers de
+Para MVP 2C (antigo 1E, histórico), objetos de mundo devem ter IDs estáveis, tile/footprint e resolvers de
 interação no domínio, retornando eventos/snapshots. entity/tile já são alvos
 serializáveis; NPC, porta, baú, placa, escada, portal e container não precisam
 consultar Pixi. Adicionar tipos/eventos quando o primeiro objeto real existir,
@@ -217,3 +343,44 @@ Preview: .github/workflows/preview.yml valida a feature e publica um artefato
 Pages com version.json contendo o SHA. É uma URL compartilhada pela última
 feature validada, não uma URL isolada por branch. Não altera o site estável.
 Assets resolvem BASE_URL tanto na raiz do Sites quanto no subdiretório Pages.
+
+## Novos contratos de combate
+
+- AUTO sempre decide; MANUAL só comandos/ordens; ASSISTED só decide depois de
+  um attack explícito cujo alvo ainda está vivo. Seleção de HUD é independente.
+- MoveTo substitui destino anterior e suspende a IA durante o deslocamento.
+  A* e MovementSystem existentes continuam autoridades de caminho e commit.
+- Caster/boss avaliam quatro orientações, tile atual e vizinhos alcançáveis a
+  cada 1500 ms lógicos. Score: hits*100 + alvo atual*10 - distância*12.
+  Não há pesquisa por frame nem previsão de input futuro.
+- Boss alterna fase aos 50% de HP. Queda da Coroa avisa por 1250 ms e aplica
+  impacto; tiles vazios afetados viram escombros por 3000 ms. Footprints ocupados
+  e paredes originais são preservados. Reservas podem ser invalidadas: o commit
+  já revalida contra GridMap.revision. map_changed transporta tiles e revisão.
+- TemporaryTerrain restaura no prazo, fim de andar e dispose/reset.
+- Somente requiresTelegraph habilita preaviso; efeitos comuns não pintam máscaras.
+- Baseline mudou por requisito de novos inimigos/spells; 24 execuções completas
+  repetidas e snapshots de resultados protegem determinismo do novo ruleset.
+
+Para desempenho, os atributos DOM expõem custo de syncPresentation (não FPS
+total), objetos no stage, VFX, recálculos de caminho e decisões táticas. O teste
+de três loops verifica lifecycle; ainda não existe benchmark de PvP massivo.
+
+## MVP 2B — equipamento e recompensas
+
+- `data/items.ts`: catálogo original, restrições, modificadores e regras de forja.
+- `combat/Equipment.ts`: única composição base → nível/passiva → item → +1.
+  Ganhar máximos não recarrega HP/mana; redução aplica clamp.
+- `combat/EquipmentDrops.ts`: LCG isolado, mesma fórmula existente. Preserva os
+  rolls de combate; equipamento é opt-in nos fixtures antigos, ativo na aplicação.
+- `CombatEngine`: emite equipment_drop somente na recompensa de criatura morta;
+  recebe loadout copiado na criação/configuração anterior ao primeiro tick.
+- `app/EquipmentStore.ts`: save local v2, IDs e recibos persistentes, operação
+  copy → validate → persist → commit. Sem DOM/Pixi; não aceita stats salvos.
+- `ui/EquipmentPanel.ts`: drawer compacto, seleção, comparação e forja, usando
+  as mesmas funções do domínio. Não modifica entidades nem concede recompensas.
+- `ui/ItemIcons.ts`: nove silhuetas vetoriais originais, sem assets externos.
+
+Equipar/forjar apenas entre hunts e Loop OFF. O próximo motor recebe a build;
+trocar itens nunca cura a sessão em andamento. A recuperação normal de uma nova
+hunt já existia e não depende de alternar equipamento. Ver EQUIPMENT_AND_LOOT.md.

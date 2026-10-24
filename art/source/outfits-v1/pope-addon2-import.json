@@ -1,0 +1,116 @@
+{
+  "generator": "builtin imagegen",
+  "sourceFile": "pope-addon2-source.png",
+  "sourceSha256": "969c35e66796da91aa4cb80ea4eab220dfb491ef8c643be09bc2ed30e02d354f",
+  "sourceSize": [
+    1254,
+    1254
+  ],
+  "runtimeSize": [
+    448,
+    448
+  ],
+  "cell": 112,
+  "baseline": 104,
+  "bodyScaleFactor": 1.25,
+  "visualTop": 77,
+  "scale": 0.26595744680851063,
+  "boxes": [
+    {
+      "left": 84,
+      "top": 65,
+      "width": 201,
+      "height": 287
+    },
+    {
+      "left": 371,
+      "top": 65,
+      "width": 209,
+      "height": 287
+    },
+    {
+      "left": 668,
+      "top": 65,
+      "width": 217,
+      "height": 288
+    },
+    {
+      "left": 1000,
+      "top": 81,
+      "width": 176,
+      "height": 272
+    },
+    {
+      "left": 72,
+      "top": 375,
+      "width": 221,
+      "height": 272
+    },
+    {
+      "left": 353,
+      "top": 369,
+      "width": 218,
+      "height": 275
+    },
+    {
+      "left": 677,
+      "top": 371,
+      "width": 211,
+      "height": 276
+    },
+    {
+      "left": 985,
+      "top": 374,
+      "width": 202,
+      "height": 271
+    },
+    {
+      "left": 74,
+      "top": 667,
+      "width": 238,
+      "height": 276
+    },
+    {
+      "left": 358,
+      "top": 665,
+      "width": 213,
+      "height": 275
+    },
+    {
+      "left": 677,
+      "top": 683,
+      "width": 204,
+      "height": 266
+    },
+    {
+      "left": 981,
+      "top": 663,
+      "width": 203,
+      "height": 283
+    },
+    {
+      "left": 50,
+      "top": 962,
+      "width": 231,
+      "height": 256
+    },
+    {
+      "left": 323,
+      "top": 973,
+      "width": 327,
+      "height": 245
+    },
+    {
+      "left": 662,
+      "top": 952,
+      "width": 222,
+      "height": 267
+    },
+    {
+      "left": 892,
+      "top": 972,
+      "width": 329,
+      "height": 246
+    }
+  ]
+}

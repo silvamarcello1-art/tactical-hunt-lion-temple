@@ -36,6 +36,7 @@ export interface MovementRequest {
   tacticalPriority?: number;
   tickOrder?: number;
   allowBacktrack?: boolean;
+  revalidateCorners?:boolean;
 }
 
 export interface PendingMovement {
@@ -51,6 +52,7 @@ export interface PendingMovement {
   tacticalPriority: number;
   tickOrder: number;
   allowBacktrack: boolean;
+  revalidateCorners?:boolean;
 }
 
 export interface MovementResult {
@@ -224,6 +226,7 @@ export class MovementSystem {
       tacticalPriority:request.tacticalPriority ?? 0,
       tickOrder:request.tickOrder ?? 0,
       allowBacktrack:request.allowBacktrack ?? false,
+      ...(request.revalidateCorners?{revalidateCorners:true}:{}),
     };
     this.pending.set(request.entityId, movement);
     this.metrics.maxPendingMovements = Math.max(
@@ -282,7 +285,13 @@ export class MovementSystem {
         resolved.push(this.cancel(movement.entityId, 'invalidated')!);
         continue;
       }
-      if (!this.occupancy.commitReservation(movement.entityId)) {
+      const diagonal=movement.from.x!==movement.to.x&&movement.from.y!==movement.to.y;
+      const footprint=movement.revalidateCorners?this.occupancy.footprintOf(movement.entityId):undefined;
+      // Reactive terrain can appear beside a committed diagonal, not only on its endpoint.
+      const cornerInvalid=movement.revalidateCorners&&diagonal&&(
+        !this.occupancy.canEnter(movement.entityId,{x:movement.to.x,y:movement.from.y},footprint).allowed||
+        !this.occupancy.canEnter(movement.entityId,{x:movement.from.x,y:movement.to.y},footprint).allowed);
+      if (cornerInvalid || !this.occupancy.commitReservation(movement.entityId)) {
         resolved.push(this.cancel(movement.entityId, 'invalidated')!);
         continue;
       }

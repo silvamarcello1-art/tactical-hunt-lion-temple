@@ -1,4 +1,298 @@
-# Consolidação visual e estrutural — 20/09/2026
+# Estado vigente — consolidação visual e tática — 24/10/2026 (São Paulo)
+
+## Atual — implementação local, publicação nova pendente
+
+Follow-up de gestos após e1fd205: magia/tecla nova cancela também drag ainda
+não solto; release antigo não pode criar push tardio. Morte do foco encerra
+ofensa, não libera held keys de movimento não relacionado. Sete E2E focados
+PASS com o novo caso; suíte completa passa a64 e está em execução. Repetição
+unitária concorrente teve2timeouts5s (308PASS), sem mismatch; será repetida
+isoladamente, sem mudar deadline. Os gates310/63 abaixo são do ponto anterior.
+
+Contrato canônico: TACTICAL_CONSOLIDATION.md. Janela15×11 comum, tiles32 lógicos,
+treino36×18 independente de CSS; câmera/inversa/DPR/letterbox/picking/drag unidos.
+Personagens/outfits.62 com anchors preservados; Hunt centrada nos SQMs reais.
+Treino selecionado somente Manual, aliados Auto no foco explícito, bots AI.
+Hunt preserva Auto/Assistido; inspeção não troca foco. Novas intenções cancelam
+rota/approach/pré-commit. Push distante aproxima executor por A*, depois agenda
+push adjacente normal, com snapshots/revalidação e nenhum destino reservado na
+viagem. Hold manual250ms, AI220ms; não alegamos latência zero ou FPS garantido.
+
+Entrada1293721=origin/CLEAN, runtime público74b confirmado, cobertura283/61.
+Gates finais de source: frozen install/health/typecheck,310unit27files(137,41s),
+63E2E(14,4min)/1worker, arte reproduzível, build/build:preview/diff PASS. Stress
+Auto24/misto24/polished6 incluídos; nenhuma baseline regenerada. A/B contra
+entrada1293721 preserva2868eventos/hash integral edcf9f6d…a554b em73/1000ms/batch.
+Smokes reais de trabalho:3vitórias manuais em1×/4×,1214eventosbot,saves intactos,
+13contadores cleanup0,errors[]/warnings[]. Ensaio prolongado ainda em fechamento.
+Build principal576,95kB (preview577,01kB) mantém warning>500kB; sem mudar limite.
+As evidências antigas abaixo NÃO validam esta consolidação. Sem push/deploy novo
+confirmado ainda; o preview74b continua a versão anterior até manifest/smokes novos.
+
+## Histórico encerrado — sprites MVP2C publicados
+
+## Atual — sprites publicados e verificados —21/10/2026
+
+Runtime74b3306d4ae17e43d182439fd5e79d8384479118 confirmado em checkout/health
+dos CI e version.json público. Push39418552073/job118613470478 PASS283unit/
+61E2E(59,7min)/build/build:preview/diff;deploy118641078023 SUCCESS. A primeira
+validação PR falhou60/61E2E por timeout220s em inventário;trace mostrou contexto
+fechando antes da assertion vazia,sem causa raiz comprovada. UMA reexecução
+explicitamente autorizada:PR39418557264/novo job119043228558 PASS283unit25files/
+61E2E(24,8min)/typecheck/frozen install/arte/build/build:preview/diff/upload.
+DeployPR119051066711 SKIPPED por política;nenhum redeploy desnecessário.
+
+Smokes públicos com SHA exato PASS:qa-outfits38variantes/4cardinais/persistência/
+troca pausada sem estado alterado;qa-training-team3vitórias/1303eventosbot/
+economia intacta;qa-preview boss19kills4240XP1489gold1token. QA complementar
+Warrior2/Druid2/Mage2 passou3treinos e boss com saves/economia preservados nos
+treinos,todos12contadores de cleanup0,errors[]/warnings[]. Capturas públicas
+atelier/party personalizada no treino/hunt inspecionadas. Não houve fix,timeout
+relaxado ou assertion ignorada. Originais/defaults preservados;usar♙Outfits,
+escolher traje/addon e Aplicar. Preview compartilhado,não release estável.
+
+38atlas/608poses RGBA448²(células112),12trajes×3níveis+2DLC,builtin ImageGen;
+prompts/proveniência em OUTFIT_ART_2C.md. Addons compostos,não camadas;cores
+seletivas/máscaras e diagonais dedicadas continuam pendentes. Chunk566,93kB
+mantém warning>500kB;~30,5MB é estimativa de pixels,não benchmarkGPU/FPS.
+Smoke público original:callback rAF médio5,08ms(1×)/8,53ms(4×),máximos260,1/
+260,6ms;amostra instrumental isolada,não garantia de fluidez. Domínio intacto.
+Link:https://silvamarcello1-art.github.io/tactical-hunt-lion-temple/?training=1&v=74b3306d4ae17e43d182439fd5e79d8384479118
+
+## Histórico — estados anteriores à publicação das sprites
+
+## Atual — nova arte em gates locais
+
+Continuação autorizada sobre2c7c89a:38atlas builtin imagegen reais importados,
+12trajes com3níveis cumulativos e2DLC independentes. Todos com4cardinais/16poses,
+RGBA448²/células112²/footpoint104,registro data-driven e mesmo relógio nativo.
+Os sprites novos realmente trocam no mundo;3originais continuam disponíveis.
+17E2E focados PASS(1,3min),incluindo12trajes/WASD/facing e hunt Warrior/Druid/Mage
+novos até vitória,sem alterar combate. Gates locais integrais PASS:283unit25files,
+61E2E(8,2min),typecheck/build/frozen install/arte/diff. Somente teste de captura
+reforçado depois:17E2E(1,5min),PNG pausada precisa mudar sem alterar snapshot do
+combate;imagem nova inspecionada. Runtime intacto. CI/deploy ainda pendentes;
+runtime público6ff5b24 abaixo NÃO contém a nova arte. Ver OUTFIT_ART_2C.md.
+Addons são atlas compostos,cores seletivas continuam pendentes de máscaras.
+Sem tint global,economia nova,Adventure,backend,merge estável ou Sites.
+
+## Histórico — fundação anterior
+
+## Atual — preview2C publicado e verificado
+
+Runtime público6ff5b24f15ede1d0b2981892dd91bc5abdb987c9,checkout/health do CI e
+version.json exatos. Push39378261786/job118481194930 PASS279unit24arquivos/
+48E2E(53,6min)/typecheck/arte/build/build:preview/diff;deploy118499012439 SUCCESS.
+PR39378266572/job118481210536 também PASS279unit/48E2E(33,4min)/build/diff.
+HEAD final local repetiu48E2E PASS(7,2min). Sem modificar timeouts/assertions.
+Smokes públicos PASS:atelier com referênciaPNG1122×1402 decodificada,persistência,
+troca cosmética sem alterar estado;3treinos1211eventosbot/economia intacta;hunt
+boss19kills4240XP1489gold1token,errors[]/warnings[]. Cleanup zero;um tween
+transitório no snapshot imediato foi reconferido em3treinos adicionais e todos
+os contadores drenaram a0. Capturas públicas do atelier/personagem inspecionadas.
+Registro final somente docs+QA [skip ci],não outro runtime;source do jogo intacto.
+
+IMPORTANTE:fundação funcional com3sprites nativos aplicáveis e12REFERÊNCIAS.
+Addons/DLC/paletas persistem,mas camadas animadas e máscaras dos12trajes novos
+continuam PENDENTES. Paletas planejadas não recolorem assets atuais. Não declarar
+spritesheets/direções/addons de produção inexistentes como concluídos.
+Link: https://silvamarcello1-art.github.io/tactical-hunt-lion-temple/?training=1&v=6ff5b24f15ede1d0b2981892dd91bc5abdb987c9
+
+## Histórico — validação local anterior à publicação
+
+## MVP2C — implementação local, publicação ainda não confirmada
+
+OutfitPanel compacto com12referências/3sprites originais aplicáveis,addons
+cumulativos0/1/2,DLC Neymar/Mbappé,paletas5canais e save versionado por herói.
+Aplicação cosmética no Unit existente,sem engine/economia/control/target/reset.
+Os12novos trajes são ilustrações frontais:camadas animadas/cardinais/máscaras
+PENDENTES. Paletas são salvas mas não recolorem imagens sem máscaras revisadas.
+Fallback e “Paleta planejada” explícitos; sem facings inventados/tint global.
+Ver OUTFITS_2C.md. Nenhuma nova arte gerada; referência1122×1402 intacta.
+Gates locais até agora:typecheck,279unit24arquivos,frozen install,build PASS;
+4novos E2E PASS,incluindo hunt personalizada até boss. Suíte integral48/48E2E
+PASS(8,8min);CI/deploy/manifest/smoke2C ainda pendentes. Público2B.4 histórico abaixo.
+
+## Histórico —2B.4 publicado
+
+## Atual — preview público aprovado
+
+Publicado a5be307b18ee3656143e945f0d34df9379f6c1d8 (checkout/health do CI e
+version.json público coincidem). Este SHA é docs-only sobre o código1860ba8;
+diff de src/public/tests/scripts/dependências/workflows vazio. Reexecução única
+autorizada do push39364771626: job118457324904 SUCCESS,258unit/44E2E(30,5min),
+typecheck/build/build:preview/arte/diff; deploy118466631698 SUCCESS. PR39364777345
+também aprovada. Não houve alteração de código, assertions, timeout ou workflow.
+Smokes públicos existentes com SHA exato PASS:3vitórias de treino,1224eventos de
+bots,economia intacta; hunt boss19kills/4240XP/1489gold/1token. Console sem erros
+ou warnings; cleanup sem resíduos, overlap/OOB/reservas/projéteis ativos zero.
+PNG mvp2b4-public-final-arena.png inspecionado: arena ampla,6atores,nomes/barras
+e dock1–9 legíveis. Preview compartilhado, não merge/release estável/PvP online;
+OTSP não integrado. Encerramento somente docs [skip ci], sem novo build.
+Link: https://silvamarcello1-art.github.io/tactical-hunt-lion-temple/?training=1&v=a5be307b18ee3656143e945f0d34df9379f6c1d8
+
+## Histórico — bloqueio anterior à reexecução autorizada
+
+Publicação ainda bloqueada (20/10): runtime1860ba8 tem gates locais verdes e
+PR CI258unit/44E2E/build PASS, mas push CI43/44E2E falhou na matriz de inspeção
+equipment.spec.ts:74/95 com timeout220s/session closed/valor de select vazio.
+Não é a antiga falha da segunda hunt, que foi corrigida. Causa da divergência
+ainda não estabelecida; nenhum timeout/assertion/código foi modificado pelo
+monitor. Deploy SKIPPED, manifest público ainda bbd0fac. Acompanhamento pausado
+aguardando direção. Detalhes/runIDs/continuação em SESSION_CHECKPOINT/NEXT_TASK.
+
+Correção autorizada em20/10: o timeout de equipamento era uma derrota real da
+segunda hunt, não apenas lentidão. Abas do inventário chamavam seleção de herói
+de combate e assumiam Manual no Druid. Agora a inspeção tem estado separado,
+sem comandos/modos/seleção de combate; abrir começa no herói da HUD. Testes novos
+mantêm todas as assertions e verificam os3modos/foco/vitória após reload/forja.
+Gates finais em execução; não anunciar publicação antes de CI/manifest/smoke.
+Pacote OTSP real foi recebido depois da pasta vazia descrita abaixo, identificado
+como arte comunitária declarada CC BY4.0, mas NÃO integrado nesta correção.
+
+Aplicação local: dock 1–9 unificado, descrição lateral removida, arena clara com
+todos os tiles amarelos ligados ao GridMap (largura por sessão, sem fake floor).
+Seleção assume Manual somente no selecionado, companheiros Auto. Três bots de
+vocação com foco por HP, movimento, magia/cura/runas reais e pixel art própria.
+Sem alterações de economia/equipamento/forja nem rede. TRAINING_2B4.md descreve
+contratos, fixtures e limites. assets_rtc indicada contém zero arquivos; sprites
+Tibia NÃO foram integradas. Gates/publicação efetivos: SESSION_CHECKPOINT.md.
+O público anterior bbd0fac NÃO é esta revisão. Não anunciar nova publicação sem
+CI/deploy/manifest/smoke corretos. Próxima ação: finalizar gates, não outro sistema.
+
+## Histórico — incremento 2B.3 publicado — 20/10/2026 UTC
+
+Implementado e validado local/público: quatro runas por 4–7, push por 8/arrastar e Stop por 9 no treino;
+três heróis com pixel art própria maior, sem zoom, mira de tile independente do
+sprite. Perfil de nove magias de referência, Heal Friend ally-only e Mana Buffer
+dos magos; hunt normal/saves preservados. TRAINING_2B3.md define regras/fontes e
+limites. ART_PROMPTS.md registra o modo builtin e fontes/atlas. Não é PvP online
+nem Wheel completa. Após confirmação do usuário, left-drag ganha prévia dos
+vizinhos autorizados (não distância7); tecla8 continua alternativa. 251 unitários/
+40 E2E PASS local e CI. Runtime publicado bbd0fac90bbc5ba27be4c9189f36513e1d59ee93:
+CI push39347671213 e PR39347675576 aprovadas, deploy118395034330 aprovado e
+version.json público conferido. Kit público passou: runas, cura, pausa/reset,
+dois pushes e sete destinos no fixture diagonal, sem movimento durante holding.
+Três treinos públicos venceram sem alterar saves econômicos; console/cleanup
+limpos. Evidências completas e hunt até boss: SESSION_CHECKPOINT.md.
+Checkpoint posterior altera somente documentação/tooling de QA, não o runtime.
+Preview compartilhado, não merge/release estável:
+https://silvamarcello1-art.github.io/tactical-hunt-lion-temple/?training=1&v=bbd0fac
+
+## Histórico — MVP 2B.2 publicado
+
+Treino local Party × Bot em ?training=1, no mesmo motor, Manual inicial e sem
+recompensas persistentes. Magic Wall/Fire Field por 4/5 + clique, com cargas,
+exhaust, range/LoS, terreno e burning de domínio. Quinas dinâmicas revalidadas
+no treino; inversão por tecla recente sem fila. Sprites próprios preservados.
+Não é PvP online nem conversão completa de magias/passivas/Wheel do Tibia.
+Contrato e fontes: TACTICAL_RUNES.md. A* original foi mantido após experimento
+não benéfico; batch run evita cópias incrementais descartadas, sem mudar eventos.
+
+Gates locais aprovados na retomada: 231 unitários, 36 E2E, typecheck, build e
+diff --check. Instalação frozen e arte reproduzível aprovadas. LoS passou a
+percorrer o supercover sem arrays/Set descartados; mesmos hashes e regras,
+paredes/unidades revalidadas em cada chamada. Não foram elevados timeouts.
+Runtime publicado: 88d3fc6256666038b0581c0674717cb20e45e79c. CI push
+39311311231 e PR 39311319743 aprovadas (231 unitários/36 E2E); deploy Pages
+aprovado e version.json público confirmado. Smoke público de runas/três treinos
+sem alteração econômica e hunt normal 1x→4x até o boss: PASS, console e cleanup
+limpos. Preview compartilhado: https://silvamarcello1-art.github.io/tactical-hunt-lion-temple/?training=1
+O checkpoint documental posterior [skip ci] não muda o runtime publicado nem
+representa novo build/merge estável. Detalhes: SESSION_CHECKPOINT.
+Playtest via navegador real automatizado, com inspeção das imagens; não equivale
+a teste de teclado físico. Computer Use nativo não foi contornado após a
+interrupção registrada na sessão anterior. Ver SESSION_CHECKPOINT/NEXT_TASK.
+
+## Histórico — entrega anterior publicada em 10/10/2026
+
+# Estado anterior — MVP 2B.1 — retomada 10/10/2026
+
+Implementação na branch `feature/gameplay-first-mvp2a`, sobre 7062c5d (código
+anterior 8e2a309). Controles físicos separados Digit/Numpad, slots estáveis por
+herói, Assistido com Auto Attack/Auto Magias independentes e HUD compacto em
+screen space. O mundo mantém o viewport dominante e as passivas continuam visíveis.
+
+Projéteis diretos são linhas contínuas entre pontos autorizados; supercover
+serve para colisão, não animação. O ruleset 2B.1 usa ponto original, sem homing:
+alvo que abandona o tile provoca cancelamento, não teleporte/dano fantasma.
+Movimentos e impactos comprometidos resolvem nos prazos lógicos, entre decisões
+de 250 ms; uma única amostra de input por decisão. Pausa/velocidade compartilham
+esse relógio. O ruleset antigo permanece para regressões determinísticas.
+
+Dois reforços originais: Bastião de Bronze e Balista Errante, com ataques
+anunciados e recuperação. Roster 5/5/6/3, sem inflação de XP/loot pelos reforços;
+IDs e RNG de recompensas existentes preservados. Inventário/forja/equipamentos
+não foram reimplementados; troca da reserva com mochila cheia preservada.
+
+Auto Druid recupera posição válida de cura quando LoS bloqueia um aliado ferido,
+antes da ofensiva. O terceiro loop progressivo não pode sacrificar um herói por
+esse bloqueio. Assistido não recebe movimento oculto; usa a posição do jogador.
+
+Contrato detalhado: `GAMEPLAY_POLISH.md`. Gates, métricas, limitações e SHA
+servido: `SESSION_CHECKPOINT.md`. Sequência permanece 2B → 2C → 2D → 2E → 2F.
+
+Código da etapa: `d51361c0b822fa69d1e23d36ffd7e5b207c03462`, push normal para
+origin confirmado. Gates locais: 216 unitários e 33 E2E; build de preview também
+validado no base path real. CI push 38090057573 / PR 38090060114 aprovados,
+deploy Pages aprovado e version.json público confirmado em d51361c. Smoke
+público 1x→4x terminou em vitória, sem erros/resíduos. O fechamento documental
+posterior não muda esse SHA de runtime; não confundir preview com release estável.
+
+## Histórico — MVP 2B
+
+# Estado vigente — MVP 2B — 05/10/2026
+
+Implementação local validada em 05/10 na branch `feature/gameplay-first-mvp2a`:
+184 unitários, 28 E2E, TypeScript/build/diff aprovados. A correção posterior a
+dca5339 permite equipar diretamente da reserva mesmo com mochila cheia.
+Publicação e CI: ver SESSION_CHECKPOINT.
+Inventário local com 24 espaços, materiais em stacks de 99 e reserva sem descarte;
+seis armas, duas armaduras e um material originais. Drops vêm do domínio em RNG
+isolado, com IDs persistentes e recibos contra replay. Equipar/forjar somente
+entre hunts com Loop OFF. Forja +1 custa 200 gold e uma Brasa do Templo.
+Stats de nível e equipamento são calculados no domínio, também usado pela UI;
+trocas não acumulam bônus nem recuperam HP/mana. XP, preferências e Boss Tokens
+anteriores são preservados por migração aditiva. Save inválido não é apagado.
+
+UI: drawer por herói, comparação, slots reais, forja, reserva, relatório com
+drops reais, feedback compacto de Loop. Inputs do mundo bloqueados no drawer.
+Polish focado em identificação da party, contraste de HP e comparação legível;
+sprites existentes preservados. Contrato: `EQUIPMENT_AND_LOOT.md`.
+Gates/ponto exato: `SESSION_CHECKPOINT.md`. Sem backend, comércio, descarte,
+drag-and-drop, novos slots ou economia online. Roadmap vigente: 2B–2F.
+
+## Histórico — Mouse-first + Encounter Depth — 26/09/2026
+
+Branch feature/gameplay-first-mvp2a, base 58d9720. Este resumo substitui as
+descrições históricas abaixo quando divergirem.
+
+- Mouse: chão MoveTo, entidade seleção, direito engage, dois botões Look sem
+  ações duplicadas. WASD e 1–3 mantidos; nenhum menu Attack/Follow/Stop no HUD.
+- AUTO autônomo; MANUAL só ordens explícitas; ASSISTED aguarda alvo, usa rotação
+  até sua morte e então para. Seleção não muda controller.
+- Mundo domina a tela, party mínima e três slots reais com cooldown lógico.
+  Análise/loot ficam em drawers; configuração de habilidades continua disponível.
+- Quatro perfis originais: Custódio, Vigia, Garra e Oráculo. Ranged busca LoS/
+  distância; flanker procura backline; caster pontua máscaras e candidatos
+  determinísticos a cada 1500 ms lógicos.
+- Regente Vazio tem fase abaixo de 50% HP e Queda da Coroa: aviso especial,
+  impacto, escombros reais por 3000 ms, revisão de navegação e restauração.
+- Magias comuns não pintam pretelegraph; magia de jogador mantém projétil/
+  wave/impacto próprios. Apenas requiresTelegraph habilita aviso antecipado.
+- Arte aprovada preservada; oito atores originais, novo relevo do templo e
+  pools de efeitos animados. Build exclui cópias legadas, sem apagar fontes.
+- Progressão XP/nível/passiva e store local da etapa anterior preservados.
+- Novas regras alteram baseline Auto intencionalmente; repetibilidade completa
+  em 24 combinações substitui comparação aos antigos hashes (preservados no Git).
+
+Typecheck, 167 unitários, 24 E2E e build aprovados; evidências e publicação
+consolidados em SESSION_CHECKPOINT. Não há backend, inventário real ou PvP.
+Não confundir preview Pages com a referência estável chatgpt.site.
+
+---
+
+# Histórico — Consolidação visual e estrutural — 20/09/2026
 
 Branch feature/visual-identity-foundation, base validada 64816ac. Motor e grid
 inalterados; main.ts cria a sessão e PlayerControls usa PlayerControlPort.

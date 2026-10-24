@@ -1,0 +1,116 @@
+{
+  "generator": "builtin imagegen",
+  "sourceFile": "hunter-base-source.png",
+  "sourceSha256": "3d4480458be972a09abd60bf9d04b3c58b95b6cd592c06b784ec42a426ccc359",
+  "sourceSize": [
+    1254,
+    1254
+  ],
+  "runtimeSize": [
+    448,
+    448
+  ],
+  "cell": 112,
+  "baseline": 104,
+  "bodyScaleFactor": 1,
+  "visualTop": 68,
+  "scale": 0.2490842490842491,
+  "boxes": [
+    {
+      "left": 89,
+      "top": 39,
+      "width": 180,
+      "height": 264
+    },
+    {
+      "left": 398,
+      "top": 40,
+      "width": 150,
+      "height": 263
+    },
+    {
+      "left": 692,
+      "top": 38,
+      "width": 173,
+      "height": 264
+    },
+    {
+      "left": 1028,
+      "top": 40,
+      "width": 151,
+      "height": 264
+    },
+    {
+      "left": 92,
+      "top": 333,
+      "width": 176,
+      "height": 268
+    },
+    {
+      "left": 382,
+      "top": 335,
+      "width": 175,
+      "height": 262
+    },
+    {
+      "left": 695,
+      "top": 333,
+      "width": 172,
+      "height": 268
+    },
+    {
+      "left": 1010,
+      "top": 336,
+      "width": 170,
+      "height": 261
+    },
+    {
+      "left": 88,
+      "top": 633,
+      "width": 179,
+      "height": 273
+    },
+    {
+      "left": 381,
+      "top": 635,
+      "width": 177,
+      "height": 268
+    },
+    {
+      "left": 690,
+      "top": 634,
+      "width": 172,
+      "height": 272
+    },
+    {
+      "left": 1011,
+      "top": 636,
+      "width": 177,
+      "height": 267
+    },
+    {
+      "left": 71,
+      "top": 945,
+      "width": 243,
+      "height": 257
+    },
+    {
+      "left": 364,
+      "top": 941,
+      "width": 245,
+      "height": 261
+    },
+    {
+      "left": 645,
+      "top": 942,
+      "width": 267,
+      "height": 260
+    },
+    {
+      "left": 950,
+      "top": 941,
+      "width": 270,
+      "height": 261
+    }
+  ]
+}

@@ -3,6 +3,18 @@ import { Assets, Rectangle, Texture } from 'pixi.js';
 import type { AnimationClipDefinition } from './AnimationSet';
 import { spriteAction, type SpriteDefinition } from './SpriteDefinition';
 import type { VisualAnimationState, VisualFacing } from './CombatPresentationSystem';
+import {pixelDefinition} from './pixelSprites';
+import {outfitSpriteAssets,outfitFrameSize,outfitFootBaseline,type OutfitSpriteAsset} from '../../data/outfitSprites';
+
+export function outfitDefinition(template:SpriteDefinition,asset:OutfitSpriteAsset):SpriteDefinition {
+  const footAnchor={x:.5,y:outfitFootBaseline/outfitFrameSize};
+  return {...template,id:asset.spriteId,spriteSet:asset.path,
+    frameSize:outfitFrameSize,visualWidth:outfitFrameSize,visualHeight:outfitFrameSize,footAnchor,
+    animations:{...template.animations,id:asset.spriteId,footAnchor},
+    footprint:{...template.footprint,maxUpwardOverflow:outfitFootBaseline},
+    effectAnchors:{...template.effectAnchors,head:{x:0,y:-(asset.visualTop??68)}},
+  };
+}
 
 export function clipFrame(clip:AnimationClipDefinition,elapsed:number):string {
   const index = Math.floor(Math.max(0,elapsed)/clip.frameDuration);
@@ -16,7 +28,10 @@ export class SpriteLibrary {
   private frames = new Map<string,Texture>();
   async load() {
     const definitions = await Assets.load<SpriteDefinition[]>(assetUrl('/assets/original/manifests/sprites.json'));
-    await Promise.all(definitions.map(async definition => {
+    const native=definitions.map(pixelDefinition);
+    const template=native.find(d=>d.id==='knight')!;
+    const outfits=outfitSpriteAssets.map(asset=>outfitDefinition(template,asset));
+    await Promise.all([...native,...outfits].map(async definition => {
       const sheet = await Assets.load<Texture>(assetUrl(definition.spriteSet));
       if (this.disposed) return;
       sheet.source.scaleMode = 'nearest';

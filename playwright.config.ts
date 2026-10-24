@@ -2,7 +2,9 @@ import { defineConfig } from '@playwright/test';
 
 export default defineConfig({
   testDir:'./tests/e2e',
-  timeout:110_000,
+  // The Windows CI runner needs a larger whole-scenario budget. Individual
+  // expectations keep their existing bounds; do not mask state failures.
+  timeout:process.env.CI ? 220_000 : 110_000,
   expect:{ timeout:10_000 },
   fullyParallel:false,
   workers:1,
@@ -12,7 +14,9 @@ export default defineConfig({
     channel:'msedge',
     headless:true,
     viewport:{ width:1366, height:768 },
-    trace:'retain-on-failure',
+    // Continuous WebGL screencasting produced 1300 JPEGs / 55 MB for one
+    // three-loop scenario on CI. Keep DOM/action traces and failure PNGs.
+    trace:{ mode:'retain-on-failure', screenshots:false, snapshots:true, sources:true },
     screenshot:'only-on-failure',
   },
   webServer:{

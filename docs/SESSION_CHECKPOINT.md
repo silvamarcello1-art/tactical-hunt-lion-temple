@@ -1,135 +1,1032 @@
-# Checkpoint — structural and original visual foundation — 20/09/2026
+# Checkpoint — consolidação visual, movimento e push —24/10/2026
 
-- Entrada: origin/feature/combat-presentation-astra e HEAD 64816acfcad1ebe810fb1baa74720802ca9af1d6, limpos e sincronizados após fetch.
-- Novo marco: feature/visual-identity-foundation. Motor/grid/eventos/dados não alterados.
-- main.ts cria a sessão; PlayerControlPort remove dependência do input em PixiRenderer.
-- SpriteDefinition/AnimationSet agora são consumidos. Seis blockouts vetoriais originais, quatro facings, seis ações, frames de 64 px; quatro pisos originais.
-- Imagem original gerada com ImageGen preservada em docs/art como conceito. Duas tentativas não entregaram alpha aceitável; não foi integrada como sprite final.
-- Sombras/seleção no footpoint, UI por anchor, efeitos menos invasivos. Frames de efeitos e projéteis passaram do ticker autônomo para o relógio lógico.
-- Health corrigido para branch sem upstream; TypeScript passou; Vitest **148/148**, 12 arquivos; Playwright/Edge **20/20**, um worker, 5,1 min.
-- Auto baseline: 24 hashes completos idênticos. Stress misto: 24 hunts, 23 vitórias e uma derrota real, sem falhas de integridade.
-- Inspeção visual Auto e Manual em 1x/2x/4x, mantendo pisos, boss, footpoint e ownership. Arte final e efeitos/ícones próprios continuam pendentes.
-- Rodada preliminar descartada: hot reload interrompeu um E2E e execução concorrente excedeu timeout de dois testes. Rodada final acima foi sequencial e sem edições de código.
-- Workflow Pages preparado para validar pushes de feature e publicar preview compartilhado com version.json/SHA. O site estável permanece preservado; nenhum remote sites foi usado.
-- Sites: acesso owner/public confirmado, mas exige push a repositório próprio, incompatível com a restrição contra remote sites. GitHub não tinha Pages/workflows; alternativa autorizada no mesmo provedor foi preparada.
-- Novo briefing recebido: MVP 2A Gameplay First. Esta base é o ponto de recuperação antes da remodelagem; o próximo checkpoint registrará o novo escopo e o resultado publicado.
+## Trabalho atual — gates locais verdes, não publicação concluída
 
----
+### Follow-up de input/gesto em validação
 
-# Session Checkpoint — MVP 1D
+Após commit local e1fd205 (ainda sem push), revisão encontrou drag não solto
+que podia sobreviver à hotkey de cast. cancelGesture agora limpa mouse/drag/
+targeting na intenção nova, incluindo keydown, sem trocar foco ofensivo.
+Morte do foco deixa de limpar held/pendingStep de movimento não relacionado;
+morte do selecionado e fim de sessão continuam limpando tudo. Novo E2E usa
+fixture somente de dados (um bot próximo/1HP) para produzir morte REAL via
+ataque dos companheiros; não injeta evento de morte, não prova vitórias com
+esse fixture. O fluxo obrigatório e três vitórias usam produção sem interceptar.
+Sete E2E focados PASS1,7min; suíte passa a64 e está em curso. Repetição unitária
+concorrente:308PASS/2timeouts5000ms em GameplayPolish (frames e três hunts), sem
+mismatch de resultado; repetir serial após navegador. Nenhum limite afrouxado.
 
-## Continuação — Manual Player Control Foundation — 19/09/2026
+QA exato e1fd205: input/drag1×/4× e takeover/movimento na Hunt PASS,errors[]/
+warnings[],release estável e sync0. Taps livres1passo; um tap4× bloqueado com
+motivo blocked. Keydown→movement_started:48,8–225,3ms1×;12,8–51,4ms4×;
+Hunt1×59,1–216,1ms. Não é latência de pintura/FPS. Drill4× sem novo foco após
+matar o primeiro inimigo terminou em derrota; NÃO contado nas três vitórias,
+que pertencem ao smoke com estratégia/foco/casts reais e economia intacta.
+Soak exato e1fd205 registrou14hunts/14bosses/14recompensas/14IDs de sessão,
+150098msativos1×/126058ms4×,console limpo,sync0. Preassert salvo; fechamento do
+harness falhou ao tentar abrir relatório que LoopOFF já abriu. Corrigida apenas
+a navegação do harness; repetir no SHA final para gate completo/cleanup.
+Pico da amostra concorrente721displayobjects/99VFX,update12ms; não benchmarkFPS.
+Smoke real agora trata retirada do ID clicado durante morte/cleanup como uma
+transição esperada, mantendo assertions de vitória/economia/13contadores zero.
 
-- Branch mantida: `feature/combat-presentation-astra`.
-- Base conferida após fetch: `ed23459805056bc25d22b1c2d5de7e769d1d9ced`.
-- Pre-flight: local/remoto iguais, 0 ahead/behind e worktree limpa.
-- Audit: apresentação existente e validada; controle manual ausente. O MVP 1D
-  combinado estava funcional porém incompleto, portanto não foi aberta branch 1E.
-- `CombatEngine.advanceTo()` e `run()` executam a mesma simulação. Nenhuma regra
-  de grid, A*, LoS, reserva, projectile ou máscara foi reimplementada.
-- AI/Manual/Assistido por ator; comandos serializáveis e validados; WASD/setas;
-  seleção, ataque básico, follow, Stop, casts e menu contextual de Look.
-- Input em campos editáveis é ignorado; blur/pausa/reset/loop limpam held keys e
-  targeting. Cooldown permanece válido ao alternar controllers.
-- Screen/world/tile aceita transformação de câmera. State machine possui
-  use-with e drag/drop, mas não há inventário falso nem operações de item reais.
-- Apresentação existente reutilizada, incluindo facing, máscaras e impacto;
-  marcador novo identifica o alvo selecionado.
-- Typecheck: aprovado. Vitest: **145/145 em 11 arquivos**. Build: **745 módulos**.
-- Gate E2E completo final: **19/19**, um worker, 4,8 min; inclui três loops,
-  três resoluções, os 15 cenários preservados e quatro fluxos manuais.
-- `git diff --check`: aprovado; commit funcional `b92624f`.
-- Baseline permanente: hashes SHA-256 de 24 resultados completos capturados
-  antes das alterações, seeds 803–814, energy wave ON/OFF; todos idênticos.
-- Stress misto: 24 hunts, 23 vitórias e uma derrota real (808/wave ON). Zero
-  overlap, fora de limites, entrada em obstáculo, stalemate, turn limit ou
-  reserva/projectile/hazard pendente no fim de andar.
-- Inspeção visual: controles, pausa, alvo e menu contextual conferidos; console
-  sem erros/warnings na inspeção.
-- Helper individual intocado. Sem merge, deploy, publicação ou remote sites.
-- Próximo gap: MVP 1E com exploração/interação concreta de mundo, NPC e quest
-  pequena. Inventário, arte cardinal completa e transporte remoto continuam
-  pendentes; ver `PLAYER_CONTROL.md`.
+### Gate anterior — e1fd205
 
-Os registros abaixo documentam a entrega anterior de apresentação.
+Gate FINAL de source:310unit/27arquivos PASS137,41s;63E2E/1worker PASS14,4min,
+typecheck/build/build:preview/diff PASS. Chunk576,95/577,01kB mantém warning500kB.
+Frozen install/health/arte reproduzível já conferidos e assets não mudaram.
+A/B read-only1293721→worktree:2868eventos e hash integral
+edcf9f6d0aa4488bda430a900d74003401d5f924d48fc6b5627da8a5f87a554b iguais
+emwarmup/batch/73/1000ms; tempo variável sob carga, não benchmarkFPS.
+Treino real de trabalho:3vitórias,1×/4× explícitos,1214eventosbot,economia
+intacta,todos13contadores cleanup0,errors[]/warnings[]. Latência de amostra
+keydown→submissão106,4/211,3/97,4/221,8ms, não tempo até pintura do monitor.
+Capturas compiladas Hunt/treino1366/1600/1920 e1902 inspecionadas; geometria
+em TACTICAL_CONSOLIDATION. Arte própria, nenhum asset da referência copiado.
 
-## Identificação
+QA prolongado inicial observou14ciclos mas sua assertion de metadado usava um
+campo que NÃO existe em boss_reward (sessionId); falhou o harness, não uma
+contagem de boss/recompensa. Não contado como gate verde: repetição com schema
+real/sessionIds de eventos comprometidos e gravação pré-assert ainda pendente.
+QA real de taps agora mede duração efetiva keydown→keyup, porque20ms solicitados
+por protocolo podem durar mais sob carga; limite de passos usa duração medida,
+com estabilidade após release ainda obrigatória. Bots móveis podem bloquear
+um tap legitimamente: zero movimento só é aceito com motivo blocked explícito.
 
-- Data: 19/09/2026
-- Base estável: `origin/recovery/antigravity-mvp1b`
-- Base integrada do MVP 1C: merge `004e42a271823993f9661ea7e3a41e040d396ace`
-- Branch: `feature/combat-presentation-astra`
-- HEAD inicial da continuação: `492891058acfcdd7a80c25c77856eba542ed88d2`
-- Helper individual: pausado e intocado
-- Merge e publicação: não realizados
+Publicação/CI/manifest/smokes com SHA novo ainda pendentes. Não confundir stamp
+1293721 do build de trabalho dirty com código publicado naquele commit.
+
+### Registro do desenvolvimento anterior ao gate final
+
+Pedido completo em TACTICAL_CONSOLIDATION.md. Pré-flight fetch/health/branch/
+upstream/remotes:1293721f08aad524782e15388cede3e9fd370d00=origin, CLEAN;
+base feature/visual-identity-foundation. Público version.json74b exato.
+Antes283unit/61E2E confirmados; medidas local/público iguais. Nenhum trabalho
+alheio encontrado. Referência preservada na workspace, não extraída para assets.
+
+Implementação: câmera15×11/inversa compartilhada; arena lógica fixa36×18 treino;
+sprite.62/anchors/nomes/HP; piso da Hunt alinhado em meio SQM; foco de party
+independente de seleção/inspeção; Manual único no treino/companheiros Auto;
+cancelamento por nova intenção; approach A*→push adjacente, sem callback tardio.
+Hunt Auto integral comparada ao perfil anterior; economia/RNG/loot intocados.
+
+Gates locais até aqui PASS: install frozen,health,typecheck,308unit27arquivos
+(119,07s),art:generate+diff de assets vazio,build/build:preview/diff. Inclui24
+Auto/24mistos/6polished stress e determinismo de approach50/1000ms. Sem snapshots
+regenerados/timeouts aumentados/assertions econômicas relaxadas. Warning de
+chunk576,83/576,88kB conservado. E2E63 e QA real ainda pendentes de fechamento.
+
+Diagnósticos reais durante desenvolvimento: ordem MoveTo antiga ressuscitava
+após troca→corrigida poda da fila; Assistido Hunt era pulado pelo novo foco→
+corrigida ordem de processamento e regressão unitária. Testes de clique agora
+usam a câmera; uma coordenada antiga estava fora da janela e foi movida para
+SQM visível, preservando a assertion latest-destination. Câmera atualiza na
+seleção mesmo em pausa. Teste obrigatório de focus/takeover/drag/approach/push/
+cancelamento/Hunt/boss passou antes da suíte integral. Três treinos manuais
+passaram, não foram substituídos por Auto. Uma tentativa integral foi invalidada
+por hot reload durante edição; interrompida e reiniciada com source congelado.
+Teste DPR2 usa1px lógico interno: subpixel.1 era arredondado para fora do canvas.
+
+Publicação nova,smokes compilados/públicos e métricas reais serão registrados
+abaixo após conclusão; não reutilizar os runs de74b como gates do código novo.
+
+## Histórico encerrado — publicação das sprites MVP2C
+
+## Encerramento das sprites reais —21/10/2026
+
+Runtime74b3306d4ae17e43d182439fd5e79d8384479118 verificado em checkout/health
+dos CI e manifest público. Push39418552073/job118613470478 SUCCESS283unit/
+61E2E(59,7min)/build/diff;Pages118641078023 SUCCESS. PR primeira tentativa
+118613492080 falhou1inventário/60PASS:timeout220s,contexto fechado antes da
+assertionASSISTED vazia;trace analisado,não prova de regressão nem causa raiz.
+Artefato12266256446 SHA256d17d7725e7154567df80f22f3d73aed12e00fae2456323ede86468d6167ef1f2.
+Uma solicitação inicial de rerun foi bloqueada pelo auto-review;sem contorno.
+Usuário confirmou run/job e revogação limitada;mesmo conector aceitou UMA
+reexecução integral:novo job119043228558/run39418557264 PASS283unit25files/
+61E2E(24,8min)/frozen/typecheck/arte/build/build:preview/diff/upload. PR deploy
+119051066711 SKIPPED;push/deploy aprovados não reexecutados. Nenhum fix,
+snapshot,timeout,assertion,workflow ou proteção alterados.
+
+Smokes públicos existentes todos exit0:qa-outfits38PNG reais448²,12trajes/
+3níveis/2DLC,persistência e estado pausado intactos,errors[];qa-training-team
+3vitórias1303eventosbot,economia intacta,cleanup0;qa-preview vitória19kills/
+4240XP/1489gold/1token,errors[]/warnings[],cleanup0,52355,6ms lógico.
+QA auxiliar workspace qa-customized-party.mjs:Warrior2/Druid2/Mage2 aplicados
+via UI,3vitórias/economia intacta,todos12contadores cleanup0,e mesma party
+persistida até boss19/4240/1489/1,errors[]/warnings[]. Capturas públicas do
+atelier e party nova em treino/hunt inspecionadas. Sem simular vitória/mudar
+economia. Callback rAF médio5,08ms1×/8,53ms4×,pico260,6ms;isso não é FPS.
+
+Pré-fechamento fetch/health PASS:local=origin74b3306,0ahead/behind,CLEAN.
+Fechamento somente documentação [skip ci],não outro runtime;verificar novamente
+local=origin/limpo e diff de src/public/art/tests/scripts/deps/workflows vazio.
+38atlas/608poses builtinImageGen com promptset/proveniência OUTFIT_ART_2C.md;
+cores/máscaras seletivas/diagonais e camadas alpha independentes não entregues.
+Preview compartilhado,não release estável;sem merge/forcepush/Sites/OTSP.
+Automação existente será pausada após registro final. Nenhum monitor duplicado.
+https://silvamarcello1-art.github.io/tactical-hunt-lion-temple/?training=1&v=74b3306d4ae17e43d182439fd5e79d8384479118
+
+## Histórico anterior ao encerramento das sprites
+
+## Continuação autorizada —38atlas locais em validação integral
+
+Entrada2c7c89abd31d92a65b2bbac44cad27ad504b9c20,local=origin/worktree limpa,
+fetch/health PASS. Usuário confirmou os12trajes aplicados ao personagem real.
+Novos atlas builtin imagegen,registro data-driven/importação/renderer/preview
+em implementação local.38atlas importados/revisados:12trajes×3níveis+2DLC.
+NÃO considerar concluído/publicado: runtime público ainda6ff5b24 anterior.
+OUTFIT_ART_2C.md registra promptset,proveniência,descartes e limites. Máscaras
+continuam pendentes;sem tint global. Nenhum novo monitor/merge/Sites.
+
+Intermediários:typecheck PASS após tipar a borda Node do teste sem dependência
+nova;23unit focados antes da ampliação do catálogo;5E2E atelier PASS(24,7s),
+mais3E2E Citizen/Warrior/Druid completos com margem112 PASS(14,1s). Novo teste
+inicial consultava unidades no idle antes do spawn;falhou corretamente e teve
+preparação ajustada para treino pausado,sem enfraquecer assertions/timeout.
+Gates integrais/CI/deploy/smokes públicos ainda PENDENTES para esta continuação.
+Depois:17E2E focados PASS(1,3min),12trajes no mundo/WASD/facing e nova hunt com
+Warrior/Druid/MageAddon2 até boss19kills4240XP1489gold1token,capturas inspecionadas.
+Typecheck e24unit focados PASS no catálogo38 antes da adição do teste puro de
+definição/footpoint. Gates integrais rodando em fonte estável;sem testes/timeout
+relaxados. Margem112/footpoint104 e fatores por atlas preservam corpo sob adornos.
+
+Gates locais finais: frozen install/typecheck PASS;283/283unit25arquivos(57,38s),
+build778módulos(4,82s),arte original reproduzível semdiff,diff-check PASS.
+Suíte integral61/61E2E PASS(8,2min). Depois,somente teste de captura reforçado:
+o relógio controlado deixava a imagemGPU antiga até próximo RAF;32ms de browser
+com player PAUSADO renderizam a textura nova SEM avançar domínio. Snapshot
+completo continua igual e PNG do canvas precisa mudar.17/17outfit E2E repetidos
+PASS(1,5min),nova PNG pausada inspecionada com Warrior/Druid/MageAddon2 reais.
+Nenhuma mudança de runtime depois da suíte integral;apenas prova visual de QA.
+
+38fontes SHA256 conferidas,38PNGs runtime distintas presentes na build;
+fontes brutas na build=0. PNGs runtime4669452bytes;raws51498741bytes fora do public.
+Bundle566,87kB conserva warning>500kB.38texturas448²RGBA representam~30,5MB de
+pixels decodificados antes de overhead,não medição totalGPU/FPS. Assets são
+precarregados;preview2D guarda no máximo8imagens. Novos display objects ao
+aplicar=0,domínio/eventos/controle/workflow/deps intactos no diff. Smokes
+compilados,commit/push/CI/deploy/manifest/smokes públicos AINDA PENDENTES.
+
+## Encerramento2C — preview público aprovado
+
+Códigoedcc846401540d804c8c660167181c4816217a1e;ajuste visual6ff5b24f15ede1d0b2981892dd91bc5abdb987c9.
+SHA REAL publicado6ff5b24 confirmado no checkout/health dos dois CI e no
+version.json público. Push39378261786/job118481194930 SUCCESS:279unit24arquivos,
+48/48E2E(53,6min),typecheck/frozen install/arte/build/build:preview/diff/upload.
+Deploy118499012439 SUCCESS. PR39378266572/job118481210536 SUCCESS279unit/
+48E2E(33,4min),build/diff;deployPR SKIPPED por política. Nenhuma reexecução,
+cancelamento,alteração de timeout/assertion/snapshot/workflow/proteção nesta rodada.
+LocalHEAD6ff5b24 repetiu48/48E2E PASS(7,2min),limpo/local=origin antes do fechamento.
+
+qa-outfits público com SHA exato PASS:6fantasias de referência/3níveis,paleta
+planejada,4cardinais do fallback,save/reload,nativo aplicado e troca em combate
+pausado sem mudança de party/posição/clock/modo/comandos. PNG pública HTTP200,
+2330784bytes,1122×1402. Primeiro screenshot ocorreu antes do background carregar;
+o smoke foi FORTALECIDO para aguardar image.decode e validar dimensões antes da
+captura. Reexecução do smoke PASS,PNG agora visível/inspecionada. Isso é mudança
+apenas de QA em scripts/qa-outfits.mjs,não código incluído no bundle/runtime.
+Capturas:test-results/mvp2c-public-final-outfits.png e mvp2c-public-final-customized.png.
+
+qa-training-team público PASS3vitórias,1211eventosbot,economia intacta,errors[],
+zero overlap/OOB/reservas/projéteis/terreno/push/resíduos. Snapshot imediato tinha
+1tween transitório;checagem complementar real-clock de3treinos públicos exigiu
+TODOS os contadores,tweens inclusive,em0 e passou com economia igual/console limpo.
+Não omitir essa distinção. Script complementar e galeria14referências frontais
+inspecionadas ficam na workspace de acompanhamento,não no bundle.
+qa-preview público PASS:boss morto,19kills,4240XP,1489gold,1token,52374,9ms lógico,
+errors[]/warnings[],cleanup0. Update médio0,043ms/max0,8ms no sample da hunt;
+RAF1x0,652ms/4x0,566ms são amostras,não benchmark/FPS garantido. Chunk preview
+560,83kB conserva warning>500kB,prancha2,3MB sob demanda;sem trabalho novo no
+loop de mundo ou novos display objects ao aplicar.
+
+LIMITES REAIS:3sprites nativos existentes reutilizados;12trajes novos apenas
+referências frontais com slots/addons0/1/2 cumulativos e DLC independentes salvos.
+Novas camadas/frames/facings/máscaras5regiões ainda PENDENTES. Sem tint global,
+costas/diagonais inventadas,arte oficial/OTSP,loja,economia,Adventure,rede ou merge.
+Entrega é fundação funcional com fallback explícito,não conclusão da produção
+artística. OUTFITS_2C.md detalha contratos. Checkpoint final docs+QA-only [skip ci]
+não exige novo build nem muda SHA servido;confirmar source src/public/deps/
+workflows/testes intactos desde6ff5b24,normalpush/local=origin/limpo.
+Link público verificado:
+https://silvamarcello1-art.github.io/tactical-hunt-lion-temple/?training=1&v=6ff5b24f15ede1d0b2981892dd91bc5abdb987c9
+
+## Histórico — implementação e validações anteriores
+
+## Implementação2C — gates locais em curso
+
+Entradafba9825a63c9fb105bfdd66d8d65c2826e8daa51,feature/gameplay-first-mvp2a,
+origin/local iguais,worktree limpa;fetch/health PASS. Pedido atual volta a exigir
+AGENTS e autoriza implementação cosmética,commit/push/preview após gates,sem merge.
+Não reutilizar monitor antigo2B.4 como autoridade para mutações ou CI deste2C.
+
+Modelo/registro,persistência isolada,modal com draft por herói,preview2D das
+mesmas animações nativas,aplicação imediata de3sprites já revisados e fallback
+para12referências. Addons2 incluem1;DLC independente. Paletas5regiões persistem,
+mas máscaras e novos sprites/addons/direções continuam PENDENTES (UI explícita).
+PNG recebida1122×1402/2330784bytes,opaca,uma vista por versão,copiada intacta
+só como referência CSS. Nenhuma produção de arte/backframes/diagonais fictícias.
+Contratos,proveniência,pendências e desempenho estrutural:OUTFITS_2C.md.
+
+Frozen install,typecheck,279/279unit24arquivos(98,32s),build777módulos(7,90s)
+PASS. Chunk560,62kB mantém warning>500kB;nenhum limite alterado.21novos unit e
+4novos E2E PASS(32,8s):catálogo/addons/DLC/persistência,preview/facings/3viewports,
+troca de todos os heróis durante combate pausado sem mudar party/posições/clock/
+target/modo/comandos/objetos;hunt personalizada vence;reset preserva;WASD/facing
+com sprite trocado. Na primeira execução houve edição de fonte durante o teste
+e o cenário terminou idle,não completed;ela NÃO conta como gate verde. Repetição
+sobre fonte estável PASS,sem aumento de timeout/assertion.
+Suíte integral48/48E2E PASS(8,8min);CI/deploy/publicsmokes ainda pendentes,não anunciar
+o antigo preview2B.4 como2C. Scripts existentes preservados;qa-outfits.mjs novo
+exige manifestSHA exato e separa referências de sprites/máscaras prontos.
+
+Compiladoedcc846401540d804c8c660167181c4816217a1e:qa-outfits PASS;3treinos
+PASS1219eventosbot/economiaintacta/console e cleanup limpos;hunt boss19kills/
+4240XP/1489gold/1token,errors[]/warnings[],52350,8ms lógico. Imagem do atelier
+inspecionada;recorte CSS do Warrior cortava o topo do adorno e foi ajustado
+em follow-up visual,sem alterar PNG/motor. DLC passa a explicitar referência
+única (addons da base preservados na preferência). Revalidar4E2E/compilado do
+follow-up antes de push;CI ainda exigirá os48integrais no HEAD publicado.
+
+## Histórico —2B.4 abaixo
+
+## Encerramento — publicação pública confirmada
+
+ÚNICA reexecução integral autorizada: push39364771626/job118457324904 SUCCESS;
+258/258unit(23arquivos),44/44E2E(30,5min),typecheck/arte/build/build:preview/diff
+e upload PASS. Deploy118466631698 SUCCESS. PR39364777345/job118438994590 já
+aprovado258unit/44E2E. O job antigo118438976608 falhou e não é o gate atual.
+Checkout e health da nova tentativa confirmam a5be307b18ee3656143e945f0d34df9379f6c1d8;
+stamp usa git HEAD, não o SHA original do evento1860ba8. version.json público
+confere exatamente a5be307. Diff de src/public/tests/scripts/package.json/
+pnpm-lock.yaml/.github contra1860ba8107efa8b936636ec1f11d651e75e4b4bd vazio.
+
+qa-training-team.mjs público com SHA exato PASS:3vitórias,1224eventos de bots,
+economia inalterada,errors[],48displayObjects finais,zero overlap/OOB/reserva/
+projétil/push/terrain/efeito residual. Update médio0,189ms/max16,4ms é amostra,
+não promessa de FPS. qa-preview.mjs público PASS:boss morto,19kills,4240XP,
+1489gold,1token,52387,2ms lógico; errors[]/warnings[],cleanup limpo. Custo RAF
+amostrado1x2,727ms/4x5,688ms não é benchmark comparativo. Ambos exit0.
+PNG test-results/mvp2b4-public-final-arena.png inspecionado: arena amarela ampla,
+3heróis/3bots com nomes/HP/mana,dock1–9 e modos selecionados visíveis.
+
+Diagnóstico do primeiro push: trace do artefato12240608790 mostra assertion
+MANUAL aprovada antes do timeout total220s; contexto fecha pelo timeout e só
+depois aparece valor vazio/session closed. Causa última do custo não comprovada.
+Relatório local CI_RETRY_DIAGNOSIS.md na workspace de acompanhamento. Nenhum
+código/teste/script/timeout/workflow/proteção foi alterado na reexecução.
+Sem merge/forcepush/Sites/OTSP. Preview público, não release estável/PvP online.
+Checkpoint final docs-only [skip ci], não novo SHA servido; monitor deve ser
+pausado no encerramento. Link verificado:
+https://silvamarcello1-art.github.io/tactical-hunt-lion-temple/?training=1&v=a5be307b18ee3656143e945f0d34df9379f6c1d8
+
+## Histórico — estados abaixo anteriores ao encerramento
+
+## Novo bloqueio de publicação — 20/10, 01:29 (São Paulo)
+
+Runtime1860ba8107efa8b936636ec1f11d651e75e4b4bd, nenhum código alterado no monitor.
+PR39364777345/job118438994590 SUCCESS:258unit23arquivos,44/44E2E(38,2min),
+typecheck/build/build:preview/arte/diff/upload aprovados. Deploy da PR SKIPPED
+por política normal do workflow. Não basta para afirmar publicação.
+
+Push39364771626/job118438976608 FAILURE:258unit PASS;43/44E2E(52,4min).
+Falha diferente da antiga: equipment.spec.ts:74, matriz de inspeção/layout,
+linha95, esperava valor MANUAL em #control-mode e recebeu string vazia;
+log contém Protocol error Runtime.callFunctionOn: Internal server error,
+session closed e timeout total original220000ms. Sem screenshot registrado no
+log dessa falha; trace/context preservados em playwright-failure-diagnostics.
+O cenário antigo de duas hunts/equipar/forjar/reload NÃO é a falha desta rodada.
+Local e PR passaram essa mesma matriz; causa da divergência ainda não comprovada.
+Não afirmar bug de gameplay, falha transitória ou infraestrutura como fato sem
+inspecionar trace. Não aumentar timeout nem mudar assertions/limites/proteções.
+
+Build/build:preview/upload do push SKIPPED; deploy118454584336 SKIPPED. Manifest
+público permanece bbd0fac90bbc5ba27be4c9189f36513e1d59ee93, sem smoke da nova
+versão pública. Gates locais/compilado1860ba8 aprovados continuam válidos, mas
+não substituem o gate do push. Acompanhamento PAUSADO conforme pedido, sem
+rerun/cancelamento/alteração de código automáticos. Próxima decisão: autorizar
+diagnóstico do trace e eventual reexecução integral do job que libera deploy,
+sem alterar código nem enfraquecer os44testes. Se aprovado, conferir ambos os
+runs e SHA do artefato antes de publicar; checkpoint docs-only não é novo runtime.
+
+## Correção autorizada — 20/10
+
+Runtime corrigido1860ba8107efa8b936636ec1f11d651e75e4b4bd commitado/push normal,
+local=origin limpo. NOVOS CI push39364771626/job118438976608 e PR39364777345/
+job118438994590 em execução; checkout/install/health/typecheck PASS, unit em curso
+na última consulta. Não usar runs anteriores como gates deste código. Próximo
+checkpoint é docs-only [skip ci], não outro build.
+
+Build:preview compilado com manifest1860ba8 PASS; smoke real-clock3×3 PASS:
+3vitórias,1221ações/eventos bot,economia igual,console vazio,zero overlap/OOB/
+reserva órfã/projétil/efeito/push/terrain residual. Estado final48displayObjects,
+max129visuais/15efeitos,update avg0,117ms/max1,4ms (amostra, não alegação de FPS).
+Hunt compilada PASS:boss morto,19kills,4240XP,1489gold,1token,52352,5ms lógico,
+console errors/warnings vazios e lifecycle limpo. qa-preview retorna ao Auto
+explicitamente após card Druid;3card modes AI conferidos antes de iniciar.
+Screenshot mvp2b4-compiled-fix-arena.png inspecionado:mapa amarelo real ocupa a
+arena,3bots nomeados,barras/dock1–9 visíveis. Capturas só em test-results,fora do
+bundle. Público ainda não validado; acompanhar CI→deploy→manifest→smokes públicos.
+Heartbeat existente retomado a cada5min com SHA/runs novos, sem gameplay e
+silencioso no estado inalterado. Avisar somente conclusão/falha/ação necessária.
+
+Gates finais locais PASS: frozen install;health;typecheck;258/258unit23arquivos
+(126,10s);build774módulos(9,67s;warning548kB mantido);arte reprodutível sem diff;
+44/44EdgeE2E1worker(8,7min);git diff --check. Cenário principal equipado/forjado
+agora vence a segunda hunt, matriz de inspeção preserva3modos e foco, reserva
+com mochila cheia preservada,3treinos e bordas amarelas passaram. Nenhum timeout
+foi alterado. Smoke qa-preview agora retorna explicitamente o Druid selecionado
+ao Auto antes de medir uma hunt Auto: card assume Manual por contrato2B.4.
+Próxima etapa é CI/deploy do commit da correção e smokes no manifest exato.
+Não confundir aprovação local com publicação confirmada.
+
+Usuário autorizou corrigir o bloqueio e enviar link só depois de pronto. Entrada
+ea0465b limpa/local=origin; fetch/health confirmados. Causa comprovada pelo fluxo
+de callbacks e snapshot local: aba de equipamento→selectHero→selectActor→Manual;
+Druid com mana cheia, party KO e estado defeated, não completed esperado pelo
+teste. Não se trata de mero custo/timeout. Correção em main: equipmentHeroId de
+inspeção independente; callback não chama controle; abrir sincroniza somente
+contexto do drawer. Seleção card/mundo exclusiva permanece intacta.
+
+Regressão equipment.spec: após inspecionar Druid exige seleção Knight/Auto e
+mesma contagem de comandos (inclusive atributo inicialmente ausente); matriz
+AI/MANUAL/ASSISTED inspeciona3heróis, preserva controle e devolve foco ao canvas.
+Primeira rodada3/4 PASS: cenário principal parou na nova assertion porque
+toHaveAttribute não aceita null; corrigido comparando valor nullable exato.
+Nenhuma regra, timeout, assertion original, save ou baseline foi relaxado.
+Typecheck PASS; unit/build e44E2E finais em execução. Monitor antigo permanece
+pausado; esta sessão executa a correção autorizada. Sem integração OTSP nem merge.
+
+## BLOQUEIO CONFIRMADO — 20/10, 00:12 (São Paulo)
+
+Código/testes a5e8e5b4ba9f6ae9597128306a149a400bec1877; checkpoint posterior
+somente docs [skip ci]. PR3/run39358581542/job118422167504 terminou FAILURE:
+258/258 unitários(23arquivos) PASS;43/44 E2E PASS(31,2min). Falha exclusiva:
+`tests/e2e/equipment.spec.ts:4`, timeout original CI360000ms, ao aguardar
+`data-session-state=completed` na segunda hunt, linha41/controlled-clock.ts:26,
+depois de equipar/forjar/reload, selecionar Druid no inventário e fechá-lo.
+O trace/screenshot/context foram preservados no artefato playwright-failure-diagnostics
+do run. Ainda NÃO se estabeleceu se a causa é estado/controle ou custo de execução;
+não aumentar timeout, ignorar assertion ou afirmar lentidão como diagnóstico.
+
+O mesmo cenário excedeu180s localmente. Novo layout/bordas/controle exclusivo/bots,
+três vitórias e todas as demais43verificações passaram no CI da PR. Build,
+build:preview e upload foram SKIPPED após a falha; deploy da PR também SKIPPED.
+Run push39358574939/job118422458146 ainda em E2E na última consulta; não cancelar
+nem rerodar automaticamente. Uma aprovação isolada dele não elimina a falha da PR.
+Manifest público permanece bbd0fac90bbc5ba27be4c9189f36513e1d59ee93; sem smoke
+da nova versão pública, pois não há nova publicação validada.
+
+Escopo deste acompanhamento é somente validar/publicar/docs. Não foi alterado
+gameplay/testes/workflow. Acompanhamento pausado para pedir autorização de uma
+correção pontual do bloqueio, seguida de todos os gates originais e smoke público.
+Próximo comando diagnóstico: pnpm exec playwright test tests/e2e/equipment.spec.ts
+--grep "real hunt" --reporter=line --workers=1. Inspecionar estado/modos/ordens na
+segunda hunt e trace; preservar save/inventário/clock e fronteiras do domínio.
+
+## Acompanhamento vigente — 19/10, 23:39 (São Paulo)
+
+- Código/testes da entrega: a5e8e5b4ba9f6ae9597128306a149a400bec1877.
+  Runtime sem alteração desde bbb8755; checkpoint posterior é somente docs
+  [skip ci], não outro build. Branch feature/gameplay-first-mvp2a, base58d9720.
+- CI vigente push39358574939/job118422458146 e PR39358581542/job118422167504:
+  install/health/typecheck/unit/art reprodutível PASS; ambos em44E2E, build/deploy
+  ainda pendentes. Não usar os runs antigos como aprovação deste HEAD.
+- Com autorização explícita do usuário, cancelamento solicitado somente para
+  runs substituídos39357334801/39357338333; a fila atual foi liberada. Nenhuma
+  proteção, workflow, assertion ou timeout foi alterado.
+- Gate local final da5e8e5b:42/44E2E PASS(13,3min), NÃO gate verde.
+  equipment.spec.ts:4 excedeu180s no segundo combate; runes.spec.ts:23 falhou
+  em route.fetch com ECONNRESET ao carregar main.ts. Os4novos E2E de produção,
+  incluindo bordas amarelas, seleção exclusiva e3vitórias3×3, passaram.
+  Nenhuma mudança de gameplay é autorizada neste acompanhamento.
+- Manifest público continua bbd0fac90bbc5ba27be4c9189f36513e1d59ee93. Não entregar
+  o site anterior como atualização. Smokes públicos da revisão aguardam CI/deploy.
+- Novo pacote OTSP fornecido pelo usuário foi inspecionado sem integração:
+  README/GUIDE/AUTHORS/LICENSE, PNGs, dat/spr/otfi e mapa existem; README declara
+  arte comunitária CC BY4.0. Não são sprites oficiais CipSoft; adequação/atribuição
+  e importação exigem outra etapa. assets_rtc vazio citado abaixo é histórico.
+- Próximo acompanhamento: conferir os dois runs a5e8e5b. Se aprovados, manifest
+  exato e scripts qa-training-team.mjs + qa-preview.mjs no público. Se falharem,
+  coletar diagnóstico, registrar bloqueio e avisar; não corrigir gameplay aqui.
+
+## Sessão vigente
+
+- Raiz Documents/Tactical-Hunt-Lion-Temple; branch feature/gameplay-first-mvp2a,
+  base visual58d9720. Entrada70ea598 local=origin, worktree limpa, fetch/health.
+- Antes das edições: typecheck/251unit(22arquivos,66,42s)/build PASS.
+- Implementado: dock1–9, retirada da descrição, retratos e ícones próprios,
+  arena clara/colunas por sessão com TODO piso amarelo acessível, seleção
+  exclusiva no domínio, três bots de vocação/focoHP/spells/runes/cura.
+- TrainingTeam6unit PASS, incluindo cantos/ampliação/MW/ownership/determinismo.
+  Primeiros testes de UI identificaram expectativas históricas de seleção
+  independente; casos de componente preservam fixture isolado explícito, enquanto
+  training-team.spec cobre produção sem interceptação. HMR durante edição
+  invalidou uma execução longa; não é gate verde. Gates finais ainda pendentes.
+- Arquivos: combat/CombatEngine+TrainingTeam.test, control/PlayerControls+Port,
+  data/training, events/types, renderer/SpriteDefinition, app/LiveHuntState,
+  main/HUD/CSS/TacticalIcons, E2E/fixture e documentação afetada.
+- Assets fornecidos: Downloads/rubinot- 2026/assets_rtc possui apenas data/cursors,
+  ZERO arquivos inclusive na inspeção elevada. Nenhuma sprite externa integrada.
+- Não iniciado: sprites Tibia, catálogo completo/Wheel/PvP online, MW/push por
+  bots. Não alterar inventário/economia. Sem merge/Sites/Helper individual.
+- Público anterior bbd0fac. NÃO afirmar novo deploy antes de CI/manifest/smoke.
+  Próximo comando: pnpm typecheck; pnpm exec vitest run; pnpm build;
+  pnpm exec playwright test --reporter=line --workers=1; git diff --check.
+
+### Validação local e limite operacional
+
+Follow-up da revisão: mouse-first2/2 PASS(39,8s) após atualizar somente a
+contagem exata: seleção envia1control e gesto combinado envia1look, total2.
+O teste anterior comparava total1 mesmo após a nova seleção explícita. Nenhuma
+assertion foi removida nem timeout alterado. Gate local44 interrompido após
+2falhas: equipment excedeu180s na segunda hunt; mouse-first era essa expectativa
+desatualizada. CI bbb8755 ainda em execução; novo commit só corrige teste/docs,
+sem alteração dos bytes de src/public. Não registrar gate completo verde.
+
+Código bbb87558101068cbdf84da23aee8c204907eba34 commitado/push normal confirmado
+por ls-remote, local=origin. CI push39357334801 / PR39357338333 em execução,
+validate da PR118415059837. PR3 atualizada, aberta e sem merge. Typecheck/build
+da revisão final PASS (774 módulos; warning de chunk548kB);44E2E finais locais
+na execução35799. Configuração de controle agora síncrona no domínio, sem
+avançar clock/ações; bots mantêm nomes visíveis em todos os frames.
+
+- Primeira revisão passou258/258 unitários e build; a última correção sincroniza
+  configuração de controle imediatamente no domínio e mantém ação no tick.
+  Name visibility dos bots também foi corrigida após inspeção da captura.
+- Seleção/bots/layout/runas/assistência:15E2E direcionados passaram antes desse
+  ajuste; smoke real-clock 3×3 passou três vitórias,1267ações/eventos de origem bot,
+  saves iguais e console/cleanup limpos. Não equivale ao gate final da revisão.
+- Nova rodada default:254/258, quatro timeouts de5s, sem falha de assertions de
+  resultado. Streams Auto, lifecycle polido, três hunts e determinismo3×3 foram
+  afetados. Executor threads também excedeu limites; tentativa interrompida.
+  Nenhum timeout foi elevado, teste ignorado ou snapshot regenerado.
+- Diagnóstico somente leitura `node scripts/profile-grid.mjs 70ea598`:
+  timeline completa idêntica ao código anterior nos modos batch/73/1000,
+  hash edcf9f6d0aa4488bda430a900d74003401d5f924d48fc6b5627da8a5f87a554b.
+  Anterior warm/batch/73/1000:5523/3585/3482/1897ms; atual3685/2514/2888/3114ms.
+  São amostras variáveis, não prova de ganho nem baseline determinístico de tempo.
+- Validação independente deve usar CI Windows original, mantendo os gates exatos.
+  Commit/push da feature dispara validate antes de deploy; qualquer falha impede
+  publicação. Não chamar gate completo verde enquanto local/CI não o comprovar.
+- Rodada final de typecheck/build/44E2E ainda em execução; registrar resultado
+  final e IDs de CI. Próximo smoke: qa-training-team.mjs (não scripts legados)
+  e qa-preview.mjs na URL compilada/pública com SHA obrigatório.
+
+## Histórico — MVP 2B.3 publicado — 20/10/2026 UTC
+
+## Fechamento vigente — prevalece sobre os registros históricos abaixo
+
+Runtime público: bbd0fac90bbc5ba27be4c9189f36513e1d59ee93.
+Branch feature/gameplay-first-mvp2a, origin GitHub, PR3 aberta sem merge.
+CI push39347671213: validate118384098380 e deploy118395034330 SUCCESS.
+CI PR39347675576: validate118384113457 SUCCESS (deploy PR é skipped por desenho).
+Manifest público exato conferido em20/10UTC após01:02. Local251/251 unitários,
+40/40 E2E Edge, typecheck/build, frozen install, health, arte reproduzível e
+diff --check PASS; gates remotos também aprovados. Nenhum timeout/assert foi
+afrouxado. Warning de chunk >500kB permanece; não há lint configurado.
+
+Smokes públicos em Edge isolado, relógio real e SHA obrigatório:
+
+- qa-training-kit: MW/mira, rejeição de Destroy Field sobre MW sem gastar carga,
+  remoção de fogo, SD/projétil, Heal Friend em aliado, dois pushes (tecla/arraste),
+  pausa/reset PASS. Oito vizinhos/sete livres no fixture, alvo imóvel ao segurar,
+  soltura no vizinho autorizado. Console/resíduos zerados. Captura dos vizinhos
+  inspecionada; runtime correto, sem zoom ajustável.
+- qa-training: três vitórias, 1441 eventos, economia inalterada, zero console,
+  overlap/OOB/reservas/projéteis/condições/pushes/VFX residuais. Variação de um
+  evento contra amostra anterior de 1442 não foi usada como baseline determinístico:
+  o smoke usa relógio real. Ruleset sem diff, testes/baselines determinísticos verdes.
+- qa-preview: vitória real contra boss,19kills/4240XP/1489gold/1BossToken,
+  simulação de52350ms (clock apresentado52363ms pelo frame real),1x→4x PASS.
+  Zero console/warnings/overlap/OOB/reservas/projéteis/pushes/VFX residuais.
+  Apresentação média0,075ms/pico1,1ms;594display objects,máximo97objetos visuais
+  ativos/13efeitos. Callback rAF1x média0,920ms/pico56,1ms;4x média1,159ms/
+  pico46,2ms. Amostras desta execução, não FPS nem prova de melhoria comparável.
+  Screenshots em test-results/mvp2b3-public-final-* e mvp2b1-public-final-gameplay.png,
+  fora do bundle. Smokes executados via scripts do repositório, não perfil do usuário.
+
+scripts/qa-training-kit.mjs passou local compilado e público após trocar espera
+arbitrária de500ms por deadline lógico queuedPush.time+2000 antes do segundo
+gesto. É ajuste apenas do teste reutilizável; src/public/dependências/workflow
+continuam exatamente no runtimebbd0fac. Fechamento doc/QA usa [skip ci] para não
+disparar outra publicação idêntica. O SHA servido é do runtime, não desse checkpoint.
+
+Usuário autorizou acompanhamento automático de5min; não foi necessário criar
+agenda porque CI/deploy terminaram e a verificação foi concluída nesta sessão.
+Sem merge, force push, Sites, ampliação de permissões ou Helper individual.
+Treino Party × Bot, não PvP online; catálogo/Wheel/fórmulas/máscaras completos e
+teclado físico manual continuam gaps documentados. Próxima fatia: NEXT_TASK.md.
+
+## Histórico da implementação e espera (não é pendência atual)
+
+## Follow-up — arraste esquerdo e vizinhos
+
+Usuário corrigiu a resposta equivocada: apenas tiles imediatamente vizinhos,
+não7tiles de distância. O código15cc18b já fazia left-drag/drop; follow-up adiciona
+preview de8vizinhos, até7livres, fornecido read-only pelo mesmo domínio/readiness
+da fila de push. Não afrouxa quinas/occupancy/reservas/atraso/clock. Tecla8 é
+alternativa, não pré-requisito. Holding não desloca o alvo. Origem não é destino.
+Typecheck,27unitáriosdirecionados e1E2E de push PASS; executar gates completos.
+Commit15cc18bcc2f9111a80de19960ca1c904a017a7f5 está no origin, CI push39345124901/
+PR39345131120 em execução. Follow-up ainda não commitado; não confundir versões.
+
+### Fechamento local do follow-up
+
+Estado operacional: runtimebbd0fac90bbc5ba27be4c9189f36513e1d59ee93 commitado e
+push normal, local=origin confirmado. CI push39347671213/PR39347675576 em
+validação E2E. Build:preview do bbd0fac e smoke compilado de kit/vizinhos + hunt
+normal até boss PASS, manifest local correto, zero erros/resíduos. Única mudança
+posterior ao runtime: qa-training-kit espera o deadline lógico de2000ms do push,
+em vez de500ms de parede, antes do segundo gesto; sintaxe e execução compilada
+PASS. É tooling de QA, não bundle/combate. Falta CI/deploy/manifest/smoke público
+do bbd0fac; depois registrar, commit checkpoint doc/QA e push sem novo runtime.
+
+- Health,251/251unitários(22arquivos,54,59s),typecheck/build e full Edge40/40
+  (6,2min,1worker) PASS; subset final de push1/1(9,4s) PASS. Smoke real
+  qa-training-kit validou novamente runas/cura/push por tecla e arraste, pausa/
+  reset e sete destinos no fixture diagonal. Captura dos vizinhos inspecionada,
+  sem erros/resíduos. Renderer não decide validade; holding não move a origem.
+- Publicação anterior15cc18b: push39345124901 e PR39345131120 success; jobs
+  validate118375757677/deploy118381843166 success. version.json público confirmou
+  15cc18bcc2f9111a80de19960ca1c904a017a7f5 em20/10UTC. Isso NÃO confirma deploy
+  do follow-up, que exige novo commit/push/CI/manifest/smoke.
+
+## Sessão atual
+
+- Entrada dca56a8aff487bd0171b04209f8d7205723abde9, local=origin e limpa;
+  branch feature/gameplay-first-mvp2a/base visual58d9720. Fetch/health feitos.
+- Concluído: SD/Destroy Field, push atrasado por MovementSystem, teclas1–9,
+  mira de chão independente de sprites maiores e pixel art original três heróis.
+  Perfil de nove magias, cooldown secundário e Mana Buffer dos magos só no treino.
+  Sem zoom; sem alterar economia/saves/hunt normal. TRAINING_2B3 e ART_PROMPTS.
+- Base antes das edições: typecheck/231 unit/build PASS. Novos E2E direcionados
+  4/4 e regressão inicial de runas/sprites4/4 PASS. Imagens dos três atlas e captura
+  do gameplay inspecionadas. São testes reais Edge do repositório, não teclado
+  físico manual. Gate completo atual na execução70587; registrar resultado final.
+- Não iniciado: Wheel completa, catálogo de cinco vocações, PvP online. Dano,
+  requisitos, autoaim e máscaras ainda parcialmente de protótipo, documentados.
+- Arquivos: combat/control/data/events, renderer/presentation, HUD/main/CSS,
+  testes RuneSystem/Push/ManaBuffer/sprites/E2E, importador/gerador e docs.
+  Raws fora do bundle em art/source/pixel-v1; runtime public/assets/original/pixel.
+- Publicação nova NÃO confirmada ainda; público anterior88d3fc6. Usuário autorizou
+  Pages depois dos gates. Não merge/Sites. Próximo comando: pnpm typecheck;
+  pnpm exec vitest run; pnpm build; pnpm exec playwright test --reporter=line --workers=1.
+
+## Evidência local consolidada
+
+- pnpm install --frozen-lockfile, health, typecheck, build e diff --check PASS.
+  Suíte final de 250/250 unitários,22 arquivos,88,66s. Full Edge40/40,1worker,
+  7,1min; após ajuste restrito à mira SD no sprite, typecheck/build e subset de
+  runas/sprites8/8 PASS(44s). Nenhum timeout/assert antigo ou baseline afrouxado.
+- Acrescentados casos de CD secundário/grupo attack e SD com impacto real; fixture
+  de baixo HP confirma Mana Buffer no pipeline de dano (restaura dados após uso).
+- scripts/qa-training-kit.mjs local (relógio real): mira MW, rejeição de remoção de
+  MW sem gastar carga, Destroy Field, SD, Heal Friend em aliado, dois pushes por
+  hotkey/drag, pausa e reset; zero erros/resíduos. Não usa relógio simulado.
+- scripts/qa-training.mjs: três vitórias,1442eventos, saves econômicos idênticos;
+  zero overlap/OOB/reserva/projétil/condição/push órfãos. Fim:590display objects,
+  máximo6VFX ativos, update apresentação médio0,093ms/máximo1,6ms na amostra.
+- scripts/qa-preview.mjs: hunt normal 1x→4x, boss real,19kills/4240XP/1489gold/
+  1token,52.350ms lógicos; zero erros/warnings/resíduos. Apresentação média0,112ms,
+  máximo2,4ms,594objetos. Instrumentação rAF: 1x média1,50/max122,3ms;4x
+  média1,34/max48,4ms. Custo de callback, não FPS; coleta concorrente a unitários,
+  sem baseline comparável para afirmar ganho. Chunk >500kB continua warning.
+- Reimportação dos três raw PNGs produziu SHA256 idêntico aos runtime PNGs;
+  art:generate deixou assets rastreados sem diff. Raw art não está em dist.
+  Capturas de mira/kit/gameplay e os três atlas inspecionados.
+- Lint não configurado; teclado físico/NumLock manual não foi certificado. QA
+  usa Edge real automatizado do repositório. Sem workaround de Computer Use.
+
+## Histórico — MVP 2B.2 publicado e verificado
+
+Entrada em 2378cb5f51f9013b95fa839e8b20a620d354bfd9, local=origin, worktree
+limpa, branch feature/gameplay-first-mvp2a e base visual 58d9720 confirmadas.
+Fetch/health aprovados; nenhum trabalho existente descartado.
+
+## Fechamento da implementação e gates
+
+- A execução antiga 66046 terminou com 4 timeouts e 2 erros de RPC do worker;
+  NÃO foi considerada um gate verde nem prova de regressão funcional.
+- Profiling local apontou alocações repetidas na LoS. visitSupercover mantém a
+  ordem/quinas da geometria e interrompe no primeiro bloqueio; trace retorna
+  dados independentes. Sem cache de visibilidade ou alteração de A*/regras.
+- A/B seed 803: hash JSON completo idêntico
+  edcf9f6d0aa4488bda430a900d74003401d5f924d48fc6b5627da8a5f87a554b em batch e
+  frames 73/1000. Na amostra desta máquina: baseline 1254/1274/1300 ms e atual
+  983/1024/986 ms. É custo de simulação, não FPS ou benchmark universal.
+- pnpm typecheck; 231/231 unitários (20 arquivos, 103,02 s); pnpm build
+  (769 módulos); 36/36 E2E (7,8 min, Edge, 1 worker); git diff --check: PASS.
+  Auto baseline de 24 cenários e os três loops progressivos antigos preservados.
+  Nenhum timeout/assertion antigo ou snapshot foi afrouxado/regenerado.
+- pnpm install --frozen-lockfile e pnpm art:generate com diff vazio dos assets:
+  PASS. Nenhuma dependência/lockfile alterada. Warning de chunk >500 kB permanece.
+- E2E de treino: targeting, colisão, quina, burning, pausa, expiração, reset,
+  três vitórias sem recompensas/alteração econômica, limpeza e três resoluções.
+  Screenshot training-runes-gameplay.png inspecionado: party, barras, kit e
+  runas legíveis. Imagens/trace/profile ficam em test-results (fora do bundle).
+- Smoke real-clock local PASS: runas/pausa/expiração/reset e três treinos,
+  1522 eventos, economia inalterada, zero console/overlap/out-of-bounds/reservas/
+  projéteis/condições/VFX residuais. scripts/qa-training.mjs é reutilizável no
+  base path Pages, em contexto isolado sem tocar saves do usuário.
+- Smoke da hunt normal 1x→4x PASS: vitória em 52350 ms lógicos, 19 kills,
+  4240 XP, 1489 ouro e um Boss Token; zero erros/warnings e lifecycle encerrado.
+  Sync da apresentação: treino média 0,110 ms / pico 2 ms / 590 objetos finais;
+  hunt média 0,126 ms / pico 2,9 ms / 594 objetos. Callback rAF na hunt teve picos
+  115,4 ms (1x) e 67,7 ms (4x): continua sendo gap de profiling, não FPS medido.
+
+## Publicação e QA público concluídos
+
+Runtime: 88d3fc6256666038b0581c0674717cb20e45e79c, commit/push normal para
+origin confirmado por ls-remote; worktree limpa e local=remoto. PR #3 continua
+aberta, sem merge. CI push e deploy PASS:
+https://github.com/silvamarcello1-art/tactical-hunt-lion-temple/actions/runs/39311311231
+CI PR PASS:
+https://github.com/silvamarcello1-art/tactical-hunt-lion-temple/actions/runs/39311319743
+Logs confirmam 231 unitários/36 E2E em ambas; push 36 E2E em 28,9 min, PR em
+22,4 min. A retomada do ambiente foi posterior à conclusão remota; não houve
+alteração de código durante a espera. Manifest público confirmado em 19/10,
+após 23:00 UTC, no SHA exato 88d3fc6, não no WIP anterior.
+
+Preview: https://silvamarcello1-art.github.io/tactical-hunt-lion-temple/?training=1&v=88d3fc6
+Build compilado local no base path Pages, com manifest 88d3fc6, passou treino e
+hunt normal. Smoke público real-clock também PASS: parede/campo/colisão/burning,
+pausa/expiração/reset e três treinos, 1520 eventos, economia inalterada. Zero
+console, overlaps, out-of-bounds, reservas, projéteis/condições/VFX residuais.
+Screenshot mvp2b2-public-runes.png inspecionado; bot/party/kit e runas visíveis.
+Hunt pública normal 1x→4x: vitória em 52350 ms lógicos, 19 kills, 4240 XP,
+1489 ouro, um Boss Token; zero erros/warnings e lifecycle encerrado.
+
+Amostras públicas: apresentação treino média 0,080 ms/pico 0,9 ms/590 objetos;
+hunt 0,079 ms/1,3 ms/594 objetos. Callback rAF teve pico 59,7 ms em 1x e 45,1 ms
+em 4x. Não é FPS medido ou prova de ganho de renderização. Arte permanece
+blockout, teclado físico/NumLock e aprovação humana de balanceamento são gaps.
+
+Fechamento documental posterior usa [skip ci], sem mudar runtime/dependências;
+não confundir HEAD documental com SHA servido. Não repetir gates completos sem
+alteração de runtime. Próxima etapa está em NEXT_TASK, sem iniciar rede/Wheel
+inteira incidentalmente. Não há release estável aprovada por esta entrega.
+Computer Use nativo não foi usado para contornar a interrupção anterior; o QA
+executa testes do próprio repositório em contexto isolado do navegador.
+Não houve merge, Sites, force push, mudança de permissões ou Helper individual.
+
+## Histórico — checkpoint parcial anterior
+
+# Checkpoint parcial — MVP 2B.2 — 19/10/2026
+
+Base local/origin 41477b948bdbda6079477ffb2163c01211b9f494, limpa na entrada;
+branch feature/gameplay-first-mvp2a, base visual 58d9720. Fetch/health confirmados.
+Usuário escolheu treino local contra bot, não PvP online. Sem backend, Helper
+individual, merge, force push, Sites ou novas permissões.
+
+## Concluído no código
+
+- RuneSystem/data/runes, comando rune, charges/cooldown/range/LoS e terreno de
+  Magic Wall; Fire Field walkable com entrada/burning fixo sem crítico/dodge.
+- Scheduler com prazos de expiração/DoT, cleanup de sessão e eventos próprios.
+- Treino Party × Bot no mesmo CombatEngine; base stats, Manual, sem XP/gold/
+  drops/Boss Tokens/forja/Loop. Stores econômicos não recebem eventos de treino.
+- Targeting 4/5/clique/ESC, UI do kit, pulsos/fade próprios no Pixi, input recente
+  por eixo e revalidação de quinas/footprint em passos comprometidos de treino.
+- Drenagem batch evita cópias incrementais descartadas; API ao vivo ainda clona.
+  Experimento heap A* foi retirado, não melhorou cenário real; A* original intacto.
+- Contrato/fontes/limites e plano de magias/passivas/Wheel em TACTICAL_RUNES.
+
+## Parcialmente concluído / bloqueio da sessão
+
+Typecheck passou. Baseline inicial: 216/216 unitários e build aprovados.
+Novos testes: RuneSystem 12/12 e rota congelada 1/1 aprovados em casos isolados;
+três E2E iniciais aprovaram runas, colisão, burning, pausa, expiração, reset,
+isolamento econômico e resoluções. Depois o caso de vitória foi expandido para
+três treinos e screenshot; essa versão ainda exige execução completa.
+
+Gates completos NÃO verdes: rodadas tiveram 226/227 e 228/229 com timeout de 5s
+em GameplayPolish (frame equivalence), sem divergência de resultado. Após retirar
+heap, caso isolado 4025 ms; baseline Git 41477b9 no mesmo teste 4021 ms. Não houve
+alteração de timeouts, assertions antigas ou snapshots. Profiling A/B confirmou
+hash completo edcf9f6d0aa4488bda430a900d74003401d5f924d48fc6b5627da8a5f87a554b
+para a seed 803, batch e frames 73/1000. Não é prova de melhoria de FPS.
+
+Última execução terminal 66046 estava ativa: typecheck passou e Auto baseline
+24 cenários passou (35,4s); depois um teste antigo de tiles em CombatEngine
+excedeu 5s (5988 ms). Os gates seguintes são fail-fast; ler o resultado final.
+Rodadas anteriores não chegaram ao build/E2E completos por causa dos unitários.
+
+Playtest manual interrompido pela skill Computer Use: a ferramenta não conseguiu
+confirmar com segurança a URL da janela do Edge e encerrou Computer Use neste
+turno. Não emitir mais inputs nem contornar o bloqueio. Edge foi aberto numa
+nova guia, sem navegação/entrada de texto/click no jogo. Nenhum save apagado.
+
+## Não iniciado
+
+Catálogo inteiro do Tibia atual, conversão de passivas/Wheel, Paladin/Monk,
+Energy/Poison Field, crafting/supplies persistentes e PvP online. Valores de
+runas são parâmetros de treino documentados, não paridade numérica certificada.
+Publicação 2B.2 não realizada. Último runtime verificado em 10/10 era d51361c.
+
+## Arquivos e continuação
+
+Runtime: CombatEngine/RuneSystem, MovementSystem/OccupancyGrid, PlayerCommand/
+PlayerControls/PlayerInput/InteractionState/PlayerControlPort, events/types,
+PixiRenderer/CombatPresentationSystem, main/style e data/runes/training.
+Testes: RuneSystem.test, Pathfinder.test e tests/e2e/runes.spec. Diagnósticos
+read-only: scripts/profile-grid.mjs e baseline-vitest.config.mjs. Documentos:
+TACTICAL_RUNES, ARCHITECTURE, PLAYER_CONTROL, COMBAT_PRESENTATION, ART_DIRECTION,
+MVP_ROADMAP, DECISIONS, CURRENT_STATE, NEXT_TASK, SESSION_CHECKPOINT e CHANGELOG.
+
+Próximo comando recomendado: pnpm health; depois ler saída da sessão 66046 e
+executar os gates da implementação, sem elevar limites. Retomar QA manual em
+nova sessão somente com URL reconhecida. Publicar apenas após validação verde.
+Checkpoint WIP com [skip ci] evita deploy automático de código ainda em QA.
+
+## Histórico — última entrega aprovada/publicada
+
+# Checkpoint — MVP 2B.1 — retomada 10/10/2026
+
+Branch `feature/gameplay-first-mvp2a`; entrada local/origin
+`7062c5d872e4d43f7a61a2c06ad2b1389d0f2812`, upstream confirmado, worktree limpa
+antes desta implementação. Origin GitHub correto; base visual 58d9720. Nenhuma
+alteração alheia descartada, nenhum Helper/Sites/merge/force push.
+
+Concluído: bindings estáveis, foco/targeting/self-heal, oito direções físicas,
+Assistido por herói/persistência de booleans, projéteis contínuos, prazos lógicos,
+party/slots/passivas compactos, dois inimigos/composições e debug opt-in.
+Preservados inventário, recibos, RNG isolado e troca da reserva com mochila cheia.
+
+Auditoria de publicação anterior: push 37353880622 falhou no timeout total do
+cenário mouse-first (27/28 E2E passaram); PR 37353885091 passou. Deploy pulado;
+manifest público ainda 056a743, não 8e2a309. Não atribuir esse site ao código novo.
+
+Gates em 10/10: health, typecheck, 216/216 unitários (17 arquivos), build
+de 766 módulos e reprodução de arte com hashes idênticos aprovados. Playwright
+33/33 aprovados (8,2 min, um worker); diff --check aprovado, diff completo revisto.
+Instalação frozen-lockfile também aprovada; nenhuma dependência/lockfile alterada.
+Vitest serializa arquivos para evitar contenção de CPU: nenhum timeout/assertion
+existente ampliado. Novos fixtures de teclado verificam origem livre e reinício
+por direção; fixture antigo de obstáculos usa roster antigo (mesmos asserts).
+Sem alterações de snapshots de combate. Regra nova isolada por `polishedRules`.
+
+Correção causal final: no terceiro loop progressivo, Sorcerer morria enquanto
+Druid tinha mana mas LoS de cura bloqueada. Auto Druid agora busca tile seguro e
+alcançável de cura antes da ofensiva; Assistido não move. Três ciclos unitários
+52350/50850/46350 ms, todos com três heróis vivos. Assert E2E original preservado.
+
+Manual 10/10, save existente Lv22/23 preservado: 1x→4x, Loop OFF, vitória em
+37s lógicos, 19 kills, 4240 XP, 1505 gold e 1 Boss Token real. Ao final zero
+overlap/OOB/reservas/projéteis/telegraphs/tweens/resíduos, três heróis. Amostra
+syncPresentation média 0,174 ms/máximo 3 ms, 594 objetos finais, pico 93 objetos
+visuais ativos.
+E2E de apresentação da rodada final: média 0,153 ms/máximo 3,8 ms,
+594 objetos finais/pico 98 objetos visuais ativos.
+São amostras diferentes, não FPS nem prova de ganho sobre a versão anterior.
+Erros antigos da aba ao faltar servidor desapareceram após startup/reload;
+filtrar console pelo timestamp desta sessão, não atribuí-los ao novo combate.
+Manual: Digit1 Druid heal_friend, Digit1 Sorcerer flame_strike e Digit2 Knight
+berserk resolveram os IDs corretos; mana foi debitada uma vez. ESC cancelou
+targeting; quatro estados ON/OFF legíveis, alvo morto sem autoaquisição; Numpad4
+moveu Sorcerer 5:12→4:12 mantendo Assistido. Latência observada desse tap 185,6 ms,
+uma amostra com execução de gates concomitante, não benchmark comparável.
+Smoke isolado real com scripts/qa-preview.mjs (1x→4x): vitória em 52s, 19 kills,
+4240 XP, 1489 gold, um Boss Token, cura 1237; zero erros/avisos e lifecycle limpo.
+Custo de execução de callbacks rAF (update/render/UI, não FPS): 1x, 3684 amostras,
+média 2,034 ms/máximo 143 ms; 4x, 2508 amostras, média 2,414 ms/máximo 84 ms.
+Há picos a perfilar; não foi feita comparação controlada com a versão anterior.
+Playtest continuou até cinco ciclos concluídos (incluindo teste de modos e três
+loops Auto posteriores). Loop OFF encerrou normalmente; três unidades e zero
+resíduos/reservas/projéteis/overlap/OOB ao final. Nenhum save foi apagado.
+Novo E2E inicialmente contou o intervalo fechado de 250 ms como um tick; dois
+eventos eram de ticks distintos (250/500). Corrigido para exigir uma ação por
+timestamp e categorias permitidas; caso isolado e suíte completa passaram.
+
+Evidência inicial: seis hunts 803/811/814, wave ON/OFF, seis vitórias, zero overlap,
+OOB e reservas/projéteis/perigos órfãos. Timeline exata em batch e frames 73/1000.
+Numpad testado no Edge via protocolo físico com key numérico e key de navegação;
+a luz/estado físico NumLock de um teclado real não pode ser alternada neste
+ambiente. Esse playtest físico permanece como limitação explícita.
+
+Código commitado/pushed: `d51361c0b822fa69d1e23d36ffd7e5b207c03462`;
+local = origin confirmado, worktree limpa após commit. PR #3 atualizada.
+CI push `38090057573` e PR `38090060114` concluídos com sucesso. O run do push
+validou 216 unitários, 33 E2E (27,4 min no runner Windows), ambos os builds,
+arte reproduzível e diff; deploy Pages aprovado. Nenhuma proteção alterada.
+Smoke do build:preview no caminho real /tactical-hunt-lion-temple/ confirmou
+version.json nesse SHA, vitória em 52s, 19 kills, 4240 XP, 1489 gold e um Boss Token.
+Zero erros/avisos, overlap/OOB/reservas/projéteis/VFX residuais; três heróis vivos.
+Callbacks rAF compilados: 1x, 3644 amostras, média 2,207 ms/máximo 127,5 ms;
+4x, 2214 amostras, média 2,907 ms/máximo 130,3 ms. São custos de callbacks,
+não FPS; picos permanecem como investigação futura, sem comparação controlada.
+
+Publicação confirmada em 10/10: version.json público retornou exatamente
+`d51361c0b822fa69d1e23d36ffd7e5b207c03462`. Smoke isolado 1x→4x no Pages:
+vitória em 52s, 19 kills, 4240 XP, 1489 gold, um Boss Token e cura 1237.
+Zero erros/avisos, overlap/OOB/reservas/projéteis/telegraphs/tweens/resíduos;
+três heróis vivos e zero divergência de máscara/sync. 594 objetos finais,
+pico 97 objetos visuais ativos; syncPresentation média 0,108 ms/máximo 3,5 ms.
+Callbacks rAF públicos: 1x, 4016 amostras, média 1,538 ms/máximo 123,6 ms;
+4x, 3094 amostras, média 1,660 ms/máximo 60,3 ms. Não são FPS nem comparação
+controlada; picos continuam pendentes de profiling. Drops de equipamento variam
+por sessão no RNG de recompensas isolado, sem mudar o resultado do combate.
+CUA conferiu Druid/slots/Assistido com ambos toggles ON no site novo; voltou a
+Auto sem iniciar combate, apagar saves ou alterar preferências persistentes.
+Evidências ignoradas, fora do bundle: test-results/mvp2b1-public-gameplay.png e
+mvp2b1-public-victory.png. Preview: https://silvamarcello1-art.github.io/tactical-hunt-lion-temple/
+
+Este fechamento documental é um commit separado com [skip ci], sem alteração
+de runtime; o SHA servido e validado é d51361c, não o HEAD documental posterior.
+Nenhum merge estável ou envio a Sites. Próximo passo: playtest físico NumLock,
+aprovação da arte/balanceamento e profiling; só então planejar 2C. Gates locais
+e remotos encerrados; não repetir sem mudança de código.
+
+## Histórico — checkpoint MVP 2B
+
+# Checkpoint atual — MVP 2B (05/10/2026, em validação)
+
+- Branch: `feature/gameplay-first-mvp2a`; ponto inicial local/remoto `bf8e823f8a9329a9cb42ddd460b6ce467b1e7ab2`.
+- Implementado no worktree: drops determinísticos isolados do RNG de combate, inventário com IDs/stack/reserva, equipamento por vocação, stats canônicos, forja +1 atômica, persistência local versionada, drawer de comparação e relatório real.
+- Equipar/forjar somente entre hunts com Loop OFF. Saves inválidos são preservados; recompensas pendentes bloqueiam novas hunts e transações até recuperação.
+- Novos arquivos: EquipmentStore/test, Equipment, EquipmentDrops, items, EquipmentPanel, ItemIcons, E2E equipment e EQUIPMENT_AND_LOOT. Integrações: CombatEngine, eventos, ProgressionStore, PlayerControls, main/style e E2E existentes.
+- Gates em 01/10: health, TypeScript, `pnpm exec vitest run` (183/183 em 16 arquivos), build (765 módulos), Playwright (27/27 em 5,6 min, um worker) e diff --check aprovados. Em 30/09 houve timeout de teste antigo/RPC; a nova rodada passou mantendo todos os limites/assertions/snapshots originais. Exigir CI verde e manifest conferido antes de considerar publicado.
+- Ajustes finais validados: pagehide preserva arena em saída cancelada; relatório suspende reinício do Loop; loot varia deterministicamente por sessão. Teste de falha de storage aguarda um drop real (1 s não garantia morte no nível 1).
+- Manual em 01/10: vitória equipada em 32 s lógicos, 17 mortes, 4.240 XP, 1.512 gold e Boss Token real. Nova alternativa Martelo versus Gume +1: -20 ataque/+12 defesa; mochila 24/24 preservou excedente na reserva. Forja +1 e reload já verificados. Amostra real de syncPresentation: média 0,046 ms, máximo 2,1 ms; 594 objetos, zero VFX/resíduos/reservas/overlap/OOB ao final. Não é medição de FPS.
+- Commit/push confirmados: `dca53395721fa0e1e22d85a7ed2f7b87cb9d9276`, local = origin, PR #3 aberta. Diff revisto; README/contratos/roadmap atualizados. Nenhum merge/Sites.
+- CI de push/deploy `36815714472` e PR `36815717660` cancelados antes da publicação: o playtest revelou equipamento preso na reserva com mochila cheia. Não representam aprovação final.
+- Correção: equipar diretamente da reserva, trocando o item anterior para ela quando a mochila está cheia, numa gravação atômica. Testes específicos aprovados: 17 unitários de equipamento e E2E de mochila cheia/reload; suíte completa em execução. Manual confirmou comparação, equipamento da reserva e persistência após reload.
+- Próxima verificação: finalizar gates da correção, commit/push, acompanhar novo CI e verificar https://silvamarcello1-art.github.io/tactical-hunt-lion-temple/version.json.
+- Retomada 05/10: local/origin continuam dca5339; alterações preservadas. TypeScript, 184/184 unitários com um worker e build aprovados. Nenhum timeout/assertion alterado; a execução concorrente de 01/10 havia excedido 5 s no teste antigo de equivalência de timeline.
+- Manual 05/10: vitória equipada em 32 s, 17 mortes, 4.240 XP, 1.519 gold, 1 Boss Token e console sem erros. Troca direta Couraça da reserva por Manto equipado manteve mochila 24/24 e nove itens na reserva; comparação mostrou +6 defesa/+80 HP/-8 magia/-80 mana. Sem exclusão de dados ou reset de progresso.
+- Gates finais 05/10: health, TypeScript, 184/184 unitários (um worker), build, 28/28 E2E (5,1 min, um worker), diff --check aprovados; diff completo revisto. Amostra manual syncPresentation média 0,051 ms/máximo 6,1 ms, zero overlap/OOB/reservas/resíduos. Commit/push da correção e CI são o próximo passo; ainda não afirmar publicação.
+- Entrega da correção 05/10: commit 8e2a309f07a0521ceed02e265395df56acdb3600 enviado; HEAD local = remoto e worktree limpo confirmados antes deste registro documental. PR #3 atualizada; sem merge.
+- CI em andamento: push/deploy https://github.com/silvamarcello1-art/tactical-hunt-lion-temple/actions/runs/37353880622 e PR https://github.com/silvamarcello1-art/tactical-hunt-lion-temple/actions/runs/37353885091. Última observação do push: instalação do Edge após gates unitários/arte. Ainda sem confirmação de deploy/manifest; preview não deve ser apresentado como versão nova.
+- Próximo comando: consultar jobs do run 37353880622. Se falhar, ler logs/trace antes de alterar código; se aprovado, conferir version.json e smoke público. Este checkpoint documental não altera o código testado nem requer republicação própria.
+
+## Histórico anterior — Mouse-first / Clean HUD / Encounter Depth
+
+Data: 26/09/2026. Branch: feature/gameplay-first-mvp2a.
+Base conferida: origin/feature/visual-identity-foundation =
+58d97203a7666e1f5ed3d0a6040bc2d95c54ab38.
+Histórico dos checkpoints anteriores permanece no Git.
 
 ## Concluído
 
-- Camada `CombatPresentationSystem` entre eventos e PixiJS.
-- Timeline visual baseada no relógio lógico do `EventPlayer`.
-- Movimento tile a tile, sem drift, com snap seguro em conclusão/cancelamento.
-- Facing cardinal e state machine visual por entidade.
-- Melee com windup, lunge interno ao tile, trace, impacto e recovery.
-- Projectiles interpolados por toda a sequência autoritativa de `pathTiles`.
-- Waves e telegraphs baseados nas máscaras lógicas, correlacionados por `castId`.
-- Challenge com footprint real e feedback de aggro existente.
-- Feedback próprio de damage, critical, heal e dodge, com stacking.
-- Footpoint, sombra de contato, y-sort e separação de UI das entidades.
-- Layers dedicadas a telegraphs, shadows, entities, effects, projectiles e UI.
-- Pools para floating texts, projectiles, telegraphs e impactos simples.
-- Sync debug e atributos E2E de posição, facing, estado, masks, pools e resíduos.
-- Abstração `AnimationSet` para futuros sprite sheets próprios.
-- Estados explícitos `attack_recovery` e `dodging`, inclusive em saltos grandes
-  do relógio lógico.
-- Debug com bounds, progresso, target e y-sort; custo médio/máximo da
-  apresentação exposto para auditoria.
-- 33 testes unitários específicos e 2 novos cenários E2E.
+- Preservados PixiJS, motor incremental, grade autoritativa e arte dos heróis.
+- Mouse: chão MoveTo (último destino vence), seleção, engage por botão direito,
+  Look por chord nas duas ordens; consumo exclusivo, sem clique através do HUD.
+- Correção real de browser: pointerdown não entrega o segundo botão; roteamento
+  usa mousedown/up e bloqueia picking duplicado de Pixi.
+- Auto autônomo; Manual somente ordens/casts explícitos; Assisted espera engage
+  e para ao morrer o alvo. Seleção não altera modo. WASD assume Manual.
+- Três slots reais, magias/ícones originais, cura disponível mesmo com inimigo
+  selecionado, pausa/velocidades e cooldown no mesmo relógio.
+- HUD compacto, party mínima, A/M/S, mundo proporcional e painéis em drawers.
+- Quatro perfis: bruiser, hunter, flanker e caster. Orientação/candidatos lógicos
+  pontuados deterministicamente, cadence de 1500 ms e recuperação de linha de tiro.
+- Boss com fase abaixo de 50% HP e Queda da Coroa: preaviso 1250 ms, impacto,
+  tiles vazios bloqueados por 3000 ms, revisão da grade, revalidação e restauração.
+- Map state limpo após reset/floor/loop; origens ocupadas e paredes preservadas.
+- Somente perigo especial tem pretelegraph; VFX originais em camadas/pools.
+- Dois sprites originais adicionais e relevos do templo; oito atores no manifesto.
+- Progressão local já presente no worktree foi preservada/integrada, não descartada.
+- Build exclui 32 cópias de referências legadas de dist. Fontes em public intactas.
 
-## Validação registrada
+## Gates locais
 
-| Gate | Resultado |
+| Gate | Evidência |
 |---|---|
-| `pnpm run typecheck` | aprovado |
-| `pnpm exec vitest run` | 124/124, 9 arquivos |
-| `pnpm run build` | aprovado, 741 módulos |
-| Playwright/Edge | 15/15, 1 worker, 4,6 min no gate final |
-| Hunt manual 1x | vitória, 60.106 ms lógicos |
-| Hunt manual 2x | vitória, 60.113 ms lógicos |
-| Hunt manual 4x | vitória, 60.114 ms lógicos |
-| Três loops | aprovados, sem duplicação |
-| Erro máximo de sync | 0 px |
-| Divergência de masks | 0 |
-| Logical overlaps | 0 |
-| Visual overlap warnings | 0 |
-| Projectiles/telegraphs órfãos | 0 |
-| Display objects residuais | 0 |
-| Máximo visual observado manualmente | 73 objetos ativos |
-| Pool manual observado | 13 floating texts criados e reutilizados |
-| Console do navegador | 0 erros, 0 warnings |
+| Instalação | pnpm install --frozen-lockfile, sem alteração do lockfile |
+| TypeScript | aprovado |
+| Vitest | 167/167 em 15 arquivos |
+| Build | aprovado, 759 módulos |
+| Playwright/Edge | 24/24, um worker, 5,0 min na rodada final |
+| Stress Auto | 24 combinações 803–814 / wave ON-OFF, execução integral repetida |
+| Stress controles | 24 hunts mistas, 24 vitórias, sem falhas de integridade |
+| Loop / resoluções | três loops; 1366×768, 1600×900, 1920×1080 |
+| Mouse | três tamanhos, chord, HUD, native menu boundary, destino mais recente |
+| Integridade | zero overlaps, OOB, reservas órfãs, resíduos e mask mismatch nos cenários |
+| Manual visual | hunt com 17 kills e boss reward; console sem erro/warning |
+| Revisão | diff revisto; git diff --check aprovado |
 
-## Commits
+Novo ruleset muda intencionalmente os resultados históricos: roster, magias,
+IA e boss não são mais os do MVP 1C. Hashes antigos continuam no histórico;
+novo snapshot guarda SHA-256 de todo HuntResult/timeline, além dos resumos.
+Não atualizar snapshots para ocultar uma regressão.
 
-- `1c10ac4` — `refactor: introduce combat presentation timeline`
-- `da9ff5c` — `feat: render tile movement facing and unit states`
-- `22fed3a` — `feat: present melee ranged and spell actions`
-- `7421cc5` — `feat: render directional waves and telegraphs from logical masks`
-- `02e642d` — `perf: stabilize combat feedback layering and pooling`
-- `78ea4a0` — `test: cover combat presentation invariants`
-- `e44e999` — `perf: pool combat projectiles telegraphs and impacts`
-- `4928910` — `docs: document combat presentation architecture`
-- `552e598` — `chore: add autonomous project health protocol`
-- `56876d4` — `feat: harden combat presentation states and diagnostics`
+Amostra headless Edge 1366×768/4x: syncPresentation médio ~0,082 ms, máximo
+~2,4 ms; 594 objetos ao final, pico de 97 objetos visuais ativos, 81 sprites
+de efeito criados/reutilizados, 306 recálculos de caminho e 27 decisões táticas.
+São medidas desta execução, não promessa de FPS ou capacidade de PvP massivo.
 
-## Não iniciado / fora do escopo
+## Arquivos principais alterados
 
-- Arte definitiva e sprite sheets próprios completos.
-- Animações cardinais completas dos três heróis.
-- Áudio, camera shake e particles complexos.
-- Helper individual, inventário, equipamentos, progressões, backend e market.
-- Merge e publicação.
+CombatEngine, eventos/tipos, PlayerControls/Port/Command, main, GameplayHUD,
+index/style, abilities/actionBar/config/encounters/worldDescriptions,
+DirectionalTactics, TemporaryTerrain, Progression/Store, PixiRenderer,
+OriginalEffects, DisplayObjectPool, SpriteDefinition e gerador/manifesto/assets.
+Testes: EncounterDepth, MouseGesture, autoBaseline + snapshots, controles,
+progressão, sprites e E2E. Scripts/package: exclusão de referências do build.
+Docs: CURRENT_STATE, NEXT_TASK, PLAYER_CONTROL, COMBAT_PRESENTATION,
+ARCHITECTURE, CHANGELOG e instrução de baseline em AGENTS.
 
-## Estado para revisão
+## Limites / não iniciado
 
-O MVP 1D está funcional e os gates foram aprovados. A branch deve passar por
-revisão independente antes de qualquer merge. O Helper continua pausado até a
-aprovação humana do MVP 1D.
+- Câmera fixa; pan/zoom interativo e massa de jogadores ainda não implementados.
+- Interface desktop, largura mínima de 560 px; mobile estreito requer outra rodada.
+- Arte ainda blockout original. Sem backend, rede, PvP, quests ou inventário real.
+- Helper individual e sua branch continuam intocados.
+- Nenhum merge/force push. Publicação estável não autorizada por exceção.
+- Consulta ao chatgpt.site foi rejeitada pela revisão automática devido à regra
+  contra Sites. Nenhum envio à origem Sites; não contornar por outro nome/URL.
+
+## Entrega e continuidade
+
+### Estado final da retomada de 30/09
+
+- Código validado e enviado: `056a743bf9417edc7b29da0433e61e22023f1e4c`.
+- Local: 167/167 unitários, 24/24 E2E (5,0 min), typecheck, build e diff check.
+  Os timeouts locais transitórios da rodada anterior não se repetiram.
+- CI push `36526442306`: validate aprovado, 167 unitários, 24 E2E (19,6 min),
+  build, build:preview, diff check e upload do artifact aprovados.
+- CI PR `36526446097`: aprovado; PR #3 continua aberto, sem merge.
+- Bloqueio anterior de allowlist resolvido com autorização explícita do usuário:
+  adicionada somente `feature/gameplay-first-mvp2a` (policy 61489770), mantendo
+  `recovery/antigravity-mvp1b` (60465899) e proteção branch_policy 66126927.
+- Reexecução somente dos jobs falhos do run `36526442306`, tentativa 2:
+  deploy `109758004341` aprovado com o artifact validado antes de expirar.
+- Manifest público version.json confirmou `056a743bf9417edc7b29da0433e61e22023f1e4c`.
+  URL: https://silvamarcello1-art.github.io/tactical-hunt-lion-temple/
+- Smoke público: Auto, 4x, Loop OFF; vitória em 47s lógicos, 17 mortes,
+  4.240 XP, 1.515 gold, 1 Boss Token, cura 1.232. Boss realmente morto.
+  Console sem erros/avisos; zero overlap/OOB/reservas pendentes/efeitos,
+  projéteis e tweens residuais. Sem merge, sem alteração do site estável.
+- Limite da ferramenta de navegador: cliques automatizados chegaram deslocados
+  no viewport; controles foram acionados por foco + Enter e verificados na UI.
+  Configuração aberta durante a tentativa foi cancelada sem salvar; gameplay
+  e o smoke não exigiram nenhuma mudança de código. Mouse já coberto pelos E2E.
+- Este registro altera somente documentação; CI não precisa ser repetido para
+  ele. O artifact validado permanece vinculado ao SHA de código acima.
+
+Entrega de gameplay enviada em 1dd6c573552abf811509f699d1172f5086be1219; PR #3.
+O primeiro CI dessa entrega passou os 167 unitários e 19 E2E, mas detectou duas
+corridas de testes: clicar depois da janela de 2s do loop e clicar em reiniciar
+depois da morte do boss. Não houve deploy nesse run (36247097005).
+O run do PR (36247139458) também expôs loop extra durante teste de idempotência
+e teclas da diagonal chegando em ticks diferentes. A idempotência agora desliga
+loop antes de iniciar; o chord é enviado com relógio congelado entre keydowns.
+Correção posterior somente na sincronização E2E: Clock do Playwright executa
+todos os frames e congela nas fronteiras para o clique real, sem mock do motor,
+skip, force click ou redução das verificações. Fades finais são avançados antes
+da contagem de resíduos. Demais cenários mantêm relógio real. Traces passam a ser
+preservados como artifact quando o CI falhar. Os 167 unitários foram revalidados
+isoladamente com um worker; timeout sob carga concorrente não motivou mudança
+em limites nem nas assertions. Uma rodada local foi interrompida por suspensão
+de rede do navegador (ERR_NETWORK_IO_SUSPENDED), exigindo nova rodada E2E limpa.
+Rodada limpa posterior: 167/167 unitários (um worker), 24/24 E2E em 6,8 min,
+typecheck, build e diff --check aprovados. Nenhuma alteração adicional em src/.
+Arquivos da correção: controlled-clock.ts, gameplay-shell.spec.ts,
+mvp0.spec.ts, player-control.spec.ts e .github/workflows/preview.yml,
+além deste checkpoint, NEXT_TASK e CHANGELOG.
+
+O run 36285078409 passou os unitários, mas estourou o orçamento total de E2E.
+Traces comprovam três loops concluídos, sem erros de console, e chamadas de
+250 ms custando até 1,54 s; clicks chegam a 8,43 s e teardown a 31 s no runner.
+Um trace continha 1300 JPEGs (55,6 MB), contra 2 MB de eventos/snapshots.
+Correção operacional seguinte: retirar somente o screencast contínuo do trace
+(preservar snapshots, ações, fontes e PNG de falha) e dobrar orçamento total
+apenas no CI. Timeouts de assertions/estados, cobertura e motor não mudam.
+Rodada local com essa configuração: 24/24 E2E aprovados em 6,8 min (exit 0),
+sem falhas no relatório final. Os 167 unitários e o build da mesma implementação
+de gameplay já estavam aprovados; esta correção não altera src/.
+
+Run 36487765160 (3a98e09): 167 unitários e 23/24 E2E aprovados; os três
+cenários de loop e todas as falhas anteriores passaram. Falha restante no teste
+de hotbar: leitura de lion-3 em (5,14), seguida de clique ~0,9 s depois, quando
+o monstro já estava em (5,13). O trace confirma MoveTo no chão, não seleção.
+Correção isolada: amostrar footpoint visual com Clock controlado, avançando
+frames reais para WASD/cast e também durante a pausa para verificar cooldown.
+Sem mudança em produção nem relaxamento de assertions. Deploy desse run pulado.
+Teste de hotbar corrigido: três execuções consecutivas aprovadas no Edge local.
+
+Push ce7b85f gerou run 36490592001, cancelado ainda na fila pelo PR
+36490597126 porque ambos usavam o grupo único feature-pages. Separar grupo
+de validação por PR do grupo serializado de deploy evita essa substituição.
+Todos os gates e a condição de publicação continuam iguais. Referência:
+https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/control-workflow-concurrency
+
+ee1b502: PR run 36490812435 aprovou 167 unitários, 24 E2E e ambos os builds.
+Push run 36490806945 falhou no limite total de 220 s do terceiro cenário de
+três loops, após as verificações de conclusão/loot; o mesmo teste passou no PR.
+Os três cenários duram ~210 s no CI. O orçamento especial de 360 s existia só
+no teste de progressão: agora é compartilhado pelos três, sem mudar limites
+de estados/assertions ou pular verificações. Correção de seleção passou no CI.
+Revalidações locais nesta retomada sofreram timeouts de simulação e RPC do
+Vitest (Node 24), além de perda temporária de DNS; não houve alteração de
+assertions do motor nem de seus timeouts. CI Node 22 aprovou esses unitários.
+Padronização dos loops validada localmente: typecheck, 3/3 cenários longos
+(1,5 min) e diff --check aprovados, sem mudanças de gameplay.
+
+O workflow preview.yml
+é a fonte do estado de publicação GitHub Pages. Confirmar deployment e version.json
+contra SHA remoto no post-flight; site estável permanece separado e não foi alterado.
+Link de preview configurado: https://silvamarcello1-art.github.io/tactical-hunt-lion-temple/
+
+Próximo comando recomendado: pnpm health (após git fetch origin --prune).
+Próxima tarefa: revisão humana do preview e balanceamento; depois um slice curto
+de exploração/objeto/NPC, conforme NEXT_TASK. Não reimplementar controles/grade.

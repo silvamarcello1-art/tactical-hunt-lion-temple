@@ -1,3 +1,150 @@
+## 2026-10-24 — consolidação visual, foco da party e push com aproximação
+
+- Janela15×11 comum, mapa36×18 do treino sem dependência de CSS, câmera/inversa
+  única e margens neutras; piso do templo alinhado aos centros lógicos.
+- Nativos/outfits.62, anchors preservados, nomes/HP/feedback calibrados.
+- Treino com selecionado somente Manual e aliados AI no foco explícito; seleção
+  e inspeção separadas do inimigo. Hunt preserva Auto/Assistido e economia.
+- Nova intenção cancela rota/approach/pré-commit; push distante caminha executor
+  por A* e revalida antes do push adjacente. Hold manual250ms, AI220ms.
+- Sem aumento de timeouts, baseline regenerado, arte protegida ou novo sistema
+  online. Gates/medidas/publicação reais em SESSION_CHECKPOINT.
+
+## 2026-10-21 — MVP2C: sprites publicados e smoke público aprovado
+
+- Runtime74b3306:CI push283unit/61E2E/build/diff e Pages aprovados;PR passou
+  após UMA reexecução integral autorizada,sem alterar código/testes/timeouts.
+- Públicos:38variantes de traje,3treinos/economia intacta,huntboss e party
+  Warrior/Druid/MageAddon2 até vitória;console e cleanup limpos,PNGs inspecionadas.
+- Cores seletivas/diagonais/camadas alpha continuam pendentes;preview,não release.
+
+## 2026-10-20 — MVP2C: novos trajes aplicados no mundo
+
+- 38atlas pixel art gerados/revisados:12trajes com base/addons1/2 e2DLC. Quatro
+ cardinais/16poses,RGBA/nearest-neighbour,pés fixos,margem para penas/cajados/capas.
+- Registro data-driven com IDs próprios;mesmo renderer/relógio/entidades,sem
+ alterar stats/alvo/controle/economia. Preview usa a mesma arte e cache limitado.
+- Addon2 conserva1 em atlas compostos;DLC não apaga nível da base. Máscaras de
+ cores continuam pendentes,não há tint global. Fontes/prompts em OUTFIT_ART_2C.
+- Testes ampliados para cada traje no mundo,arquivos/footpoint,38combinações e
+ vitória com party usando arte nova. Gates/publicação reais no checkpoint.
+
+## 2026-10-20 — MVP 2C: atelier de aparência com fallback explícito
+
+- Preview6ff5b24 publicado/verificado:CI279unit/48E2E/build/diff e smokes públicos
+  atelier/três treinos/huntboss aprovados;referências frontais continuam pendentes
+  de spritesheets/camadas/máscaras,não são novos outfits animados prontos.
+
+- Modal Outfits, catálogo12referências+3sprites originais aplicáveis,addons0/1/2
+  cumulativos e DLC independentes,preferências/paletas versionadas por herói.
+- Aplicação cosmética no Unit existente; sem alterações de engine/economia.
+  Preview cardinais/idle/walk/attack/cast do sprite real,nearest-neighbour.
+- Prancha frontal intacta só como referência. Novos sprites/addons animados e
+  máscaras5regiões PENDENTES; cores salvas não recolorem assets sem máscara.
+  Limites e contratos em docs/OUTFITS_2C.md; nenhum frame inexistente declarado.
+
+## 2026-10-20 — correção do bloqueio de equipamento
+
+- Navegar entre heróis do inventário não assume Manual nem altera a seleção de
+  combate. Antes, inspecionar Druid desativava sua cura na próxima hunt Auto,
+  derrotava a party e o E2E esperava vitória até o timeout. Estado de inspeção
+  isolado; nenhuma fórmula/save/loot alterada.
+- Regressão exige zero comandos/alteração de modo/seleção ao inspecionar e cobre
+  Auto/Manual/Assistido, foco ao fechar e vitória após equipamento/forja/reload.
+- Sem aumentar timeout, pular assertions ou importar sprites junto da correção.
+
+## 2026-10-19 — treino 2B.4 (São Paulo)
+
+- Hotbar unificada 1–9 no rodapé, sem descrição lateral; arena clara mais larga,
+  todo piso amarelo caminhável salvo obstáculos/runas reais.
+- Seleção controla apenas esse herói; companheiros Auto. Três bots de vocação
+  atacam por menor HP, perseguem e usam magia/cura/runas no motor existente.
+- Ícones/retratos próprios. Pacote assets_rtc vazio, nenhuma sprite Tibia integrada.
+- Contratos/limites em TRAINING_2B4; gates/SHA em SESSION_CHECKPOINT.
+
+## 2026-10-19 — treino 2B.3
+
+- Fechamento em20/10UTC: runtimebbd0fac publicado no Pages, CI push/PR e deploy
+  aprovados, manifest exato e smokes públicos verificados. Checkpoint doc/QA
+  posterior não muda o bundle. Evidências em SESSION_CHECKPOINT.md.
+
+- Confirmação do gesto de empurrar: botão esquerdo segurado e soltura num vizinho
+  livre, não7tiles de distância. Preview dos destinos vem do domínio; tecla8
+  continua alternativa. Holding não move/teleporta a criatura.
+
+- SD/Destroy Field reais no domínio de treino, grupos/cargas e projétil existente.
+- Push atrasado/revalidado por MovementSystem, hotkey8 e drag; Stop9. Digit1–3
+  magias,4–7 runas, Numpad movimento; sem slots fictícios ou controle de zoom.
+- Pixel art original maior para três heróis; mira do tile não seleciona hitbox
+  do sprite por engano. IDs/saves/footprint/cenário normal preservados.
+- Nove magias no perfil de referência, Heal Friend ally-only, grupos secundários
+  e Mana Buffer de treino. Não é Wheel completa/PvP online. TRAINING_2B3.md.
+- Resultados de gates/preview somente no checkpoint após execução/verificação.
+
+## 2026-10-10 — retomada MVP 2B.1
+
+- Código d51361c: CI push/PR e deploy Pages aprovados; manifest público no SHA
+  exato e smoke até boss verificados. 216 unitários/33 E2E; zero erros/resíduos
+  no smoke público. Fechamento documental separado não altera runtime servido.
+
+- Auto Druid busca linha de cura segura pelo MovementSystem quando um aliado
+  ferido está sem LoS; Assistido mantém movimento do jogador. Corrigida a causa
+  da derrota do Sorcerer no terceiro loop progressivo, mantendo o assert original.
+- E2E exercita as quatro combinações de assistência após engage, parada após
+  morte do alvo e novo engage explícito. Gates finais registrados no checkpoint.
+
+## 2026-10-05 — MVP 2B.1
+
+- Bindings data-driven Digit1–3 por herói, foco do gameplay, self-heal/targeting/ESC.
+- Numpad físico em oito direções, buffer limitado e Stop; Assistido mantém modo.
+- Auto Attack/Auto Magias independentes por herói, domínio validado/persistência sem ordens.
+- Cast explícito precede automação no mesmo orçamento; cooldown individual/grupo lógico.
+- Projéteis contínuos com endpoints autorizados e original-tile, sem homing/escada.
+- Deadlines lógicos entre decisões: completesAt/impactAt exatos, input só uma vez por tick.
+- Party fora da arena; HP/mana úteis, três ícones originais por vocação e passivas visíveis.
+- Bastião de Bronze e Balista Errante em duas composições; reforços sem inflação de loot/XP.
+- Debug opt-in e testes de geometria/assistência/numpad/roster/lifecycle; regressões preservadas.
+- Vitest serializa arquivos CPU-bound sem aumentar timeouts ou afrouxar assertions.
+- Inventário, forja, IDs/recibos/RNG e troca de equipamento da reserva intactos.
+- Gates e publicação efetivamente verificados são registrados em SESSION_CHECKPOINT.
+
+## 2026-10-01 — MVP 2B (em validação)
+
+- Inventário persistente, drops determinísticos, comparação e equipamento por vocação.
+- Forja +1 atômica; overflow em reserva; proteção contra replay e save inválido.
+- Equipar diretamente da reserva com mochila cheia preserva o item substituído;
+  falha ao salvar desfaz toda a troca, sem perda ou duplicação.
+- Drawer com bloqueio de input do mundo; relatório de drops reais e feedback compacto de Loop.
+- Roadmap atual 2B–2F; histórico anterior preservado e identificado.
+
+## 2026-09-30 — Preview público validado
+
+- GitHub Pages publicou `056a743` com artifact aprovado (167 unitários, 24 E2E).
+- Allowlist ampliada somente para a branch autorizada, preservando proteções.
+- Manifest e hunt pública até vitória verificados; sem merge ou alteração de Sites.
+
+## 2026-09-26 — Mouse-first combat, compact HUD and encounter depth
+
+- MoveTo autoritativo, engage por botão direito e Look por chord consumido.
+- AUTO independente da seleção; MANUAL explícito; ASSISTED condicionado ao alvo.
+- Três habilidades originais por herói, HUD mínimo e cooldown no relógio lógico.
+- Quatro papéis inimigos, orientação determinística e reposicionamento limitado.
+- Boss com fase desperta e escombros temporários reais com revalidação da grade.
+- Telegraph reservado a perigo especial; magias e projéteis originais em pools.
+- Progressão local existente preservada; oito atores originais e cenário legível.
+- Distribuição exclui assets de referência legados sem remover arquivos-fonte.
+- Novo ruleset documenta mudança intencional do baseline e mantém repetibilidade.
+- E2E de fronteiras transitórias usa relógio controlado (frames reais) para não
+  disputar com o timer de loop/boss no runner; CI preserva traces em falhas.
+- Traces sem filmstrip contínuo de WebGL; snapshots e PNG de falha mantidos.
+  CI tem orçamento total de cenário ajustado, sem ampliar limites de assertions.
+- Teste de hotbar amostra o footpoint visual com relógio controlado para não
+  clicar um tile abandonado pelo monstro entre chamadas do protocolo.
+- Validação do PR e publicação Pages usam filas separadas; PR não cancela mais
+  um push pendente. Deploys continuam serializados e condicionados aos gates.
+- Os três cenários de loops compartilham orçamento total explícito, mantendo
+  limites individuais e auditorias de integridade inalterados.
+
 ## 2026-09-20 — original visual foundation
 
 - Sessão composta em main.ts; PlayerControlPort desacopla input de Pixi.
@@ -197,3 +344,20 @@ alterados.
 - 16 testes unitários.
 - 4 cenários Playwright cobrindo controles, três loops e resoluções.
 - Documentação canônica consolidada em `docs/`.
+## 2026-10-19 — MVP 2B.2: treino tático local
+
+- Cenário Party × Bot selecionável, no mesmo motor; Manual inicial, kit gratuito,
+  sem progressão/loot/saldo/forja ou Loop automático.
+- Magic Wall/Fire Field por 4/5 + clique: range/LoS, cargas e exhaust de domínio;
+  parede reativa, burning não cumulativo, expiração e cleanup no relógio lógico.
+- Quinas/footprint revalidados em movimento comprometido no treino; inversão
+  rápida por tecla mais recente sem filas. Hunts/baselines anteriores preservados.
+- Efeitos próprios, testes e roteiro de fidelidade incremental em TACTICAL_RUNES.
+  Não é PvP online nem conversão completa de magias/passivas/Wheel do Tibia.
+- LoS percorre supercover sem materializar caminhos descartados, interrompendo
+  no primeiro bloqueio; verificações dinâmicas e hashes de combate preservados.
+- README com controles do treino e smoke real-clock reutilizável em
+  scripts/qa-training.mjs (funciona também no base path do GitHub Pages).
+- Fechamento: 231 unitários/36 E2E, CI push/PR e deploy aprovados. Runtime
+  88d3fc6 verificado no Pages; smoke público passou três treinos isolados e
+  hunt normal até o boss, sem erros de console ou resíduos de lifecycle.

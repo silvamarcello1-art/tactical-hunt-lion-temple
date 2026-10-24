@@ -11,6 +11,10 @@ const actors = [
   ['sorcerer','characters','#3d3f50','#45365a','#9ea7ba',false,false],
   ['lion-guard','creatures','#89764c','#3f4445','#c0a363',true,true],
   ['lion-oracle','creatures','#605a47','#4c5963','#b4ced0',false,true],
+  ['lion-hunter','creatures','#586450','#344e46','#82b69c',false,true],
+  ['lion-flanker','creatures','#644b52','#392e3d','#c68c93',false,true],
+  ['bronze-bastion','creatures','#7e693b','#443b2f','#d0ae64',true,false],
+  ['wandering-ballista','creatures','#4d6169','#2f3942','#97c7d6',false,false],
   ['hollow-regent','bosses','#615e53','#572c38','#b59b58',true,true],
 ];
 const definitions = [];
@@ -60,6 +64,10 @@ for (const [id,folder,metal,cloth,accent,heavy,feline] of actors) {
         }
         art += '</g>';
         if (heavy && !back) art += poly('M -18 -30 L -8 -33 -6 -17 -13 -12 -19 -19 Z',cloth);
+        if(id==='lion-hunter')art+='<path d="M -17 -40 Q -32 -26 -17 -10 L -17 -40" stroke="#bfa874" stroke-width="2" fill="none"/>';
+        if(id==='lion-flanker')art+=poly('M -16 -28 L -23 -38 -21 -21 -13 -17 Z','#c7b2b4');
+        if(id==='bronze-bastion')art+=poly('M -22 -45 L -6 -45 -6 -8 -14 -4 -23 -12 Z','#b19453')+poly('M -20 -41 L -10 -41 -10 -16 -16 -12 -20 -18 Z','#574b32');
+        if(id==='wandering-ballista')art+='<path d="M -20 -31 L 20 -31 M -18 -44 Q -26 -31 -18 -18 M 18 -44 Q 26 -31 18 -18 M -11 -4 L -21 2 M 11 -4 L 21 2" fill="none" stroke="#b7cbd0" stroke-width="3"/>';
         content += `<g transform="translate(${dir*64+32} ${(row+frame)*64+56})"><g transform="scale(${mirror*(profile?.78:1)} 1) translate(${lean} 0) rotate(${death*20}) scale(1 ${1-death*.45})">${art}</g></g>`;
       }
     }
@@ -67,11 +75,25 @@ for (const [id,folder,metal,cloth,accent,heavy,feline] of actors) {
   }
   await mkdir(resolve(root,folder),{recursive:true});
   await writeFile(resolve(root,folder,`${id}.svg`),`<svg xmlns="http://www.w3.org/2000/svg" width="256" height="${row*64}" viewBox="0 0 256 ${row*64}">${content}</svg>\n`);
-  definitions.push({id,entityType:boss?'boss':folder==='characters'?'character':'creature',spriteSet:`/assets/original/${folder}/${id}.svg`,frameSize:64,footAnchor:{x:.5,y:.875},visualWidth:64,visualHeight:64,scale:boss?1.15:1,facings,animations,shadowProfile:{width:boss?19:heavy?15:12,height:boss?6:4,alpha:.28},effectAnchors:{head:{x:0,y:-48},hand:{x:15,y:-28},chest:{x:0,y:-28}}});
+  definitions.push({id,entityType:boss?'boss':folder==='characters'?'character':'creature',spriteSet:`/assets/original/${folder}/${id}.svg`,frameSize:64,footAnchor:{x:.5,y:.875},visualWidth:boss?45:48,visualHeight:64,scale:boss?1.08:1,footprint:{logicalTiles:{width:1,height:1},safeHorizontalBounds:{left:-15,right:15},maxUpwardOverflow:boss?60:56,shadowBounds:{width:28,height:8},visualCollisionEnvelope:{x:-11,y:-15,width:22,height:16}},facings,animations,shadowProfile:{width:14,height:4,alpha:.28},effectAnchors:{head:{x:0,y:-48},hand:{x:15,y:-28},chest:{x:0,y:-28}}});
 }
 await mkdir(resolve(root,'manifests'),{recursive:true});
 await writeFile(resolve(root,'manifests/sprites.json'),JSON.stringify(definitions,null,2)+'\n');
 console.log(`Generated ${definitions.length} original SVG blockouts and manifest.`);
+const skillArt={
+  challenge:['#c7a566','<path d="M 12 29 Q 24 7 36 29 M 6 35 Q 24 0 42 35"/><circle cx="24" cy="31" r="4"/>'],
+  berserk:['#d7c29b','<path d="M 9 37 L 34 12 38 9 36 17 14 39 M 7 32 L 17 42 M 5 9 Q 38 0 43 32"/>'],
+  groundshaker:['#bca47b','<path d="M 25 5 L 18 21 29 29 20 43 M 12 13 L 6 23 14 32 M 39 16 L 33 29 42 40"/>'],
+  heal_friend:['#9ccc95','<path d="M 24 12 V 36 M 12 24 H 36"/><circle cx="24" cy="24" r="19"/>'],
+  strong_ice_wave:['#91b475','<path d="M 10 38 Q 19 32 25 17 M 24 25 Q 10 27 15 13 Q 26 9 24 25 M 26 19 Q 30 7 39 9 Q 41 24 26 19 M 8 14 L 4 10 M 12 7 L 9 3"/>'],
+  eternal_winter:['#b4c481','<path d="M 7 37 H 41 M 14 37 V 20 M 25 37 V 13 M 35 37 V 20"/><circle cx="14" cy="16" r="5"/><circle cx="25" cy="9" r="5"/><circle cx="35" cy="16" r="5"/>'],
+  flame_strike:['#e7a36c','<path d="M 5 39 L 38 8 M 27 5 L 43 5 43 21 M 6 30 L 12 39 M 15 20 L 22 28"/>'],
+  energy_wave:['#b7a6d2','<path d="M 7 24 Q 17 14 27 24 Q 36 34 43 24 M 12 12 Q 23 4 33 12 M 12 36 Q 23 44 33 36"/>'],
+  rage_skies:['#bba2dc','<path d="M 7 15 Q 5 7 16 7 Q 23 0 31 9 Q 43 5 43 18 H 7 M 21 20 L 14 30 24 29 20 42 M 36 22 L 31 34"/>'],
+};
+await mkdir(resolve(root,'ui'),{recursive:true});
+for(const [id,[color,art]] of Object.entries(skillArt)) await writeFile(resolve(root,'ui',`${id}.svg`),`<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48"><rect width="48" height="48" rx="3" fill="#18211d"/><g fill="none" stroke="${color}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">${art}</g></svg>\n`);
+for(const [id,art] of Object.entries({strong_ice_wave:'<path d="M 6 38 L 18 14 24 34 31 8 42 38 M 9 25 H 39 M 13 17 L 36 35 M 35 16 L 12 35"/>',eternal_winter:'<path d="M 24 4 V 44 M 4 24 H 44 M 9 9 L 39 39 M 9 39 L 39 9 M 17 5 L 24 12 31 5 M 17 43 L 24 36 31 43"/>'}))await writeFile(resolve(root,'ui',`training-${id}.svg`),`<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48"><rect width="48" height="48" rx="3" fill="#18212b"/><g stroke="#9fdaee" stroke-width="2" fill="none" stroke-linejoin="round">${art}</g></svg>\n`);
 await mkdir(resolve(root,'terrain'),{recursive:true});
 for (const [id,color,detail] of [
   ['floor-stone','#343b3d','<path d="M 2 2 H 30 V 30 H 2 Z M 3 4 H 27"/>'],

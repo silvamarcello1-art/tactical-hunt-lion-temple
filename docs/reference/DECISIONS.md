@@ -1,5 +1,15 @@
 # Decisões e dúvidas
 
+## ADR — 19/10/2026: treino de runas antes da rede
+
+Usuário escolheu arena local contra bot. Incremento 2B.2 reutiliza CombatEngine,
+sem backend, economia ou PvP entre contas. Não bloqueia/renumera 2C→2D→2E→2F.
+Treino normaliza atributos e isola recompensas. Magic Wall/Fire Field são o
+primeiro teste tático, com números de protótipo identificados. Magias/passivas/
+Wheel idênticas ao Tibia atual ainda exigem catálogo e referência versionada.
+Detalhes, fontes, custos de criação versus uso e aceite: TACTICAL_RUNES.md.
+Sprites/efeitos continuam próprios. Sem merge, Sites ou mudança de permissões.
+
 ## Decisões aceitas
 
 | ID | Decisão | Motivo |

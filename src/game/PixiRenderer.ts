@@ -1,3 +1,6 @@
+import { OriginalEffects } from './presentation/OriginalEffects';
+import {WORLD_VIEW,worldCamera,viewportPoint,type WorldCamera} from './worldViewport';
+import { abilityNames } from '../data/actionBar';
 import { assetUrl } from './assetUrl';
 import { SpriteLibrary } from './presentation/SpriteLibrary';
 import { spriteId, spriteAction, type SpriteDefinition } from './presentation/SpriteDefinition';
@@ -9,7 +12,7 @@ import {
   Graphics,
   Rectangle,
   Sprite,
-  Spritesheet,
+  TilingSprite,
   Text,
   TextStyle,
   Texture,
@@ -39,6 +42,8 @@ export type EntityVisualState = VisualAnimationState;
 
 type Unit = {
   body: Container;
+  visual: Container;
+  name: Text;
   ui: Container;
   shadow: Graphics;
   sprite: Sprite | AnimatedSprite;
@@ -58,6 +63,7 @@ type Unit = {
   maxMana: number;
   currentMana: number;
   hero: boolean;
+  alwaysShowName:boolean;
   definition: SpriteDefinition;
   animationStartedAt: number;
   animationKey: string;
@@ -76,6 +82,7 @@ type Tween = {
 type RendererOptions = {
   debugEnabled?: boolean;
   selectedHeroId?: string;
+  appearanceSprite?:(heroId:string)=>string;
 };
 
 export class PixiRenderer {
@@ -84,13 +91,57 @@ export class PixiRenderer {
   get result():HuntResult { return this.engine.result; }
   beforeTick?:(time:number) => void;
   readonly units = new Map<string, Unit>();
+  private readonly world=new Container();
+  private scenery?:TilingSprite;
+  private trainingGround?:Texture;
+  private viewportObserver?:ResizeObserver;
+  private camera?:WorldCamera;
+  private viewportSize={width:1,height:1};
+  private readonly cameraMask=new Graphics();
+  private cameraMaskSize='';
+  private rubble=new Map<string,Graphics>();
+  private runeVisuals=new Map<string,{graphic:Graphics;startedAt:number;runeId:string}>();
+  /** Picking uses rendered footpoints; commands still validate only logical tiles. */
+  pickEntity(clientX:number,clientY:number) {
+    const p=this.canvasPoint(clientX,clientY);
+    if(!p)return;
+    const alive=[...this.units.entries()].filter(([,u])=>u.currentHp>0);
+    const feet=alive.filter(([,u])=>Math.hypot(p.x-u.body.x,p.y-u.body.y)<=12).sort((a,b)=>Math.hypot(p.x-a[1].body.x,p.y-a[1].body.y)-Math.hypot(p.x-b[1].body.x,p.y-b[1].body.y));
+    if(feet.length)return feet[0][0];
+    return alive.filter(([,u])=>Math.abs(p.x-u.body.x)<Math.min(18,u.definition.visualWidth*u.definition.scale/2) && p.y>=u.body.y+(u.definition.effectAnchors.head.y-8)*u.definition.scale && p.y<=u.body.y+9*u.definition.scale)
+      .sort((a,b)=>b[1].body.y-a[1].body.y)[0]?.[0];
+  }
+  canvasPoint(clientX:number,clientY:number) {
+    const b=this.app.canvas.getBoundingClientRect();
+    return this.camera?viewportPoint({x:clientX,y:clientY},b,this.camera):undefined;
+  }
+  showDestination(tile:GridPoint) {
+    const marker=new Graphics().ellipse(tile.x*32,tile.y*32,8,4).stroke({color:0xbacfaf,width:1,alpha:.7});
+    this.effectLayer.addChild(marker);this.tween(450,p=>marker.alpha=1-p,()=>marker.destroy());
+  }
   readonly player: LiveEventPlayer;
+  private readonly aimTile=new Graphics();
+  private readonly pushHints=new Graphics();
+  showPushPreview(preview?:import('../combat/PushSystem').PushPreview){
+    this.pushHints.clear();if(this.parent)this.parent.dataset.pushDestinations=preview?JSON.stringify(preview.destinations):'';
+    if(!preview){this.pushHints.removeFromParent();return;}
+    if(!this.pushHints.parent)this.telegraphLayer.addChild(this.pushHints);
+    for(const {tile,ready} of preview.destinations)this.pushHints.rect(tile.x*32-15,tile.y*32-15,30,30).fill({color:ready?0x8ddac4:0xd77a69,alpha:ready ? .12 : .06}).stroke({color:ready?0x8ddac4:0xd77a69,width:1,alpha:.6});
+    this.pushHints.rect(preview.origin.x*32-15,preview.origin.y*32-15,30,30).stroke({color:0xedcf88,width:2});
+  }
+  showAim(tile?:GridPoint,ready=true){
+    this.aimTile.clear();if(this.parent)this.parent.dataset.aimTile=tile?`${tile.x}:${tile.y}:${ready?'valid':'invalid'}`:'';
+    if(!tile){this.aimTile.removeFromParent();return;}
+    if(!this.aimTile.parent)this.telegraphLayer.addChild(this.aimTile);
+    this.aimTile.rect(tile.x*32-16,tile.y*32-16,32,32).fill({color:ready?0x8ddac4:0xd77a69,alpha:.2}).stroke({color:ready?0xc8fff0:0xffa090,width:2});
+    this.aimTile.moveTo(tile.x*32-5,tile.y*32).lineTo(tile.x*32+5,tile.y*32).moveTo(tile.x*32,tile.y*32-5).lineTo(tile.x*32,tile.y*32+5).stroke({color:0xffffff,width:1});
+  }
 
   private floorText!: Text;
   private bossFill?: Graphics;
   private tweens: Tween[] = [];
   private readonly sprites = new SpriteLibrary();
-  private effectSheet!: Spritesheet;
+  private readonly effectSheet = new OriginalEffects();
   private tileTextures = new Map<string, Texture>();
   private readonly presentation = new CombatPresentationSystem();
   private readonly terrainLayer = new Container();
@@ -114,6 +165,7 @@ export class PixiRenderer {
   private destroyed = false;
   private selectedHeroId: string;
   private readonly debugEnabled: boolean;
+  private readonly appearanceSprite?:(heroId:string)=>string;
   private maskMismatchCount = 0;
   private maxActiveVisualObjects = 0;
   private presentationUpdateSamples = 0;
@@ -165,6 +217,11 @@ export class PixiRenderer {
     },
     32,
   );
+  private readonly spellEffectPool=new DisplayObjectPool<AnimatedSprite>(
+    ()=>new AnimatedSprite([Texture.EMPTY]),
+    sprite=>{sprite.removeFromParent();sprite.textures=[Texture.EMPTY];sprite.rotation=0;sprite.alpha=1;sprite.scale.set(1);},
+    256,sprite=>sprite.destroy(),
+  );
   private readonly tickerHandler = (ticker: Ticker) => {
     if (this.destroyed) return;
     const timelineWasRunning = this.player.isRunning;
@@ -176,6 +233,7 @@ export class PixiRenderer {
   };
 
   constructor(engine: CombatEngine, options: RendererOptions = {}) {
+    this.appearanceSprite=options.appearanceSprite;
     this.debugEnabled =
       options.debugEnabled ?? RENDER_CONFIG.arena.debugEnabled;
     this.selectedHeroId = options.selectedHeroId ?? 'knight';
@@ -231,7 +289,7 @@ export class PixiRenderer {
     this.entityLayer.sortableChildren = true;
     this.unitUiLayer.sortableChildren = true;
     this.overlayLayer.sortableChildren = true;
-    this.app.stage.addChild(
+    this.world.addChild(
       this.terrainLayer,
       this.telegraphLayer,
       this.shadowLayer,
@@ -241,6 +299,13 @@ export class PixiRenderer {
       this.unitUiLayer,
       this.overlayLayer,
     );
+    this.world.sortableChildren=true;
+    this.scenery=new TilingSprite({texture:this.tileTextures.get('floorStone')!,width:1,height:1});
+    this.scenery.tint=0x878d83;
+    this.app.stage.addChild(this.scenery,this.world,this.cameraMask);this.world.mask=this.cameraMask;
+    this.viewportObserver=new ResizeObserver(()=>this.resizeViewport());
+    this.viewportObserver.observe(parent);
+    this.resizeViewport();
     this.drawArena();
     this.targetRing.visible = false;
     this.shadowLayer.addChild(this.targetRing);
@@ -252,7 +317,7 @@ export class PixiRenderer {
         this.debugSyncLayer,
       );
     }
-    this.floorText = this.label('PREPARAÇÃO', 13, '#f0d77a');
+    this.floorText = this.label(this.engine.trainingMode?'TREINO LOCAL · 3 × 3':'PREPARAÇÃO', 13, this.engine.trainingMode?'#4b3b1d':'#f0d77a');
     this.floorText.position.set(18, 14);
     this.floorText.zIndex = 60;
     this.overlayLayer.addChild(this.floorText);
@@ -299,6 +364,7 @@ export class PixiRenderer {
   destroy() {
     if (this.destroyed) return;
     this.destroyed = true;
+    this.viewportObserver?.disconnect();
     this.player.dispose();
     this.tweens = [];
     this.units.clear();
@@ -311,10 +377,17 @@ export class PixiRenderer {
     this.projectilePool.clear((sprite) => sprite.destroy());
     this.telegraphPool.clear((graphics) => graphics.destroy());
     this.impactPool.clear((graphics) => graphics.destroy());
+    this.spellEffectPool.clear(sprite=>sprite.destroy());
+    this.rubble.clear();
+    this.runeVisuals.clear();
+    this.aimTile.removeFromParent();this.aimTile.destroy();
+    this.pushHints.removeFromParent();this.pushHints.destroy();
     this.bossFill = undefined;
     this.app.ticker?.remove(this.tickerHandler);
     try {
       this.sprites.destroy();
+      this.effectSheet.destroy();
+      this.trainingGround?.destroy(true);
       this.app.destroy(true, { children:true });
     } catch {
       // Pixi may not be fully initialized when a restart interrupts asset loading.
@@ -339,15 +412,44 @@ export class PixiRenderer {
         unit.selection.visible = id === heroId;
       }
     }
-    if (this.parent) this.parent.dataset.selectedHero = heroId;
+    if (this.parent) {this.parent.dataset.selectedHero = heroId;this.updateCamera();}
+  }
+
+  /** Uniform camera fit; every yellow tile is part of the authoritative arena.
+   * Any resize letterboxing uses neutral stone, never fake playable yellow. */
+  private resizeViewport() {
+    if(!this.parent||this.destroyed)return;
+    const bounds=this.parent.getBoundingClientRect();
+    const width=Math.max(1,bounds.width),height=Math.max(1,bounds.height);
+    this.viewportSize={width,height};
+    this.app.renderer.resize(width,height);
+    this.updateCamera(width,height);
+  }
+  private updateCamera(width=this.viewportSize.width,height=this.viewportSize.height){
+    const view=this.engine.arenaView;
+    const selected=this.presentation.entities.get(this.selectedHeroId)?.position??HUNT_LAYOUT_CONFIG.partyPositions[this.selectedHeroId as keyof typeof HUNT_LAYOUT_CONFIG.partyPositions]??HUNT_LAYOUT_CONFIG.partyPositions.knight;
+    const camera=worldCamera(width,height,view,selected),scale=camera.scale;
+    this.camera=camera;
+    const maskSize=`${camera.left}:${camera.top}:${camera.width*scale}:${camera.height*scale}`;
+    if(maskSize!==this.cameraMaskSize){this.cameraMask.clear().rect(camera.left,camera.top,camera.width*scale,camera.height*scale).fill(0xffffff);this.cameraMaskSize=maskSize;}
+    this.world.scale.set(scale);
+    this.world.position.set(camera.left-camera.x*scale,camera.top-camera.y*scale);
+    if(this.scenery){this.scenery.width=width;this.scenery.height=height;this.scenery.tileScale.set(scale);this.scenery.tilePosition.copyFrom(this.world.position);}
+    if(!this.parent)return;
+    this.parent.dataset.viewportScale=String(scale);
+    this.parent.dataset.camera=JSON.stringify(camera);
+    this.parent.dataset.partyFocus=this.engine.partyFocusTargetId??'';
+    this.parent.dataset.pendingApproaches=String(this.engine.pendingApproachCount);
+    this.parent.dataset.tileApparent=String(WORLD_VIEW.tileSize*scale);
+    this.parent.dataset.viewColumns=String(camera.width/32);this.parent.dataset.viewRows=String(camera.height/32);
+    this.parent.dataset.arenaWidth=String(view.width);this.parent.dataset.arenaHeight=String(view.height);
+    this.parent.dataset.arenaOrigin=`${view.x}:${view.y}`;
   }
 
   private async loadAssets() {
-    const [effects] = await Promise.all([
-      Assets.load<Spritesheet>(assetUrl('/assets/tibia/effects.json')),
-      this.sprites.load(),
-    ]);
-    this.effectSheet = effects;
+    await this.sprites.load();
+    if(this.destroyed) return;
+    this.effectSheet.create(this.app);
     const sources: Record<string, string> = {
       floorStone:'/assets/original/terrain/floor-stone.svg',
       floorOrnate:'/assets/original/terrain/floor-ornate.svg',
@@ -359,9 +461,30 @@ export class PixiRenderer {
         this.tileTextures.set(key, await Assets.load<Texture>(assetUrl(source)));
       }),
     );
+    if(this.engine.trainingMode){
+      const tile=new Graphics().rect(0,0,32,32).fill(0xd7c387);
+      tile.moveTo(1,1).lineTo(31,1).moveTo(1,1).lineTo(1,31).stroke({color:0x9b895d,width:1,alpha:.65});
+      for(let i=0;i<9;i++){const x=(i*13+5)%30+1,y=(i*7+3)%30+1;tile.rect(x,y,1+(i%2),1).fill({color:i%2?0xf4e4b1:0x9d8d62,alpha:.28});}
+      this.trainingGround=this.app.renderer.generateTexture({target:tile,frame:new Rectangle(0,0,32,32),resolution:1});tile.destroy();
+    }
+  }
+
+  private drawTrainingArena(){
+    const view=this.engine.arenaView;
+    const floor=new TilingSprite({texture:this.trainingGround!,width:view.width,height:view.height});
+    floor.position.set(view.x,view.y);
+    this.terrainLayer.addChild(floor);
+    const barriers=new Graphics();
+    for(const tile of HUNT_LAYOUT_CONFIG.blockedTiles){
+      const x=tile.x*32,y=tile.y*32;
+      barriers.roundRect(x-14,y-14,28,28,2).fill(0x9b8660).stroke({color:0x62553c,width:2});
+      barriers.moveTo(x-9,y-10).lineTo(x-9,y+10).moveTo(x+9,y-10).lineTo(x+9,y+10).moveTo(x-12,y-8).lineTo(x+12,y-8).stroke({color:0xd4be85,width:2});
+    }
+    this.terrainLayer.addChild(barriers);
   }
 
   private drawArena() {
+    if(this.engine.trainingMode){this.drawTrainingArena();return;}
     const terrain = new Container();
     terrain.zIndex = 0;
     const { walkableBounds,ceremonialPath } = HUNT_LAYOUT_CONFIG;
@@ -392,8 +515,8 @@ export class PixiRenderer {
         const tileSprite = new Sprite(this.tileTextures.get(key)!);
         tileSprite.anchor.set(.5);
         tileSprite.position.set(
-          x * TILE_SIZE + TILE_SIZE / 2,
-          y * TILE_SIZE + TILE_SIZE / 2,
+          x * TILE_SIZE,
+          y * TILE_SIZE,
         );
         tileSprite.width = TILE_SIZE;
         tileSprite.height = TILE_SIZE;
@@ -410,22 +533,22 @@ export class PixiRenderer {
 
     const frame = new Graphics()
       .rect(
-        5,
-        5,
+        5 - TILE_SIZE / 2,
+        5 - TILE_SIZE / 2,
         RENDER_CONFIG.arena.width - 10,
         RENDER_CONFIG.arena.height - 10,
       )
       .stroke({ width:10, color:0x3a2518, alpha:.96 })
       .rect(
-        TILE_SIZE - 1,
-        TILE_SIZE - 1,
+        TILE_SIZE / 2 - 1,
+        TILE_SIZE / 2 - 1,
         RENDER_CONFIG.arena.width - (TILE_SIZE - 1) * 2,
         RENDER_CONFIG.arena.height - (TILE_SIZE - 1) * 2,
       )
       .stroke({ width:3, color:0x8b7442, alpha:.85 })
       .rect(
-        walkableBounds.minColumn * TILE_SIZE - 1,
-        walkableBounds.minRow * TILE_SIZE - 1,
+        (walkableBounds.minColumn - .5) * TILE_SIZE - 1,
+        (walkableBounds.minRow - .5) * TILE_SIZE - 1,
         (walkableBounds.maxColumn - walkableBounds.minColumn + 1) * TILE_SIZE + 2,
         (walkableBounds.maxRow - walkableBounds.minRow + 1) * TILE_SIZE + 2,
       )
@@ -439,8 +562,8 @@ export class PixiRenderer {
       x++
     ) {
       grid
-        .moveTo(x * TILE_SIZE, walkableBounds.minRow * TILE_SIZE)
-        .lineTo(x * TILE_SIZE, (walkableBounds.maxRow + 1) * TILE_SIZE)
+        .moveTo((x - .5) * TILE_SIZE, (walkableBounds.minRow - .5) * TILE_SIZE)
+        .lineTo((x - .5) * TILE_SIZE, (walkableBounds.maxRow + .5) * TILE_SIZE)
         .stroke({ width:1, color:0x111714, alpha:.1 });
     }
     for (
@@ -449,23 +572,23 @@ export class PixiRenderer {
       y++
     ) {
       grid
-        .moveTo(walkableBounds.minColumn * TILE_SIZE, y * TILE_SIZE)
-        .lineTo((walkableBounds.maxColumn + 1) * TILE_SIZE, y * TILE_SIZE)
+        .moveTo((walkableBounds.minColumn - .5) * TILE_SIZE, (y - .5) * TILE_SIZE)
+        .lineTo((walkableBounds.maxColumn + .5) * TILE_SIZE, (y - .5) * TILE_SIZE)
         .stroke({ width:1, color:0x111714, alpha:.1 });
     }
     grid.zIndex = 2;
 
     const atmosphere = new Graphics()
       .rect(
-        walkableBounds.minColumn * TILE_SIZE,
-        walkableBounds.minRow * TILE_SIZE,
+        (walkableBounds.minColumn - .5) * TILE_SIZE,
+        (walkableBounds.minRow - .5) * TILE_SIZE,
         (walkableBounds.maxColumn - walkableBounds.minColumn + 1) * TILE_SIZE,
         (walkableBounds.maxRow - walkableBounds.minRow + 1) * TILE_SIZE,
       )
       .fill({ color:0x10202a, alpha:.08 })
       .rect(
-        ceremonialPath.minColumn * TILE_SIZE,
-        walkableBounds.minRow * TILE_SIZE,
+        (ceremonialPath.minColumn - .5) * TILE_SIZE,
+        (walkableBounds.minRow - .5) * TILE_SIZE,
         (ceremonialPath.maxColumn - ceremonialPath.minColumn + 1) * TILE_SIZE,
         (walkableBounds.maxRow - walkableBounds.minRow + 1) * TILE_SIZE,
       )
@@ -485,7 +608,22 @@ export class PixiRenderer {
         .stroke({ width:2,color:0x91754c,alpha:.92 });
     }
     obstacles.zIndex = 4;
-    this.terrainLayer.addChild(terrain, frame, grid, atmosphere, obstacles);
+    for(const tile of HUNT_LAYOUT_CONFIG.blockedTiles) {
+      const x=tile.x*32,y=tile.y*32;
+      obstacles.roundRect(x-12,y-13,24,24,3).fill(0x736c59).rect(x-9,y-13,18,3).fill(0xb7a47b)
+        .moveTo(x-6,y-7).lineTo(x-6,y+6).moveTo(x,y-7).lineTo(x,y+7).moveTo(x+6,y-7).lineTo(x+6,y+6)
+        .stroke({width:2,color:0x47483d,alpha:.8}).poly([x-13,y+8,x-3,y+6,x+1,y+13,x-14,y+14]).fill(0x8b8065);
+    }
+    const relief=new Graphics();
+    for(const x of [112,816]) {
+      relief.poly([x-20,37,x-14,16,x,9,x+14,16,x+20,37,x,51]).fill(0x686044).stroke({color:0xb39b67,width:1})
+        .poly([x-9,23,x-4,28,x,24,x+4,28,x+9,23,x+6,39,x,43,x-6,39]).fill(0x333e35)
+        .moveTo(x-7,30).lineTo(x-3,31).moveTo(x+3,31).lineTo(x+7,30).stroke({color:0xd6bf78,width:2});
+    }
+    for(const [x,y] of [[80,528],[880,528],[48,200],[912,370]]) {
+      relief.moveTo(x,y).lineTo(x+6,y-22).lineTo(x-3,y-36).moveTo(x+6,y-22).lineTo(x+18,y-32).stroke({color:0x546e47,width:3,alpha:.85});
+    }
+    this.terrainLayer.addChild(terrain, frame, grid, atmosphere, obstacles, relief);
   }
 
   private drawDebugOverlay() {
@@ -642,6 +780,12 @@ export class PixiRenderer {
         .circle(state.position.x, state.position.y, 2)
         .fill({ color:0xff66dd,alpha:.85 });
       if (unit) {
+        const footprint=unit.definition.footprint;
+        const safe=footprint.safeHorizontalBounds;
+        const x=state.position.x,y=state.position.y;
+        graphics.rect(x+safe.left,y-footprint.maxUpwardOverflow,safe.right-safe.left,footprint.maxUpwardOverflow).stroke({width:1,color:0xd1bd6a,alpha:.8});
+        const envelope=footprint.visualCollisionEnvelope;
+        graphics.rect(x+envelope.x,y+envelope.y,envelope.width,envelope.height).stroke({width:1,color:0x78c78e,alpha:.8});
         const bounds = unit.sprite.getBounds();
         graphics
           .rect(bounds.x, bounds.y, bounds.width, bounds.height)
@@ -656,6 +800,11 @@ export class PixiRenderer {
       );
       label.position.set(state.position.x + 8, state.position.y + 14);
       this.debugSyncLayer.addChild(label);
+    }
+    for(const projectile of this.presentation.projectiles.values()) {
+      graphics.moveTo(projectile.origin.x,projectile.origin.y).lineTo(projectile.impact.x,projectile.impact.y).stroke({width:1,color:0x55ddff,alpha:.8});
+      for(const tile of projectile.pathTiles)graphics.rect(tile.x*32-4,tile.y*32-4,8,8).stroke({width:1,color:0xffba55,alpha:.6});
+      graphics.circle(projectile.position.x,projectile.position.y,3).fill({color:0xffffff,alpha:.8});
     }
     this.debugSyncLayer.addChildAt(graphics, 0);
   }
@@ -723,38 +872,41 @@ export class PixiRenderer {
     ui.zIndex = body.zIndex;
 
     const hero = this.isHero(snapshot);
+    const humanoid=hero||!!snapshot.trainingVocation;
     const boss = snapshot.role === 'boss';
-    const definition = this.sprites.definition(spriteId(snapshot));
+    const definition = this.sprites.definition(this.visualSpriteId(snapshot));
     const shadow = new Graphics()
       .ellipse(0, 0, definition.shadowProfile.width, definition.shadowProfile.height)
       .fill({color:0x000000,alpha:definition.shadowProfile.alpha});
     shadow.position.set(position.x, position.y);
     shadow.zIndex = 1;
     this.shadowLayer.addChild(shadow);
-    const hpWidth = hero ? 58 : boss ? 56 : 48;
+    const hpWidth = humanoid ? 34 : boss ? 44 : 26;
     const hpY = definition.effectAnchors.head.y * definition.scale - 10;
-    const manaY = hero ? hpY + 8 : undefined;
+    const manaY = humanoid ? hpY + 8 : undefined;
     const sprite = this.createSprite(snapshot);
-    const name = this.label(snapshot.name, hero || boss ? 11 : 10, '#f4f5e9');
+    const name = this.label(snapshot.name, humanoid || boss ? 10 : 8, snapshot.trainingVocation?'#ffb1a3':'#f4f5e9');
     name.anchor.set(.5);
     name.position.y = hpY - 12;
     const hpBackground = new Graphics()
       .rect(-hpWidth / 2 - 1, hpY - 1, hpWidth + 2, 7)
       .fill(0x080a07);
     const hp = new Graphics();
-    const manaBackground = hero
+    const manaBackground = humanoid
       ? new Graphics()
           .rect(-hpWidth / 2 - 1, manaY! - 1, hpWidth + 2, 6)
           .fill(0x080a07)
       : undefined;
-    const mana = hero ? new Graphics() : undefined;
+    const mana = humanoid ? new Graphics() : undefined;
     const selection = hero
       ? new Graphics()
           .ellipse(0, 0, 17, 6)
           .stroke({ width:2,color:0xe4c65a,alpha:.9 })
       : undefined;
     if (selection) selection.visible = snapshot.id === this.selectedHeroId;
-    body.addChild(sprite);
+    const visual=new Container();
+    visual.addChild(sprite);body.addChild(visual);
+    name.visible=humanoid || boss;
     ui.addChild(name, hpBackground, hp);
     if (manaBackground && mana) ui.addChild(manaBackground, mana);
     if (selection) body.addChildAt(selection, 0);
@@ -766,7 +918,7 @@ export class PixiRenderer {
       debugLabel.anchor.set(.5);
       debugLabel.position.y = 38;
       const hitbox = new Graphics()
-        .rect(-24, -44, 48, 76)
+        .rect(-16, -16, 32, 32)
         .stroke({ width:1,color:0x7de9ff,alpha:.8 });
       body.addChild(hitbox);
       ui.addChild(debugLabel);
@@ -787,10 +939,12 @@ export class PixiRenderer {
 
     const unit = {
       body,
+      visual,
+      name,
       ui,
       shadow,
       sprite,
-      spriteKey:spriteId(snapshot),
+      spriteKey:this.visualSpriteId(snapshot),
       facing:'south' as DirectionName,
       state:'idle' as EntityVisualState,
       hp,
@@ -805,11 +959,13 @@ export class PixiRenderer {
       maxMana:snapshot.maxMana,
       currentMana:snapshot.mana,
       hero,
+      alwaysShowName:humanoid||boss,
       definition,
       animationStartedAt:this.presentation.time,
       animationKey:'idle',
     };
     this.units.set(snapshot.id, unit);
+    this.syncAppearanceDiagnostics();
     this.syncDiagnostics();
     this.drawVitals(unit);
     this.tween(RENDER_CONFIG.entity.spawnDuration, (progress) => {
@@ -831,7 +987,7 @@ export class PixiRenderer {
   }
 
   private createSprite(snapshot: EntitySnapshot): Sprite {
-    const id = spriteId(snapshot);
+    const id = this.visualSpriteId(snapshot);
     const definition = this.sprites.definition(id);
     const sprite = new Sprite(this.sprites.texture(id,'idle','south',0));
     sprite.anchor.set(definition.footAnchor.x,definition.footAnchor.y);
@@ -840,6 +996,27 @@ export class PixiRenderer {
       definition.visualHeight / definition.frameSize * definition.scale,
     );
     return sprite;
+  }
+
+  private visualSpriteId(snapshot:EntitySnapshot){
+    return this.isHero(snapshot)?this.appearanceSprite?.(snapshot.id)??spriteId(snapshot):spriteId(snapshot);
+  }
+  /** Cosmetic-only: no engine calls, orders, selection, animation clock or reset. */
+  refreshAppearance(heroId:string){
+    const unit=this.units.get(heroId);if(!unit?.hero)return;
+    const id=this.appearanceSprite?.(heroId)??heroId;
+    unit.definition=this.sprites.definition(id);unit.spriteKey=id;
+    // Move only name/vitals above the new adornment envelope. Logical footpoint,
+    // selection ring and stored combat values do not move or get reconstructed.
+    unit.ui.pivot.y=unit.hpY-(unit.definition.effectAnchors.head.y*unit.definition.scale-10);
+    if(unit.debugLabel)unit.debugLabel.position.y=38+unit.ui.pivot.y;
+    unit.sprite.anchor.set(unit.definition.footAnchor.x,unit.definition.footAnchor.y);
+    unit.sprite.scale.set(unit.definition.visualWidth/unit.definition.frameSize*unit.definition.scale,unit.definition.visualHeight/unit.definition.frameSize*unit.definition.scale);
+    unit.sprite.texture=this.sprites.texture(id,unit.state,unit.facing,this.presentation.time-unit.animationStartedAt);
+    this.syncAppearanceDiagnostics();
+  }
+  private syncAppearanceDiagnostics(){
+    if(this.parent)this.parent.dataset.appearanceSprites=JSON.stringify(Object.fromEntries([...this.units].filter(([,u])=>u.hero).map(([id,u])=>[id,u.spriteKey])));
   }
 
   private face(unit: Unit, direction: DirectionName) {
@@ -982,9 +1159,48 @@ export class PixiRenderer {
   }
 
   private applyEvent(event: CombatEvent) {
+    if(event.type==='mana_buffer'&&event.data?.entity){const unit=this.units.get(event.targetId!);if(unit){unit.currentHp=event.data.entity.hp;unit.currentMana=event.data.entity.mana;this.drawVitals(unit);this.spellLabel(unit.body.x,unit.body.y-76,'Mana Buffer');}}
+    if(event.type==='rune_used'){
+      const source=this.units.get(event.sourceId!);if(source)this.castPulse(source);
+      if(event.data?.runeId==='destroy_field'&&event.data.tile)this.spellLabel(event.data.tile.x*32,event.data.tile.y*32-18,'Destroy Field');
+    }
+    if(event.type==='rune_placed'&&event.data?.tile&&event.data.castId){
+      const source=this.units.get(event.sourceId!);if(source)this.castPulse(source);
+      const tile=event.data.tile,id=event.data.castId;
+      this.runeVisuals.get(id)?.graphic.destroy();
+      const graphic=new Graphics();
+      if(event.data.runeId==='magic_wall'){
+        graphic.roundRect(-15,-27,30,36,3).fill({color:0x7956bc,alpha:.65}).stroke({color:0xc9b0ff,width:2});
+        for(let x=-9;x<=9;x+=9)graphic.moveTo(x,-23).lineTo(x,5).stroke({color:0xeadfff,width:1,alpha:.75});
+      }else{
+        graphic.ellipse(0,0,14,8).fill({color:0xd64b21,alpha:.65});
+        for(let x=-9;x<=9;x+=9)graphic.poly([x-5,1,x-4,-10,x,-21,x+3,-8,x+5,1]).fill({color:0xffb64e,alpha:.85});
+      }
+      graphic.position.set(tile.x*32,tile.y*32);this.terrainLayer.addChild(graphic);
+      this.runeVisuals.set(id,{graphic,startedAt:event.time,runeId:event.data.runeId??''});
+    }
+    if(event.type==='rune_removed'&&event.data?.castId){
+      const visual=this.runeVisuals.get(event.data.castId);
+      if(visual){this.runeVisuals.delete(event.data.castId);const alpha=visual.graphic.alpha;this.tween(250,p=>visual.graphic.alpha=alpha*(1-p),()=>visual.graphic.destroy());}
+    }
+    if(this.parent){this.parent.dataset.monsterDecisions=String(this.engine.encounterMetrics.monsterDecisionEvaluations);this.parent.dataset.temporaryBlockedTiles=String(this.engine.encounterMetrics.temporaryBlockedTiles);}
+    if(event.type==='map_changed') {
+      for(const tile of event.data?.logicalTiles??[]) {
+        const key=`${tile.x}:${tile.y}`;this.rubble.get(key)?.destroy();this.rubble.delete(key);
+        if(event.data?.blocked) {
+          const stone=new Graphics().poly([tile.x*32-12,tile.y*32+9,tile.x*32-8,tile.y*32-9,tile.x*32+3,tile.y*32-14,tile.x*32+13,tile.y*32+7]).fill(0x776b54).stroke({color:0xc2a475,width:1});
+          this.terrainLayer.addChild(stone);this.rubble.set(key,stone);
+        }
+      }
+    }
+    if(event.type==='boss_phase')this.spellLabel(this.units.get(event.sourceId!)?.body.x??700,140,'A coroa desperta');
     this.applyDebugEvent(event);
     this.presentation.handle(event);
     if (event.type === 'spawn' || event.type === 'boss_spawn') this.spawn(event);
+    if(event.type==='level_up' && event.data?.entity) {
+      const unit=this.units.get(event.targetId!);const entity=event.data.entity;
+      if(unit){unit.maxHp=entity.maxHp;unit.maxMana=entity.maxMana;unit.currentHp=entity.hp;unit.currentMana=entity.mana;this.drawVitals(unit);this.spellLabel(unit.body.x,unit.body.y-70,'Nível '+entity.level);}
+    }
     if (event.type === 'target_change') {
       const unit = this.units.get(event.sourceId!);
       if (unit) this.setUnitState(unit, unit.state, event.targetId);
@@ -1017,7 +1233,7 @@ export class PixiRenderer {
           }
           const challenge = event.data?.abilityId === 'challenge';
           this.tileEffect(
-            event.data?.tiles ?? [],
+            challenge ? [] : event.data?.tiles ?? [],
             challenge ? 0xf3c65b : this.elementColor(event.data?.element),
             false,
             RENDER_CONFIG.effects.tileDuration,
@@ -1027,7 +1243,7 @@ export class PixiRenderer {
           this.spellLabel(
             unit.body.x,
             unit.body.y - (unit.hero ? 72 : 52),
-            event.data?.words ?? event.data?.ability ?? '',
+            abilityNames[event.data?.abilityId??''] ?? 'Invocação',
           );
         }
       }
@@ -1055,7 +1271,7 @@ export class PixiRenderer {
       event.data?.castId
     ) {
       if (event.type === 'projectile_resolved' && event.targetId) {
-        this.impactSpark(event.targetId, this.elementColor(event.data?.element));
+        this.impactSpark(event.targetId, this.elementColor(event.data?.element),event.data?.visualImpact);
       }
       this.cleanupProjectile(event.data.castId);
     }
@@ -1069,7 +1285,7 @@ export class PixiRenderer {
       const unit = this.units.get(event.targetId!);
       if (unit) {
         const amount = this.safeAmount(event.data?.amount);
-        unit.currentHp = Math.max(0, unit.currentHp - amount);
+        unit.currentHp = Math.max(0, unit.currentHp - (event.data?.healthDamage??amount));
         this.drawVitals(unit);
         this.animateHurt(unit);
         this.floatingText(event.targetId!, `-${amount}`, '#ff746d', 'damage');
@@ -1145,6 +1361,7 @@ export class PixiRenderer {
   }
 
   private telegraph(event: CombatEvent) {
+    if(event.data?.requiresTelegraph!==true)return;
     const castId = event.data?.castId ?? event.id;
     this.cleanupTelegraph(castId);
     const logicalTiles = event.data?.logicalTiles ?? [];
@@ -1160,14 +1377,9 @@ export class PixiRenderer {
     const warning = this.telegraphPool.acquire();
     for (const point of worldTiles) {
       warning
-        .rect(
-          point.x - TILE_SIZE / 2 + 1,
-          point.y - TILE_SIZE / 2 + 1,
-          TILE_SIZE - 2,
-          TILE_SIZE - 2,
-        )
-        .fill({ color:0xf36b53,alpha:.18 })
-        .stroke({ width:2,color:0xff816d,alpha:.9 });
+        .circle(point.x,point.y,12).stroke({width:1.5,color:0xe6a165,alpha:.85})
+        .moveTo(point.x-6,point.y-9).lineTo(point.x+3,point.y-2).lineTo(point.x-3,point.y+5).lineTo(point.x+7,point.y+10)
+        .stroke({width:2,color:0xf3c184,alpha:.8});
     }
     warning.zIndex = 5;
     warning.alpha = .4;
@@ -1185,8 +1397,8 @@ export class PixiRenderer {
     tweenKey?: string,
   ) {
     if (!tiles.length) return;
-    const graphics = new Graphics();
-    for (const point of tiles) {
+    const graphics = this.impactPool.acquire();
+    for (const point of warning ? tiles : []) {
       graphics
         .rect(
           point.x - TILE_SIZE / 2 + 1,
@@ -1207,7 +1419,7 @@ export class PixiRenderer {
           graphics.alpha = .35 + Math.abs(Math.sin(progress * Math.PI * 6)) * .65;
         },
         () => {
-          graphics.destroy();
+          this.impactPool.release(graphics);
           if (tweenKey?.startsWith('telegraph:')) {
             this.activeTelegraphs.delete(tweenKey.slice('telegraph:'.length));
           }
@@ -1235,9 +1447,11 @@ export class PixiRenderer {
           const delay =
             Math.min(7, distance) * RENDER_CONFIG.effects.tileCascadeDelay;
           maxDelay = Math.max(maxDelay, delay);
-          const effect = new AnimatedSprite(textures);
+          const effect = this.spellEffectPool.acquire();
+          effect.textures=textures;
           effect.anchor.set(.5);
           effect.position.set(point.x, point.y);
+          if(origin) effect.rotation=Math.atan2(point.y-origin.y,point.x-origin.x);
           effect.autoUpdate = false;
           effect.loop = false;
           effect.zIndex = 46;
@@ -1257,7 +1471,7 @@ export class PixiRenderer {
               effect.scale.set(.52 + swell * .2);
               effect.y = point.y + 5 - swell * 8;
             },
-            () => effect.destroy(),
+            () => this.spellEffectPool.release(effect),
             delay,
           );
         }
@@ -1268,19 +1482,20 @@ export class PixiRenderer {
       (progress) => {
         graphics.alpha = 1 - progress;
       },
-      () => graphics.destroy(),
+      () => this.impactPool.release(graphics),
     );
     return graphics;
   }
 
   private effectKey(event: CombatEvent) {
+    if(this.engine.trainingMode&&['strong_ice_wave','eternal_winter'].includes(event.data?.abilityId??''))return 'ice';
     const abilityMap: Record<string, string> = {
       challenge:'holy',
       berserk:'physical',
       groundshaker:'physical',
       heal_friend:'heal',
-      strong_ice_wave:'ice',
-      eternal_winter:'ice',
+      strong_ice_wave:'earth',
+      eternal_winter:'earth',
       flame_strike:'fire',
       energy_wave:'energy',
       rage_skies:'energy',
@@ -1359,6 +1574,7 @@ export class PixiRenderer {
     this.tween(
       RENDER_CONFIG.effects.spellLabelDuration,
       (progress) => {
+        text.scale.set(Math.min(1,1.25/(this.camera?.scale??1)));
         text.y = y - progress * 14;
         text.alpha =
           progress < .18 ? progress / .18 : Math.max(0, 1 - (progress - .65) / .35);
@@ -1449,7 +1665,7 @@ export class PixiRenderer {
       (progress) => {
         text.y = startY - progress * (kind === 'dodge' ? 18 : 31);
         text.x = startX + direction * progress * 12;
-        if (kind === 'critical') text.scale.set(1 + Math.sin(progress * Math.PI) * .35);
+        text.scale.set(Math.min(1,1.25/(this.camera?.scale??1))*(kind==='critical'?1+Math.sin(progress*Math.PI)*.2:1));
         text.alpha = 1 - progress;
       },
       () => this.floatingTextPool.release(text),
@@ -1488,7 +1704,7 @@ export class PixiRenderer {
     }, () => this.impactPool.release(trace));
   }
 
-  private impactSpark(targetId: string, color: number) {
+  private impactSpark(targetId: string, color: number,impact?:{x:number;y:number}) {
     const target = this.units.get(targetId);
     if (!target) return;
     const spark = this.impactPool.acquire();
@@ -1499,7 +1715,7 @@ export class PixiRenderer {
         .lineTo(Math.cos(angle) * 13, Math.sin(angle) * 13)
         .stroke({ width:2,color,alpha:.9 });
     }
-    spark.position.copyFrom(target.body.position);
+    spark.position.copyFrom(impact??target.body.position);
     spark.zIndex = 60;
     this.effectLayer.addChild(spark);
     this.tween(220, (progress) => {
@@ -1510,12 +1726,21 @@ export class PixiRenderer {
 
   private syncPresentation() {
     const startedAt = performance.now();
+    this.updateCamera();
+    for(const rune of this.runeVisuals.values())rune.graphic.alpha=.85+.15*Math.sin((this.player.time-rune.startedAt)/180);
     for (const [id, state] of this.presentation.entities) {
       const unit = this.units.get(id);
       if (!unit) continue;
       unit.body.position.set(state.position.x, state.position.y);
-      unit.ui.position.set(state.position.x, state.position.y);
+      const uiScale=Math.min(1,1.25/(this.camera?.scale??1));
+      unit.ui.scale.set(uiScale);
+      unit.ui.position.set(state.position.x,state.position.y+(unit.hpY-unit.ui.pivot.y)*(1-uiScale));
       unit.shadow.position.set(state.position.x, state.position.y);
+      const p=state.movement?Math.max(0,Math.min(1,(this.presentation.time-state.movement.startedAt)/Math.max(1,state.movement.completesAt-state.movement.startedAt))):0;
+      const step=Math.sin(p*Math.PI);
+      unit.visual.y=-step*1.5;
+      unit.visual.rotation=step*(state.facing==='west'?-.025:state.facing==='east'?.025:0);
+      unit.name.visible=unit.alwaysShowName || id===this.selectedTargetId;
       const sortKey = visualSortKey(
         { x:state.position.x / TILE_SIZE,y:state.position.y / TILE_SIZE },
         id,
@@ -1534,12 +1759,10 @@ export class PixiRenderer {
     for (const [castId, state] of this.presentation.projectiles) {
       const projectile = this.activeProjectiles.get(castId);
       if (!projectile) continue;
-      const previousX = projectile.x;
-      const previousY = projectile.y;
       projectile.position.set(state.position.x, state.position.y);
       projectile.gotoAndStop(Math.floor(Math.max(0,this.presentation.time-state.startedAt)/80) % projectile.textures.length);
-      const dx = state.position.x - previousX;
-      const dy = state.position.y - previousY;
+      const dx = state.impact.x - state.origin.x;
+      const dy = state.impact.y - state.origin.y;
       if (Math.abs(dx) + Math.abs(dy) > .01) projectile.rotation = Math.atan2(dy, dx);
     }
     for (const [castId, state] of this.presentation.telegraphs) {
@@ -1601,8 +1824,12 @@ export class PixiRenderer {
 
   private syncDiagnostics() {
     if (!this.parent || this.destroyed) return;
+    this.parent.dataset.activeRuneTiles=String(this.runeVisuals.size);
+    this.parent.dataset.runeConditions=String(this.engine.runeConditionCount);
+    this.parent.dataset.pendingPushes=String(this.engine.pendingPushCount);
     for (const [key,value] of Object.entries(this.engine.metrics)) this.parent.dataset[key] = String(value);
-    const bounds = RENDER_CONFIG.arena.cameraBounds;
+    const view=this.engine.arenaView;
+    const bounds={x:view.x,y:view.y,width:view.width,height:view.height};
     const outOfBounds = [...this.units.values()].filter(
       (unit) =>
         unit.body.x < bounds.x ||
@@ -1624,6 +1851,9 @@ export class PixiRenderer {
       activeVisualObjects,
     );
     this.parent.dataset.unitCount = String(this.units.size);
+    const countObjects=(node:Container):number=>1+node.children.reduce((sum,child)=>sum+countObjects(child),0);
+    this.parent.dataset.displayObjectCount=String(countObjects(this.app.stage));
+    this.parent.dataset.visualFootprint='safe-width:30;logical:32;footpoint:grounded';
     this.parent.dataset.stageChildren = String(this.app.stage.children.length);
     this.parent.dataset.tweenCount = String(this.tweens.length);
     this.parent.dataset.effectCount = String(this.effectLayer.children.length);
@@ -1649,6 +1879,7 @@ export class PixiRenderer {
     this.parent.dataset.unitStates = [...this.units.entries()]
       .map(([id, unit]) => `${id}:${unit.state}`)
       .join(',');
+    this.parent.dataset.visibleUnitNames=[...this.units.entries()].filter(([,u])=>u.name.visible&&u.currentHp>0).map(([id])=>id).join(',');
     this.parent.dataset.visualFacings = [...this.units.entries()]
       .map(([id, unit]) => `${id}:${unit.facing}`)
       .join(',');
@@ -1679,6 +1910,10 @@ export class PixiRenderer {
     this.parent.dataset.createdProjectiles = String(projectilePoolMetrics.created);
     this.parent.dataset.createdTelegraphs = String(telegraphPoolMetrics.created);
     this.parent.dataset.createdImpacts = String(impactPoolMetrics.created);
+    this.parent.dataset.createdSpellEffects=String(this.spellEffectPool.metrics.created);
+    this.parent.dataset.activeSpellEffects=String(this.spellEffectPool.metrics.active);
+    this.parent.dataset.pathRecalculations=String(this.engine.metrics.pathRecalculations);
+    this.parent.dataset.monsterDecisions=String(this.engine.encounterMetrics.monsterDecisionEvaluations);
     this.parent.dataset.maxActiveVisualObjects = String(this.maxActiveVisualObjects);
     this.parent.dataset.presentationUpdateAverageMs = String(
       this.presentationUpdateSamples

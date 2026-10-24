@@ -2,11 +2,36 @@ import { describe, expect, it } from 'vitest';
 import manifestText from '../../../public/assets/original/manifests/sprites.json?raw';
 import { clipFrame } from './SpriteLibrary';
 import { spriteAction, type SpriteDefinition } from './SpriteDefinition';
+import {pixelDefinition} from './pixelSprites';
 
 const definitions = JSON.parse(manifestText) as SpriteDefinition[];
 describe('original sprite export contract',() => {
-  it('has six original silhouettes with every cardinal action inside its atlas',() => {
-    expect(new Set(definitions.map(item => item.id)).size).toBe(6);
+  it('replaces the three hero images with larger pixel sheets without enlarging logical footprints',()=>{
+    for(const base of definitions){
+      const pixel=pixelDefinition(base);
+      if(base.entityType!=='character'){expect(pixel).toBe(base);continue;}
+      expect(pixel.frameSize).toBe(80);expect(pixel.footAnchor).toEqual({x:.5,y:74/80});
+      expect(pixel.footprint.logicalTiles).toEqual({width:1,height:1});expect(pixel.id).toBe(base.id);
+      expect(pixel.spriteSet).toBe(`/assets/original/pixel/${base.id}-v1.png`);
+      for(const action of Object.values(pixel.animations.clips))for(const clip of Object.values(action!)){
+        for(const frame of clip!.frames)expect(frame.split(':').every(n=>Number(n)>=0&&Number(n)<4)).toBe(true);
+      }
+    }
+  });
+  it('keeps grounded envelopes and shadows inside one logical tile',()=>{
+    for(const {footprint:f} of definitions){
+      expect(f.logicalTiles).toEqual({width:1,height:1});
+      expect(f.safeHorizontalBounds.right-f.safeHorizontalBounds.left).toBeLessThanOrEqual(32);
+      expect(f.visualCollisionEnvelope.x).toBeGreaterThanOrEqual(f.safeHorizontalBounds.left);
+      expect(f.visualCollisionEnvelope.x+f.visualCollisionEnvelope.width).toBeLessThanOrEqual(f.safeHorizontalBounds.right);
+      expect(f.shadowBounds.width).toBeLessThanOrEqual(32);
+      expect(f.maxUpwardOverflow).toBeLessThanOrEqual(64);
+    }
+  });
+  it('has ten original silhouettes with every cardinal action inside its atlas',() => {
+    expect(new Set(definitions.map(item => item.id)).size).toBe(10);
+    expect(definitions.map(item=>item.id)).toContain('bronze-bastion');
+    expect(definitions.map(item=>item.id)).toContain('wandering-ballista');
     for (const definition of definitions) {
       expect(definition.spriteSet).toMatch(/^\/assets\/original\//);
       expect(definition.footAnchor).toEqual({x:.5,y:.875});

@@ -1,5 +1,45 @@
 # Roadmap
 
+## Escopo autorizado em24/10/2026
+
+Consolidação visual/movimento/controle/foco/push sobre MVP2C já entregue, sem
+renumerar outfits ou Adventure. Contrato: TACTICAL_CONSOLIDATION.md. Não inicia
+backend, OTSP, NPC, quest, campanha ou PvP online. Gates/publicação novos precisam
+de evidência própria; o runtime74b não contém automaticamente esta consolidação.
+
+## Escopo autorizado em20/10/2026
+
+O pedido atual chama MVP2C de Outfit Customization & Addon System. Este slice
+implementa atelier/catálogo/persistência e,na continuação autorizada,38atlas reais
+dos12trajes/addons/DLC,sem iniciar World/NPC/quests. OUTFIT_ART_2C.md distingue
+sprites entregues e máscaras seletivas/ciclos longos ainda pendentes.
+Adventure descrita na sequência histórica abaixo fica adiada, não implicitamente
+implementada ou renumerada por este incremento. Sem economia/loja/rede nova.
+
+## Sequência vigente — decisão do usuário em 30/09/2026
+
+| Marco | Escopo |
+|---|---|
+| MVP 2B | Inventory + Equipment + Loot + Forge; vertical slice local atual |
+| MVP 2B.1 | Consolidação de 2B: hotkeys, Numpad, Assistido, projéteis contínuos, party/HUD e duas composições; antes de Adventure |
+| MVP 2B.2 | Autorizado em 19/10: treino local Party × Bot, movimento reativo e Magic Wall/Fire Field; não é PvP online nem o catálogo completo do Tibia |
+| MVP 2B.3 | Extensão autorizada do treino: SD/Destroy Field, push e 1–9, pixel heroes maiores sem zoom; perfil de magias parcial, sem Wheel completa |
+| MVP 2B.4 | Layout claro com hotbar unificada, toda arena amarela acessível, controle exclusivo do selecionado e três bots ativos; laboratório local, não networking |
+| MVP 2C | Manual Adventure + World + NPCs + Quests |
+| MVP 2D | Story/Campaign Foundation |
+| MVP 2E | Server Authority + Networking; exige ADR antes de autoridade remota |
+| MVP 2F | PvP Vertical Slice, sobre a autoridade validada |
+
+O treino 2B.2 é uma exceção explícita de laboratório local, aprovada pelo usuário.
+Não antecipa PvP entre jogadores. A sequência 2C→2D→2E→2F permanece inalterada;
+o plano de fidelidade mecânica incremental está em TACTICAL_RUNES.md.
+
+2B não inicia Adventure, NPCs, quests, campanha, servidor ou PvP. Weapon e armor
+são o núcleo; helmet/amulet e drag-and-drop ficam fora desta entrega.
+As seções abaixo são registros históricos, não uma sequência concorrente.
+
+## Histórico de planejamento e marcos anteriores
+
 ## MVP 0 — baseline estável
 
 **Concluído em 27/07/2026.**
@@ -57,7 +97,7 @@ Incremento pausado (não é a prioridade seguinte):
 - reação a AOE;
 - catálogo visual original/licenciado.
 
-Backend continua condicionado ao gate abaixo. O inventário entra somente no marco 1F descrito a seguir.
+Planejamento histórico: inventário era 1F. Substituído pelo MVP 2B acima.
 
 Saída do MVP 1: dez ciclos consecutivos sem travar, atravessar obstáculos,
 duplicar eventos/recompensas ou divergir do relatório.
@@ -93,10 +133,9 @@ Condicionado ao gate de backend:
 3. **Monetização:** revisão jurídica e política não-P2W.
 4. **Escopo:** uma tarefa pertence a um único MVP.
 
-## Sequência vigente após o MVP 1D
+## Sequência histórica após o MVP 1D — substituída por 2B–2F
 
-Esta sequência substitui a ordem histórica de curto prazo acima, preservada
-como contexto. Não confundir os marcos anteriores com novas tarefas pendentes.
+Esta sequência foi usada antes da decisão de 30/09. Preservada apenas como histórico.
 
 | Marco | Vertical slice / gate |
 |---|---|

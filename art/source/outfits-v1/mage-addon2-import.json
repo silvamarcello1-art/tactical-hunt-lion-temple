@@ -1,0 +1,116 @@
+{
+  "generator": "builtin imagegen",
+  "sourceFile": "mage-addon2-source.png",
+  "sourceSha256": "3526c5ccefaeb1ed0002b28157d82d9d60c8c1f10779cf1564c0858eb04a7b04",
+  "sourceSize": [
+    1254,
+    1254
+  ],
+  "runtimeSize": [
+    448,
+    448
+  ],
+  "cell": 112,
+  "baseline": 104,
+  "bodyScaleFactor": 1.4,
+  "visualTop": 95,
+  "scale": 0.3152317880794702,
+  "boxes": [
+    {
+      "left": 59,
+      "top": 29,
+      "width": 221,
+      "height": 300
+    },
+    {
+      "left": 401,
+      "top": 30,
+      "width": 202,
+      "height": 299
+    },
+    {
+      "left": 683,
+      "top": 31,
+      "width": 218,
+      "height": 298
+    },
+    {
+      "left": 984,
+      "top": 30,
+      "width": 205,
+      "height": 299
+    },
+    {
+      "left": 56,
+      "top": 335,
+      "width": 215,
+      "height": 294
+    },
+    {
+      "left": 406,
+      "top": 338,
+      "width": 209,
+      "height": 294
+    },
+    {
+      "left": 691,
+      "top": 341,
+      "width": 215,
+      "height": 296
+    },
+    {
+      "left": 987,
+      "top": 335,
+      "width": 198,
+      "height": 297
+    },
+    {
+      "left": 58,
+      "top": 641,
+      "width": 229,
+      "height": 302
+    },
+    {
+      "left": 400,
+      "top": 643,
+      "width": 215,
+      "height": 297
+    },
+    {
+      "left": 684,
+      "top": 647,
+      "width": 228,
+      "height": 297
+    },
+    {
+      "left": 978,
+      "top": 645,
+      "width": 212,
+      "height": 295
+    },
+    {
+      "left": 48,
+      "top": 950,
+      "width": 257,
+      "height": 282
+    },
+    {
+      "left": 371,
+      "top": 954,
+      "width": 254,
+      "height": 278
+    },
+    {
+      "left": 642,
+      "top": 954,
+      "width": 289,
+      "height": 278
+    },
+    {
+      "left": 964,
+      "top": 951,
+      "width": 239,
+      "height": 281
+    }
+  ]
+}

@@ -1,0 +1,116 @@
+{
+  "generator": "builtin imagegen",
+  "sourceFile": "bolsonaro-base-source.png",
+  "sourceSha256": "90b0db2ff138184505f95fd8aea764befe4021512154880b2bfdc5ed2901a59d",
+  "sourceSize": [
+    1254,
+    1254
+  ],
+  "runtimeSize": [
+    448,
+    448
+  ],
+  "cell": 112,
+  "baseline": 104,
+  "bodyScaleFactor": 1,
+  "visualTop": 68,
+  "scale": 0.24113475177304963,
+  "boxes": [
+    {
+      "left": 81,
+      "top": 52,
+      "width": 189,
+      "height": 279
+    },
+    {
+      "left": 402,
+      "top": 52,
+      "width": 145,
+      "height": 279
+    },
+    {
+      "left": 687,
+      "top": 52,
+      "width": 190,
+      "height": 279
+    },
+    {
+      "left": 1021,
+      "top": 56,
+      "width": 148,
+      "height": 275
+    },
+    {
+      "left": 76,
+      "top": 353,
+      "width": 196,
+      "height": 276
+    },
+    {
+      "left": 382,
+      "top": 353,
+      "width": 188,
+      "height": 276
+    },
+    {
+      "left": 691,
+      "top": 353,
+      "width": 187,
+      "height": 276
+    },
+    {
+      "left": 997,
+      "top": 356,
+      "width": 185,
+      "height": 273
+    },
+    {
+      "left": 74,
+      "top": 648,
+      "width": 196,
+      "height": 282
+    },
+    {
+      "left": 376,
+      "top": 655,
+      "width": 191,
+      "height": 272
+    },
+    {
+      "left": 690,
+      "top": 653,
+      "width": 179,
+      "height": 275
+    },
+    {
+      "left": 1006,
+      "top": 653,
+      "width": 184,
+      "height": 275
+    },
+    {
+      "left": 72,
+      "top": 953,
+      "width": 192,
+      "height": 259
+    },
+    {
+      "left": 349,
+      "top": 954,
+      "width": 245,
+      "height": 256
+    },
+    {
+      "left": 681,
+      "top": 951,
+      "width": 226,
+      "height": 259
+    },
+    {
+      "left": 974,
+      "top": 951,
+      "width": 227,
+      "height": 259
+    }
+  ]
+}
