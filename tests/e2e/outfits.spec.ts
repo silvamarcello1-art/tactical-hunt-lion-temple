@@ -1,4 +1,5 @@
 import {test,expect} from '@playwright/test';
+import {tilePoint} from './world-point';
 import {installControlledClock,pauseIdleClock,advanceUntilAttribute,REPEATED_HUNT_TIMEOUT_MS} from './controlled-clock';
 import {outfitSpriteAssets} from '../../src/data/outfitSprites';
 
@@ -88,8 +89,7 @@ for(const scenario of [
   await installControlledClock(page);await page.goto('/');await pauseIdleClock(page);
   await page.locator('#loop-toggle').click();await page.locator('#start').click();await page.clock.runFor(1000);await page.locator('#pause').click();
   const targetPosition=(await page.locator('#game').getAttribute('data-logical-positions'))!.split(',').find(p=>p.startsWith('lion-1:'))!.split(':');
-  const bounds=(await page.locator('#game canvas').boundingBox())!,scale=Math.min(bounds.width/960,bounds.height/576);
-  await page.mouse.click(bounds.x+(bounds.width-960*scale)/2+Number(targetPosition[1])*32*scale,bounds.y+(bounds.height-576*scale)/2+Number(targetPosition[2])*32*scale);
+  const screen=await tilePoint(page,Number(targetPosition[1]),Number(targetPosition[2]));await page.mouse.click(screen.x,screen.y);
   await expect(page.locator('#player-controls')).toHaveAttribute('data-selected-target','lion-1');
   await page.clock.runFor(32);
   const state=()=>page.evaluate(()=>({party:document.querySelector('#party')!.textContent,game:document.querySelector<HTMLElement>('#game')!.dataset.logicalPositions,

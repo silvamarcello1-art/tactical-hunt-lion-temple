@@ -1,5 +1,11 @@
 # MVP 2C — atelier de aparência e sprites de produção
 
+24/10: arquivos/registro38atlas, clips/cardinais e anchors continuam os mesmos.
+Consolidação visual aplica escala comum.62 aos nativos/outfits no mundo e
+recalibra UI/câmera, sem alterar o preview de desenho do atelier ou saves.
+Máscaras de cores/diagonais/camadas independentes continuam pendentes.
+Medições e contrato atual: TACTICAL_CONSOLIDATION.md.
+
 ## Continuação — arte aplicada no mundo
 
 O usuário confirmou que os novos visuais precisam estar nos personagens reais.

@@ -1,4 +1,15 @@
-# Apresentação vigente — MVP 2B.1 (05/10/2026)
+# Apresentação vigente — consolidação visual (24/10/2026)
+
+Especificação e medidas: TACTICAL_CONSOLIDATION.md. Mundo15×11 SQMs, tile lógico32,
+câmera/letterbox/inversa únicos nos dois modos, mapa lógico independente de CSS.
+Personagens nativos e outfits escala.62, footpoints originais, sombras no chão;
+nomes/HP e feedback textual têm ampliação limitada. Piso da Hunt centrado no mesmo
+tile autoritativo do treino; pilares, runas, projéteis e boss na escala comum.
+Máscara permanente impede mundo falso nas margens. Pan segue o herói selecionado
+sem easing; UI/picking usa a mesma transformação. Hold linear manual250ms,
+AI220ms; bob pequeno só durante passo. Não confundir isso com latência zero/FPS.
+
+## Histórico anterior a24/10 (regras substituídas quando contradizem o acima)
 
 2B.4: piso claro original no treino, grade amarela inteiramente autoritativa,
 arena larga configurada por sessão e canvas responsivo com escala uniforme.

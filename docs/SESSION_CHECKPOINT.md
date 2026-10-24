@@ -1,4 +1,66 @@
-# Checkpoint — MVP2C sprites no mundo — 20/10/2026 (São Paulo)
+# Checkpoint — consolidação visual, movimento e push —24/10/2026
+
+## Trabalho atual — gates locais verdes, não publicação concluída
+
+Gate FINAL de source:310unit/27arquivos PASS137,41s;63E2E/1worker PASS14,4min,
+typecheck/build/build:preview/diff PASS. Chunk576,95/577,01kB mantém warning500kB.
+Frozen install/health/arte reproduzível já conferidos e assets não mudaram.
+A/B read-only1293721→worktree:2868eventos e hash integral
+edcf9f6d0aa4488bda430a900d74003401d5f924d48fc6b5627da8a5f87a554b iguais
+emwarmup/batch/73/1000ms; tempo variável sob carga, não benchmarkFPS.
+Treino real de trabalho:3vitórias,1×/4× explícitos,1214eventosbot,economia
+intacta,todos13contadores cleanup0,errors[]/warnings[]. Latência de amostra
+keydown→submissão106,4/211,3/97,4/221,8ms, não tempo até pintura do monitor.
+Capturas compiladas Hunt/treino1366/1600/1920 e1902 inspecionadas; geometria
+em TACTICAL_CONSOLIDATION. Arte própria, nenhum asset da referência copiado.
+
+QA prolongado inicial observou14ciclos mas sua assertion de metadado usava um
+campo que NÃO existe em boss_reward (sessionId); falhou o harness, não uma
+contagem de boss/recompensa. Não contado como gate verde: repetição com schema
+real/sessionIds de eventos comprometidos e gravação pré-assert ainda pendente.
+QA real de taps agora mede duração efetiva keydown→keyup, porque20ms solicitados
+por protocolo podem durar mais sob carga; limite de passos usa duração medida,
+com estabilidade após release ainda obrigatória. Bots móveis podem bloquear
+um tap legitimamente: zero movimento só é aceito com motivo blocked explícito.
+
+Publicação/CI/manifest/smokes com SHA novo ainda pendentes. Não confundir stamp
+1293721 do build de trabalho dirty com código publicado naquele commit.
+
+### Registro do desenvolvimento anterior ao gate final
+
+Pedido completo em TACTICAL_CONSOLIDATION.md. Pré-flight fetch/health/branch/
+upstream/remotes:1293721f08aad524782e15388cede3e9fd370d00=origin, CLEAN;
+base feature/visual-identity-foundation. Público version.json74b exato.
+Antes283unit/61E2E confirmados; medidas local/público iguais. Nenhum trabalho
+alheio encontrado. Referência preservada na workspace, não extraída para assets.
+
+Implementação: câmera15×11/inversa compartilhada; arena lógica fixa36×18 treino;
+sprite.62/anchors/nomes/HP; piso da Hunt alinhado em meio SQM; foco de party
+independente de seleção/inspeção; Manual único no treino/companheiros Auto;
+cancelamento por nova intenção; approach A*→push adjacente, sem callback tardio.
+Hunt Auto integral comparada ao perfil anterior; economia/RNG/loot intocados.
+
+Gates locais até aqui PASS: install frozen,health,typecheck,308unit27arquivos
+(119,07s),art:generate+diff de assets vazio,build/build:preview/diff. Inclui24
+Auto/24mistos/6polished stress e determinismo de approach50/1000ms. Sem snapshots
+regenerados/timeouts aumentados/assertions econômicas relaxadas. Warning de
+chunk576,83/576,88kB conservado. E2E63 e QA real ainda pendentes de fechamento.
+
+Diagnósticos reais durante desenvolvimento: ordem MoveTo antiga ressuscitava
+após troca→corrigida poda da fila; Assistido Hunt era pulado pelo novo foco→
+corrigida ordem de processamento e regressão unitária. Testes de clique agora
+usam a câmera; uma coordenada antiga estava fora da janela e foi movida para
+SQM visível, preservando a assertion latest-destination. Câmera atualiza na
+seleção mesmo em pausa. Teste obrigatório de focus/takeover/drag/approach/push/
+cancelamento/Hunt/boss passou antes da suíte integral. Três treinos manuais
+passaram, não foram substituídos por Auto. Uma tentativa integral foi invalidada
+por hot reload durante edição; interrompida e reiniciada com source congelado.
+Teste DPR2 usa1px lógico interno: subpixel.1 era arredondado para fora do canvas.
+
+Publicação nova,smokes compilados/públicos e métricas reais serão registrados
+abaixo após conclusão; não reutilizar os runs de74b como gates do código novo.
+
+## Histórico encerrado — publicação das sprites MVP2C
 
 ## Encerramento das sprites reais —21/10/2026
 

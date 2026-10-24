@@ -1,5 +1,12 @@
 # MVP 2B.2 — laboratório local de movimentação e runas — 19/10/2026
 
+Regra vigente24/10: TACTICAL_CONSOLIDATION.md. Treino3×3, selecionado apenas
+Manual, companheiros AI no foco explícito, bots AI. ESC é Stop no mundo;
+novo gameplay interrompe rota/approach, não a inspeção de painel. Janela15×11,
+mapa36×18 fixo e mesma inversa para runas/picking/drag. O kit, cargas, fórmulas
+parciais e isolamento econômico continuam; as descrições antigas abaixo de
+modos/câmera/controle independente foram substituídas, não são regras vigentes.
+
 Atualização 2B.3: TRAINING_2B3.md prevalece sobre o kit/atalhos abaixo: 4/5
 mantidos, 6 SD, 7 Destroy Field, 8 push/arrastar, 9 Stop. Sem zoom; pixel heroes
 maiores e mira de tile. Mesmo motor, treinamento sem economia. Sem paridade

@@ -1,5 +1,11 @@
 # MVP 2B.1 — gameplay polish (retomada 10/10/2026)
 
+Contrato posterior24/10 em TACTICAL_CONSOLIDATION.md/PLAYER_CONTROL.md:
+treino Manual exclusivo + aliados AI no foco; Hunt mantém Assistido/Auto;
+câmera15×11 e cancelamento de rota por nova intenção. ESC no mundo envia Stop.
+O registro abaixo é histórico onde contradiz essas regras. Fórmulas/recompensas,
+pipeline de projéteis e hashes Auto não foram regenerados para esta consolidação.
+
 ## Escopo e evidências
 
 Polish de controles, assistência, apresentação e dois encontros, antes de

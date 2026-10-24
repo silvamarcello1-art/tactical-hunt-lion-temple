@@ -1,4 +1,5 @@
 import {test,expect,type Page} from '@playwright/test';
+import {tilePoint} from './world-point';
 import {installControlledClock,pauseIdleClock} from './controlled-clock';
 import {isolatedCombatFixture} from './isolated-combat-fixture';
 async function boot(page:Page) {
@@ -14,8 +15,8 @@ async function position(page:Page,id:string) {
   const entry=(await page.locator('#game').getAttribute('data-logical-positions'))!.split(',').find(s=>s.startsWith(id+':'))!.split(':');return {x:Number(entry[1]),y:Number(entry[2])};
 }
 async function clickEntity(page:Page,id:string,button:'left'|'right'='left') {
-  const p=await position(page,id),b=(await page.locator('#game canvas').boundingBox())!,s=Math.min(b.width/960,b.height/576);
-  await page.mouse.click(b.x+(b.width-960*s)/2+p.x*32*s,b.y+(b.height-576*s)/2+p.y*32*s,{button});
+  const p=await position(page,id),screen=await tilePoint(page,p.x,p.y);
+  await page.mouse.click(screen.x,screen.y,{button});
 }
 test('shown keys execute each vocation; HUD focus, self heal, targeting ESC and inventory capture',async({page})=>{
   const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));await boot(page);

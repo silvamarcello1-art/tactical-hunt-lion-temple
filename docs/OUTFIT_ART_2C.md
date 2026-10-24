@@ -1,5 +1,12 @@
 # MVP2C — sprites realmente aplicados ao mundo
 
+24/10: nenhuma PNG foi gerada/editada/importada nesta consolidação. A escala de
+mundo passou a.62 para nativos e38atlas existentes; células/anchors/fontes/clips
+inalterados. Alpha idle medido (limiar>16): nativos60px de altura→1,1625SQM;
+WarriorAddon2 76px→1,4725SQM com acessórios. TACTICAL_CONSOLIDATION.md detalha
+registro, câmera, medidas e limites. Estados de publicação antigos abaixo são
+históricos; os gates da consolidação pertencem ao novo checkpoint.
+
 ## Assets integrados localmente — 20/10/2026
 
 Continuação autorizada pelo usuário após a fundação com fallback: os12trajes

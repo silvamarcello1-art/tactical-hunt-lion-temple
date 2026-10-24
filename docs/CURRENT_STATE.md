@@ -1,4 +1,28 @@
-# Estado vigente — MVP2C sprites no mundo — 20/10/2026 (São Paulo)
+# Estado vigente — consolidação visual e tática — 24/10/2026 (São Paulo)
+
+## Atual — implementação local, publicação nova pendente
+
+Contrato canônico: TACTICAL_CONSOLIDATION.md. Janela15×11 comum, tiles32 lógicos,
+treino36×18 independente de CSS; câmera/inversa/DPR/letterbox/picking/drag unidos.
+Personagens/outfits.62 com anchors preservados; Hunt centrada nos SQMs reais.
+Treino selecionado somente Manual, aliados Auto no foco explícito, bots AI.
+Hunt preserva Auto/Assistido; inspeção não troca foco. Novas intenções cancelam
+rota/approach/pré-commit. Push distante aproxima executor por A*, depois agenda
+push adjacente normal, com snapshots/revalidação e nenhum destino reservado na
+viagem. Hold manual250ms, AI220ms; não alegamos latência zero ou FPS garantido.
+
+Entrada1293721=origin/CLEAN, runtime público74b confirmado, cobertura283/61.
+Gates finais de source: frozen install/health/typecheck,310unit27files(137,41s),
+63E2E(14,4min)/1worker, arte reproduzível, build/build:preview/diff PASS. Stress
+Auto24/misto24/polished6 incluídos; nenhuma baseline regenerada. A/B contra
+entrada1293721 preserva2868eventos/hash integral edcf9f6d…a554b em73/1000ms/batch.
+Smokes reais de trabalho:3vitórias manuais em1×/4×,1214eventosbot,saves intactos,
+13contadores cleanup0,errors[]/warnings[]. Ensaio prolongado ainda em fechamento.
+Build principal576,95kB (preview577,01kB) mantém warning>500kB; sem mudar limite.
+As evidências antigas abaixo NÃO validam esta consolidação. Sem push/deploy novo
+confirmado ainda; o preview74b continua a versão anterior até manifest/smokes novos.
+
+## Histórico encerrado — sprites MVP2C publicados
 
 ## Atual — sprites publicados e verificados —21/10/2026
 

@@ -1,5 +1,15 @@
 # Treino 2B.4 — arena, barra unificada e equipe adversária
 
+## Regra vigente em24/10
+
+TACTICAL_CONSOLIDATION.md substitui largura30–52 calculada por CSS, câmera de
+mapa inteiro e seleção com Auto/Assistido no treino: mapa36×18 fixo, janela15×11,
+selecionado somente Manual, aliados AI no foco explícito, bots AI. Controle,
+foco, cancelamento e push distante são os do contrato novo. Slots/economia/
+normalização e três bots continuam preservados.
+
+## Registro histórico do incremento19/10 (não é contrato concorrente)
+
 ## Pedido e limites — 19/10/2026 (São Paulo)
 
 Referência visual fornecida pelo usuário: piso claro em grade, heróis legíveis e

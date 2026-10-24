@@ -1,4 +1,20 @@
-# Arquitetura — atualização MVP 2B.1 (10/10/2026)
+# Arquitetura — consolidação tática (24/10/2026)
+
+Contrato atual de controles/apresentação: TACTICAL_CONSOLIDATION.md.
+main ativa `tacticalControls` no MESMO CombatEngine: foco ofensivo explícito,
+controle exclusivo e approach efêmero, sem Pixi/DOM no domínio. Defaults antigos
+preservam fixtures e hashes, não constituem um segundo motor de produção.
+`pushApproach` consulta Pathfinder com tiles proibidos; MovementSystem continua
+autoridade de reserva/commit. Ordem síncrona por ID substituível, sem callback A*.
+`worldViewport` compartilha câmera/inversa/política de15×11 e tile32 já existente;
+treino36×18 fixo, sem ler CSS para criar GridMap. Stage: cenário neutro, world e
+uma máscara permanente; oito layers dentro de world. Hunt/treino usam essa base.
+Inspeção de equipamento/outfits mantém contexto local e não envia combate.
+
+## Histórico arquitetural anterior a24/10
+
+Descrições datadas abaixo de câmera fixa, largura derivada do viewport ou seleção
+independente são histórico, não contratos simultaneamente vigentes.
 
 ## Continuação2C — sprites reais
 

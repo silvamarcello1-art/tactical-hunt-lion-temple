@@ -1,4 +1,23 @@
-# Controle do jogador — contrato vigente (05/10/2026)
+# Controle do jogador — contrato vigente (24/10/2026)
+
+Contrato atual: [TACTICAL_CONSOLIDATION.md](TACTICAL_CONSOLIDATION.md).
+Treino: apenas o selecionado Manual, aliados Auto seguem foco ofensivo explícito;
+bots AI. Auto/Assistido não são opções para o selecionado nesse modo. Hunt conserva
+as três opções, com takeover exclusivo na seleção. Foco de party não é seleção
+de herói; trocar card ou inspecionar equipamento não muda inimigo.
+
+Nova intenção cancela rota/approach/push não comprometido. Passo reservado termina
+normalmente. ESC sempre Stop no mundo, inclusive targeting; ESC de modal apenas
+fecha o modal. Painéis suspendem gestos, não emitem Stop. Push distante aproxima
+executor por A*, depois executa push adjacente normal; destino/alvo são snapshots.
+Janela/câmera15×11 uniforme compartilhada com picking/drag; tile lógico32,
+treino36×18 fixo. Hold manual250ms, AI220ms, buffer limitado a um tap.
+
+## Histórico de contratos substituídos (não são regras vigentes)
+
+As seções datadas abaixo preservam decisões/evidências anteriores. As diferenças
+de seleção, modos no treino, câmera fixa e ESC foram substituídas pelo contrato
+de24/10 acima; não devem orientar implementação nova.
 
 ## Correção de isolamento do inventário — 20/10
 

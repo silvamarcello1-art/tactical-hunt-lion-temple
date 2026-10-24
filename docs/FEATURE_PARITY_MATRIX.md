@@ -1,5 +1,13 @@
 # Matriz de paridade
 
+## Atualização24/10 — consolidação, não novo marco online
+
+Janela15×11/câmera comum Hunt/treino, proporção nativa1,1625SQM, mapa de treino
+36×18 sem CSS, foco explícito da party, Manual exclusivo no treino e push com
+aproximação no mesmo domínio. TACTICAL_CONSOLIDATION.md registra medidas,
+contratos e limites. Economia/andares/boss/outfits mantidos; sem PvP online,
+Adventure ou paridade completa de catálogo. Gates próprios no checkpoint.
+
 Referência comportamental: `docs/reference/VIDEO_REFERENCE_MAP.md`.
 
 ## Atualização MVP 2B — 30/09/2026

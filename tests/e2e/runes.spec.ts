@@ -1,4 +1,5 @@
 import {test,expect,type Page} from '@playwright/test';
+import {tilePoint as cameraTilePoint} from './world-point';
 import {installControlledClock,pauseIdleClock} from './controlled-clock';
 import {isolatedCombatFixture} from './isolated-combat-fixture';
 async function pos(page:Page,id='knight'){
@@ -6,12 +7,10 @@ async function pos(page:Page,id='knight'){
   return {x:Number(entry[1]),y:Number(entry[2])};
 }
 async function tile(page:Page,p:{x:number;y:number}){
-  const b=(await page.locator('#game canvas').boundingBox())!,s=Math.min(b.width/960,b.height/576);
-  await page.mouse.click(b.x+(b.width-960*s)/2+p.x*32*s,b.y+(b.height-576*s)/2+p.y*32*s);
+  const screen=await cameraTilePoint(page,p.x,p.y);await page.mouse.click(screen.x,screen.y);
 }
 async function point(page:Page,p:{x:number;y:number}){
-  const b=(await page.locator('#game canvas').boundingBox())!,s=Math.min(b.width/960,b.height/576);
-  return {x:b.x+(b.width-960*s)/2+p.x*32*s,y:b.y+(b.height-576*s)/2+p.y*32*s};
+  return cameraTilePoint(page,p.x,p.y);
 }
 async function boot(page:Page){
   await isolatedCombatFixture(page);

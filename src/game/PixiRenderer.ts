@@ -1,4 +1,5 @@
 import { OriginalEffects } from './presentation/OriginalEffects';
+import {WORLD_VIEW,worldCamera,viewportPoint,type WorldCamera} from './worldViewport';
 import { abilityNames } from '../data/actionBar';
 import { assetUrl } from './assetUrl';
 import { SpriteLibrary } from './presentation/SpriteLibrary';
@@ -94,6 +95,10 @@ export class PixiRenderer {
   private scenery?:TilingSprite;
   private trainingGround?:Texture;
   private viewportObserver?:ResizeObserver;
+  private camera?:WorldCamera;
+  private viewportSize={width:1,height:1};
+  private readonly cameraMask=new Graphics();
+  private cameraMaskSize='';
   private rubble=new Map<string,Graphics>();
   private runeVisuals=new Map<string,{graphic:Graphics;startedAt:number;runeId:string}>();
   /** Picking uses rendered footpoints; commands still validate only logical tiles. */
@@ -103,15 +108,12 @@ export class PixiRenderer {
     const alive=[...this.units.entries()].filter(([,u])=>u.currentHp>0);
     const feet=alive.filter(([,u])=>Math.hypot(p.x-u.body.x,p.y-u.body.y)<=12).sort((a,b)=>Math.hypot(p.x-a[1].body.x,p.y-a[1].body.y)-Math.hypot(p.x-b[1].body.x,p.y-b[1].body.y));
     if(feet.length)return feet[0][0];
-    return alive.filter(([,u])=>Math.abs(p.x-u.body.x)<18 && p.y>=u.body.y+u.definition.effectAnchors.head.y-8 && p.y<=u.body.y+9)
+    return alive.filter(([,u])=>Math.abs(p.x-u.body.x)<Math.min(18,u.definition.visualWidth*u.definition.scale/2) && p.y>=u.body.y+(u.definition.effectAnchors.head.y-8)*u.definition.scale && p.y<=u.body.y+9*u.definition.scale)
       .sort((a,b)=>b[1].body.y-a[1].body.y)[0]?.[0];
   }
   canvasPoint(clientX:number,clientY:number) {
     const b=this.app.canvas.getBoundingClientRect();
-    const view=this.engine.arenaView,scale=Math.min(b.width/view.width,b.height/view.height);
-    const x=(clientX-b.left-(b.width-view.width*scale)/2)/scale+view.x;
-    const y=(clientY-b.top-(b.height-view.height*scale)/2)/scale+view.y;
-    return x>=view.x&&y>=view.y&&x<view.x+view.width&&y<view.y+view.height?{x,y}:undefined;
+    return this.camera?viewportPoint({x:clientX,y:clientY},b,this.camera):undefined;
   }
   showDestination(tile:GridPoint) {
     const marker=new Graphics().ellipse(tile.x*32,tile.y*32,8,4).stroke({color:0xbacfaf,width:1,alpha:.7});
@@ -300,7 +302,7 @@ export class PixiRenderer {
     this.world.sortableChildren=true;
     this.scenery=new TilingSprite({texture:this.tileTextures.get('floorStone')!,width:1,height:1});
     this.scenery.tint=0x878d83;
-    this.app.stage.addChild(this.scenery,this.world);
+    this.app.stage.addChild(this.scenery,this.world,this.cameraMask);this.world.mask=this.cameraMask;
     this.viewportObserver=new ResizeObserver(()=>this.resizeViewport());
     this.viewportObserver.observe(parent);
     this.resizeViewport();
@@ -410,20 +412,36 @@ export class PixiRenderer {
         unit.selection.visible = id === heroId;
       }
     }
-    if (this.parent) this.parent.dataset.selectedHero = heroId;
+    if (this.parent) {this.parent.dataset.selectedHero = heroId;this.updateCamera();}
   }
 
   /** Uniform camera fit; every yellow tile is part of the authoritative arena.
    * Any resize letterboxing uses neutral stone, never fake playable yellow. */
   private resizeViewport() {
     if(!this.parent||this.destroyed)return;
-    const width=Math.max(1,this.parent.clientWidth),height=Math.max(1,this.parent.clientHeight);
+    const bounds=this.parent.getBoundingClientRect();
+    const width=Math.max(1,bounds.width),height=Math.max(1,bounds.height);
+    this.viewportSize={width,height};
     this.app.renderer.resize(width,height);
-    const view=this.engine.arenaView,scale=Math.min(width/view.width,height/view.height);
+    this.updateCamera(width,height);
+  }
+  private updateCamera(width=this.viewportSize.width,height=this.viewportSize.height){
+    const view=this.engine.arenaView;
+    const selected=this.presentation.entities.get(this.selectedHeroId)?.position??HUNT_LAYOUT_CONFIG.partyPositions[this.selectedHeroId as keyof typeof HUNT_LAYOUT_CONFIG.partyPositions]??HUNT_LAYOUT_CONFIG.partyPositions.knight;
+    const camera=worldCamera(width,height,view,selected),scale=camera.scale;
+    this.camera=camera;
+    const maskSize=`${camera.left}:${camera.top}:${camera.width*scale}:${camera.height*scale}`;
+    if(maskSize!==this.cameraMaskSize){this.cameraMask.clear().rect(camera.left,camera.top,camera.width*scale,camera.height*scale).fill(0xffffff);this.cameraMaskSize=maskSize;}
     this.world.scale.set(scale);
-    this.world.position.set((width-view.width*scale)/2-view.x*scale,(height-view.height*scale)/2-view.y*scale);
+    this.world.position.set(camera.left-camera.x*scale,camera.top-camera.y*scale);
     if(this.scenery){this.scenery.width=width;this.scenery.height=height;this.scenery.tileScale.set(scale);this.scenery.tilePosition.copyFrom(this.world.position);}
-    this.parent.dataset.viewportScale=scale.toFixed(4);
+    if(!this.parent)return;
+    this.parent.dataset.viewportScale=String(scale);
+    this.parent.dataset.camera=JSON.stringify(camera);
+    this.parent.dataset.partyFocus=this.engine.partyFocusTargetId??'';
+    this.parent.dataset.pendingApproaches=String(this.engine.pendingApproachCount);
+    this.parent.dataset.tileApparent=String(WORLD_VIEW.tileSize*scale);
+    this.parent.dataset.viewColumns=String(camera.width/32);this.parent.dataset.viewRows=String(camera.height/32);
     this.parent.dataset.arenaWidth=String(view.width);this.parent.dataset.arenaHeight=String(view.height);
     this.parent.dataset.arenaOrigin=`${view.x}:${view.y}`;
   }
@@ -497,8 +515,8 @@ export class PixiRenderer {
         const tileSprite = new Sprite(this.tileTextures.get(key)!);
         tileSprite.anchor.set(.5);
         tileSprite.position.set(
-          x * TILE_SIZE + TILE_SIZE / 2,
-          y * TILE_SIZE + TILE_SIZE / 2,
+          x * TILE_SIZE,
+          y * TILE_SIZE,
         );
         tileSprite.width = TILE_SIZE;
         tileSprite.height = TILE_SIZE;
@@ -515,22 +533,22 @@ export class PixiRenderer {
 
     const frame = new Graphics()
       .rect(
-        5,
-        5,
+        5 - TILE_SIZE / 2,
+        5 - TILE_SIZE / 2,
         RENDER_CONFIG.arena.width - 10,
         RENDER_CONFIG.arena.height - 10,
       )
       .stroke({ width:10, color:0x3a2518, alpha:.96 })
       .rect(
-        TILE_SIZE - 1,
-        TILE_SIZE - 1,
+        TILE_SIZE / 2 - 1,
+        TILE_SIZE / 2 - 1,
         RENDER_CONFIG.arena.width - (TILE_SIZE - 1) * 2,
         RENDER_CONFIG.arena.height - (TILE_SIZE - 1) * 2,
       )
       .stroke({ width:3, color:0x8b7442, alpha:.85 })
       .rect(
-        walkableBounds.minColumn * TILE_SIZE - 1,
-        walkableBounds.minRow * TILE_SIZE - 1,
+        (walkableBounds.minColumn - .5) * TILE_SIZE - 1,
+        (walkableBounds.minRow - .5) * TILE_SIZE - 1,
         (walkableBounds.maxColumn - walkableBounds.minColumn + 1) * TILE_SIZE + 2,
         (walkableBounds.maxRow - walkableBounds.minRow + 1) * TILE_SIZE + 2,
       )
@@ -544,8 +562,8 @@ export class PixiRenderer {
       x++
     ) {
       grid
-        .moveTo(x * TILE_SIZE, walkableBounds.minRow * TILE_SIZE)
-        .lineTo(x * TILE_SIZE, (walkableBounds.maxRow + 1) * TILE_SIZE)
+        .moveTo((x - .5) * TILE_SIZE, (walkableBounds.minRow - .5) * TILE_SIZE)
+        .lineTo((x - .5) * TILE_SIZE, (walkableBounds.maxRow + .5) * TILE_SIZE)
         .stroke({ width:1, color:0x111714, alpha:.1 });
     }
     for (
@@ -554,23 +572,23 @@ export class PixiRenderer {
       y++
     ) {
       grid
-        .moveTo(walkableBounds.minColumn * TILE_SIZE, y * TILE_SIZE)
-        .lineTo((walkableBounds.maxColumn + 1) * TILE_SIZE, y * TILE_SIZE)
+        .moveTo((walkableBounds.minColumn - .5) * TILE_SIZE, (y - .5) * TILE_SIZE)
+        .lineTo((walkableBounds.maxColumn + .5) * TILE_SIZE, (y - .5) * TILE_SIZE)
         .stroke({ width:1, color:0x111714, alpha:.1 });
     }
     grid.zIndex = 2;
 
     const atmosphere = new Graphics()
       .rect(
-        walkableBounds.minColumn * TILE_SIZE,
-        walkableBounds.minRow * TILE_SIZE,
+        (walkableBounds.minColumn - .5) * TILE_SIZE,
+        (walkableBounds.minRow - .5) * TILE_SIZE,
         (walkableBounds.maxColumn - walkableBounds.minColumn + 1) * TILE_SIZE,
         (walkableBounds.maxRow - walkableBounds.minRow + 1) * TILE_SIZE,
       )
       .fill({ color:0x10202a, alpha:.08 })
       .rect(
-        ceremonialPath.minColumn * TILE_SIZE,
-        walkableBounds.minRow * TILE_SIZE,
+        (ceremonialPath.minColumn - .5) * TILE_SIZE,
+        (walkableBounds.minRow - .5) * TILE_SIZE,
         (ceremonialPath.maxColumn - ceremonialPath.minColumn + 1) * TILE_SIZE,
         (walkableBounds.maxRow - walkableBounds.minRow + 1) * TILE_SIZE,
       )
@@ -1556,6 +1574,7 @@ export class PixiRenderer {
     this.tween(
       RENDER_CONFIG.effects.spellLabelDuration,
       (progress) => {
+        text.scale.set(Math.min(1,1.25/(this.camera?.scale??1)));
         text.y = y - progress * 14;
         text.alpha =
           progress < .18 ? progress / .18 : Math.max(0, 1 - (progress - .65) / .35);
@@ -1646,7 +1665,7 @@ export class PixiRenderer {
       (progress) => {
         text.y = startY - progress * (kind === 'dodge' ? 18 : 31);
         text.x = startX + direction * progress * 12;
-        if (kind === 'critical') text.scale.set(1 + Math.sin(progress * Math.PI) * .35);
+        text.scale.set(Math.min(1,1.25/(this.camera?.scale??1))*(kind==='critical'?1+Math.sin(progress*Math.PI)*.2:1));
         text.alpha = 1 - progress;
       },
       () => this.floatingTextPool.release(text),
@@ -1706,13 +1725,16 @@ export class PixiRenderer {
   }
 
   private syncPresentation() {
-    for(const rune of this.runeVisuals.values())rune.graphic.alpha=.85+.15*Math.sin((this.player.time-rune.startedAt)/180);
     const startedAt = performance.now();
+    this.updateCamera();
+    for(const rune of this.runeVisuals.values())rune.graphic.alpha=.85+.15*Math.sin((this.player.time-rune.startedAt)/180);
     for (const [id, state] of this.presentation.entities) {
       const unit = this.units.get(id);
       if (!unit) continue;
       unit.body.position.set(state.position.x, state.position.y);
-      unit.ui.position.set(state.position.x, state.position.y);
+      const uiScale=Math.min(1,1.25/(this.camera?.scale??1));
+      unit.ui.scale.set(uiScale);
+      unit.ui.position.set(state.position.x,state.position.y+(unit.hpY-unit.ui.pivot.y)*(1-uiScale));
       unit.shadow.position.set(state.position.x, state.position.y);
       const p=state.movement?Math.max(0,Math.min(1,(this.presentation.time-state.movement.startedAt)/Math.max(1,state.movement.completesAt-state.movement.startedAt))):0;
       const step=Math.sin(p*Math.PI);

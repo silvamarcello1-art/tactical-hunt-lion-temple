@@ -1,7 +1,7 @@
 import {test,expect,type Page} from '@playwright/test';
+import {tilePoint as cameraTilePoint} from './world-point';
 async function tilePoint(page:Page,x:number,y:number) {
-  const b=(await page.locator('#game canvas').boundingBox())!,s=Math.min(b.width/960,b.height/576);
-  return {x:b.x+(b.width-960*s)/2+x*32*s,y:b.y+(b.height-576*s)/2+y*32*s};
+  return cameraTilePoint(page,x,y);
 }
 async function boot(page:Page,mode='MANUAL') {
   await page.addInitScript(()=>{(window as any).events=[];window.addEventListener('hunt-event',e=>(window as any).events.push((e as CustomEvent).detail));});
@@ -30,9 +30,9 @@ test('mouse destinations, chord consumption, HUD ownership and native menu bound
     const hud=new MouseEvent('contextmenu',{bubbles:true,cancelable:true});document.querySelector('#party')!.dispatchEvent(hud);
     return {canvas:canvas.defaultPrevented,hud:hud.defaultPrevented};
   });expect(boundary).toEqual({canvas:true,hud:false});
-  const old=await tilePoint(page,3,9),fresh=await tilePoint(page,8,3);
+  const old=await tilePoint(page,3,9),fresh=await tilePoint(page,8,4);
   await page.mouse.click(old.x,old.y);await page.mouse.click(fresh.x,fresh.y);await page.locator('#pause').click();
-  await expect.poll(()=>page.evaluate(()=>(window as any).events.filter((e:any)=>e.sourceId==='knight'&&e.type==='movement_started').at(-1)?.data.destinationTile)).toEqual({x:8,y:3});
+  await expect.poll(()=>page.evaluate(()=>(window as any).events.filter((e:any)=>e.sourceId==='knight'&&e.type==='movement_started').at(-1)?.data.destinationTile)).toEqual({x:8,y:4});
   await expect(page.locator('#game')).toHaveAttribute('data-logical-overlaps','0');
 });
 test('Assisted only rotates after right-click and stops when selected enemy dies',async({page})=>{

@@ -14,6 +14,7 @@ export interface PathfindingOptions {
   footprint?: EntityFootprint;
   goalRange?: number;
   maxIterations?: number;
+  forbidden?:readonly GridPosition[];
 }
 
 interface SearchNode {
@@ -77,6 +78,7 @@ export class Pathfinder {
       }
 
       for (const neighbor of this.map.neighbors(current.position, footprint)) {
+        if(options.forbidden?.some(tile=>sameGridPosition(tile,neighbor)))continue;
         const key = gridKey(neighbor);
         if (closed.has(key)) continue;
         if (!this.canTraverseDiagonal(current.position, neighbor, options.entityId, footprint)) {

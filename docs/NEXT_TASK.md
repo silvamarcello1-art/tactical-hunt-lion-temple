@@ -1,4 +1,23 @@
-# Próxima tarefa — validar/publicar sprites2C — 20/10/2026 (São Paulo)
+# Próxima tarefa — concluir consolidação visual/tática —24/10/2026
+
+## Agora
+
+Source local implementado sob o pedido24/10; contrato TACTICAL_CONSOLIDATION.md.
+Não retomar instruções antigas de monitor de sprites/arena: publicação74b foi
+encerrada e automação antiga está pausada. Gates locais310unit/typecheck/build/
+build:preview/frozen/arte/diff e63E2E(14,4min) passaram; fechar
+inspeção nas três resoluções, smokes reais de treino Manual e três hunts, métricas
+de latência/update/objetos/sync/cleanup. Revisar diff, commit normal, rebuild com
+SHA do commit e push autorizado. CI/deploy/manifest exato e smoke público dos
+dois modos obrigatórios; não anunciar74b como esta consolidação.
+
+Depois: registro real em checkpoint/CURRENT_STATE/PR3, docs-only [skip ci] se
+necessário sem mudar checkout durante CI, local=origin/limpo e seis links finais.
+Sem merge/forcepush/Sites/backend/OTSP, sem novos sistemas/arte protegida e sem
+relaxar timeout/assertions/snapshots. Cores/diagonais/outfits continuam nos limites
+já documentados; Adventure não foi iniciado ou renumerado.
+
+## Histórico encerrado — publicação de sprites2C
 
 ## Atual — publicação concluída —21/10/2026
 

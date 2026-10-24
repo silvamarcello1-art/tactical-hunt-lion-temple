@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import {worldPoint} from './world-point';
 import { advanceUntilAttribute, installControlledClock, pauseIdleClock, REPEATED_HUNT_TIMEOUT_MS } from './controlled-clock';
 
 const position=async(page:Page,id:string)=>{
@@ -6,9 +7,8 @@ const position=async(page:Page,id:string)=>{
   const [,x,y]=entry?.split(':')??[];return{x:Number(x),y:Number(y)};
 };
 const clickEntity=async(page:Page,id:string,button:'left'|'right'='left')=>{
-  const p=await position(page,id);const b=(await page.locator('#game canvas').boundingBox())!;
-  const scale=Math.min(b.width/960,b.height/576);
-  await page.mouse.click(b.x+(b.width-960*scale)/2+p.x*scale,b.y+(b.height-576*scale)/2+p.y*scale,{button});
+  const p=await position(page,id),screen=await worldPoint(page,p.x,p.y);
+  await page.mouse.click(screen.x,screen.y,{button});
 };
 test('compact slots follow selected hero; WASD and hotkeys submit real commands',async({page})=>{
   // Keep the moving target at the sampled rendered footpoint while the test
@@ -27,8 +27,9 @@ test('compact slots follow selected hero; WASD and hotkeys submit real commands'
   await expect(page.locator('#player-controls')).toHaveAttribute('data-control-mode','MANUAL');
   await expect(page.locator('#card-knight')).toHaveAttribute('data-control-mode','AI');
   expect(await page.locator('#party').boundingBox()).toEqual(rail);
-  await clickEntity(page,'lion-3');
-  await expect(page.locator('#player-controls')).toHaveAttribute('data-selected-target','lion-3');
+  // The camera follows Druid: choose the enemy visible near her, not off-camera lion-3.
+  await clickEntity(page,'lion-2');
+  await expect(page.locator('#player-controls')).toHaveAttribute('data-selected-target','lion-2');
   await expect(page.locator('[data-ability="heal_friend"]')).not.toHaveAttribute('data-unavailable-reason','invalid-target');
   await page.keyboard.press('1');
   await page.clock.runFor(250);

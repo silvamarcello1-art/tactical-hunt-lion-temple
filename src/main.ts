@@ -1,4 +1,5 @@
 import { GameplayHUD } from './ui/GameplayHUD';
+import {WORLD_VIEW} from './game/worldViewport';
 import {AppearanceStore} from './app/AppearanceStore';
 import {OutfitPanel} from './ui/OutfitPanel';
 import {resolveOutfit} from './data/outfits';
@@ -11,6 +12,7 @@ import { iconMarkup } from './data/actionBar';
 import { ProgressionStore } from './app/ProgressionStore';
 import { CombatEngine } from './combat/CombatEngine';
 import './style.css';
+document.documentElement.style.setProperty('--world-aspect',String(WORLD_VIEW.columns/WORLD_VIEW.rows));
 import { PlayerControls } from './control/PlayerControls';
 import { CurrencyService } from './app/CurrencyService';
 import { LiveHuntState } from './app/LiveHuntState';
@@ -353,7 +355,7 @@ async function createRenderer() {
   playerControls = undefined;
   renderer?.destroy();
   renderer = undefined;
-  const nextRenderer = new PixiRenderer(new CombatEngine(803, preferences, huntSessionId, trainingMode?undefined:progressionStore.snapshot(), trainingMode?{}:equipmentStore.loadout(),true,true,trainingMode,{singleHeroControl:true,trainingTeam:true,trainingColumns:18*$('#game').clientWidth/Math.max(1,$('#game').clientHeight)}), {
+  const nextRenderer = new PixiRenderer(new CombatEngine(803, preferences, huntSessionId, trainingMode?undefined:progressionStore.snapshot(), trainingMode?{}:equipmentStore.loadout(),true,true,trainingMode,{singleHeroControl:true,trainingTeam:true,trainingColumns:WORLD_VIEW.trainingColumns,tacticalControls:true}), {
     appearanceSprite:id=>resolveOutfit(appearanceStore.get(id),id).spriteId,
     debugEnabled,
     selectedHeroId,
@@ -369,6 +371,8 @@ async function createRenderer() {
       get running() { return nextRenderer.player.isRunning; },
       training:trainingMode,
       singleHeroControl:true,
+      tacticalControls:true,
+      get partyFocusTargetId(){return nextRenderer.engine.partyFocusTargetId;},
       runePreview:(actor,id,tile)=>nextRenderer.engine.runePreview(actor,id,tile),
       pushPreview:(actor,target)=>nextRenderer.engine.pushPreview(actor,target),
       showPushPreview:preview=>nextRenderer.showPushPreview(preview),

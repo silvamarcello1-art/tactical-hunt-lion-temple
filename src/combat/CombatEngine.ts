@@ -7,6 +7,7 @@ import { TemporaryTerrain } from './TemporaryTerrain';
 import {RuneSystem} from './RuneSystem';
 import {runeDefinitions,TRAINING_SD,type RuneId} from '../data/runes';
 import {PushSystem,TRAINING_PUSH,type PendingPush} from './PushSystem';
+import {pushApproach} from './PushApproach';
 import {trainingFloors,trainingTeamFloors,weakestTrainingTarget} from '../data/training';
 import {abilityCatalog} from '../data/trainingSpells';
 import {manaBuffer} from './ManaBuffer';
@@ -117,15 +118,19 @@ export class CombatEngine {
   assistanceOf(actorId:string) {return {...(this.assistance.get(actorId)??defaultAssistance())};}
   private readonly orders = new Map<string, Extract<PlayerIntent, {type:'attack' | 'follow'}>>();
   private readonly destinations = new Map<string, GridPosition>();
+  private focusTargetId?:string;
+  get partyFocusTargetId(){return this.focusTargetId;}
+  private readonly approaches=new Map<string,{id:string;targetId:string;origin:GridPosition;destination:GridPosition}>();
+  get pendingApproachCount(){return this.approaches.size;}
   private temporaryTerrain?:TemporaryTerrain;
   private runes?:RuneSystem;
   private pushes?:PushSystem;
   private readonly pushMotion=new Map<string,PendingPush>();
-  get pendingPushCount(){return (this.pushes?.size??0)+this.pushMotion.size;}
+  get pendingPushCount(){return this.approaches.size+(this.pushes?.size??0)+this.pushMotion.size;}
   pushPreview(actorId:string,targetId:string){
     if(!this.trainingMode||this.finished||this.disposed)return;
     const source=this.party.find(h=>h.id===actorId),target=[...this.party,...this.enemies].find(e=>e.id===targetId);
-    return this.pushes?.preview(source,target?{...target,pushable:target.pushable??target.role!=='boss'}:undefined,this.elapsed);
+    return this.pushes?.preview(source,target?{...target,pushable:target.pushable??target.role!=='boss'}:undefined,this.elapsed,!!this.options.tacticalControls);
   }
   private readonly runeCharges=new Map<string,number>();
   get runeTiles(){return this.runes?.tiles??[];}
@@ -220,8 +225,8 @@ export class CombatEngine {
   get controlResults() { return clone(this.commandResults); }
   get entities() { return clone([...this.party, ...this.enemies]); }
   get arenaView(){
-    const extended=this.trainingMode&&this.options.trainingTeam;
-    return {width:this.gridMap.width*32,height:this.gridMap.height*32,x:extended?-16:0,y:extended?-16:0,columns:this.gridMap.width,rows:this.gridMap.height};
+    const centered=this.options.tacticalControls||this.trainingMode&&this.options.trainingTeam;
+    return {width:this.gridMap.width*32,height:this.gridMap.height*32,x:centered?-16:0,y:centered?-16:0,columns:this.gridMap.width,rows:this.gridMap.height};
   }
   controlOf(actorId:string):ControlOwnership { return { ...(this.ownership.get(actorId) ?? {mode:'AI'}) }; }
 
@@ -230,6 +235,7 @@ export class CombatEngine {
     const reset=(id:string,next:ControlOwnership['mode'])=>{
       this.ownership.set(id,{mode:next,...(next==='AI'?{}:{ownerId})});
       this.orders.delete(id);this.destinations.delete(id);
+      if(this.options.tacticalControls)this.cancelManualOrder(id,'control-changed');
       const hero=this.party.find(h=>h.id===id);if(hero)hero.targetId=undefined;
     };
     if(this.options.singleHeroControl)for(const hero of heroes)if(hero.id!==actorId&&this.controlOf(hero.id).mode!=='AI')reset(hero.id,'AI');
@@ -241,11 +247,24 @@ export class CombatEngine {
     if (this.disposed || this.finished) return reject('session-ended');
     if (command.sessionId !== this.sessionId) return reject('stale-session');
     if (command.ownerId !== 'local-player' || !heroes.some(hero => hero.id === command.actorId)) return reject('ownership');
+    if(!validIntent(command.intent))return reject('invalid-command');
+    if(this.options.tacticalControls&&this.trainingMode&&command.intent.type==='control'&&command.intent.mode!=='MANUAL')return reject('manual-required');
+    if(this.options.tacticalControls&&command.actorId!==this.selectedController&&!['control','assistance','look'].includes(command.intent.type))return reject('not-selected');
     if (!Number.isSafeInteger(command.sequence) || command.sequence <= (this.sequences.get(command.actorId) ?? 0)) return reject('sequence');
     if (typeof command.commandId !== 'string' || !command.commandId.length || command.commandId.length > 128 ||
-      !Number.isFinite(command.logicalTick) || command.logicalTick < 0 || command.logicalTick > this.elapsed + 250 || !validIntent(command.intent)) return reject('invalid-command');
+      !Number.isFinite(command.logicalTick) || command.logicalTick < 0 || command.logicalTick > this.elapsed + 250) return reject('invalid-command');
     if (this.commands.length >= 128) return reject('queue-full');
     this.sequences.set(command.actorId, command.sequence);
+    if(this.options.tacticalControls&&command.intent.type==='attack'){
+      const targetId=command.intent.targetId;
+      if(!this.enemies.some(e=>e.id===targetId&&e.alive))return reject('invalid-target');
+      this.focusTargetId=targetId;
+    }
+    if(this.options.tacticalControls&&command.intent.type==='stop')this.focusTargetId=undefined;
+    if(this.options.tacticalControls&&!['control','assistance','look'].includes(command.intent.type)){
+      this.cancelManualOrder(command.actorId,'new-intent');
+      for(let i=this.commands.length-1;i>=0;i--)if(this.commands[i].actorId===command.actorId&&!['control','assistance','look'].includes(this.commands[i].intent.type))this.commands.splice(i,1);
+    }
     // A burst of pointer updates replaces the pending destination, not the queue.
     if (command.intent.type === 'move-to' || command.intent.type==='move') {
       for (let index=this.commands.length-1;index>=0;index--) {
@@ -286,6 +305,7 @@ export class CombatEngine {
 
   dispose() {
     this.disposed = true;
+    this.approaches.clear();this.focusTargetId=undefined;
     this.commands.length = 0;
     this.orders.clear();
     this.destinations.clear();
@@ -302,6 +322,33 @@ export class CombatEngine {
     const mode = this.controlOf(actorId).mode;
     if (this.acted.has(actorId) || this.destinations.has(actorId)) return false;
     return mode === 'AI';
+  }
+
+  private cancelManualOrder(actorId:string,reason:string){
+    this.orders.delete(actorId);this.destinations.delete(actorId);
+    for(let i=this.commands.length-1;i>=0;i--)if(this.commands[i].actorId===actorId&&!['control','assistance','look'].includes(this.commands[i].intent.type))this.commands.splice(i,1);
+    const approach=this.approaches.get(actorId);this.approaches.delete(actorId);
+    if(approach)this.emit('push_cancelled',this.currentFloor,actorId,approach.targetId,{castId:approach.id,reason,sessionId:this.sessionId});
+    for(const p of this.pushes?.cancelSource(actorId)??[])this.emit('push_cancelled',this.currentFloor,actorId,p.targetId,{castId:p.id,reason,sessionId:this.sessionId});
+    // Already reserved steps and committed push displacements keep their lifecycle.
+  }
+
+  private processApproach(actor:SimEntity,party:SimEntity[],enemies:SimEntity[],floor:number){
+    const order=this.approaches.get(actor.id);if(!order)return;
+    const target=[...party,...enemies].find(e=>e.id===order.targetId);
+    const reason=!actor.alive?'actor-dead':this.selectedController!==actor.id||this.controlOf(actor.id).mode!=='MANUAL'?'control-changed':!target?.alive?'target-dead':gridKey(this.tileOf(target))!==gridKey(order.origin)?'target-moved':this.pushes!.readiness(actor,{...target,pushable:target.pushable??target.role!=='boss'},order.destination,this.now,true);
+    if(reason!=='ok'){this.cancelManualOrder(actor.id,reason);return;}
+    this.acted.add(actor.id);
+    if(this.movement.pendingEntries().some(m=>m.entityId===actor.id))return;
+    if(gridDistance(this.tileOf(actor),order.origin)<=1){
+      this.approaches.delete(actor.id);
+      const result=this.pushes!.queue(order.id,this.sessionId,actor,target!,order.destination,this.now);
+      if(result.push){this.basicReady.set(actor.id,Math.max(this.basicReady.get(actor.id)??0,this.now+TRAINING_PUSH.skipAttack));this.emit('push_queued',floor,actor.id,target!.id,{castId:order.id,fromTile:order.origin,toTile:order.destination,completesAt:result.push.completesAt,sessionId:this.sessionId});}
+      else this.emit('push_cancelled',floor,actor.id,order.targetId,{castId:order.id,reason:result.reason,sessionId:this.sessionId});
+      return;
+    }
+    const plan=pushApproach(this.gridMap,this.occupancy,actor.id,this.tileOf(actor),order.origin,order.destination);
+    if(!plan?.path.length||!this.move(actor,plan.path[0],floor,false,0,true,'push-approach'))this.cancelManualOrder(actor.id,'no-route');
   }
 
   private processCommands(party:SimEntity[], enemies:SimEntity[], floor:number) {
@@ -326,6 +373,7 @@ export class CombatEngine {
       if (this.commandResults.length > 128) this.commandResults.shift();
     }
     for (const actor of party) {
+      this.processApproach(actor,party,enemies,floor);
       if (!actor.alive) { this.orders.delete(actor.id);this.destinations.delete(actor.id); continue; }
       const destination=this.destinations.get(actor.id);
       if (destination) {
@@ -348,6 +396,7 @@ export class CombatEngine {
 
   private resolvePlayerIntent(actor:SimEntity, intent:PlayerIntent, party:SimEntity[], enemies:SimEntity[], floor:number):string {
     if(this.options.singleHeroControl&&!actor.trainingVocation&&actor.id!==this.selectedController&&intent.type!=='look')return 'not-selected';
+    if(intent.type==='interrupt')return 'ok';
     if(intent.type==='rune'){
       if(this.acted.has(actor.id))return 'action-pending';
       const status=this.runeStatus(actor.id,intent.runeId,this.now);
@@ -380,6 +429,13 @@ export class CombatEngine {
       if(this.acted.has(actor.id))return 'action-pending';
       const target=[...party,...enemies].find(e=>e.id===intent.targetId);
       if(!target)return 'invalid-target';
+      if(this.options.tacticalControls){
+        const checked=this.pushes!.readiness(actor,{...target,pushable:target.pushable??target.role!=='boss'},intent.tile,this.now,true);
+        if(checked!=='ok')return checked;
+        if(gridDistance(this.tileOf(actor),this.tileOf(target))>1&&!pushApproach(this.gridMap,this.occupancy,actor.id,this.tileOf(actor),this.tileOf(target),intent.tile))return 'no-route';
+        this.approaches.set(actor.id,{id:`push-${++this.castSequence}`,targetId:target.id,origin:this.tileOf(target),destination:{...intent.tile}});
+        return 'ok';
+      }
       const result=this.pushes!.queue(`push-${++this.castSequence}`,this.sessionId,actor,{...target,pushable:target.pushable??target.role!=='boss'},intent.tile,this.now);
       if(!result.push)return result.reason;
       this.basicReady.set(actor.id,Math.max(this.basicReady.get(actor.id)??0,this.now+TRAINING_PUSH.skipAttack));
@@ -387,6 +443,7 @@ export class CombatEngine {
       this.acted.add(actor.id);return 'ok';
     }
     if (intent.type === 'stop') {
+      if(this.options.tacticalControls)this.focusTargetId=undefined;
       for(const p of this.pushes?.cancelSource(actor.id)??[])this.emit('push_cancelled',floor,p.sourceId,p.targetId,{castId:p.id,reason:'player-stop',sessionId:this.sessionId});
       this.orders.delete(actor.id);
       this.destinations.delete(actor.id);
@@ -422,6 +479,7 @@ export class CombatEngine {
       const candidates = intent.type === 'attack' ? enemies : [...party,...enemies];
       const target = candidates.find(entity => entity.id === intent.targetId && entity.alive && entity.id !== actor.id);
       if (!target) return 'invalid-target';
+      if(this.options.tacticalControls&&intent.type==='attack')this.focusTargetId=target.id;
       this.setTarget(actor,target,floor,'player');
       this.destinations.delete(actor.id);
       this.orders.set(actor.id,intent);
@@ -536,7 +594,7 @@ export class CombatEngine {
     equipmentRewards=false,
     private polishedRules=false,
     readonly trainingMode=false,
-    private readonly options:{singleHeroControl?:boolean;trainingTeam?:boolean;trainingColumns?:number}={},
+    private readonly options:{singleHeroControl?:boolean;trainingTeam?:boolean;trainingColumns?:number;tacticalControls?:boolean}={},
   ) {
     this.sessionId = sessionId ?? `hunt-${seed}`;
     this.options={...options};
@@ -614,7 +672,7 @@ export class CombatEngine {
   private resetGridContext() {
     this.temporaryTerrain?.restore();
     this.runes?.clear();
-    this.pushes?.clear();this.pushMotion.clear();
+    this.pushes?.clear();this.pushMotion.clear();this.approaches.clear();
     this.occupancy = new OccupancyGrid(this.gridMap);
     this.movement = new MovementSystem(
       this.gridMap,
@@ -895,13 +953,14 @@ export class CombatEngine {
     reason?: string,
   ) {
     const from = this.tileOf(entity);
+    const duration=this.options.tacticalControls&&this.controlOf(entity.id).mode!=='AI'?250:220;
     const result = this.movement.step({
       entityId:entity.id,
       from,
       destination,
       goalRange,
       now:this.now,
-      duration:220,
+      duration,
       sessionId:this.sessionId,
       tacticalPriority:
         entity.role === 'knight'
@@ -941,7 +1000,7 @@ export class CombatEngine {
       completesAt:result.pending?.completesAt,
       pathRevision:result.pending?.pathRevision,
       sessionId:this.sessionId,
-      duration:220,
+      duration,
       allowBacktrack,
     });
     this.emit('movement_started', floor, entity.id, undefined, {
@@ -949,7 +1008,7 @@ export class CombatEngine {
       toTile:result.to,
       destinationTile:cloneGridPosition(destination),
       path:clone(result.path),
-      duration:220,
+      duration,
       startedAt:result.pending?.startedAt,
       completesAt:result.pending?.completesAt,
       pathRevision:result.pending?.pathRevision,
@@ -963,7 +1022,7 @@ export class CombatEngine {
       toTile:cloneGridPosition(result.to),
       destinationTile:cloneGridPosition(destination),
       path:clone(result.path),
-      duration: 220,
+      duration,
       startedAt:result.pending?.startedAt,
       completesAt:result.pending?.completesAt,
       sessionId:this.sessionId,
@@ -1822,6 +1881,9 @@ export class CombatEngine {
   ) {
     const aliveEnemies = enemies.filter((enemy) => enemy.alive);
     if (!aliveEnemies.length) return;
+    if(this.options.tacticalControls){
+      if(this.focusTargetId&&!aliveEnemies.some(e=>e.id===this.focusTargetId))this.focusTargetId=undefined;
+    }
     for(const hero of party.filter(h=>h.alive&&this.controlOf(h.id).mode==='ASSISTED')) {
       const target=aliveEnemies.find(e=>e.id===this.orders.get(hero.id)?.targetId);
       if(!target || this.acted.has(hero.id) || this.destinations.has(hero.id) || this.movement.pendingEntries().some(m=>m.entityId===hero.id)) continue;
@@ -1836,6 +1898,9 @@ export class CombatEngine {
         if(action) {this.performOffensiveAction(hero,action,floor);continue;}
       }
       if(options.autoAttack) this.basicAttack(hero,target,floor);
+    }
+    if(this.options.tacticalControls&&(this.trainingMode||this.focusTargetId)){
+      this.focusedPartyActions(party,aliveEnemies,floor);return;
     }
     const knight = party.find((hero) => hero.id === 'knight')!;
     const druid = party.find((hero) => hero.id === 'druid')!;
@@ -2083,7 +2148,9 @@ export class CombatEngine {
     for (const hero of party.filter((candidate) => candidate.alive && this.aiControls(candidate.id))) {
       this.movement.clearFailure(hero.id);
       if (hero.role !== 'druid' && hero.role !== 'sorcerer') continue;
-      const target = this.nearest(hero, aliveEnemies);
+      const explicitFocus = aliveEnemies.find(enemy=>enemy.id===this.focusTargetId);
+      const target = this.options.tacticalControls && (this.trainingMode || explicitFocus)
+        ? explicitFocus : this.nearest(hero, aliveEnemies);
       if (
         target &&
         !this.hasFiringOptionAt(
@@ -2220,6 +2287,28 @@ export class CombatEngine {
     const removed=all?this.runes!.clear():this.runes!.expire(this.now);
     for(const rune of removed)this.emit('rune_removed',floor,rune.sourceId,undefined,{runeId:rune.runeId,tile:rune.tile,castId:rune.id,sessionId:this.sessionId,reason:all?'floor-complete':'expired'});
   }
+  private focusedPartyActions(party:SimEntity[],enemies:SimEntity[],floor:number){
+    const target=enemies.find(e=>e.id===this.focusTargetId);
+    for(const hero of party){
+      if(!hero.alive||!this.aiControls(hero.id)||this.movement.pendingEntries().some(m=>m.entityId===hero.id))continue;
+      if(hero.role==='druid'){
+        const heal=this.ability('heal_friend'),wounded=party.filter(h=>h.alive&&(!this.trainingMode||h.id!==hero.id)&&h.hp/h.maxHp<.58).sort((a,b)=>a.hp/a.maxHp-b.hp/b.maxHp)[0];
+        if(wounded&&this.abilityStatus(hero.id,heal.id,wounded.id).ready){this.healFriend(hero,wounded,heal,floor,enemies);continue;}
+        if(wounded&&this.canCast(hero,heal)&&this.tryHealingPosition(hero,wounded,enemies,floor,heal.rangeTiles))continue;
+      }
+      if(!target)continue;
+      this.setTarget(hero,target,floor,'player');
+      const action=this.vocationAbilities(hero.role as AbilityDefinition['vocation']).filter(a=>a.group!=='healing'&&a.group!=='support'&&this.canCast(hero,a)&&(!a.reserveForBoss||floor>=4))
+        .map(ability=>({ability,targeting:this.abilityTargets(hero,target,ability,enemies),score:0}))
+        .find(a=>a.targeting.targets.some(t=>t.id===target.id)&&a.targeting.targets.length>=a.ability.hardMinTargets&&(hero.role!=='druid'||hero.mana-a.ability.manaCost>=360));
+      if(action){action.targeting.targets.sort((a,b)=>Number(b.id===target.id)-Number(a.id===target.id));this.performOffensiveAction(hero,action,floor);continue;}
+      if(this.basicAttack(hero,target,floor))continue;
+      const range=hero.role==='knight'?1:5;
+      if(this.distance(hero,target)>range)this.move(hero,this.tileOf(target),floor,false,range,true,'party-focus');
+      else if(!this.lineOfSight.hasLineOfSight(this.tileOf(hero),this.tileOf(target),{ignoreEntityIds:[hero.id,target.id]}))this.tryMoveToFiringPosition(hero,target,party,enemies,floor);
+    }
+  }
+
   private resolvePushes(party:SimEntity[],enemies:SimEntity[],floor:number){
     if(!this.trainingMode)return;
     const pending=this.movement.pendingEntries();
@@ -2356,6 +2445,8 @@ export class CombatEngine {
       yield this.now;
       this.resolvePendingMovements(party, enemies, floor);
       this.cancelPendingMovements(floor, 'floor-complete');
+      for(const actor of party)if(this.approaches.has(actor.id))this.cancelManualOrder(actor.id,'floor-complete');
+      this.focusTargetId=undefined;
       for(const p of [...(this.pushes?.clear()??[]),...this.pushMotion.values()])this.emit('push_cancelled',floor,p.sourceId,p.targetId,{castId:p.id,reason:'floor-complete',sessionId:this.sessionId});this.pushMotion.clear();
       this.resolvePendingProjectiles(party, enemies);
       this.cancelPendingProjectiles(floor, 'floor-complete');

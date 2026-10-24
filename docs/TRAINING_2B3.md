@@ -1,5 +1,11 @@
 # Treino 2B.3 — runas, empurrão e leitura — 19/10/2026
 
+Atualização24/10: TACTICAL_CONSOLIDATION.md e PLAYER_CONTROL.md são vigentes.
+Push pode começar distante: executor aproxima e só então agenda push adjacente;
+alvo nunca é puxado. Nova intenção/ESC cancela approach e rota, sem push tardio.
+Escala/câmera comuns substituem “sem zoom”/corpo60px renderizado desta etapa.
+O texto datado abaixo é histórico nos pontos substituídos, não outra regra atual.
+
 ## Escopo
 
 Party × bot local, mesmo CombatEngine/PixiJS. Sem backend, PvP entre contas,

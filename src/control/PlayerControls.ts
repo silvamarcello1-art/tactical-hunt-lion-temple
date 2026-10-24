@@ -28,13 +28,14 @@ export class PlayerControls {
   focusGame(){this.port.canvas.focus({preventScroll:true});}
   private assumeMovement() {if(this.mode==='AI')this.assumeManual();}
   get selectedActor() { return this.actorId; }
-  get selectedTarget() { return this.target?.kind==='entity'?this.target.entityId:undefined; }
+  get selectedTarget() { return this.port.tacticalControls?this.port.partyFocusTargetId:this.target?.kind==='entity'?this.target.entityId:undefined; }
   assumeManual() {
     if (this.mode==='MANUAL') return;
     this.mode='MANUAL';this.modeSelect.value=this.mode;
     this.send({type:'control',mode:'MANUAL'});this.onSelect(this.actorId);this.sync();
   }
   returnAuto() {
+    if(this.port.training&&this.port.tacticalControls)return;
     this.clear();this.mode='AI';this.modeSelect.value='AI';
     this.send({type:'control',mode:'AI'});this.onSelect(this.actorId);this.sync();
   }
@@ -59,6 +60,7 @@ export class PlayerControls {
     this.actorSelect.value = this.actorId;
     this.mode=this.port.controlOf(this.actorId).mode;
     this.modeSelect.value = this.mode;
+    if(this.port.training&&this.port.tacticalControls){this.modeSelect.hidden=true;const label=document.createElement('span');label.id='manual-mode';label.textContent='Manual · aliados Auto';this.panel.prepend(label);}
     for(const id of ['knight','druid','sorcerer']) {
       const o=this.assistanceStore.get(id);const sequence=++this.sequence;
       this.port.submit({commandId:`player-${sequence}`,sessionId:this.port.sessionId,actorId:id,ownerId:'local-player',sequence,logicalTick:this.port.time,intent:{type:'assistance',...o}});
@@ -89,7 +91,7 @@ export class PlayerControls {
       if(event.ctrlKey||event.metaKey||event.altKey)return;
       if (event.key === 'Escape') {
         event.preventDefault();
-        if(['spell-targeting','use-with','rune-targeting','push-targeting'].includes(this.interaction.state.kind)) {this.interaction.cancel();this.status.textContent='Escolha de alvo cancelada.';this.sync();return;}
+        if(!this.port.tacticalControls&&['spell-targeting','use-with','rune-targeting','push-targeting'].includes(this.interaction.state.kind)) {this.interaction.cancel();this.status.textContent='Escolha de alvo cancelada.';this.sync();return;}
         this.stop();this.status.textContent='Parado.';return;
       }
       if (editableTarget(event.target) || !this.port.running || event.ctrlKey || event.metaKey || event.altKey) return;
@@ -102,7 +104,7 @@ export class PlayerControls {
       if(event.code==='Numpad5') {event.preventDefault();if(!event.repeat)this.stop();return;}
       if (this.held.press(event.code)) {
         event.preventDefault();this.assumeMovement();
-        if(!event.repeat) {this.pendingStep=this.held.direction();this.inputAt=performance.now();}
+        if(!event.repeat) {if(this.port.tacticalControls)this.send({type:'interrupt'});this.pendingStep=this.held.direction();this.inputAt=performance.now();}
         this.sync();
       }
     });
@@ -184,7 +186,7 @@ export class PlayerControls {
       }
       if(gesture==='engage') {
         if(target.kind==='entity'&&!heroes.some(h=>h.id===target.entityId)) {
-          this.target=target;this.send({type:'attack',targetId:target.entityId});this.sync();
+          this.engageTarget(target.entityId);
         }
         return;
       }
@@ -192,7 +194,8 @@ export class PlayerControls {
       const command = this.interaction.target(target);
       if (command) this.send(command);
       if (!targeting && target.kind==='entity' && heroes.some(hero=>hero.id===target.entityId)) {this.selectActor(target.entityId);return;}
-      this.target = targeting ? undefined : target;
+      if(this.port.tacticalControls&&!targeting&&target.kind==='entity'){this.engageTarget(target.entityId);return;}
+      if(!this.port.tacticalControls)this.target = targeting ? undefined : target;
       if(!targeting&&target.kind==='tile') {
         this.assumeMovement();
         this.send({type:'move-to',tile:target.tile});
@@ -227,16 +230,17 @@ export class PlayerControls {
   }
 
   get manual() { return this.mode !== 'AI'; }
-  armPush(){if(!this.port.training||!this.port.running)return;this.held.clear();this.pendingStep=undefined;this.interaction.armPush();this.status.textContent='Empurrar: clique numa criatura/personagem adjacente e depois no tile de destino. Ou arraste o alvo.';this.sync();this.focusGame();}
+  armPush(){if(!this.port.training||!this.port.running)return;this.interrupt();this.interaction.armPush();this.status.textContent='Empurrar: escolha a criatura e um destino vizinho; você se aproxima antes de empurrar. Ou arraste o alvo.';this.sync();this.focusGame();}
   stopAction(){this.stop();this.focusGame();}
   armRune(runeId:RuneId){
     if(!this.port.training||!this.port.running)return;
-    this.held.clear();this.pendingStep=undefined;this.interaction.armRune(runeId);
+    this.interrupt();this.interaction.armRune(runeId);
     this.status.textContent=`${runeDefinitions[runeId].name}: ${runeDefinitions[runeId].target==='enemy'?'clique no inimigo':'clique no tile'} (até ${runeDefinitions[runeId].range} tiles). ESC cancela.`;this.sync();this.focusGame();
   }
   selectActor(actorId:string, takeControl=true) {
     if (!heroes.some(hero => hero.id === actorId)) return;
-    this.clear();
+    const focus=this.selectedTarget;this.clear();
+    if(this.port.tacticalControls&&focus)this.target={kind:'entity',entityId:focus};
     this.actorId = actorId;
     this.actorSelect.value = actorId;
     this.mode = this.port.controlOf(actorId).mode;
@@ -248,13 +252,14 @@ export class PlayerControls {
     this.sync();
   }
   cast(abilityId:string, targeting = false) {
+    if(this.port.tacticalControls)this.interrupt();
     const ability = abilityCatalog(!!this.port.training).find(ability => ability.id === abilityId);
     const hero = heroes.find(hero => hero.id === this.actorId);
     if (!ability || ability.vocation !== hero?.role) {
       this.status.textContent = 'Selecione o personagem desta habilidade.';
       return;
     }
-    const targetId=ability.group==='healing'||ability.group==='support'?this.actorId:this.target?.kind==='entity'?this.target.entityId:undefined;
+    const targetId=ability.group==='healing'||ability.group==='support'?this.actorId:this.selectedTarget;
     const available=this.port.abilityStatus(this.actorId,abilityId,targetId);
     if(targeting || available.reason==='ally-required' || (!targetId && available.reason==='no-target')) {
       this.held.clear();this.pendingStep=undefined;this.interaction.armSpell(abilityId);
@@ -275,13 +280,15 @@ export class PlayerControls {
     this.pendingStep=undefined;this.inputAt=0;this.interaction.cancel();this.menu.hidden=true;this.sync();
   }
   private clearOverlayInput(){
-    if(document.querySelector('#outfit-dialog[open]'))this.suspendInput();else this.clear();
+    this.suspendInput();
   }
   destroy() {
     if (this.abort.signal.aborted) return;
     this.clear(); this.debug?.remove(); this.abort.abort(); this.port.beforeTick();
+    document.querySelector('#manual-mode')?.remove();this.modeSelect.hidden=false;
   }
   private send(intent:PlayerIntent) {
+    if(this.port.tacticalControls&&!['move','interrupt','look','control','assistance'].includes(intent.type)){this.held.clear();this.pendingStep=undefined;}
     this.panel.dataset.lastIntent=intent.type;
     this.panel.dataset.commandCount=String(Number(this.panel.dataset.commandCount??0)+1);
     const sequence = ++this.sequence;
@@ -293,6 +300,8 @@ export class PlayerControls {
     return result;
   }
   private stop() { this.clear();if(this.mode==='AI')this.assumeManual();this.send({type:'stop'}); }
+  private interrupt(){this.held.clear();this.pendingStep=undefined;if(this.port.tacticalControls)this.send({type:'interrupt'});}
+  engageTarget(targetId:string){this.interrupt();this.target={kind:'entity',entityId:targetId};this.send({type:'attack',targetId});this.sync();this.focusGame();}
   private pointerTarget(event:MouseEvent):InteractionTarget | undefined {
     const point=this.port.worldPoint?.(event.clientX,event.clientY);
     const tile = this.port.worldPoint ? point?{x:Math.round(point.x/32),y:Math.round(point.y/32)}:undefined : screenToTile({x:event.clientX,y:event.clientY},this.port.canvas.getBoundingClientRect(),RENDER_CONFIG.arena);
@@ -305,6 +314,8 @@ export class PlayerControls {
     return this.target?.kind === 'entity' ? `Alvo: ${this.target.entityId}` : this.target?.kind === 'tile' ? `Tile ${this.target.tile.x}, ${this.target.tile.y}` : 'Selecione um alvo.';
   }
   private reasonLabel(reason:string) {
+    if(reason==='manual-required')return 'No treino, o selecionado é Manual; os aliados continuam Auto.';
+    if(reason==='no-route')return 'Não há aproximação adjacente alcançável para empurrar.';
     if(reason==='not-selected')return 'Este herói voltou ao Auto; selecione-o para dar ordens.';
     const tactical:Record<string,string>={'no-field':'Nenhum campo removível neste tile. Magic Wall não é removível.','not-pushable':'Esta criatura não pode ser empurrada.','self-push':'Use movimento para deslocar seu próprio herói.','push-cooldown':'Aguarde a recarga do empurrão.','push-pending':'Já existe um empurrão pendente.','target-moved':'O alvo se moveu; empurrão cancelado.'};if(tactical[reason])return tactical[reason];
     const labels:Record<string,string> = {'training-only':'Runas disponíveis no treino local.','no-charges':'Sem cargas neste kit de treino.','ownership':'Assuma o controle Manual deste personagem.', 'session-ended':'A hunt terminou.', 'actor-dead':'Personagem derrotado.', 'invalid-target':'Alvo inválido.', 'out-of-range':'Alvo fora do alcance.', 'blocked':'Destino bloqueado por parede, criatura ou reserva.', 'invalid-destination':'Destino fora da arena.', 'ability-unavailable':'Habilidade indisponível: mana, cooldown ou configuração.', 'unsupported-interaction':'Esta interação ainda não está disponível.', 'action-pending':'Aguarde o próximo passo.'};
@@ -315,7 +326,7 @@ export class PlayerControls {
     const hover=this.pushHover,valid=preview?.destinations.find(d=>d.tile.x===hover?.x&&d.tile.y===hover?.y);
     this.port.showAim?.(hover,valid?.ready??false);
     const count=preview?.destinations.filter(d=>d.ready).length??0;
-    this.status.textContent=`Arrastando: ${count} destinos vizinhos válidos. Solte o botão esquerdo em um tile verde.${hover&&!valid?.ready?' '+this.reasonLabel(valid?.reason??'invalid-destination'):''}`;
+    this.status.textContent=`${valid?.needsApproach?'Aproximar para empurrar. ':''}Arrastando: ${count} destinos vizinhos válidos. Solte em um tile verde.${hover&&!valid?.ready?' '+this.reasonLabel(valid?.reason??'invalid-destination'):''}`;
   }
   private sync() {
     const options=this.assistanceStore.get(this.actorId);
@@ -324,15 +335,24 @@ export class PlayerControls {
       if(button) {button.hidden=this.mode!=='ASSISTED';button.setAttribute('aria-pressed',String(options[category]));button.textContent=`${category==='autoAttack'?'Auto Attack':'Auto Magias'} ${options[category]?'ON':'OFF'}`;}
     }
     this.panel.dataset.autoAttack=String(options.autoAttack);this.panel.dataset.autoSpells=String(options.autoSpells);
-    this.port.selectTarget(this.target?.kind === 'entity' ? this.target.entityId : undefined);
+    this.port.selectTarget(this.selectedTarget);
     this.panel.dataset.controlMode = this.mode;
     this.panel.dataset.controlledActor = this.actorId;
     this.panel.dataset.interactionState = this.interaction.state.kind;
     this.panel.dataset.heldKeys = String(this.held.size);
-    this.panel.dataset.selectedTarget = this.target?.kind === 'entity' ? this.target.entityId : '';
+    this.panel.dataset.selectedTarget = this.selectedTarget??'';
     const target=this.port.entities.find(entity=>entity.id===this.selectedTarget);
     const targetStatus=document.querySelector('#target-status');
     if(targetStatus) targetStatus.textContent=target?`${target.name} · ${target.hp}/${target.maxHp} HP`:'';
+    const focus=document.querySelector('#party-focus');if(focus)focus.textContent=target?`${target.name} · ${target.hp}/${target.maxHp} HP`:'Nenhum alvo · aguardando ordem';
+    const policy=document.querySelector('#mode-policy');if(policy)policy.textContent=this.port.training?'Selecionado Manual. Aliados Auto seguem o foco ofensivo; suporte automático preservado.':'Hunt: automação disponível; selecionar outro herói assume Manual só nele.';
+    const list=document.querySelector('#battle-targets');
+    if(list){
+      const enemies=this.port.entities.filter(e=>e.alive&&!heroes.some(h=>h.id===e.id));
+      const ids=enemies.map(e=>e.id).join('|');
+      if(list.getAttribute('data-roster')!==ids){list.replaceChildren(...enemies.map(e=>{const button=document.createElement('button');button.dataset.battleTarget=e.id;button.textContent=e.name;button.onclick=()=>this.engageTarget(e.id);return button;}));list.setAttribute('data-roster',ids);}
+      for(const button of Array.from(list.querySelectorAll<HTMLButtonElement>('button')))button.setAttribute('aria-pressed',String(button.dataset.battleTarget===this.selectedTarget));
+    }
     const aiming=['spell-targeting','rune-targeting','push-targeting'].includes(this.interaction.state.kind);
     this.port.canvas.style.cursor = this.dragActor?'grabbing':aiming ? 'crosshair' : '';
     if(this.dragActor)this.showPushOptions(this.dragActor.id);

@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import {tilePoint} from './world-point';
 import { installControlledClock, pauseIdleClock } from './controlled-clock';
 
 async function position(page:Page,id = 'knight') {
@@ -8,9 +9,7 @@ async function position(page:Page,id = 'knight') {
   return {x:Number(x),y:Number(y)};
 }
 async function clickTile(page:Page,tile:{x:number;y:number},button:'left'|'right' = 'left') {
-  const bounds = (await page.locator('#game canvas').boundingBox())!;
-  const scale=Math.min(bounds.width/960,bounds.height/576);
-  await page.mouse.click(bounds.x+(bounds.width-960*scale)/2+tile.x*32*scale,bounds.y+(bounds.height-576*scale)/2+tile.y*32*scale,{button});
+  const screen=await tilePoint(page,tile.x,tile.y);await page.mouse.click(screen.x,screen.y,{button});
 }
 async function open(page:Page, controlledClock = false) {
   const errors:string[] = [];
@@ -83,8 +82,8 @@ test('mouse engage, ESC and two-button Look issue domain actions', async ({page}
   await page.waitForTimeout(800);
   expect(await page.evaluate(() => (window as any).__controlEvents.filter((event:any) => event.sourceId === 'knight' && event.type === 'basic_attack').length)).toBe(attackCount);
   await page.locator('#pause').click();
-  const target=await position(page,'sorcerer');const b=(await page.locator('#game canvas').boundingBox())!;const k=Math.min(b.width/960,b.height/576);
-  await page.mouse.move(b.x+(b.width-960*k)/2+target.x*32*k,b.y+(b.height-576*k)/2+target.y*32*k);
+  const target=await position(page,'sorcerer'),screen=await tilePoint(page,target.x,target.y);
+  await page.mouse.move(screen.x,screen.y);
   await page.mouse.down({button:'left'});await page.mouse.down({button:'right'});await page.mouse.up({button:'right'});await page.mouse.up({button:'left'});
   await expect(page.locator('#interaction-menu')).toBeHidden();
   await expect(page.locator('#interaction-status')).toContainText('Orin');

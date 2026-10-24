@@ -1,5 +1,12 @@
 # Roadmap
 
+## Escopo autorizado em24/10/2026
+
+Consolidação visual/movimento/controle/foco/push sobre MVP2C já entregue, sem
+renumerar outfits ou Adventure. Contrato: TACTICAL_CONSOLIDATION.md. Não inicia
+backend, OTSP, NPC, quest, campanha ou PvP online. Gates/publicação novos precisam
+de evidência própria; o runtime74b não contém automaticamente esta consolidação.
+
 ## Escopo autorizado em20/10/2026
 
 O pedido atual chama MVP2C de Outfit Customization & Addon System. Este slice

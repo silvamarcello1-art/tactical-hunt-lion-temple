@@ -10,6 +10,7 @@ export type PlayerIntent =
   | { type:'move-to'; tile:GridPoint }
   | { type:'attack' | 'follow'; targetId:string }
   | { type:'stop' }
+  | { type:'interrupt' }
   | { type:'cast'; abilityId:string; targetId:string }
   | { type:'rune'; runeId:RuneId; tile:GridPoint }
   | { type:'push'; targetId:string; tile:GridPoint }
@@ -53,7 +54,7 @@ export function validIntent(intent: PlayerIntent): boolean {
     case 'move': return [intent.dx,intent.dy].every(value => Number.isInteger(value) && Math.abs(value) <= 1) && !!(intent.dx || intent.dy);
     case 'move-to': return Number.isSafeInteger(intent.tile?.x) && Number.isSafeInteger(intent.tile?.y);
     case 'attack': case 'follow': return id(intent.targetId);
-    case 'stop': return true;
+    case 'stop': case 'interrupt': return true;
     case 'cast': return id(intent.abilityId) && id(intent.targetId);
     case 'rune': return isRuneId(intent.runeId) && !!target({kind:'tile',tile:intent.tile});
     case 'push': return id(intent.targetId) && !!target({kind:'tile',tile:intent.tile});

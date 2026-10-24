@@ -1,3 +1,15 @@
+## 2026-10-24 — consolidação visual, foco da party e push com aproximação
+
+- Janela15×11 comum, mapa36×18 do treino sem dependência de CSS, câmera/inversa
+  única e margens neutras; piso do templo alinhado aos centros lógicos.
+- Nativos/outfits.62, anchors preservados, nomes/HP/feedback calibrados.
+- Treino com selecionado somente Manual e aliados AI no foco explícito; seleção
+  e inspeção separadas do inimigo. Hunt preserva Auto/Assistido e economia.
+- Nova intenção cancela rota/approach/pré-commit; push distante caminha executor
+  por A* e revalida antes do push adjacente. Hold manual250ms, AI220ms.
+- Sem aumento de timeouts, baseline regenerado, arte protegida ou novo sistema
+  online. Gates/medidas/publicação reais em SESSION_CHECKPOINT.
+
 ## 2026-10-21 — MVP2C: sprites publicados e smoke público aprovado
 
 - Runtime74b3306:CI push283unit/61E2E/build/diff e Pages aprovados;PR passou

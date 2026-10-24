@@ -9,6 +9,8 @@ export interface PlayerControlPort {
   readonly running:boolean;
   readonly training?:boolean;
   readonly singleHeroControl?:boolean;
+  readonly tacticalControls?:boolean;
+  readonly partyFocusTargetId?:string;
   readonly entities:readonly Readonly<EntitySnapshot & {alive:boolean}>[];
   readonly results:readonly CommandResult[];
   controlOf(actorId:string):ControlOwnership;

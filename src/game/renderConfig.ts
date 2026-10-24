@@ -1,8 +1,11 @@
+import {TILE_SIZE,MAP_TILES} from '../combat/tiles';
+/** Shared framing policy; logical map creation never reads CSS. */
+export const WORLD_VIEW={tileSize:TILE_SIZE,columns:15,rows:11,characterScale:.62,trainingColumns:36,trainingRows:18} as const;
 export const RENDER_CONFIG = {
   arena:{
-    width:960,
-    height:576,
-    tileSize:32,
+    width:MAP_TILES.width*TILE_SIZE,
+    height:MAP_TILES.height*TILE_SIZE,
+    tileSize:TILE_SIZE,
     maxResolution:2,
     cameraBounds:{ x:0,y:0,width:960,height:576 },
     debugEnabled:false,
