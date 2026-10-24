@@ -2,6 +2,11 @@
 
 ## Agora
 
+Follow-up ainda local após e1fd205: gesto não solto cancelado pela nova intenção
+e morte do foco preservando held input;7E2E focados PASS, suíte64 em curso.
+Repetir310unit isoladamente após2timeouts5s na execução concorrente; não elevar
+limites. Rebuild/smokes exatos no SHA final, incluindo fechamento do soak real.
+
 Source local implementado sob o pedido24/10; contrato TACTICAL_CONSOLIDATION.md.
 Não retomar instruções antigas de monitor de sprites/arena: publicação74b foi
 encerrada e automação antiga está pausada. Gates locais310unit/typecheck/build/

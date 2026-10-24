@@ -84,6 +84,10 @@ Armar targeting envia `interrupt`, sem mudar foco ofensivo. Passo já reservado
 termina pelo lifecycle normal; não paramos no meio de um SQM. Impactos e pushes
 já comprometidos resolvem/revalidam normalmente. Painel não é nova intenção.
 
+Isso inclui gesto ainda não solto: cast ou keydown novo limpa a captura antiga,
+de modo que o mouseup tardio não envia push. Morte do foco encerra a ofensa,
+mas não solta held keys nem cancela movimento não relacionado do jogador.
+
 ## Push distante
 
 Snapshot `{id,source,target,origin,destination}` efêmero por ator. `pushApproach`
@@ -113,8 +117,10 @@ Novos testes cobrem inversa/quatro cantos/resize/DPR2, modos/foco, cancelamentos
 paredes/ocupação/reservas/morte/target-moved, identidade substituída, nenhum push
 tardio ou cooldown pré-adjacência e determinismo50/1000ms. Hunt Auto do perfil
 novo é comparada integralmente ao perfil anterior, sem regenerar hashes.
-Fixtures históricas isolam regressões de magias/Assistido; cenários de produção
-novos não interceptam módulos. Mudaram coordenadas de câmera e expectativas do
+Fixtures históricas isolam regressões de magias/Assistido; fluxo obrigatório e
+três vitórias de produção não interceptam módulos. Um caso-limite de adapter usa
+somente dados de um inimigo1HP/próximo para produzir morte real, sem injetar evento
+ou usar essa composição como prova de vitória. Mudaram coordenadas de câmera e expectativas do
 contrato de treino, não os limites/assertions econômicos, timeouts ou snapshots.
 
 Gates locais:310unit/27files e63E2E/1worker, typecheck/build/build:preview/frozen/

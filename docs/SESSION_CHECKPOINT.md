@@ -2,6 +2,36 @@
 
 ## Trabalho atual — gates locais verdes, não publicação concluída
 
+### Follow-up de input/gesto em validação
+
+Após commit local e1fd205 (ainda sem push), revisão encontrou drag não solto
+que podia sobreviver à hotkey de cast. cancelGesture agora limpa mouse/drag/
+targeting na intenção nova, incluindo keydown, sem trocar foco ofensivo.
+Morte do foco deixa de limpar held/pendingStep de movimento não relacionado;
+morte do selecionado e fim de sessão continuam limpando tudo. Novo E2E usa
+fixture somente de dados (um bot próximo/1HP) para produzir morte REAL via
+ataque dos companheiros; não injeta evento de morte, não prova vitórias com
+esse fixture. O fluxo obrigatório e três vitórias usam produção sem interceptar.
+Sete E2E focados PASS1,7min; suíte passa a64 e está em curso. Repetição unitária
+concorrente:308PASS/2timeouts5000ms em GameplayPolish (frames e três hunts), sem
+mismatch de resultado; repetir serial após navegador. Nenhum limite afrouxado.
+
+QA exato e1fd205: input/drag1×/4× e takeover/movimento na Hunt PASS,errors[]/
+warnings[],release estável e sync0. Taps livres1passo; um tap4× bloqueado com
+motivo blocked. Keydown→movement_started:48,8–225,3ms1×;12,8–51,4ms4×;
+Hunt1×59,1–216,1ms. Não é latência de pintura/FPS. Drill4× sem novo foco após
+matar o primeiro inimigo terminou em derrota; NÃO contado nas três vitórias,
+que pertencem ao smoke com estratégia/foco/casts reais e economia intacta.
+Soak exato e1fd205 registrou14hunts/14bosses/14recompensas/14IDs de sessão,
+150098msativos1×/126058ms4×,console limpo,sync0. Preassert salvo; fechamento do
+harness falhou ao tentar abrir relatório que LoopOFF já abriu. Corrigida apenas
+a navegação do harness; repetir no SHA final para gate completo/cleanup.
+Pico da amostra concorrente721displayobjects/99VFX,update12ms; não benchmarkFPS.
+Smoke real agora trata retirada do ID clicado durante morte/cleanup como uma
+transição esperada, mantendo assertions de vitória/economia/13contadores zero.
+
+### Gate anterior — e1fd205
+
 Gate FINAL de source:310unit/27arquivos PASS137,41s;63E2E/1worker PASS14,4min,
 typecheck/build/build:preview/diff PASS. Chunk576,95/577,01kB mantém warning500kB.
 Frozen install/health/arte reproduzível já conferidos e assets não mudaram.

@@ -54,10 +54,13 @@ try{
     for(let tick=0;Date.now()-started<60000&&!['completed','defeated'].includes(await page.locator('html').getAttribute('data-session-state'));tick++){
       if(Date.now()-started>30000&&speed===1){speedWallMs[1]+=Date.now()-last;await page.locator('[data-speed="4"]').click();speed=4;last=Date.now();}
       const targets=page.locator('[data-battle-target]');if(await targets.count()){
-        try{await targets.first().click({timeout:500});}catch(error){
-          // The last living target may die between sampling and a real click.
-          // Accept only that terminal transition; victory/cleanup still assert below.
+        const targetId=await targets.first().getAttribute('data-battle-target');
+        const chosen=page.locator(`[data-battle-target="${targetId}"]`);
+        try{await chosen.click({timeout:500});}catch(error){
+          // A real target can retire before click or during final-floor cleanup.
+          // Retry only an actually removed ID; all victory/cleanup checks remain.
           if(['completed','defeated'].includes(await page.locator('html').getAttribute('data-session-state')))break;
+          if(await chosen.count()===0){await page.waitForTimeout(50);continue;}
           throw error;
         }
       }

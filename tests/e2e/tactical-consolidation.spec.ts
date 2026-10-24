@@ -3,6 +3,23 @@ import {installControlledClock,pauseIdleClock,advanceUntilAttribute} from './con
 import {tilePoint} from './world-point';
 async function pos(page:Page,id:string){const entry=(await page.locator('#game').getAttribute('data-logical-positions'))!.split(',').find(p=>p.startsWith(id+':'))!.split(':');return{x:Number(entry[1]),y:Number(entry[2])};}
 async function drag(page:Page,id:string,to:{x:number;y:number}){const p=await pos(page,id),from=await tilePoint(page,p.x,p.y),dest=await tilePoint(page,to.x,to.y);await page.mouse.move(from.x,from.y);await page.mouse.down();await page.mouse.move(dest.x,dest.y,{steps:8});await page.mouse.up();}
+test('new cast cancels an unreleased drag; real target death does not cancel unrelated held movement',async({page})=>{
+  // Data-only adapter edge fixture: retain the production control profile and
+  // three real bots, but make one nearby enemy die from a real companion attack.
+  // This fixture is NOT used to prove three wins or the production boss flow.
+  await page.route('**/src/data/training.ts*',async route=>{const response=await route.fetch();await route.fulfill({response,body:(await response.text())+'\nObject.assign(trainingTeamFloors[0][0],{hp:1,maxHp:1,tileX:9,tileY:9,position:{x:288,y:288}});'});});
+  await installControlledClock(page);await page.addInitScript(()=>{(window as any).gestureEvents=[];window.addEventListener('hunt-event',e=>(window as any).gestureEvents.push((e as CustomEvent).detail));});
+  await page.goto('/?training=1');await pauseIdleClock(page);await page.locator('#start').click();await page.clock.runFor(250);
+  const target=await pos(page,'sorcerer'),from=await tilePoint(page,target.x,target.y),to=await tilePoint(page,target.x-1,target.y);
+  await page.mouse.move(from.x,from.y);await page.mouse.down();await page.mouse.move(to.x,to.y,{steps:8});await page.keyboard.press('Digit2');await page.mouse.up();await page.clock.runFor(500);
+  await expect(page.locator('#game')).toHaveAttribute('data-pending-pushes','0');await expect(page.locator('#game')).toHaveAttribute('data-push-destinations','');
+  expect(await page.evaluate(()=>(window as any).gestureEvents.some((e:any)=>e.type==='push_queued'))).toBe(false);
+  await page.keyboard.press('Escape');await page.locator('[data-battle-target="training-sparring"]').click();await page.keyboard.down('ArrowUp');await page.clock.runFor(1000);
+  expect(await page.evaluate(()=>(window as any).gestureEvents.some((e:any)=>e.type==='death'&&e.targetId==='training-sparring'))).toBe(true);
+  await expect(page.locator('#player-controls')).toHaveAttribute('data-held-keys','1');await page.keyboard.up('ArrowUp');await page.clock.runFor(500);
+  const released=await pos(page,'knight');await page.clock.runFor(500);expect(await pos(page,'knight')).toEqual(released);
+  await expect(page.locator('#game')).toHaveAttribute('data-logical-overlaps','0');await expect(page.locator('#game')).toHaveAttribute('data-reservation-count','0');
+});
 test('production focus/takeover → distant drag approach/push → cast and movement cancellation → equivalent Hunt and boss',async({page})=>{
   const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});
   await installControlledClock(page);await page.addInitScript(()=>{(window as any).tacticalEvents=[];window.addEventListener('hunt-event',e=>(window as any).tacticalEvents.push((e as CustomEvent).detail));});

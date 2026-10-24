@@ -104,7 +104,7 @@ export class PlayerControls {
       if(event.code==='Numpad5') {event.preventDefault();if(!event.repeat)this.stop();return;}
       if (this.held.press(event.code)) {
         event.preventDefault();this.assumeMovement();
-        if(!event.repeat) {if(this.port.tacticalControls)this.send({type:'interrupt'});this.pendingStep=this.held.direction();this.inputAt=performance.now();}
+        if(!event.repeat) {if(this.port.tacticalControls){this.cancelGesture();this.send({type:'interrupt'});}this.pendingStep=this.held.direction();this.inputAt=performance.now();}
         this.sync();
       }
     });
@@ -116,7 +116,11 @@ export class PlayerControls {
       const event = (raw as CustomEvent<CombatEvent>).detail;
       if(event.type==='push_cancelled'&&event.sourceId===this.actorId)this.status.textContent=this.reasonLabel(event.data?.reason??'blocked');
       if (event.type === 'floor_complete' || event.type === 'hunt_complete' ||
-        (event.type === 'death' && (event.targetId === this.actorId || (this.target?.kind === 'entity' && this.target.entityId === event.targetId)))) this.clear();
+        event.type === 'death' && event.targetId === this.actorId) this.clear();
+      else if(event.type==='death'&&this.target?.kind==='entity'&&this.target.entityId===event.targetId){
+        // Target retirement ends offense, not the player's unrelated held movement.
+        if(this.port.tacticalControls){this.target=undefined;this.sync();}else this.clear();
+      }
     });
     listen(window,'hunt-time',() => {
       const last = this.port.results.at(-1);
@@ -300,7 +304,8 @@ export class PlayerControls {
     return result;
   }
   private stop() { this.clear();if(this.mode==='AI')this.assumeManual();this.send({type:'stop'}); }
-  private interrupt(){this.held.clear();this.pendingStep=undefined;if(this.port.tacticalControls)this.send({type:'interrupt'});}
+  private cancelGesture(){this.mouse.clear();this.dragActor=undefined;this.pushHover=undefined;this.interaction.cancel();}
+  private interrupt(){this.held.clear();this.pendingStep=undefined;this.cancelGesture();if(this.port.tacticalControls)this.send({type:'interrupt'});}
   engageTarget(targetId:string){this.interrupt();this.target={kind:'entity',entityId:targetId};this.send({type:'attack',targetId});this.sync();this.focusGame();}
   private pointerTarget(event:MouseEvent):InteractionTarget | undefined {
     const point=this.port.worldPoint?.(event.clientX,event.clientY);

@@ -2,6 +2,13 @@
 
 ## Atual — implementação local, publicação nova pendente
 
+Follow-up de gestos após e1fd205: magia/tecla nova cancela também drag ainda
+não solto; release antigo não pode criar push tardio. Morte do foco encerra
+ofensa, não libera held keys de movimento não relacionado. Sete E2E focados
+PASS com o novo caso; suíte completa passa a64 e está em execução. Repetição
+unitária concorrente teve2timeouts5s (308PASS), sem mismatch; será repetida
+isoladamente, sem mudar deadline. Os gates310/63 abaixo são do ponto anterior.
+
 Contrato canônico: TACTICAL_CONSOLIDATION.md. Janela15×11 comum, tiles32 lógicos,
 treino36×18 independente de CSS; câmera/inversa/DPR/letterbox/picking/drag unidos.
 Personagens/outfits.62 com anchors preservados; Hunt centrada nos SQMs reais.
