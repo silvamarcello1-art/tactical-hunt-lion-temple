@@ -111,6 +111,13 @@ ou no HUD cancela. Tecla8 chama o mesmo contrato, sem menu extra.
 
 ## Verificação e limites
 
+Atualização26/10:source645267a local310unit/64E2E PASS;CIpush40076742272
+PASS310/64 e PagesSUCCESS,manifest público645exato. PR40076745331FAIL3timeouts
+(54pass/7nãoexecutados);smoke público falhou duas vezes na readiness5s.
+Inspeção separada só chegou idle25s,sem erros finais;NÃO considerar smoke
+aprovado nem publicar link como pronto. Diagnóstico/checkpoint registra os
+limites reais;nenhum timeout/assertion relaxado e nenhuma reexecução automática.
+
 Entrada: local=origin1293721 docs-only, runtime74b; worktree limpa; fetch/health
 conferidos. Baseline real283unit/61E2E, sem usar CI antigo como gate novo.
 Novos testes cobrem inversa/quatro cantos/resize/DPR2, modos/foco, cancelamentos,

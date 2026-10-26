@@ -1,5 +1,48 @@
 # Checkpoint — consolidação visual, movimento e push —24/10/2026
 
+## Retomada26/10 — CI push verde/Pages publicado; PR e smoke bloqueiam entrega
+
+24/10:gates finais645 PASS310unit/27files83,44s (isolado,sem elevar5s),64E2E/
+1worker16,0min,typecheck/build/build:preview/health/arte/diff;worktree limpa.
+Push normal e1fd205+645267a confirmado remoto645267a7c30a8ff0209b061c6d460ff387892b34.
+Compilado exato:qa-training3vitórias1330açõesbot/saves intactos/13cleanup0;
+qa-outfits38variantes;qa-preview19kills4240XP1489gold1token,console/warnings[].
+Drill real1×/4×/Hunt PASS com cura/foco explícitos:4taps1× livres1SQM;
+4×3livres1SQM e1blocked0,release estável/sync0. Latência de início amostrada
+10,6–195,6ms treino e44,1–221,3ms Hunt,não latência de pintura. Soak14hunts/
+14bosses/14recompensas/14IDs,150069ms1×122706ms4×,console/warnings[]/cleanup0.
+276amostras:picos723objects/91VFX/update22,3ms;callback até324,5ms,nãoFPS.
+Warning chunk577,19/577,24kB preservado,sem regressão de assets/deps/workflows.
+
+Interrupção anterior:limite de uso impediu revisão automática;ação não foi
+executada,não houve tentativa de contornar. Retomada autorizada por Continue.
+Fetch/health26/10 confirmou645local=origin/CLEAN antes deste checkpointdocs.
+CI push40076742272/job120821597914PASS310unit/64E2E46,3min/build/preview/diff,
+checkout/health645exato;Pages120831302884SUCCESS. Manifest público645exato.
+PR40076745331/job120821607497FAIL54pass/3timeouts/7didnotrun(1h),unit310PASS;
+deployPR120834410948SKIPPED. Diagnóstico12555595049(SHA256
+963cb8777118dbeb3bf05ef81f2aa5f7061c7f1578fd6376118472b82e1e5385)baixado/
+inspecionado na workspace. gameplay-shell:53 e mvp0:379 chegaram a2ciclos e
+clock.runFor250ms demorava2,4–2,8s no final até360s. tactical-consolidation:23
+chegou ao boss,runFor250ms2,4–3,0s até220s. Contexto foi fechado por timeout;
+erro sessionclosed posterior não prova bug de combate nem causa de lentidão.
+Não atribuir causa última ao runner sem evidência adicional;PR segue vermelho.
+
+qa-training-team público645 FAIL duas vezes em preparing em5s. Inspeção
+isolada1 ainda preparing30s;inspeção2 preparing20s,idle25s,canvas1,console[]/
+requestsfailed[]/HTTP>=400[]/pending[] ao fim30s. Mantidos logs de ambasfalhas;
+sem timeout elevado. Não executou três vitórias públicas nem boss/outfits por
+cadeia interrompida;captura idle pública inspecionada,não prova de gameplay.
+Não iniciar rerunCI/fix automático sem fechar diagnóstico/direção. Sem merge,
+forcepush,Sites,workflow/proteção alterados. Não chamar preview de pronto.
+
+Evidências locais fora do repo:unit-final-isolated.log;training-final-local.log;
+outfits-final-local.log;preview-final-local.log;manual-final-manual-combat/;
+hunt-final-local-approved/;consolidation-pr-failure-12555595049/;
+consolidation-trace-summary.json;training-consolidation-public*.log;
+public-consolidation-diagnostic.json/png. Registro PR atualizado preservando
+histórico;apenas checkpointdocs-only[skip ci] autorizado depois de CI encerrado.
+
 ## Trabalho atual — gates locais verdes, não publicação concluída
 
 ### Follow-up de input/gesto em validação

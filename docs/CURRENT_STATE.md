@@ -1,5 +1,32 @@
 # Estado vigente — consolidação visual e tática — 24/10/2026 (São Paulo)
 
+## Retomada26/10 — publicado, mas entrega NÃO aprovada
+
+Runtime645267a7c30a8ff0209b061c6d460ff387892b34 enviado por push normal e
+confirmado em checkout/health do CI e version.json público. Push40076742272/
+validate120821597914 PASS310unit/27files,64E2E(46,3min),frozen/typecheck/arte/
+build/build:preview/diff;deploy120831302884 SUCCESS. PR40076745331/
+validate120821607497 FAIL:54E2Epass,3timeouts,7nãoexecutados;310unitPASS.
+Dois cenários de3loops chegaram a2ciclos antes360s; fluxo tático chegou ao
+boss antes220s. Traces mostram clock.runFor250ms levando cerca2,4–3,0s reais
+no final; fechamento por timeout precede erro session closed. Causa raiz NÃO
+comprovada, não atribuir automaticamente ao runner nem ignorar gate falho.
+
+Gates locais finais645 PASS310unit(83,44s)/64E2E(16min)/typecheck/build/
+build:preview/health/arte/diff. QA compilado:3vitórias manuais,1330açõesbot,
+economia intacta,38outfits,19kills4240XP1489gold1token. Soak14hunts/14bosses/
+14recompensas,150069msativos1×/122706ms4×,console[]/warnings[]/sync0/cleanup0.
+Picos amostrados723objetos/91VFX/update22,3ms; callback até324,5ms,nãoFPS.
+Chunk577,19/577,24kB continua warning500kB,sem alterar o limite.
+
+Smoke público de treino FAIL duas vezes no limite original5s:estado preparing,
+não idle. Inspeção separada chegou idle aos25s,canvas presente,sem erros de
+console/HTTP ou requests pendentes ao encerrar30s; NÃO equivale a smoke verde.
+Não concluídos3treinos/boss públicos novos. Captura idle inspecionada,sem claim
+de gameplay público aprovado. Sem fix/rerunCI/timeout aumentado/merge/force/Sites.
+Próximo:diagnosticar readiness público e decidir tentativa única do PR;não
+anunciar link como pronto. Histórico abaixo preserva o estado de cada etapa.
+
 ## Atual — implementação local, publicação nova pendente
 
 Follow-up de gestos após e1fd205: magia/tecla nova cancela também drag ainda

@@ -1,5 +1,22 @@
 # Próxima tarefa — concluir consolidação visual/tática —24/10/2026
 
+## Prioridade26/10 — bloqueios reais de validação
+
+Runtime645267a já publicado/manifest exato;push40076742272PASS310unit/64E2E,
+Pages120831302884SUCCESS. PR40076745331FAIL54pass/3timeouts/7nãoexecutados,
+310unitPASS. Dois3loops pararam no ciclo2 antes360s; fluxo tático chegou ao
+boss antes220s. Artefato12555595049/trace analisado,causa última não comprovada.
+Sem rerun automático ou mudança de deadlines/assertions/snapshots.
+
+Treino público falhou duas vezes em preparing no5s original. Diagnóstico
+isolado chegou idle25s/console e rede sem erros no final30s;não é gate verde.
+Investigar readiness/carga real sem mascarar falha nem aumentar timeout.
+Só após resolver/validar estes bloqueios:smokes públicos completos dos dois
+modos/outfits,inspeção de capturas,documentação final e link como aprovado.
+Não retomar monitor antigo nem redeploy desnecessário. Gates locais finais645
+310unit83,44s/64E2E16min;3treinos1330açõesbot/economia intacta e14hunts reais
+PASS. Source permanece645;eventual checkpointdocs-only[skip ci] não é runtime.
+
 ## Agora
 
 Follow-up ainda local após e1fd205: gesto não solto cancelado pela nova intenção
