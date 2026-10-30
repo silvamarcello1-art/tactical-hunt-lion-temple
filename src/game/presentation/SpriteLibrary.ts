@@ -4,6 +4,7 @@ import type { AnimationClipDefinition } from './AnimationSet';
 import { spriteAction, type SpriteDefinition } from './SpriteDefinition';
 import type { VisualAnimationState, VisualFacing } from './CombatPresentationSystem';
 import {pixelDefinition} from './pixelSprites';
+import {fitSpriteToCell} from './cellSpriteFit';
 import {outfitSpriteAssets,outfitFrameSize,outfitFootBaseline,type OutfitSpriteAsset} from '../../data/outfitSprites';
 
 export function outfitDefinition(template:SpriteDefinition,asset:OutfitSpriteAsset):SpriteDefinition {
@@ -31,7 +32,8 @@ export class SpriteLibrary {
     const native=definitions.map(pixelDefinition);
     const template=native.find(d=>d.id==='knight')!;
     const outfits=outfitSpriteAssets.map(asset=>outfitDefinition(template,asset));
-    await Promise.all([...native,...outfits].map(async definition => {
+    await Promise.all([...native,...outfits].map(async rawDefinition => {
+      const definition=fitSpriteToCell(rawDefinition);
       const sheet = await Assets.load<Texture>(assetUrl(definition.spriteSet));
       if (this.disposed) return;
       sheet.source.scaleMode = 'nearest';

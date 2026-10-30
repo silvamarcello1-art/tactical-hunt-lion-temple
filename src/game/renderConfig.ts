@@ -1,6 +1,6 @@
 import {TILE_SIZE,MAP_TILES} from '../combat/tiles';
 /** Shared framing policy; logical map creation never reads CSS. */
-export const WORLD_VIEW={tileSize:TILE_SIZE,columns:15,rows:11,characterScale:.62,trainingColumns:36,trainingRows:18} as const;
+export const WORLD_VIEW={tileSize:TILE_SIZE,columns:19,rows:11,characterScale:.62,cellSpriteWidth:30,cellSpriteHeight:30,cellSpriteMotion:.5,trainingColumns:36,trainingRows:18} as const;
 export const RENDER_CONFIG = {
   arena:{
     width:MAP_TILES.width*TILE_SIZE,

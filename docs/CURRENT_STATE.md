@@ -1,4 +1,25 @@
-# Estado vigente — consolidação publicada e validada —30/10/2026 (São Paulo)
+# Estado vigente — ajustes de SQM em validação local —30/10/2026 (São Paulo)
+
+## Pedido atual — janela19×11,corpos no SQM e Hunt progressiva
+
+Usuário pediu somente+3–4SQMs horizontais,continuidade da câmera,respeito aos
+SQMs ao andar/push,e confirmou QUANTIDADE E FORÇA progressivas na Hunt.
+Contrato vigente:SQM_EXPANSION.md. Fonte local ainda sem novo commit/push.
+19×11(+4),mesmo tile aparente52,45/64,45/80,82px nas3res e câmera contínua.
+48atlases medidos/envelope máximo30×30,sem corte;escala fixa poratlas/anchors
+normalizados,bob/lean extra removidos,picking/hitArea alinhados ao corpo.
+Grade/A*/MovementSystem preservados;diagnóstico inclui sobreposição em trânsito.
+Produção strictCellMovement protege os dois cantos atravessados pela diagonal
+apenas durante o passo,com reserva/commit/cancel existentes;cleanup inclui todas
+as células. Reações de dano/ataque agora≤0,5px absolutos,sem lunge/shake acumulado.
+Hunt opt-in5/6/8 e boss+4guardas=24kills;HP+0/2/4/6%,ataque+0/1/2/3% sobre
+base do andar,reforços leves. Treino continua3bots;budget4240XP/1token intacto.
+Gates locais finaisPASS332unit30files(63,89s),69E2E1worker(9,3min),typecheck,
+arte reproduzível/build/build:preview/health/diff. Chunk581,61/581,66kBwarning
+preservado. Novo SHA,smokes compilados/CI/manifest/públicos pendentes;645abaixo
+é a versão pública anterior,não esta entrega.
+
+## Histórico — entrega anterior645267a validada
 
 ## Atual — preview aprovado, não release estável
 

@@ -5,7 +5,11 @@ Sorcerer atravessam três ondas e enfrentam um boss. Um motor incremental usa
 grade autoritativa, A*, LoS e eventos determinísticos; PixiJS representa o
 combate, e HTML/CSS apresenta controles Auto/Manual/Assisted, Party e Analyzer.
 
-Preview compartilhado validado30/10 (não release estável):
+Pedido posterior em validação local:janela19×11(+4SQMs),corpos/áreas de clique
+limitados ao SQM e inimigos em quantidade/força progressivas. Contrato:
+[SQM expansion](docs/SQM_EXPANSION.md). O link abaixo ainda é a versão anterior.
+
+Preview compartilhado anterior validado30/10 (não release estável):
 [jogar treino](https://silvamarcello1-art.github.io/tactical-hunt-lion-temple/?training=1&v=645267a7c30a8ff0209b061c6d460ff387892b34).
 Hunt e treino usam a mesma janela15×11;controle/foco/push e medidas em
 [Consolidação tática](docs/TACTICAL_CONSOLIDATION.md). Manifest,CI e smokes reais
@@ -37,7 +41,7 @@ aproximação sem retomar passos antigos. As teclas 1–3 continuam
 as magias da vocação; Numpad somente movimenta, não conjura.
 Magias e runas ficam em sequência 1–9 no dock inferior. Toda a área amarela faz
 parte da grade caminhável, salvo caixas/runas bloqueadoras; mapa36×18 fixo,
-janela15×11/câmera uniforme, resize não altera combate. Bots perseguem o menor
+janela19×11/câmera uniforme, resize não altera combate. Bots perseguem o menor
 percentual de vida, usam magias/cura/SD/Fire Field e respeitam custos/cooldowns.
 Parede bloqueia caminhada/tiros; campo causa burning no adversário. Pausa e velocidades
 compartilham o relógio lógico. Reiniciar repõe o kit gratuito de cada herói.
@@ -45,7 +49,7 @@ compartilham o relógio lógico. Reiniciar repõe o kit gratuito de cada herói.
 Sem recompensas persistentes, Loop ou PvP online. Não é o catálogo completo de
 magias/passivas/Wheel do Tibia atual; parâmetros e próximos passos estão em
 [Training 2B.4](docs/TRAINING_2B4.md) e [perfil 2B.3](docs/TRAINING_2B3.md).
-Heróis/bots/outfits em pixel art própria calibrada (~1,16SQM de corpo nativo),
+Heróis/bots/outfits em pixel art própria,com envelope medido de até30×30px porSQM32,
 sem zoom ajustável pelo usuário; prévia de tile facilita colocar MW sem acertar um sprite
 por engano. [Origem da arte e prompts](docs/ART_PROMPTS.md).
 

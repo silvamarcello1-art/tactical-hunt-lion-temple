@@ -46,8 +46,8 @@ test('production focus/takeover → distant drag approach/push → cast and move
   await page.screenshot({path:'test-results/tactical-training.png'});
   await page.locator('#restart').click();await expect(page.locator('html')).toHaveAttribute('data-session-state','idle');
   await page.locator('#training-link').click();await expect(page.locator('html')).toHaveAttribute('data-session-state','idle');
-  await expect(page.locator('#game')).toHaveAttribute('data-view-columns','15');await expect(page.locator('#game')).toHaveAttribute('data-view-rows','11');await expect(page.locator('#control-mode')).toBeVisible();
+  await expect(page.locator('#game')).toHaveAttribute('data-view-columns','19');await expect(page.locator('#game')).toHaveAttribute('data-view-rows','11');await expect(page.locator('#control-mode')).toBeVisible();
   await page.locator('#loop-toggle').click();await page.locator('[data-speed="4"]').click();await page.locator('#start').click();await advanceUntilAttribute(page,'data-session-state','completed');
-  await expect(page.locator('#result-content')).toContainText('Vitória no templo');await expect(page.locator('#result-content')).toContainText('4.240');await expect(page.locator('#result-content')).toContainText('Monstros derrotados: 19');
+  await expect(page.locator('#result-content')).toContainText('Vitória no templo');await expect(page.locator('#result-content')).toContainText('4.240');await expect(page.locator('#result-content')).toContainText('Monstros derrotados: 24');
   for(const metric of ['logical-overlaps','out-of-bounds','reservation-count','pending-pushes','active-projectiles','active-telegraphs','residual-visual-objects'])await expect(page.locator('#game')).toHaveAttribute(`data-${metric}`,'0');expect(errors).toEqual([]);
 });

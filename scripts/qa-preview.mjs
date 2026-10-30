@@ -43,8 +43,8 @@ try {
   await expect(page.locator('#result')).toBeVisible();
   await expect(page.locator('#result-content')).toContainText('Vitória no templo');
   await expect(page.locator('#result-content')).toContainText('4.240');
-  await expect(page.locator('#result-content')).toContainText('Monstros derrotados: 19');
-  for(const metric of ['logical-overlaps','out-of-bounds','active-projectiles','active-telegraphs','reservation-count','residual-visual-objects','tween-count'])await expect(page.locator('#game')).toHaveAttribute('data-'+metric,'0');
+  await expect(page.locator('#result-content')).toContainText('Monstros derrotados: 24');
+  for(const metric of ['logical-overlaps','body-overlaps','out-of-bounds','active-projectiles','active-telegraphs','reservation-count','reserved-cells','residual-visual-objects','tween-count'])await expect(page.locator('#game')).toHaveAttribute('data-'+metric,'0');
   await expect(page.locator('#game')).toHaveAttribute('data-unit-count','3');expect(errors).toEqual([]);
   const evidence=await page.evaluate(()=>({
     result:document.querySelector('#result-content')?.textContent,

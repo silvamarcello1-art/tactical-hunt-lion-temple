@@ -1,15 +1,24 @@
-# Arquitetura — consolidação tática (24/10/2026)
+# Arquitetura — janela ampliada e Hunt progressiva (30/10/2026)
 
-Contrato atual de controles/apresentação: TACTICAL_CONSOLIDATION.md.
+Contrato atual:SQM_EXPANSION.md,e controles/foco emTACTICAL_CONSOLIDATION.md.
 main ativa `tacticalControls` no MESMO CombatEngine: foco ofensivo explícito,
 controle exclusivo e approach efêmero, sem Pixi/DOM no domínio. Defaults antigos
 preservam fixtures e hashes, não constituem um segundo motor de produção.
 `pushApproach` consulta Pathfinder com tiles proibidos; MovementSystem continua
 autoridade de reserva/commit. Ordem síncrona por ID substituível, sem callback A*.
-`worldViewport` compartilha câmera/inversa/política de15×11 e tile32 já existente;
+`worldViewport` compartilha câmera/inversa/política de19×11 e tile32 já existente;
 treino36×18 fixo, sem ler CSS para criar GridMap. Stage: cenário neutro, world e
 uma máscara permanente; oito layers dentro de world. Hunt/treino usam essa base.
 Inspeção de equipamento/outfits mantém contexto local e não envia combate.
+SpriteLibrary aplica cellSpriteFit medido/constante aos48atlases,sem mutar arte,
+com picking/diagnóstico dos corpos vivos duranteinterpolação. MovementSystem,
+Pathfinder e OccupancyGrid não foram reescritos. data/progressiveHunt.ts é o
+perfil explícito de produção ativado poroptions.progressiveHunt;treino tem
+precedência,fixtures históricas/defaults e hashes antigos ficampreservados.
+main também ativa strictCellMovement:MovementSystem pede aOccupancyGrid claims
+de trânsito curtas para os cantos diagonais,sem outro motor/resolvedor. Política
+versionada nova tem baseline próprio;históricos não são regenerados. Reações
+visuais são offsets absolutos limitados,sem empilhar deslocamentos de tweens.
 
 ## Histórico arquitetural anterior a24/10
 

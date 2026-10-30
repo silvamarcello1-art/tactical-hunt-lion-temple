@@ -1,5 +1,12 @@
 # MVP 2C — atelier de aparência e sprites de produção
 
+30/10:SQM_EXPANSION.md prevalece na apresentação. Os mesmos38atlases/clips e
+saves são preservados;um fit uniforme fixo poratlas limita todasposes a30×30px
+de envelope,sem recortar/recolorir arte. .62 é teto pré-fit,não escala final
+obrigatória. Addons maiores podem requerer fator menor que o traje básico.
+
+## Histórico — calibração anterior645267a
+
 24/10: arquivos/registro38atlas, clips/cardinais e anchors continuam os mesmos.
 Consolidação visual aplica escala comum.62 aos nativos/outfits no mundo e
 recalibra UI/câmera, sem alterar o preview de desenho do atelier ou saves.

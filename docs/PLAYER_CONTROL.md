@@ -1,6 +1,7 @@
-# Controle do jogador — contrato vigente (24/10/2026)
+# Controle do jogador — contrato vigente (30/10/2026)
 
-Contrato atual: [TACTICAL_CONSOLIDATION.md](TACTICAL_CONSOLIDATION.md).
+Contrato atual: [SQM_EXPANSION.md](SQM_EXPANSION.md),com as regras de foco e
+ordens de [TACTICAL_CONSOLIDATION.md](TACTICAL_CONSOLIDATION.md) preservadas.
 Treino: apenas o selecionado Manual, aliados Auto seguem foco ofensivo explícito;
 bots AI. Auto/Assistido não são opções para o selecionado nesse modo. Hunt conserva
 as três opções, com takeover exclusivo na seleção. Foco de party não é seleção
@@ -10,8 +11,10 @@ Nova intenção cancela rota/approach/push não comprometido. Passo reservado te
 normalmente. ESC sempre Stop no mundo, inclusive targeting; ESC de modal apenas
 fecha o modal. Painéis suspendem gestos, não emitem Stop. Push distante aproxima
 executor por A*, depois executa push adjacente normal; destino/alvo são snapshots.
-Janela/câmera15×11 uniforme compartilhada com picking/drag; tile lógico32,
+Janela/câmera19×11 uniforme compartilhada com picking/drag; tile lógico32,
 treino36×18 fixo. Hold manual250ms, AI220ms, buffer limitado a um tap.
+Picking/hitArea respeitam o envelope real do corpo;chão livre ao lado de um
+herói não é capturado pela antiga região invisível maior. Pan contínuo mantido.
 
 ## Histórico de contratos substituídos (não são regras vigentes)
 

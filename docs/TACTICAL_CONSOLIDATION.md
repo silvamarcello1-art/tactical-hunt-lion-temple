@@ -1,5 +1,9 @@
 # Consolidação visual e tática — contrato de 24/10/2026
 
+Pedido posterior30/10: [SQM_EXPANSION.md](SQM_EXPANSION.md) prevalece para a
+janela19×11(+4),envelopes30×30/picking e Hunt com quantidade/força progressivas.
+As medidas15×11/.62final abaixo registram a entrega anterior645267a.
+
 Este pedido posterior prevalece sobre as regras de controle/câmera dos marcos
 2B.1–2B.4. Não renumera MVP2C/outfits nem autoriza Adventure, rede ou OTSP.
 

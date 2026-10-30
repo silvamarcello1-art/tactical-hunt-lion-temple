@@ -3,7 +3,7 @@ import {worldCamera,viewportPoint,WORLD_VIEW} from './worldViewport';
 describe('one square-tile world transform',()=>{
   it.each([[1366,768],[1600,900],[1920,1080]])('round-trips all four visible corners after resize %s×%s',(width,height)=>{
     const map={x:-16,y:-16,width:1152,height:576},camera=worldCamera(width,height,map,{x:600,y:300});
-    expect(camera.width/32).toBe(15);expect(camera.height/32).toBe(11);
+    expect(camera.width/32).toBe(19);expect(camera.height/32).toBe(11);
     for(const dx of [.01,camera.width-.01])for(const dy of [.01,camera.height-.01]){
       const result=viewportPoint({x:23+camera.left+dx*camera.scale,y:41+camera.top+dy*camera.scale},{left:23,top:41,width,height},camera)!;
       expect(result.x).toBeCloseTo(camera.x+dx);expect(result.y).toBeCloseTo(camera.y+dy);
@@ -14,7 +14,7 @@ describe('one square-tile world transform',()=>{
   it('clamps camera, not logical map, and keeps consistent square scale',()=>{
     const map={x:0,y:0,width:960,height:576},camera=worldCamera(1058,778,map,{x:9999,y:9999});
     expect(camera.x+camera.width).toBe(960);expect(camera.y+camera.height).toBe(576);
-    expect(camera.width*camera.scale/15).toBeCloseTo(camera.height*camera.scale/11);
+    expect(camera.width*camera.scale/19).toBeCloseTo(camera.height*camera.scale/11);
     expect(WORLD_VIEW.characterScale).toBe(.62);
   });
   it('uses fractional CSS dimensions without integer X/Y stretch or DPR double-scaling',()=>{

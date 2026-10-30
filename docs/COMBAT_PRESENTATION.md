@@ -1,4 +1,16 @@
-# Apresentação vigente — consolidação visual (24/10/2026)
+# Apresentação vigente — janela ampliada e SQM (30/10/2026)
+
+Contrato atual:SQM_EXPANSION.md. Janela19×11(+4),mesmo tile aparente e câmera
+contínua nos dois modos. Cada atlas tem um fit uniforme constante que limita
+todasposes ao envelope30×30,sem cortar arte ou ler alpha no startup. Footpoint
+lógico permanece centrodoSQM,anchors/efeitos/picking normalizados;frames de
+caminhada mantidos,sem bob/lean extra. bodyOverlaps inclui vivos interpolando,
+não só entidades estacionárias. Grade/reservas continuam autoridade separada.
+Reações de ataque/cast/dano têm deslocamento absoluto≤0,5px sem rotação ou
+acúmulo de offsets;diagnóstico soma a posição real do Sprite. Passos diagonais
+de produção protegem os cantos atravessados por reservas curtas do domínio.
+
+## Histórico — apresentação645267a (substituída onde contradiz o acima)
 
 Especificação e medidas: TACTICAL_CONSOLIDATION.md. Mundo15×11 SQMs, tile lógico32,
 câmera/letterbox/inversa únicos nos dois modos, mapa lógico independente de CSS.

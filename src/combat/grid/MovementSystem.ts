@@ -37,6 +37,7 @@ export interface MovementRequest {
   tickOrder?: number;
   allowBacktrack?: boolean;
   revalidateCorners?:boolean;
+  reserveTransit?:boolean;
 }
 
 export interface PendingMovement {
@@ -190,10 +191,13 @@ export class MovementSystem {
       return this.blocked(request, 'oscillation', true, undefined, path, true);
     }
 
+    const transit=request.reserveTransit&&next.x!==request.from.x&&next.y!==request.from.y
+      ?[{x:next.x,y:request.from.y},{x:request.from.x,y:next.y}]:[];
     const reserved = this.occupancy.reserve(
       request.entityId,
       next,
       request.footprint,
+      transit,
     );
     if (!reserved.allowed) {
       if (reserved.reason === 'reserved') this.metrics.reservationConflicts++;

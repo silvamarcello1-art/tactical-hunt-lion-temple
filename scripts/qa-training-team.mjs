@@ -71,7 +71,7 @@ try{
     speedWallMs[speed]+=Date.now()-last;
     await expect(page.locator('html')).toHaveAttribute('data-session-state','completed');
     await expect(page.locator('#result-content')).toContainText('Treino concluído');expect(await save()).toBe(before);
-    for(const m of ['logical-overlaps','out-of-bounds','reservation-count','active-projectiles','active-rune-tiles','rune-conditions','pending-pushes','pending-approaches','residual-visual-objects','tween-count','active-floating-texts','active-spell-effects','temporary-blocked-tiles'])await expect(page.locator('#game')).toHaveAttribute('data-'+m,'0');
+    for(const m of ['logical-overlaps','body-overlaps','out-of-bounds','reservation-count','reserved-cells','active-projectiles','active-rune-tiles','rune-conditions','pending-pushes','pending-approaches','residual-visual-objects','tween-count','active-floating-texts','active-spell-effects','temporary-blocked-tiles'])await expect(page.locator('#game')).toHaveAttribute('data-'+m,'0');
     await page.screenshot({path:resolve(output,`tactical-${label}-training-${cycle+1}.png`)});
   }
   const botEvents=events.filter(e=>e.sourceId?.startsWith('training-'));

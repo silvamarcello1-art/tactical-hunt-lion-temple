@@ -3,6 +3,7 @@ import {WORLD_VIEW,worldCamera,viewportPoint,type WorldCamera} from './worldView
 import { abilityNames } from '../data/actionBar';
 import { assetUrl } from './assetUrl';
 import { SpriteLibrary } from './presentation/SpriteLibrary';
+import {opaqueCellBounds,opaqueBodiesOverlap,cellActionMotion,cellHurtMotion} from './presentation/cellSpriteFit';
 import { spriteId, spriteAction, type SpriteDefinition } from './presentation/SpriteDefinition';
 import {
   AnimatedSprite,
@@ -108,7 +109,7 @@ export class PixiRenderer {
     const alive=[...this.units.entries()].filter(([,u])=>u.currentHp>0);
     const feet=alive.filter(([,u])=>Math.hypot(p.x-u.body.x,p.y-u.body.y)<=12).sort((a,b)=>Math.hypot(p.x-a[1].body.x,p.y-a[1].body.y)-Math.hypot(p.x-b[1].body.x,p.y-b[1].body.y));
     if(feet.length)return feet[0][0];
-    return alive.filter(([,u])=>Math.abs(p.x-u.body.x)<Math.min(18,u.definition.visualWidth*u.definition.scale/2) && p.y>=u.body.y+(u.definition.effectAnchors.head.y-8)*u.definition.scale && p.y<=u.body.y+9*u.definition.scale)
+    return alive.filter(([,u])=>{const b=opaqueCellBounds(u.definition,u.body.position);return p.x>=b.left&&p.x<=b.right&&p.y>=b.top&&p.y<=b.bottom;})
       .sort((a,b)=>b[1].body.y-a[1].body.y)[0]?.[0];
   }
   canvasPoint(clientX:number,clientY:number) {
@@ -900,7 +901,7 @@ export class PixiRenderer {
     const mana = humanoid ? new Graphics() : undefined;
     const selection = hero
       ? new Graphics()
-          .ellipse(0, 0, 17, 6)
+          .ellipse(0, 0, 14, 5)
           .stroke({ width:2,color:0xe4c65a,alpha:.9 })
       : undefined;
     if (selection) selection.visible = snapshot.id === this.selectedHeroId;
@@ -927,7 +928,8 @@ export class PixiRenderer {
     if (hero) {
       body.eventMode = 'static';
       body.cursor = 'pointer';
-      body.hitArea = new Rectangle(-32, -72, 64, 108);
+      const hit=opaqueCellBounds(definition,{x:0,y:0});
+      body.hitArea = new Rectangle(hit.left,hit.top,hit.right-hit.left,hit.bottom-hit.top);
       body.on('pointertap', () => {
         window.dispatchEvent(
           new CustomEvent('hunt-select-character', { detail:snapshot.id }),
@@ -1013,6 +1015,8 @@ export class PixiRenderer {
     unit.sprite.anchor.set(unit.definition.footAnchor.x,unit.definition.footAnchor.y);
     unit.sprite.scale.set(unit.definition.visualWidth/unit.definition.frameSize*unit.definition.scale,unit.definition.visualHeight/unit.definition.frameSize*unit.definition.scale);
     unit.sprite.texture=this.sprites.texture(id,unit.state,unit.facing,this.presentation.time-unit.animationStartedAt);
+    const hit=opaqueCellBounds(unit.definition,{x:0,y:0});
+    unit.body.hitArea=new Rectangle(hit.left,hit.top,hit.right-hit.left,hit.bottom-hit.top);
     this.syncAppearanceDiagnostics();
   }
   private syncAppearanceDiagnostics(){
@@ -1054,26 +1058,18 @@ export class PixiRenderer {
         : RENDER_CONFIG.entity.castDuration;
     const target = unit.targetId ? this.units.get(unit.targetId) : undefined;
     if (target) this.face(unit, this.movementDirection(unit.body.position, target.body.position));
-    const startY = unit.sprite.y;
-    const startX = unit.sprite.x;
-    const startRotation = unit.sprite.rotation;
     const deltaX = target ? target.body.x - unit.body.x : 0;
     const deltaY = target ? target.body.y - unit.body.y : -1;
-    const distance = Math.max(1, Math.hypot(deltaX, deltaY));
-    const lunge = state === 'attacking' ? 7 : 2;
     this.tween(
       duration,
       (progress) => {
-        const arc = Math.sin(progress * Math.PI);
-        unit.sprite.x = startX + (deltaX / distance) * lunge * arc;
-        unit.sprite.y = startY + (deltaY / distance) * lunge * arc - (state === 'attacking' ? 0 : arc * 3);
-        unit.sprite.rotation =
-          startRotation + Math.sin(progress * Math.PI * 2) * .025;
+        const offset=cellActionMotion(progress,deltaX,deltaY,state==='attacking');
+        unit.sprite.position.set(offset.x,offset.y);
+        unit.sprite.rotation=0;
       },
       () => {
-        unit.sprite.x = startX;
-        unit.sprite.y = startY;
-        unit.sprite.rotation = startRotation;
+        unit.sprite.position.set(0,0);
+        unit.sprite.rotation=0;
         if (unit.sprite instanceof AnimatedSprite) unit.sprite.gotoAndStop(0);
         this.setUnitState(unit, 'idle');
       },
@@ -1083,16 +1079,14 @@ export class PixiRenderer {
   private animateHurt(unit: Unit) {
     if (unit.state === 'dead') return;
     this.setUnitState(unit, 'hit_reaction', unit.targetId);
-    const startX = unit.sprite.x;
     this.tween(
       RENDER_CONFIG.entity.hurtDuration,
       (progress) => {
-        unit.sprite.x =
-          startX + Math.sin(progress * Math.PI * 5) * (1 - progress) * 5;
+        unit.sprite.x=cellHurtMotion(progress);
         unit.sprite.alpha = .55 + Math.abs(Math.sin(progress * Math.PI)) * .45;
       },
       () => {
-        unit.sprite.x = startX;
+        unit.sprite.x=0;
         unit.sprite.alpha = 1;
         this.setUnitState(unit, 'idle');
       },
@@ -1736,10 +1730,10 @@ export class PixiRenderer {
       unit.ui.scale.set(uiScale);
       unit.ui.position.set(state.position.x,state.position.y+(unit.hpY-unit.ui.pivot.y)*(1-uiScale));
       unit.shadow.position.set(state.position.x, state.position.y);
-      const p=state.movement?Math.max(0,Math.min(1,(this.presentation.time-state.movement.startedAt)/Math.max(1,state.movement.completesAt-state.movement.startedAt))):0;
-      const step=Math.sin(p*Math.PI);
-      unit.visual.y=-step*1.5;
-      unit.visual.rotation=step*(state.facing==='west'?-.025:state.facing==='east'?.025:0);
+      // Walking frames already animate the body. No extra lift/lean beyond its
+      // measured cell envelope, especially next to an ally during manual push.
+      unit.visual.y=0;
+      unit.visual.rotation=0;
       unit.name.visible=unit.alwaysShowName || id===this.selectedTargetId;
       const sortKey = visualSortKey(
         { x:state.position.x / TILE_SIZE,y:state.position.y / TILE_SIZE },
@@ -1824,6 +1818,12 @@ export class PixiRenderer {
 
   private syncDiagnostics() {
     if (!this.parent || this.destroyed) return;
+    const bodies=[...this.presentation.entities.values()].filter(e=>e.alive&&this.units.has(e.id)).map(e=>{const u=this.units.get(e.id)!;return {id:e.id,offsetX:u.sprite.x,offsetY:u.sprite.y,rotation:u.sprite.rotation,...opaqueCellBounds(u.definition,e.position,u.sprite.position)};});
+    let bodyOverlaps=0;
+    for(let i=0;i<bodies.length;i++)for(let j=i+1;j<bodies.length;j++)if(opaqueBodiesOverlap(bodies[i],bodies[j]))bodyOverlaps++;
+    this.parent.dataset.bodyOverlaps=String(bodyOverlaps);
+    this.parent.dataset.bodyEnvelopes=JSON.stringify(bodies);
+    this.parent.dataset.reservedCells=String(this.engine.reservedCellCount);
     this.parent.dataset.activeRuneTiles=String(this.runeVisuals.size);
     this.parent.dataset.runeConditions=String(this.engine.runeConditionCount);
     this.parent.dataset.pendingPushes=String(this.engine.pendingPushCount);

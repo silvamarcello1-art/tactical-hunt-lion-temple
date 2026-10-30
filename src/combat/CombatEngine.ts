@@ -19,6 +19,7 @@ import {
   type AbilityPreferences,
 } from '../data/abilities';
 import { floors, polishedFloors, heroes, HUNT_LAYOUT_CONFIG } from '../data/config';
+import {progressiveHuntFloors} from '../data/progressiveHunt';
 import type {
   CombatEvent,
   Direction,
@@ -224,6 +225,7 @@ export class CombatEngine {
   get metrics() { return clone(this.gridMetrics); }
   get controlResults() { return clone(this.commandResults); }
   get entities() { return clone([...this.party, ...this.enemies]); }
+  get reservedCellCount(){return this.occupancy.reservedTileEntries().length;}
   get arenaView(){
     const centered=this.options.tacticalControls||this.trainingMode&&this.options.trainingTeam;
     return {width:this.gridMap.width*32,height:this.gridMap.height*32,x:centered?-16:0,y:centered?-16:0,columns:this.gridMap.width,rows:this.gridMap.height};
@@ -594,7 +596,7 @@ export class CombatEngine {
     equipmentRewards=false,
     private polishedRules=false,
     readonly trainingMode=false,
-    private readonly options:{singleHeroControl?:boolean;trainingTeam?:boolean;trainingColumns?:number;tacticalControls?:boolean}={},
+    private readonly options:{singleHeroControl?:boolean;trainingTeam?:boolean;trainingColumns?:number;tacticalControls?:boolean;progressiveHunt?:boolean;strictCellMovement?:boolean}={},
   ) {
     this.sessionId = sessionId ?? `hunt-${seed}`;
     this.options={...options};
@@ -972,7 +974,8 @@ export class CombatEngine {
               : 10,
       tickOrder:this.movementOrder++,
       allowBacktrack,
-      revalidateCorners:this.trainingMode,
+      revalidateCorners:this.trainingMode||this.options.strictCellMovement,
+      reserveTransit:this.options.strictCellMovement,
     });
     if (result.recalculated) {
       this.emit('path_recalculated', floor, entity.id, undefined, {
@@ -2332,7 +2335,7 @@ export class CombatEngine {
   private *simulate():Generator<number,HuntResult,void> {
     const party = heroes.map((hero) => this.entity(hero));
     this.party = party;
-    const encounterFloors=this.trainingMode?this.options.trainingTeam?trainingTeamFloors:trainingFloors:this.polishedRules?polishedFloors:floors;
+    const encounterFloors=this.trainingMode?this.options.trainingTeam?trainingTeamFloors:trainingFloors:this.options.progressiveHunt?progressiveHuntFloors:this.polishedRules?polishedFloors:floors;
     for (let floorIndex = 0; floorIndex < encounterFloors.length; floorIndex++) {
       this.resetGridContext();
       const floor = floorIndex + 1;

@@ -1,5 +1,12 @@
 # MVP2C — sprites realmente aplicados ao mundo
 
+30/10:nenhuma imagem alterada. cellSpriteFit usa a união opaca medida de todas
+poses para um fator fixo poratlas/envelope30×30;E2E mede novamente os pixels.
+Clips/cardinais/células112/fontes e proveniência abaixo intactos. Sem crop,
+recolor ou camadas novas;contrato vigenteSQM_EXPANSION.md.
+
+## Histórico — escala da entrega anterior645267a
+
 24/10: nenhuma PNG foi gerada/editada/importada nesta consolidação. A escala de
 mundo passou a.62 para nativos e38atlas existentes; células/anchors/fontes/clips
 inalterados. Alpha idle medido (limiar>16): nativos60px de altura→1,1625SQM;

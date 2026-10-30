@@ -1,4 +1,21 @@
-# Próxima tarefa — consolidação concluída —30/10/2026
+# Próxima tarefa — fechar ajustes de SQM —30/10/2026
+
+## Atual — validar e publicar somente o pedido novo
+
+Janela19×11 preservando pan/tile;48sprites/envelopes30×30/picking ajustados;
+Huntprogressiva quantidadeEforça5/6/8/boss+4,treino3inalterado. Contrato
+SQM_EXPANSION.md. Gates locais332unit63,89s/69E2E9,3min/typecheck/build/arte/
+diff/stress PASS. Fechar três hunts/treinos reais compilados e capturas3res.
+Commit/push normal apósgates,
+CIpushPR/Pages/manifest SHA novo e smokes públicos dos dois modos antes do link.
+Não alterar HEAD durante checkout live;checkpointdocs-only[skip ci] apósfechar.
+Sem novos sistemas/arte/backend/Sites/merge/force/proteções/snapshots relaxados.
+Não retomar monitor antigo ou reutilizar gates645 como gates deste pedido.
+strictCellMovement reivindica cantos diagonais atomicamente;reações≤0,5px
+absolutos e diagnóstico com offset real. Baseline novo versionadosqm-pressure-v1,
+hashaa8ae5e0…cd97ff8;baselines históricos preservados.
+
+## Histórico — fechamento da entrega anterior
 
 ## Atual — nenhuma validação pendente desta entrega
 

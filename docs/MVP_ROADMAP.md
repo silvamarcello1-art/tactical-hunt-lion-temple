@@ -1,5 +1,12 @@
 # Roadmap
 
+## Escopo autorizado posterior em30/10/2026
+
+Somente janela+4SQMs horizontais/pan contínuo,respeito visual/interação aosSQMs
+e aumento de quantidadeEforça poronda/andar da Hunt,confirmado pelousuário.
+ContratoSQM_EXPANSION.md;treino continua3bots. Não inicia sistemas adicionais,
+Adventure/OTSP/backend/online nem altera a numeração dos marcos anteriores.
+
 ## Escopo autorizado em24/10/2026
 
 Consolidação visual/movimento/controle/foco/push sobre MVP2C já entregue, sem

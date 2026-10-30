@@ -355,7 +355,7 @@ async function createRenderer() {
   playerControls = undefined;
   renderer?.destroy();
   renderer = undefined;
-  const nextRenderer = new PixiRenderer(new CombatEngine(803, preferences, huntSessionId, trainingMode?undefined:progressionStore.snapshot(), trainingMode?{}:equipmentStore.loadout(),true,true,trainingMode,{singleHeroControl:true,trainingTeam:true,trainingColumns:WORLD_VIEW.trainingColumns,tacticalControls:true}), {
+  const nextRenderer = new PixiRenderer(new CombatEngine(803, preferences, huntSessionId, trainingMode?undefined:progressionStore.snapshot(), trainingMode?{}:equipmentStore.loadout(),true,true,trainingMode,{singleHeroControl:true,trainingTeam:true,trainingColumns:WORLD_VIEW.trainingColumns,tacticalControls:true,progressiveHunt:true,strictCellMovement:true}), {
     appearanceSprite:id=>resolveOutfit(appearanceStore.get(id),id).spriteId,
     debugEnabled,
     selectedHeroId,

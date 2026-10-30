@@ -50,7 +50,7 @@ dialog footer, .dialog-actions { display: flex; justify-content: flex-end; gap: 
 /* Compact screen-space layout; no world overlays or per-breakpoint !important. */
 .app-shell{height:100dvh;min-width:560px;min-height:0;max-width:none;overflow:hidden}
 .topbar{height:38px;padding-inline:14px}
-.game-layout{grid-template-columns:minmax(148px,1fr) minmax(0,calc((100dvh - 156px)*var(--world-aspect))) minmax(148px,1fr);gap:12px;padding:4px 12px;min-height:0}
+.game-layout{grid-template-columns:minmax(150px,1fr) minmax(0,calc((100dvh - 156px)*var(--world-aspect))) minmax(150px,1fr);gap:12px;padding:4px 12px;min-height:0}
 .party-rail{position:static;padding-top:8px;max-width:220px;width:100%;justify-self:end}.party-rail>header{margin-bottom:8px}
 .party{display:grid;gap:8px}.hero-card{width:100%;grid-template-columns:32px minmax(0,1fr);min-height:100px;padding:8px;gap:4px}
 .portrait.vocation-mark{width:32px;height:32px;grid-row:1/3;display:block;background-size:400% 400%;background-position:0 0;background-repeat:no-repeat;background-color:transparent;image-rendering:pixelated}

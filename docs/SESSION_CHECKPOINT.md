@@ -1,5 +1,54 @@
 # Checkpoint — consolidação visual, movimento e push —24/10/2026
 
+## Novo pedido30/10 — ampliação/SQM/progressão,em validação
+
+GATE LOCAL FINAL PASS:332unit30files63,89s,69E2E1worker9,3min,typecheck,
+arte reproduzível/build/build:preview/health/diff. Source final comstricttransit/
+reactionsbudget0,5/layout150/hashv1. Assets/deps/workflows/snapshots legados
+inalterados;chunk581,61/581,66kBwarning500mantido. Falhas e interrupções abaixo
+são históricas,nenhuma assertion/deadline foi relaxada. Smokes compilados e
+novo commit/push/CI/Pages/manifest/públicos ainda pendentes neste registro.
+
+Refinamento:primeirogate67E2E terminou66PASS/1FAIL(barraHP129px vsassert>130).
+Corrigido minrail148→150,não assertion;mantém19colunas/tiletamanho. Reprodução
+vermelha porunit comprovou diagonal sem claims de cantos:reservedBy esperavaA,
+recebeuundefined. Nova opção de produção strictCellMovement reserva destino+
+cantos atomicamente no MovementSystem/Occupancy existentes,só pelo passo;
+complete/cancel/stalesession libera tudo. Push também respeita canto reservado.
+Defaults históricos continuam explícitos/sem snapshot regenerado. Stress passou
+com claims completas e novo perfil;sessão de produção main ativa a proteção.
+
+Código de reações ainda tinha lunge7px/shake5px/levitação3px fora do envelope.
+Limitado aoffsets absolutos≤0,5px,sem acumular starts antigos/rotação extra;
+frames/alpha preservados. bodyEnvelopes inclui offset real. Rodada local68E2E
+interrompida cedo para incluir esse fix (não CIcancelado,não gateverde).
+Focados finais22unit/10E2E(51,7s)PASS,layout/hitbox/alpha/transit/reação/push.
+Baseline novo sqm-pressure-v1 seed803:aa8ae5e05b6167e60fb74094859965a73aa645b2ca8dfb45710ddc5e2cd97ff8,
+igualframe50/1000ms;legados intactos. Hash usaWebCrypto jádisponível,semdepsNode.
+Gate final332unit/69E2E emcurso,fonte congelada;nenhum commit/pushnovo.
+
+Após aprovar trabalho anterior,usuário pediu+3–4SQMs horizontais mantendo pan,
+correção de corpos sobrepostos manual/push,e confirmou quantidadeEforça por
+onda/andar. Fetch/health:aedd003=origin/CLEAN,branchfeature/gameplay-first-mvp2a.
+Implementação local:WORLD_VIEW19×11,mesmos tilesaparentes nas3res (+4colunas).
+Medição real alpha>16 de48atlases/todasposes comprovou nativos37–42pxaltura,
+addonsaté59/criaturas64paraSQM32. Novo fitconstante30×30semcorte,anchors
+normalizados/hitArea+picking corrigidos,bob/leanextra removidos. Dados não
+alteramPNG/SVG. bodyOverlaps monitora vivos emtrânsito;grade separada intacta.
+
+Huntprogressiva explícita5/6/8 e boss+4guardas=24kills;HP1/1.02/1.04/1.06,
+ataque1/1.01/1.02/1.03,reforços leves/budget de XP/tokens intacto. Legacy e
+polished imutáveis,treino3bots unaffected. Curva inicial mais forte falhouboss,
+calibrada semafrouxar assertions. Setupunitsemprogressão retornava3760XP;
+corrigido teste para snapshotfresh real(level0) e4240XP,não alteradarecompensa.
+Determinismo50/1000ms,stress4seeds/ocupação/reservas e3loops evoluindoPASS.
+Gate324unit29filesPASS63,73s antesdoúltimoajustehitbox;focados5E2EPASS41,2s.
+Novo caso de cliquechãolivre e gatefinal324/67 estão emcurso. Source congelado.
+Build anterior580,77/580,83kBwarning;nenhum timeout/snapshot/deps/workflow alterado.
+Sem commit/push/publicação nova ainda. Evidências workspace sqm-*.log,
+sqm-envelopes-before.json e geometry-sqm-local/8PNGs+measurements.json.
+Contrato novoSQM_EXPANSION.md prevalece sobre15×11/escala.62final anteriores.
+
 ## Fechamento30/10 — preview validado; nenhuma mudança de runtime nesta retomada
 
 SIM do usuário autorizou diagnóstico+UMA reexecução PR. Fetch/health confirmou

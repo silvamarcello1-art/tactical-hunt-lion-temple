@@ -1,3 +1,15 @@
+## 2026-10-30 — janela ampliada/SQM/Hunt progressiva (em validação local)
+
+- Janela19×11(+4colunas),mesmo tile aparente e pan contínuo.
+- Envelope30×30 medido em48atlases,todasposes;sem corte/escala variável porframe,
+  anchors e picking/hitArea corrigidos,sem bob/lean extra sobre células adjacentes.
+- Passos diagonais protegem os cantos atravessados com reservas curtas atômicas;
+  reações visuais≤0,5px absolutos impedem lunge/shake acumulando fora do envelope.
+- Hunt5/6/8 e boss+4guardas,24kills,atributos gradualmente maiores;treino3inalterado,
+  budget4240XP/1token preservado,sem novos sistemas/preços/save migrations.
+- Perfil e fixtures históricos preservados;novos testes de alpha real,corpos em
+  trânsito,cliquechãolivre,determinismo/stress/loops. Sem relaxar deadlines.
+
 ## 2026-10-30 — consolidação publicada e validada no preview
 
 - Runtime645267a público confirmado;CIpush310unit/64E2E/PagesSUCCESS e UMA

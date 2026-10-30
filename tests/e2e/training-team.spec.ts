@@ -17,8 +17,8 @@ test('unified bottom dock, full viewport scenery and three pixel opponents fit d
     await page.setViewportSize(size);await page.clock.runFor(32);
     const dock=(await page.locator('.action-dock').boundingBox())!,world=(await page.locator('.world-stage').boundingBox())!,canvas=(await page.locator('#game canvas').boundingBox())!;
     expect(Math.abs(canvas.width-world.width)).toBeLessThanOrEqual(3);expect(Math.abs(canvas.height-world.height)).toBeLessThanOrEqual(3);
-    await expect(page.locator('#game')).toHaveAttribute('data-view-columns','15');await expect(page.locator('#game')).toHaveAttribute('data-view-rows','11');
-    const camera=JSON.parse((await page.locator('#game').getAttribute('data-camera'))!);expect(camera.width*camera.scale/15).toBeCloseTo(camera.height*camera.scale/11);
+    await expect(page.locator('#game')).toHaveAttribute('data-view-columns','19');await expect(page.locator('#game')).toHaveAttribute('data-view-rows','11');
+    const camera=JSON.parse((await page.locator('#game').getAttribute('data-camera'))!);expect(camera.width*camera.scale/19).toBeCloseTo(camera.height*camera.scale/11);
     let right=0;
     for(let i=1;i<=9;i++){const slot=page.locator(`[data-action-slot="${i}"]`);await expect(slot).toBeVisible();const r=(await slot.boundingBox())!;expect(r.y).toBeGreaterThanOrEqual(dock.y);expect(r.x).toBeGreaterThanOrEqual(right);right=r.x+r.width;expect(r.y+r.height).toBeLessThanOrEqual(size.height);}
     expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth&&document.documentElement.scrollHeight<=innerHeight)).toBe(true);
