@@ -5,6 +5,12 @@ Sorcerer atravessam três ondas e enfrentam um boss. Um motor incremental usa
 grade autoritativa, A*, LoS e eventos determinísticos; PixiJS representa o
 combate, e HTML/CSS apresenta controles Auto/Manual/Assisted, Party e Analyzer.
 
+Preview compartilhado validado30/10 (não release estável):
+[jogar treino](https://silvamarcello1-art.github.io/tactical-hunt-lion-temple/?training=1&v=645267a7c30a8ff0209b061c6d460ff387892b34).
+Hunt e treino usam a mesma janela15×11;controle/foco/push e medidas em
+[Consolidação tática](docs/TACTICAL_CONSOLIDATION.md). Manifest,CI e smokes reais
+registrados em [estado vigente](docs/CURRENT_STATE.md).
+
 ## Recompensas e build — MVP 2B
 
 Desligue **Loop**, conclua uma hunt e abra **Inventário**. Escolha um herói,

@@ -1,5 +1,53 @@
 # Checkpoint — consolidação visual, movimento e push —24/10/2026
 
+## Fechamento30/10 — preview validado; nenhuma mudança de runtime nesta retomada
+
+SIM do usuário autorizou diagnóstico+UMA reexecução PR. Fetch/health confirmou
+6797981=origin/CLEAN,docs-only sobre runtime645267a;diff src/public/tests/scripts/
+deps/workflows vazio. Nenhum source/test/script/deadline alterado. Profiling
+auxiliar inicial teve dois erros do próprio instrumento (observer antes de
+documentElement e url como função);JSON preservado,não contado como gate.
+Instrumento corrigido:dois contextos novos public idle3936/1807ms,wall4274/
+2055ms,console[],13workers/recursosmáx1065/414ms,longtaskmáx165/98ms. Readiness
+25s de26/10 não reproduzida;causa última continua não comprovada,semfixespeculativo.
+
+ÚNICA reexecução aceita do job120821607497/run40076745331 gerou124190615051:
+PASS310unit27files,64E2E37,2min,frozen/health/typecheck/arte/build/build:preview/
+diff/upload. Checkout/health logs6797981ae0fae58f5ceea68c6533fbd4af596cc8,
+equivalente645 no jogo;PRartefato pode stamp679,masdeploy124211142124SKIPPED.
+Push40076742272 PASS310/64 e Pages120831302884SUCCESS continuam os gates da
+publicação645. Manifest público reconferido após retry:645267a7c30a8ff0209b061c6d460ff387892b34.
+Sem rerun adicional,cancelamento,merge,forcepush,Sites,workflow ou proteção mudados.
+
+Smokes públicos originais30/10 SEM mudar timeout/assertion PASS:
+- qa-training-team:3vitórias manuais/1247açõesbot/saves econômicos intactos,
+  todos13contadores finais0,errors[]/warnings[].
+- qa-outfits:38sprites/12trajes,cardinais/cosméticos/persistência preservados.
+- qa-preview:Huntboss19kills4240XP1489gold1token,console/warnings[]/cleanup0.
+- qa-manual-feel auxiliar:drag/aproximação/push1×/4×,taps/hold/reversal/diagonais,
+  ESC,Huntmanual/takeover e reset PASS;blocked0passos só com motivo explícito,
+  release estável/sync0. Amostras ativas têm VFX legítimos;cleanup só apósreset0.
+
+Latência pública1× treino27–252,6ms(8amostras),4×9–45,2ms(8novas,não repetir
+prefixo1×),Hunt1×40,8–228,9ms(5). Não é latência de pintura nem benchmarkFPS.
+Snapshotupdate médio0,188/0,217/0,206ms,máx1,9/1,9/1,6ms;objects89/49/639
+nesses snapshots,não picos globais. qa-previewrAF1×3666amostras/média2,314ms/
+máx144,3ms;4×2546/média2,450/máx64,1ms. Soak compilado645 de14hunts e picos
+723objects/91VFX/update22,3ms permanecem registrados,não escondidos por médias.
+
+Auditoria pública8capturas:1366/1600/1920/1902referência×Hunt/treino15×11;
+tile52,45/64,45/80,82/71,55px e scrollWidth=viewport. PNGs nas três resoluções
+e treino/atelier/Hunt inspecionados. Compilado/local310unit64E2E e14hunts
+reais permanecem evidência do MESMO runtime645. Arte original/deps intactas.
+
+Evidências workspace:startup-public-30oct-clean.json,training/outfits/preview-
+consolidation-30oct.log,manual-consolidation-public-30oct/report.json,
+geometry-public-30oct/measurements.json e PNGs. Histórico de falhas26/10 mantido,
+sem declarar causa provada. Fechamento docs-only[skip ci]/push normal e PR3 com
+histórico preservado;source continua645. Antiga automação PAUSED,nenhuma nova.
+Preview compartilhado,não release estável;chunk577,24kB/cores/diagonais/camadas/
+benchmarkGPU continuam limites reais. Usar♙Outfits→escolher→Aplicar.
+
 ## Retomada26/10 — CI push verde/Pages publicado; PR e smoke bloqueiam entrega
 
 24/10:gates finais645 PASS310unit/27files83,44s (isolado,sem elevar5s),64E2E/

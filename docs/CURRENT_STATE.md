@@ -1,4 +1,37 @@
-# Estado vigente — consolidação visual e tática — 24/10/2026 (São Paulo)
+# Estado vigente — consolidação publicada e validada —30/10/2026 (São Paulo)
+
+## Atual — preview aprovado, não release estável
+
+Runtime público645267a7c30a8ff0209b061c6d460ff387892b34;manifest reconferido
+após CI. Push40076742272/job120821597914 PASS310unit/64E2E46,3min e Pages
+120831302884SUCCESS. UMA reexecução PR explicitamente autorizada30/10:
+run40076745331/job124190615051PASS310unit/27files,64E2E37,2min,frozen/health/
+typecheck/arte/build/build:preview/diff/upload. Checkout/health6797981docs-only,
+source/tests/scripts/assets/deps/workflows idênticos645. DeployPR124211142124
+SKIPPED pela política normal;nenhum redeploy desnecessário ou nova tentativa.
+
+Smokes públicos ORIGINAIS30/10,SHA645exato PASS:3vitórias manuais,1247açõesbot,
+economia preservada,13cleanup0;38variantes de outfits/persistência/cosméticos;
+Hunt19kills4240XP1489gold1token. Console/warnings[]/sync0/cleanup0. Drill público
+adicional1×/4×/Hunt:drag distante/aproximação/push,taps/hold/diagonais/release,
+troca de controle e reset PASS. Capturas públicas treino/atelier/Hunt e geometria
+1366×768/1600×900/1920×1080 (+1902×978 referência) inspecionadas,sem overflow.
+Ambos modos15×11,tiles52,45/64,45/80,82px (referência71,55px).
+
+Readiness em dois contextos novos:idle3936/1807ms desde navegação,sem erros;
+os smokes mantiveram5s original. Não reproduziu25s;causa última anterior não
+comprovada,não atribuída automaticamente ao runner/rede. Nenhum fix especulativo,
+timeout/assertion/snapshot alterado. Histórico de falhas abaixo preservado.
+Latência pública keydown→movement_started:treino1×27–252,6ms;4×9–45,2ms;
+Hunt1×40,8–228,9ms. Amostras instrumentais,não latência até pintura/FPS.
+Callback público rAF médio2,31/2,45ms (1×/4×),máx144,3/64,1ms;não garantiaFPS.
+Warning chunk577,24kB e limites de cores/diagonais/camadas continuam vigentes.
+
+Usar ♙Outfits→escolher→Aplicar;selecionado Manual no treino,aliados Auto no
+foco ofensivo explícito. Hunt mantém automação. Sem merge/forcepush/Sites/rede.
+https://silvamarcello1-art.github.io/tactical-hunt-lion-temple/?training=1&v=645267a7c30a8ff0209b061c6d460ff387892b34
+
+## Histórico26/10 — bloqueios antes da validação30/10
 
 ## Retomada26/10 — publicado, mas entrega NÃO aprovada
 

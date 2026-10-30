@@ -111,6 +111,15 @@ ou no HUD cancela. Tecla8 chama o mesmo contrato, sem menu extra.
 
 ## Verificação e limites
 
+Fechamento30/10:runtime645 público/manifest confirmado;push310unit/64E2E/
+PagesSUCCESS e UMA reexecução PR124190615051PASS310unit/64E2E37,2min/build/
+preview/diff. Checkout679docs-only equivalente645,sem novo deploy. Públicos
+originais PASS3treinos1247açõesbot/economia intacta,38outfits,Huntboss19kills/
+4240XP1489gold1token;drill movimento/push1×/4×/Hunt/reset e8capturas de geometria
+PASS. Nenhum timeout/assertion/snapshot alterado. Readiness3936/1807ms agora,
+sem reproduzir25s;causa anterior não comprovada. Histórico26/10 abaixo NÃO é
+bloqueio vigente. Detalhes/latência/picos reais no SESSION_CHECKPOINT.
+
 Atualização26/10:source645267a local310unit/64E2E PASS;CIpush40076742272
 PASS310/64 e PagesSUCCESS,manifest público645exato. PR40076745331FAIL3timeouts
 (54pass/7nãoexecutados);smoke público falhou duas vezes na readiness5s.

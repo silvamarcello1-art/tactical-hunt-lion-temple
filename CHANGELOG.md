@@ -1,3 +1,13 @@
+## 2026-10-30 — consolidação publicada e validada no preview
+
+- Runtime645267a público confirmado;CIpush310unit/64E2E/PagesSUCCESS e UMA
+  reexecução PR autorizadaPASS310unit/64E2E(37,2min)/build/diff,sem mudar limites.
+- Smokes públicos originais:3vitórias manuais/economia intacta/38outfits/boss,
+  drill de movimento/push e capturas dos dois modos nas três resoluções PASS.
+- Startup3936/1807ms medido,sem reproduzir25s anteriores;causa última não
+  comprovada,histórico preservado. Sem fix especulativo ou novo runtime.
+- Preview,não release estável;limites de cores/diagonais/performance mantidos.
+
 ## 2026-10-24 — consolidação visual, foco da party e push com aproximação
 
 - Janela15×11 comum, mapa36×18 do treino sem dependência de CSS, câmera/inversa

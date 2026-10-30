@@ -1,4 +1,24 @@
-# Próxima tarefa — concluir consolidação visual/tática —24/10/2026
+# Próxima tarefa — consolidação concluída —30/10/2026
+
+## Atual — nenhuma validação pendente desta entrega
+
+Preview645267a público/manifest exato,CIpush310unit/64E2E/PagesSUCCESS e UMA
+nova tentativa PR autorizada124190615051PASS310unit/64E2E37,2min/build/diff.
+Checkout6797981docs-only equivalente ao runtime645;deployPRSKIPPED normal.
+Smokes públicos originais PASS3vitórias1247açõesbot/economia intacta,38outfits,
+boss19kills4240XP1489gold1token;drill público movimento/push1×/4×/Hunt/reset e
+capturas nas três resoluções PASS,console/cleanup/sync limpos. Sem relaxar5s.
+Readiness3936/1807ms medido;falhas anteriores e causa não comprovada preservadas.
+
+Fechamento apenas documental[skip ci],push normal,source645inalterado e
+local=origin/worktree limpa. Não iniciar outra reexecução,redeploy,merge ou
+monitor antigo. Automação antiga permanece pausada;nenhum monitor novo criado.
+Melhorias posteriores somente sob novo pedido:startup frio/performanceGPU,
+cores com máscaras/camadas independentes/diagonais dedicadas;Adventure não
+iniciado nem renumerado. Preview não é release estável;Sites continua proibido.
+https://silvamarcello1-art.github.io/tactical-hunt-lion-temple/?training=1&v=645267a7c30a8ff0209b061c6d460ff387892b34
+
+## Histórico — tarefas anteriores ao fechamento30/10
 
 ## Prioridade26/10 — bloqueios reais de validação
 
