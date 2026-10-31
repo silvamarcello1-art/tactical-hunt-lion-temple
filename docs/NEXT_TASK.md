@@ -1,5 +1,23 @@
 # Próxima tarefa — fechar ajustes de SQM —30/10/2026
 
+## Bloqueio vigente31/10 — pedir direção,sem novas tentativas automáticas
+
+Runtime f1200c42d3c3450c5ac798e980b2f39285b8ef68 implementado/push normal.
+Local332unit/69E2E e smokes compilados completos PASS,incluindo13Hunts/3treinos,
+manual/push,38outfits e geometria19×11. PR41125868457/124304105807 PASS332/69
+(58,8min)/build/diff;push41125860437/124304078404 FAIL57PASS/5timeouts/
+7nãoexecutados. Pages124338963135SKIPPED. Traces13017156455colhidos;
+timeout precede teardown/sessionclosed;causa última ainda não comprovada.
+Não alterar limites/assertions/snapshots/workflows nem tentar novamente sem
+direção. Pedir autorização específica caso se proponha UMA reexecução integral.
+Se futuramente autorizada:checkout usa branch live;checkpointdocs-only pode
+mudar SHA do stamp. Comprovar checkout/health/source equivalentes antes de
+expectativa de manifest;depois smokes públicos/PNGs. Nada disso foi feito agora.
+Público permanece645267a,confirmado31/10;não oferecer como entrega nova.
+Monitor antigo continua encerrado;nenhuma automação nova foi criada.
+
+## Histórico de plano local — substituído pelo bloqueio acima
+
 ## Atual — validar e publicar somente o pedido novo
 
 Janela19×11 preservando pan/tile;48sprites/envelopes30×30/picking ajustados;

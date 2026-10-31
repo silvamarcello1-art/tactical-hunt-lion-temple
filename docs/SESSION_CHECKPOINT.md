@@ -1,5 +1,47 @@
 # Checkpoint — consolidação visual, movimento e push —24/10/2026
 
+## 31/10 — SQM implementado e push concluído; CI de publicação bloqueado
+
+Runtime/source f1200c42d3c3450c5ac798e980b2f39285b8ef68. Commit normal em
+feature/gameplay-first-mvp2a;ls-remote confirmou local=origin e worktree limpa
+antes deste checkpointdocs-only. Nenhuma edição em gameplay após fullgate.
+Local final332unit/69E2E1worker9,3min/typecheck/art/build/preview/health/diffPASS.
+Rebuild apóscommit estampou SHA exato. Smokes compiled4178 PASS:
+- training3vitórias1231açõesbot/economia inalterada/cleanup incluindo claims0;
+- outfits38variantes;preview24kills4240XP1540gold1token,victory/consolelimpos;
+- manual/push/approach/tap/hold/reversal/8direções1×/4×,Hunt/takeover/reset;
+- soak13Hunts,13bosses/rewards/completions/sessões,166688ms1×/120157ms4×,
+  partyviva/token13,297amostras body/logicaloverlapMAX0,claims finais0,loopOFF
+  estável. Capturas4res×2modos19×11,mesmos tiles aparentes,semoverflow.
+PNGs treinamento1366/1920,Hunt1366/1600,manual1× e bossinspecionados.
+Callbackcost não é FPSbenchmark;warningchunk581,66kB500preservado.
+
+NOVO CI PR41125868457/job124304105807 SUCCESS:332unit30files66,69s,
+69E2E58,8min,frozen/health/typecheck/arte/build/build:preview/diff/uploadPASS.
+NOVO push41125860437/job124304078404 FAIL:332unit30files89,10s/typecheck/
+artePASS;E2E57PASS/5timeouts/7nãoexecutados1,3h. Builds/uploadSKIPPED,
+deploy124338963135SKIPPED. PRdeploy124331217665SKIPPEDnormal,não publica.
+Ambos checkout e health confirmam f1200c4exato/CLEAN/origin0ahead0behind.
+Falhas:equipment:4(360s),equipment:74(220s),gameplay-shell:53(360s),
+mvp0:379(360s),tactical-consolidation:23(220s). Sem retry/cancel/fix iniciado.
+
+Artefato13017156455SHA256884b500ee3dfae1f216153fd1253ccfc5b41c15bc9031cd53d86b476105e45a7,
+ZIP6,3MB salvo no workspace como sqm-ci-failure.zip,extraído sqm-ci-diagnostics.
+Inventory test.trace:timeout220s,AfterHooks938335,77ms,assertASSISTED940459,285,
+Closecontext955275,531 e erro sessionclosed955734,216. Logo valor vazio depois
+do timeout/teardown NÃO prova regressão real do seletor. Demais traces mostram
+clockRunFor250 levando2,7–3,2s;últimos estados boss/running/cycles1. Atrasos são
+observados,causa raiz não comprovada;PASS da PR não substitui pushfalho.
+Diagnóstico detalhado no workspace SQM_CI_DIAGNOSIS.md;histórico preservado.
+
+Manifest público reconferido31/10 ainda645267a7c30a8ff0209b061c6d460ff387892b34.
+Não executar smokes como se f1200 estivesse servido,não enviar site como pronto.
+Direção humana necessária para próximo passo;sem ampliar permissões ou limites.
+Atualização posterior apenasdocs[skip ci],source/tests/scripts/assets/deps/
+workflows idênticos ao runtimef1200;sem build ou deploy novo deste checkpoint.
+
+## Histórico — implementação e gates locais anteriores
+
 ## Novo pedido30/10 — ampliação/SQM/progressão,em validação
 
 GATE LOCAL FINAL PASS:332unit30files63,89s,69E2E1worker9,3min,typecheck,

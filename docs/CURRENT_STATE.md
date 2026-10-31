@@ -1,10 +1,37 @@
-# Estado vigente — ajustes de SQM em validação local —30/10/2026 (São Paulo)
+# Estado vigente — SQM implementado; publicação bloqueada no CI —31/10/2026
+
+## Resultado vigente — runtime f1200c4, sem novo deploy
+
+Commit f1200c42d3c3450c5ac798e980b2f39285b8ef68 enviado normalmente; source
+congelado. Local332unit/69E2E/typecheck/arte/build/build:preview/health/diff PASS.
+Smokes compilados exactSHA PASS:3treinos/1231açõesbot/economia intacta/38outfits;
+boss24kills4240XP1540gold1token;manual/push1×/4×;13Hunts consecutivas com13
+bosses/recompensas/sessões,party viva,297amostras sem overlap lógico/corporal,
+reservas finais0 e console/warnings limpos. Capturas4res×2modos inspecionadas.
+
+CI PR41125868457/job124304105807 PASS332unit/69E2E(58,8min)/build/preview/diff.
+CI push41125860437/job124304078404 FAIL:57E2E PASS,5timeouts,7nãoexecutados
+(1,3h);unit332/typecheck/arte PASS. Deploy124338963135 SKIPPED. Artefato
+13017156455 contém5traces;nenhuma reexecução ou fix automático foi iniciado.
+Logs/checkout/health dos dois jobs confirmam f1200c4 exato. Testes afetados:
+equipment(drop/equipar e painéis),gameplay-shell3loops,mvp0tokens e fluxo
+tactical-consolidation. Três deadlines360s e dois220s,sem elevar limites.
+Trace de inventário mostra timeout/After Hooks antes do erro ASSISTED vazio
+com session closed;outros mostram clockRunFor250ms levando2,7–3,2s antes
+de interromper. Isso não comprova causa raiz nem autoriza ignorar a falha.
+
+Manifest público reconferido31/10:645267a7c30a8ff0209b061c6d460ff387892b34.
+Portanto19×11/SQM/progressão NÃO estão publicados;sem smokes públicos novos.
+Próximo passo depende de direção do usuário,sem rerun/cancel/fix automático.
+Checkpoint posterior é somente docs [skip ci],não outro runtime.
+
+## Histórico local anterior — substituído pelo resultado acima
 
 ## Pedido atual — janela19×11,corpos no SQM e Hunt progressiva
 
 Usuário pediu somente+3–4SQMs horizontais,continuidade da câmera,respeito aos
 SQMs ao andar/push,e confirmou QUANTIDADE E FORÇA progressivas na Hunt.
-Contrato vigente:SQM_EXPANSION.md. Fonte local ainda sem novo commit/push.
+Contrato vigente:SQM_EXPANSION.md. Implementação registrada em f1200c4.
 19×11(+4),mesmo tile aparente52,45/64,45/80,82px nas3res e câmera contínua.
 48atlases medidos/envelope máximo30×30,sem corte;escala fixa poratlas/anchors
 normalizados,bob/lean extra removidos,picking/hitArea alinhados ao corpo.

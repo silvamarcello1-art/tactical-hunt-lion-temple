@@ -104,6 +104,13 @@ snapshot/hash legado foi regenerado para esconder regressões.
 
 ## Validação e publicação
 
+Resultado31/10:runtimef1200c4 implementado/pushnormal,local332unit/69E2E e
+smokescompilados(13Hunts/3treinos/38outfits/manualpush)PASS. PRCI41125868457
+PASS332/69;pushCI41125860437FAIL57PASS/5timeouts/7nãoexecutados e Pages
+SKIPPED. Manifestpúblico ainda645267a;novas alterações não publicadas.
+Diagnóstico/checkpoint preservam traces e causa não comprovada. Sem retry,
+fix automático ou relaxamento;próxima ação depende de direção humana.
+
 Primeira curva forte falhou no boss;calibrada para crescimento gradual mantendo
 assertions de vitória/party viva/orçamento. Nenhum deadline/snapshot foi relaxado.
 Focados de câmera/alpha/movimento-push/fluxo ao boss passaram;gates completos,

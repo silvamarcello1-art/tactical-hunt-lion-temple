@@ -1,4 +1,4 @@
-## 2026-10-30 — janela ampliada/SQM/Hunt progressiva (em validação local)
+## 2026-10-30 — janela ampliada/SQM/Hunt progressiva (publicação bloqueada)
 
 - Janela19×11(+4colunas),mesmo tile aparente e pan contínuo.
 - Envelope30×30 medido em48atlases,todasposes;sem corte/escala variável porframe,
@@ -9,6 +9,8 @@
   budget4240XP/1token preservado,sem novos sistemas/preços/save migrations.
 - Perfil e fixtures históricos preservados;novos testes de alpha real,corpos em
   trânsito,cliquechãolivre,determinismo/stress/loops. Sem relaxar deadlines.
+- Commitf1200c4,local332unit/69E2E/smokes13Hunts/3treinos PASS;PRCI332/69PASS.
+  CIpush57PASS/5timeouts/7nãoexecutados impede deploy;preview público segue645.
 
 ## 2026-10-30 — consolidação publicada e validada no preview
 

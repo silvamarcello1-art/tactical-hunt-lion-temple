@@ -5,9 +5,11 @@ Sorcerer atravessam três ondas e enfrentam um boss. Um motor incremental usa
 grade autoritativa, A*, LoS e eventos determinísticos; PixiJS representa o
 combate, e HTML/CSS apresenta controles Auto/Manual/Assisted, Party e Analyzer.
 
-Pedido posterior em validação local:janela19×11(+4SQMs),corpos/áreas de clique
+Pedido posterior implementado em f1200c4:janela19×11(+4SQMs),corpos/áreas de clique
 limitados ao SQM e inimigos em quantidade/força progressivas. Contrato:
 [SQM expansion](docs/SQM_EXPANSION.md). O link abaixo ainda é a versão anterior.
+Publicação bloqueada31/10:PR332unit/69E2E PASS;CIpush5timeouts/57PASS/
+7nãoexecutados,deploySKIPPED. Local332/69 e smokes compilados PASS.
 
 Preview compartilhado anterior validado30/10 (não release estável):
 [jogar treino](https://silvamarcello1-art.github.io/tactical-hunt-lion-temple/?training=1&v=645267a7c30a8ff0209b061c6d460ff387892b34).
