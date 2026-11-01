@@ -3,10 +3,14 @@ import type { GridPoint, Point } from '../events/types';
 const directions:Record<string,Point> = {
   KeyW:{x:0,y:-1}, ArrowUp:{x:0,y:-1}, KeyS:{x:0,y:1}, ArrowDown:{x:0,y:1},
   KeyA:{x:-1,y:0}, ArrowLeft:{x:-1,y:0}, KeyD:{x:1,y:0}, ArrowRight:{x:1,y:0},
+  Numpad7:{x:-1,y:-1},Numpad8:{x:0,y:-1},Numpad9:{x:1,y:-1},
+  Numpad4:{x:-1,y:0},Numpad6:{x:1,y:0},
+  Numpad1:{x:-1,y:1},Numpad2:{x:0,y:1},Numpad3:{x:1,y:1},
 };
 
 /** OS repeats only update a set; one step is sampled per domain tick. */
 export class HeldInput {
+  constructor(private recentAxisWins=false){}
   private keys = new Set<string>();
   press(code:string) { if (!(code in directions)) return false; this.keys.add(code); return true; }
   release(code:string) { return this.keys.delete(code); }
@@ -14,6 +18,7 @@ export class HeldInput {
   get size() { return this.keys.size; }
   direction():Point {
     const values = [...this.keys].map(code => directions[code]);
+    if(this.recentAxisWins){const recent=values.slice().reverse();return {x:recent.find(d=>d.x!==0)?.x??0,y:recent.find(d=>d.y!==0)?.y??0};}
     // W + Up is one north direction, even while S is also pressed.
     return {
       x:Number(values.some(d => d.x === 1)) - Number(values.some(d => d.x === -1)),

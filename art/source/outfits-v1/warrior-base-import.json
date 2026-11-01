@@ -1,0 +1,116 @@
+{
+  "generator": "builtin imagegen",
+  "sourceFile": "warrior-base-source.png",
+  "sourceSha256": "2db98fd50df337eb3a69d1243439eb62b87fb62409e1174816f97fa76ebc31df",
+  "sourceSize": [
+    1254,
+    1254
+  ],
+  "runtimeSize": [
+    448,
+    448
+  ],
+  "cell": 112,
+  "baseline": 104,
+  "bodyScaleFactor": 1,
+  "visualTop": 68,
+  "scale": 0.24548736462093862,
+  "boxes": [
+    {
+      "left": 76,
+      "top": 36,
+      "width": 176,
+      "height": 270
+    },
+    {
+      "left": 400,
+      "top": 36,
+      "width": 147,
+      "height": 273
+    },
+    {
+      "left": 693,
+      "top": 35,
+      "width": 174,
+      "height": 271
+    },
+    {
+      "left": 1015,
+      "top": 36,
+      "width": 149,
+      "height": 273
+    },
+    {
+      "left": 80,
+      "top": 342,
+      "width": 173,
+      "height": 276
+    },
+    {
+      "left": 394,
+      "top": 342,
+      "width": 162,
+      "height": 272
+    },
+    {
+      "left": 690,
+      "top": 341,
+      "width": 163,
+      "height": 277
+    },
+    {
+      "left": 1007,
+      "top": 343,
+      "width": 164,
+      "height": 271
+    },
+    {
+      "left": 70,
+      "top": 647,
+      "width": 176,
+      "height": 274
+    },
+    {
+      "left": 394,
+      "top": 647,
+      "width": 163,
+      "height": 272
+    },
+    {
+      "left": 702,
+      "top": 646,
+      "width": 167,
+      "height": 275
+    },
+    {
+      "left": 1008,
+      "top": 648,
+      "width": 167,
+      "height": 271
+    },
+    {
+      "left": 73,
+      "top": 951,
+      "width": 204,
+      "height": 264
+    },
+    {
+      "left": 375,
+      "top": 950,
+      "width": 214,
+      "height": 265
+    },
+    {
+      "left": 685,
+      "top": 949,
+      "width": 205,
+      "height": 263
+    },
+    {
+      "left": 976,
+      "top": 951,
+      "width": 221,
+      "height": 264
+    }
+  ]
+}

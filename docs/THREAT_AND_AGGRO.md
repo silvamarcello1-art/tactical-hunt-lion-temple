@@ -1,5 +1,10 @@
 # Threat e aggro
 
+24/10: partyFocusTargetId governa somente o foco ofensivo dos aliados. Não muda
+threat/aggro dos monstros nem a IA adversária do treino. Movimento/LoS, Challenge
+e máscaras não se tornam globais. Contrato atual de controle/foco em
+TACTICAL_CONSOLIDATION.md; as regras de threat abaixo permanecem do domínio.
+
 Atualizado em 27 de julho de 2026.
 
 ## Autoridade

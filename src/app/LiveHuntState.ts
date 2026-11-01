@@ -55,7 +55,7 @@ export class LiveHuntState {
     ) {
       this.damageTaken += amount;
     }
-    if (event.type === 'heal') this.healing += amount;
+    if (event.type === 'heal' && heroIds.has(event.sourceId??'')) this.healing += amount;
     if (
       event.type === 'death' &&
       event.targetId &&

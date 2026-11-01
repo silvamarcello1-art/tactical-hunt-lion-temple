@@ -63,16 +63,15 @@ export class OccupancyGrid {
     entityId: string,
     position: GridPosition,
     footprint = this.footprints.get(entityId) ?? { width: 1, height: 1 },
+    transit:readonly GridPosition[] = [],
   ) {
-    const result = this.canEnter(entityId, position, footprint);
-    if (!result.allowed) return result;
+    const claims=[position,...transit];
+    for(const tile of claims){const result=this.canEnter(entityId,tile,footprint);if(!result.allowed)return result;}
     this.cancelReservation(entityId);
     this.entityReservations.set(entityId, cloneGridPosition(position));
-    for (const tile of this.map.footprintTiles(position, footprint)) {
-      this.reservedTiles.set(gridKey(tile), entityId);
-    }
+    for(const claim of claims)for(const tile of this.map.footprintTiles(claim,footprint))this.reservedTiles.set(gridKey(tile),entityId);
     this.revisionValue++;
-    return result;
+    return {allowed:true} as EnterResult;
   }
 
   cancelReservation(entityId: string) {
@@ -136,6 +135,10 @@ export class OccupancyGrid {
     return this.occupiedTiles.get(gridKey(position));
   }
 
+  footprintOf(entityId:string):EntityFootprint {
+    return {...(this.footprints.get(entityId)??{width:1,height:1})};
+  }
+
   reservedBy(position: GridPosition) {
     return this.reservedTiles.get(gridKey(position));
   }
@@ -162,6 +165,11 @@ export class OccupancyGrid {
       entityId,
       position: cloneGridPosition(position),
     }));
+  }
+
+  /** All claimed cells, including temporary diagonal transit corners. */
+  reservedTileEntries(){
+    return [...this.reservedTiles].map(([key,entityId])=>{const[x,y]=key.split(':').map(Number);return {entityId,position:{x,y}};});
   }
 
   findNearestFree(

@@ -1,0 +1,116 @@
+{
+  "generator": "builtin imagegen",
+  "sourceFile": "druid-addon1-source.png",
+  "sourceSha256": "ffd613e6d427de09603f19f519b63bcf669781eb34d4317f9e21ffd62de776d8",
+  "sourceSize": [
+    1254,
+    1254
+  ],
+  "runtimeSize": [
+    448,
+    448
+  ],
+  "cell": 112,
+  "baseline": 104,
+  "bodyScaleFactor": 1,
+  "visualTop": 68,
+  "scale": 0.2546816479400749,
+  "boxes": [
+    {
+      "left": 95,
+      "top": 58,
+      "width": 196,
+      "height": 267
+    },
+    {
+      "left": 390,
+      "top": 60,
+      "width": 180,
+      "height": 264
+    },
+    {
+      "left": 670,
+      "top": 58,
+      "width": 203,
+      "height": 265
+    },
+    {
+      "left": 974,
+      "top": 58,
+      "width": 178,
+      "height": 266
+    },
+    {
+      "left": 91,
+      "top": 357,
+      "width": 200,
+      "height": 266
+    },
+    {
+      "left": 372,
+      "top": 360,
+      "width": 197,
+      "height": 266
+    },
+    {
+      "left": 665,
+      "top": 359,
+      "width": 210,
+      "height": 267
+    },
+    {
+      "left": 967,
+      "top": 360,
+      "width": 196,
+      "height": 266
+    },
+    {
+      "left": 90,
+      "top": 648,
+      "width": 201,
+      "height": 265
+    },
+    {
+      "left": 378,
+      "top": 650,
+      "width": 195,
+      "height": 265
+    },
+    {
+      "left": 669,
+      "top": 649,
+      "width": 202,
+      "height": 267
+    },
+    {
+      "left": 969,
+      "top": 650,
+      "width": 191,
+      "height": 266
+    },
+    {
+      "left": 65,
+      "top": 941,
+      "width": 231,
+      "height": 262
+    },
+    {
+      "left": 360,
+      "top": 943,
+      "width": 248,
+      "height": 259
+    },
+    {
+      "left": 661,
+      "top": 944,
+      "width": 249,
+      "height": 257
+    },
+    {
+      "left": 934,
+      "top": 941,
+      "width": 258,
+      "height": 261
+    }
+  ]
+}

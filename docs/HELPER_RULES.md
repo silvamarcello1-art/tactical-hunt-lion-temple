@@ -1,5 +1,12 @@
 # Regras do Helper e rotação
 
+Atualização24/10: no treino e na Hunt com foco explícito, os companheiros AI
+restringem o alvo ofensivo primário a partyFocusTargetId; áreas continuam reais,
+cura/suporte preservados. Sem foco, treino aguarda ordem e Hunt mantém aquisição
+autônoma. Selecionado Manual não recebe rotação AI; Hunt Assistido conserva as
+duas preferências e sua regra sem movimento automático. TACTICAL_CONSOLIDATION.md
+é o contrato atual; as prioridades/reservas/mínimos abaixo continuam dados de base.
+
 Atualizado em 27 de julho de 2026.
 
 ## Preferências atuais

@@ -18,6 +18,12 @@ const event = (
 });
 
 describe('LiveHuntState', () => {
+  it('does not count opposing bot healing as party sustain',()=>{
+    const state=new LiveHuntState();
+    state.apply(event('heal',{amount:120},'training-warden','training-sparring'));
+    expect(state.healing).toBe(0);
+    state.apply(event('heal',{amount:80},'druid','knight'));expect(state.healing).toBe(80);
+  });
   it('agrega e reinicia as métricas ao vivo', () => {
     const state = new LiveHuntState();
     state.setTime(1200);

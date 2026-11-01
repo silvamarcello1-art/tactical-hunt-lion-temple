@@ -1,3 +1,39 @@
+# Direção de arte — atualização 2B.1 (05/10/2026)
+
+2B.4: referência clara fornecida pelo usuário orienta piso areia/grade e hotbar,
+sem copiar a captura. TacticalIcons cria quatro runas e duas utilidades originais;
+bots reutilizam os atlas próprios de heróis. assets_rtc indicada em Downloads
+contém zero arquivos (só data/cursors); não houve integração de sprites Tibia.
+Não substituir ícones/passivas por imagens sem correspondência/proveniência.
+
+Incremento 2B.3 (19/10): três heróis agora usam pixel art original gerada no modo
+builtin, atlases RGBA 4×4, maiores e com pés registrados, sem zoom. Arte raw fora
+do bundle, PNGs finais versionados. ART_PROMPTS.md registra prompts/importação;
+SPRITE_PIPELINE.md define contrato. Monstros continuam nos vetores existentes.
+No treino, duas magias de gelo têm ícones/VFX próprios; não copiar assets Tibia.
+Os parágrafos abaixo descrevem o histórico, não os heróis pixel novos.
+
+Incremento 2B.2 em 19/10: parede violeta geométrica e campo de chamas vetorial,
+ambos originais e amostrados pelo relógio lógico. Bot de treino usa o blockout
+caster existente. Nenhuma cópia de sprites/ícones do Tibia. Arte final pendente.
+
+Dez atores vetoriais originais no manifesto; heróis aprovados preservados.
+Bastião de Bronze: escudo largo e armadura pesada. Balista Errante: arma transversal
+com cavalete, silhueta não felina. Ambos mantêm frame/footpoint/footprint registrados,
+não são recolors. Qualidade atual é blockout, não arte final.
+
+Nove ícones SVG originais 48×48 individuais: chamado/espada/ruptura, cura/folha/
+jardim, lança/onda astral/céu. IDs antigos do Druid são chaves de compatibilidade,
+não justificam gelo na imagem: Laço Vital, Semente Errante e Jardim da Vigília
+possuem símbolos de cura/natureza. Tooltip usa o mesmo ID e nome do binding.
+
+Party compacta fora do mundo; barras contrastadas, ícones/teclas/custos discretos,
+passivas com efeito e unlock visíveis. Identidade não depende só de cor/hover.
+Gerador existente produz sprites e ícones; não houve cópia de assets externos.
+Os itens/ícones de equipamento e fontes legadas preservadas não foram reeditados.
+
+## Direção de arte base e histórico
+
 # Tactical Hunt — direção de arte
 
 ## Identidade

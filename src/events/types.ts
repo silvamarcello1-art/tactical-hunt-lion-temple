@@ -1,4 +1,19 @@
+import type { HeroProgress } from '../data/progression';
+import type { ItemInstance } from '../combat/Equipment';
 export type EventType =
+  | 'mana_buffer'
+  | 'push_queued'
+  | 'push_started'
+  | 'push_resolved'
+  | 'push_cancelled'
+  | 'rune_used'
+  | 'rune_placed'
+  | 'rune_removed'
+  | 'equipment_drop'
+  | 'map_changed'
+  | 'boss_phase'
+  | 'hero_experience'
+  | 'level_up'
   | 'spawn'
   | 'boss_spawn'
   | 'tile_reserved'
@@ -52,7 +67,15 @@ export interface CombatEvent {
   sourceId?: string;
   targetId?: string;
   data?: {
+    runeId?: 'magic_wall'|'fire_field'|'sudden_death'|'destroy_field';
+    expiresAt?:number;
+    equipment?: ItemInstance;
+    requiresTelegraph?: boolean;
+    blocked?: boolean;
+    progress?: HeroProgress;
+    previousLevel?: number;
     amount?: number;
+    healthDamage?:number;
     element?: string;
     position?: Point;
     tiles?: Point[];
@@ -66,6 +89,8 @@ export interface CombatEvent {
     pathTiles?: GridPoint[];
     originTile?: GridPoint;
     targetTile?: GridPoint;
+    visualOrigin?: Point;
+    visualImpact?: Point;
     facing?: Direction;
     ability?: string;
     abilityId?: string;
@@ -108,6 +133,12 @@ export interface CombatEvent {
 export type Role = 'knight' | 'druid' | 'sorcerer' | 'monster' | 'boss';
 
 export interface EntitySnapshot {
+  /** Opposing training team, never a player-owned hero or a reward source. */
+  trainingVocation?: 'knight'|'druid'|'sorcerer';
+  pushable?:boolean;
+  description?: string;
+  archetype?: 'bruiser'|'hunter'|'flanker'|'caster'|'protector'|'artillery';
+  rewardSuppressed?: boolean;
   id: string;
   name: string;
   role: Role;
@@ -124,6 +155,8 @@ export interface EntitySnapshot {
   position: Point;
   color: number;
   bossTokenReward?: number;
+  magicPower?: number;
+  level?: number;
 }
 
 export interface HuntResult {

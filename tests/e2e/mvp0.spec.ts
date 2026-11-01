@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { advanceUntilAttribute, installControlledClock, pauseIdleClock, REPEATED_HUNT_TIMEOUT_MS } from './controlled-clock';
 
 function collectRuntimeErrors(page: Page) {
   const errors: string[] = [];
@@ -70,6 +71,9 @@ async function installGridAudit(page: Page) {
         currentInitialBackline = 0;
       }
       const tile = event.data?.tile as { x:number;y:number } | undefined;
+      if(event.type==='map_changed')for(const tile of (event.data?.logicalTiles??[]) as {x:number;y:number}[]) {
+        const key=`${tile.x}:${tile.y}`;if(event.data?.blocked)blocked.add(key);else blocked.delete(key);
+      }
       const toTile = event.data?.toTile as { x:number;y:number } | undefined;
       if ((event.type === 'spawn' || event.type === 'boss_spawn') && event.targetId && tile) {
         positions.set(event.targetId, `${tile.x}:${tile.y}`);
@@ -184,10 +188,13 @@ test.describe.serial('MVP 0 + MVP 1A — fluxo completo', () => {
     const errors = collectRuntimeErrors(page);
     await openIdleHunt(page);
 
-    await expect(page.locator('#backpack-capacity')).toHaveText('0 / 20 slots');
+    await page.locator('#open-equipment').click();
+    await expect(page.locator('.empty-inventory')).toContainText('Derrote o Regente');
+    await expect(page.locator('#inventory-gold')).toHaveText('0 ouro');
+    await page.locator('#close-equipment').click();
     await expect(page.locator('#loot-capacity')).toHaveText('0 / 64 slots');
     await expect(page.locator('#loot')).toHaveText('Nenhum item ainda.');
-    await expect(page.locator('.demo-tag')).not.toHaveCount(0);
+    await expect(page.locator('#backpack-slots')).toHaveCount(0);
 
     await page.locator('[data-module="helper"]').click();
     await expect(page.locator('#ability-modal')).toBeVisible();
@@ -200,15 +207,19 @@ test.describe.serial('MVP 0 + MVP 1A — fluxo completo', () => {
     );
     await expect(page.locator('#game canvas')).toHaveCount(1);
 
-    await page.locator('#party-config').click();
+    await page.locator('[data-module="helper"]').click();
     await expect(page.locator('#ability-modal')).toBeVisible();
     await page.locator('#ability-modal button[value="cancel"]').first().click();
 
-    await page.locator('[data-ability]').first().click();
+    await expect(page.locator('[data-ability]').first()).toBeDisabled();
+    await expect(page.locator('[data-ability]').first()).toHaveAttribute('data-unavailable-reason','not-started');
+    await page.locator('#ability-config').click();
     await expect(page.locator('#ability-modal')).toBeVisible();
     await page.locator('#ability-modal button[value="cancel"]').first().click();
 
-    for (const module of ['bestiary','progression','storage','social']) {
+    await page.locator('[data-view="combat"]').click();
+    await page.locator('.roadmap summary').click();
+    for (const module of ['bestiary','storage','social']) {
       await page.locator(`[data-module="${module}"]`).click();
       await expect(page.locator('#future-modal')).toBeVisible();
       await expect(page.locator('#future-description')).toContainText(
@@ -219,11 +230,13 @@ test.describe.serial('MVP 0 + MVP 1A — fluxo completo', () => {
 
     await page.locator('[data-view="combat"]').click();
     await expect(page.locator('#view-summary')).toBeVisible();
-    await expect(page.locator('#view-summary')).toContainText('MVP 1');
+    await expect(page.locator('#view-summary')).toContainText('Hunt Analyzer');
     await page.locator('[data-view="loot"]').click();
-    await expect(page.locator('#view-summary')).toContainText('inventário');
+    await expect(page.locator('#view-summary')).toContainText('Inventário');
     await page.locator('[data-view="general"]').click();
     await expect(page.locator('#view-summary')).toBeHidden();
+
+    await page.locator('[data-view="combat"]').click();
 
     const collapse = page.locator('[data-collapse]').first();
     const content = collapse.locator('xpath=ancestor::section[1]').locator(
@@ -234,12 +247,13 @@ test.describe.serial('MVP 0 + MVP 1A — fluxo completo', () => {
     await collapse.click();
     await expect(content).toBeVisible();
 
-    await page.locator('#supply-config').click();
-    await expect(page.locator('#future-modal')).toBeVisible();
-    await expect(page.locator('#future-description')).toContainText(
-      'Disponível em um próximo MVP',
-    );
-    await page.locator('#close-future').click();
+    await page.locator('[data-view="loot"]').click();
+    // Real inventory replaces the former decorative slots/Supply placeholder.
+    await page.locator('#open-equipment').click();
+    await expect(page.locator('#equipment-drawer')).toContainText('Somente consulta');
+    await page.locator('#close-equipment').click();
+    await page.locator('[data-view="loot"]').click();
+    await page.locator('#close-drawer').click();
     await page.locator('#loop-toggle').click();
     await expect(page.locator('#loop-toggle')).toHaveAttribute(
       'aria-pressed',
@@ -337,6 +351,9 @@ test.describe.serial('MVP 0 + MVP 1A — fluxo completo', () => {
   }) => {
     const errors = collectRuntimeErrors(page);
     await openIdleHunt(page);
+    // Isolate reward idempotency from the next legitimate loop's reward.
+    await page.locator('#loop-toggle').click();
+    await expect(page.locator('#loop-toggle')).toHaveAttribute('aria-pressed', 'false');
     await page.locator('[data-speed="4"]').click();
     await page.locator('#start').click();
     await expect(page.locator('html')).toHaveAttribute(
@@ -362,15 +379,17 @@ test.describe.serial('MVP 0 + MVP 1A — fluxo completo', () => {
   test('três loops legítimos concedem três Boss Tokens', async ({
     page,
   }) => {
+    test.setTimeout(REPEATED_HUNT_TIMEOUT_MS);
     const errors = collectRuntimeErrors(page);
+    await installControlledClock(page);
     await openIdleHunt(page);
+    await pauseIdleClock(page);
     await page.locator('[data-speed="4"]').click();
     await page.locator('#start').click();
-    await expect(page.locator('html')).toHaveAttribute(
-      'data-completed-cycles',
-      '3',
-      { timeout: 100_000 },
-    );
+    await advanceUntilAttribute(page, 'data-completed-cycles', '3');
+    await page.locator('#loop-toggle').click();
+    await page.clock.runFor(2500);
+    await expect(page.locator('html')).toHaveAttribute('data-completed-cycles', '3');
     await expect(page.locator('#boss-token-balance')).toHaveText(
       '★ 3 Boss Token',
     );
@@ -405,7 +424,9 @@ test.describe.serial('MVP 0 + MVP 1A — fluxo completo', () => {
     const errors = collectRuntimeErrors(page);
     await openIdleHunt(page);
 
-    await page.getByRole('button', { name:'Abrir Helper de Lyra' }).click();
+    await page.locator('#card-druid').click();
+    await expect(page.locator('#ability-modal')).toBeHidden();
+    await page.locator('#ability-config').click();
     await expect(page.locator('html')).toHaveAttribute(
       'data-selected-hero',
       'druid',
@@ -423,7 +444,8 @@ test.describe.serial('MVP 0 + MVP 1A — fluxo completo', () => {
       'data-session-state',
       'running',
     );
-    await page.getByRole('button', { name:'Abrir Helper de Orin' }).click();
+    await page.locator('#card-sorcerer').click();
+    await page.locator('#ability-config').click();
     await expect(page.locator('#helper-character-name')).toHaveText('Orin');
     await expect(page.locator('html')).toHaveAttribute(
       'data-selected-hero',
@@ -553,16 +575,15 @@ test.describe.serial('MVP 0 + MVP 1A — fluxo completo', () => {
     page,
   }) => {
     const errors = collectRuntimeErrors(page);
+    await installControlledClock(page);
     await openIdleHunt(page);
+    await pauseIdleClock(page);
     await page.locator('#loop-toggle').click();
     await page.locator('[data-speed="4"]').click();
     await page.locator('#start').click();
 
-    await expect(page.locator('html')).toHaveAttribute(
-      'data-session-state',
-      'boss',
-      { timeout:60_000 },
-    );
+    await advanceUntilAttribute(page, 'data-session-state', 'boss');
+    await expect(page.locator('#result')).toBeHidden();
     await expect(page.locator('html')).toHaveAttribute(
       'data-boss-spawns',
       '1',
@@ -579,11 +600,7 @@ test.describe.serial('MVP 0 + MVP 1A — fluxo completo', () => {
     await expect(page.locator('#game')).toHaveAttribute('data-tween-count', '0');
 
     await page.locator('#start').click();
-    await expect(page.locator('html')).toHaveAttribute(
-      'data-session-state',
-      'completed',
-      { timeout:60_000 },
-    );
+    await advanceUntilAttribute(page, 'data-session-state', 'completed');
     await page.locator('#close-result').click();
     await page.locator('#restart').click();
     await expect(page.locator('html')).toHaveAttribute(
@@ -632,18 +649,20 @@ test.describe.serial('MVP 0 + MVP 1A — fluxo completo', () => {
   });
 
   test('chega ao boss e conclui três loops sem duplicações', async ({ page }) => {
+    test.setTimeout(REPEATED_HUNT_TIMEOUT_MS);
     const errors = collectRuntimeErrors(page);
+    await installControlledClock(page);
     await installGridAudit(page);
     await openIdleHunt(page);
+    await pauseIdleClock(page);
     await page.locator('[data-speed="4"]').click();
     await page.locator('#start').click();
 
-    await expect(page.locator('html')).toHaveAttribute(
-      'data-completed-cycles',
-      '3',
-      { timeout:100_000 },
-    );
+    await advanceUntilAttribute(page, 'data-completed-cycles', '3');
     await page.locator('#loop-toggle').click();
+    // The final cosmetic fade also uses rAF; let it finish without permitting
+    // the cancelled loop timer to start a fourth hunt.
+    await page.clock.runFor(2500);
     await expect(page.locator('#result')).toBeVisible();
     await expect(page.locator('#stage-label')).toHaveText('Hunt concluída');
     await expect(page.locator('html')).toHaveAttribute('data-boss-spawns', '1');
@@ -669,7 +688,7 @@ test.describe.serial('MVP 0 + MVP 1A — fluxo completo', () => {
         'data-processed-events',
       )))
       .toBeGreaterThan(0);
-    await page.waitForTimeout(2500);
+    await page.clock.runFor(2500);
     await expect(page.locator('html')).toHaveAttribute(
       'data-completed-cycles',
       '3',

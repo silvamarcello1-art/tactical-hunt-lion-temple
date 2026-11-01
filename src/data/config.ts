@@ -1,5 +1,6 @@
 import { tile } from '../combat/tiles';
 import type { EntitySnapshot } from '../events/types';
+import { monsterProfiles } from './encounters';
 
 export const HUNT_LAYOUT_CONFIG = {
   maxInitialBacklineAttackers:2,
@@ -112,3 +113,24 @@ export const floors: EntitySnapshot[][] = [
     lion('guard-2','Royal Guard',620,75,HUNT_LAYOUT_CONFIG.enemySpawnPositions[3][2]),
   ],
 ];
+
+// Stable encounter IDs preserve reward/save identity; presentation names are original.
+const roster:NonNullable<EntitySnapshot['archetype']>[][]=[
+  ['bruiser','flanker','hunter','caster'],['bruiser','hunter','caster','flanker'],
+  ['bruiser','flanker','hunter','caster','caster','bruiser'],['bruiser','bruiser','hunter'],
+];
+floors.forEach((floor,i)=>floor.forEach((entity,j)=>{
+  if(entity.role==='boss') {entity.name='O Regente Vazio';entity.description='A coroa desperta. Seus golpes derrubam o próprio templo.';return;}
+  const archetype=roster[i][j],profile=monsterProfiles[archetype];
+  Object.assign(entity,{archetype,name:profile.name,description:profile.description,color:profile.color});
+}));
+
+/** 2B.1 ruleset. Legacy rosters remain immutable for deterministic regression tests. */
+export const polishedFloors:EntitySnapshot[][]=floors.map(floor=>floor.map(enemy=>structuredClone(enemy)));
+for(const [floorIndex,archetype,tile,id] of [
+  [0,'protector',{x:18,y:8},'bronze-bastion-1'],
+  [1,'artillery',{x:23,y:14},'wandering-ballista-1'],
+] as const) {
+  const profile=monsterProfiles[archetype];
+  polishedFloors[floorIndex].push({...lion(id,profile.name,archetype==='protector'?240:180,24,{x:tile.x*32,y:tile.y*32}),archetype,description:profile.description,color:profile.color,tileX:tile.x,tileY:tile.y,rewardSuppressed:true});
+}

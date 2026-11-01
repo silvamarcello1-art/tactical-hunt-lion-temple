@@ -1,6 +1,29 @@
 # Matriz de paridade
 
+## Atualização24/10 — consolidação, não novo marco online
+
+Janela15×11/câmera comum Hunt/treino, proporção nativa1,1625SQM, mapa de treino
+36×18 sem CSS, foco explícito da party, Manual exclusivo no treino e push com
+aproximação no mesmo domínio. TACTICAL_CONSOLIDATION.md registra medidas,
+contratos e limites. Economia/andares/boss/outfits mantidos; sem PvP online,
+Adventure ou paridade completa de catálogo. Gates próprios no checkpoint.
+
 Referência comportamental: `docs/reference/VIDEO_REFERENCE_MAP.md`.
+
+## Atualização MVP 2B — 30/09/2026
+
+| Funcionalidade | Estado atual | Diferença restante | Prioridade / marco | Dependência / aceite |
+|---|---|---|---|---|
+| Inventário | Local real, 24 entradas, stacks/reserva persistentes | Sem venda/descarte/DnD | P1 / 2B | Drops de domínio conservados e replay protegido |
+| Equipamento | Arma/armadura por herói, comparação e stats efetivos | Sem slots extras | P1 / 2B | Vocação e política entre hunts validadas; combate realmente alterado |
+| Forja | +1, 200 gold e uma brasa, transação única | Sem tiers adicionais | P1 / 2B | Duplo clique não consome duas vezes; reload preserva |
+| Resultado/Loop | Drops reais, atalho à comparação e feedback compacto | Sem histórico de todas as hunts | P1 / 2B | Três loops sem duplicação e relatório sob demanda |
+
+Estado corrente do combate/grade em CURRENT_STATE e GRID_COMBAT. A tabela
+abaixo é o diagnóstico histórico anterior a esses marcos, não a lista atual
+de funcionalidades ausentes. Roadmap vigente: 2B–2F em MVP_ROADMAP.
+
+## Matriz histórica da referência
 
 | Funcionalidade | Referência | Estado atual | Diferença | Prioridade | MVP | Dependências | Aceite |
 |---|---|---|---|---|---|---|---|

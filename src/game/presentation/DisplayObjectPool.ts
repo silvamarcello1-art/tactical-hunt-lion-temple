@@ -7,6 +7,7 @@ export class DisplayObjectPool<T> {
     private readonly create: () => T,
     private readonly reset: (item: T) => void,
     private readonly capacity = 32,
+    private readonly discard?: (item:T) => void,
   ) {}
 
   acquire() {
@@ -19,6 +20,7 @@ export class DisplayObjectPool<T> {
     this.active = Math.max(0, this.active - 1);
     this.reset(item);
     if (this.available.length < this.capacity) this.available.push(item);
+    else this.discard?.(item);
   }
 
   clear(destroy?: (item: T) => void) {
