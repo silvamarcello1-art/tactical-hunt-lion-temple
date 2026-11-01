@@ -1,5 +1,26 @@
 # Próxima tarefa — desbloquear publicação da Roguelite Alpha —01/11/2026
 
+## 01/11 — CI do cache encerrado: publicação bloqueada
+
+Fonte/runtime `54f9a695a825e6e55968f1fe50d9a5fe263b9b6d`.
+Push41340601548/job124949570821 e PR41340605212/job124949581900:
+**FAILURE**, ambos363unit/34files PASS;67E2E PASS/4timeouts/7nãoexecutados(1,3h).
+Os4E2E novos do cache e4Alpha passaram em ambos. Frozen install/health/
+typecheck/arte/art-diff PASS; builds/build:preview/diff finais não executados.
+Deploys124970114637/124969909312 SKIPPED. Não há publicação nova aprovada.
+
+Artefatos13100006520/13100096094 preservados, SHA256 conferidos;8traces analisados.
+Cache estava ativo,1rebuild nos loops;250ms virtuais ainda custavam~2,0–2,6s
+parede. Loops pararam em2ciclos e cenário tático no boss. Timeout total precede
+teardown; vazio/sessionclosed não prova bug de seleção/crash. Causa última
+remanescente não comprovada; ganho local não resolveu o gate completo.
+Diagnóstico: [STATIC_CACHE_CI_DIAGNOSIS.md](STATIC_CACHE_CI_DIAGNOSIS.md).
+Manifest público continua versão anterior b9d0e31; não houve smoke público contra
+build antigo, retry, fix, deploy forçado ou mudança de gates. Histórico local
+362/363unit e78E2E PASS permanece distinto dos resultados remotos.
+Próximo passo exige direção para investigação dirigida, não retry cego.
+Entradas anteriores abaixo são histórico, não CI pendente atual.
+
 ## Atual — validar o novo runtime de cache no CI, sem retry antigo
 
 Cache implementado após autorização; STATIC_SCENE_CACHE.md registra contrato

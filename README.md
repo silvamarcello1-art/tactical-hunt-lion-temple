@@ -1,5 +1,11 @@
 # Lion Temple — Tactical Hunt
 
+Estado final do cache em01/11: push/PR falharam com363unit PASS,
+67E2E PASS/4timeouts/7nãoexecutados cada;4cache+4Alpha E2E PASS.
+Builds remotos e deploy não executados; preview Alpha continua bloqueado.
+[Diagnóstico e próximos limites](docs/STATIC_CACHE_CI_DIAGNOSIS.md).
+Os resultados e planos abaixo preservam o histórico, não gates atuais verdes.
+
 Cache da base estática Hunt/treino implementado, sem alterar combate ou Alpha.
 [Contrato e validação](docs/STATIC_SCENE_CACHE.md):78E2E PASS,builds PASS;
 suíteunitária362/363 por timeout antigo5s. Ganho local não aprova publicação:

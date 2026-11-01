@@ -1,3 +1,11 @@
+## 2026-11-01 — resultado final do CI do cache; sem publicação
+
+- Push41340601548/PR41340605212 FAILURE:363unit PASS;67E2E PASS/4timeouts/7notrun.
+-4cache+4Alpha E2E PASS em ambos;builds remotos/deploy SKIPPED após falha.
+- Dois artefatos/hash conferidos e8traces preservados;cache ativo,loops lentos.
+- Causa última não comprovada;sem fix/retry/gate relaxado/publicação forçada.
+- Apenas checkpoint documental;fonte54f9a695 permanece intacta.
+
 ## 2026-11-01 — cache do cenário estático
 
 - Cache em resolução integral da base Hunt/treino;runas/escombros/fades vivos.
