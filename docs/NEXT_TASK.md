@@ -1,5 +1,22 @@
 # Próxima tarefa — desbloquear publicação da Roguelite Alpha —01/11/2026
 
+## Atual — validar remotamente o ajuste medido de HUD
+
+Continuação autorizada após47f50cb. Correção de redundância UI pronta;novo
+frozen/typecheck353unit/74E2E/arte/builds/diff locais PASS. Redução local~60%JS/
+15%parede,sem mudança de domínio/input/clock ou relaxamento. Causa última dos
+timeoutsCI ainda não provada. HUD_PERFORMANCE_DIAGNOSIS.md guarda método/limites.
+Smokes compilados Alpha/Hunt PASS,PNGs inspecionados. Interação CUA ficou
+indisponível mesmo após reset;registrar limite,não contornar/inventar manual.
+Commit/push normal da correção validada.
+Isso gera NOVOS gates, não rerun cego do job antigo. Não mover HEAD durante
+CI/deploy:workflow lê branch viva. Confirmar checkout/health/stamp/SHA servido;
+após sucesso rodar qa-roguelite público com esse SHA,sem fixtures,inspecionar
+PNGs/economia/console. Se falhar, preservar diagnóstico antes de nova ação.
+Só encerrar publicação após smoke real;sem merge/force/remoteSites/monitores.
+
+## Histórico — resultado do runtime2dea277, não do ajuste novo
+
 Implementação/runtime2dea277 concluídos, push normal e PR4 draft. CI PR PASS
 350unit/73E2E/builds; CI push350unit PASS,61E2E PASS/5timeouts/7nãoexecutados,
 deploy SKIPPED. Quatro Alpha E2E passaram em ambos. Público continua b9d0e31;

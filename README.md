@@ -14,7 +14,11 @@ real dos gates e limites: [Alpha](docs/ROGUELITE_ALPHA.md),
 [estado vigente](docs/CURRENT_STATE.md). Preview não é release estável.
 Meta10–15min total ainda depende de playtests; não é duração humana já medida.
 
-Status01/11: runtime2dea277 no PR4 draft. CI PR350unit/73E2E/builds PASS;
+Continuação01/11: HUD otimizado sem mudar regras/input;353unit/74E2E/builds
+locais PASS. [Diagnóstico e limites](docs/HUD_PERFORMANCE_DIAGNOSIS.md).
+Novo runtime ainda depende de CI/Pages/manifest/smoke;preview não pronto.
+
+Histórico: runtime2dea277 no PR4 draft. CI PR350unit/73E2E/builds PASS;
 CI push61E2E PASS/5timeouts/7nãoexecutados bloqueou o Pages. Público ainda
 b9d0e31, não Alpha. Diagnóstico preservado; nenhum retry/relaxamento automático.
 

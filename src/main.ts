@@ -1,4 +1,5 @@
 import { GameplayHUD } from './ui/GameplayHUD';
+import {coalescedRefresh} from './ui/coalescedRefresh';
 import {WORLD_VIEW} from './game/worldViewport';
 import {AppearanceStore} from './app/AppearanceStore';
 import {OutfitPanel} from './ui/OutfitPanel';
@@ -161,14 +162,16 @@ function createNewHuntSessionId() {
   return `hunt-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
+const integerFormatter = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 0 });
+const numberFormatter = new Intl.NumberFormat('pt-BR');
 function formatBossToken(amount: number) {
-  return new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 0 }).format(
+  return integerFormatter.format(
     Math.max(0, Math.round(amount)),
   );
 }
 
 const formatNumber = (value: number) =>
-  new Intl.NumberFormat('pt-BR').format(Math.round(safeNumber(value)));
+  numberFormatter.format(Math.round(safeNumber(value)));
 
 const formatTime = (milliseconds: number) => {
   const ms = safeNumber(milliseconds);
@@ -214,6 +217,9 @@ function setSessionPhase(phase: SessionPhase, message?: string) {
 
 function renderParty() { hud.renderParty(selectedHeroId); }
 function renderActionBar() { hud.renderActions(selectedHeroId,preferences); updateCooldownVisuals(logicalTime); }
+// A rendered frame can dispatch many combat events. Read the final domain
+// snapshot once after that synchronous batch, not once for every event.
+const scheduleHUD = coalescedRefresh(updateHUD);
 function updateHUD() {
   const engine=renderer?.engine;
   hud.update(engine?.entities??[],engine?.progression??progressionStore.snapshot(),id=>engine?.controlOf(id).mode??'AI',selectedHeroId);
@@ -548,7 +554,7 @@ function scheduleLoop() {
 window.addEventListener('hunt-time', (rawEvent) => {
   liveState.setTime((rawEvent as CustomEvent<number>).detail);
   updateCooldownVisuals(liveState.time);
-  updateHUD();
+  scheduleHUD();
   const element = document.querySelector('#time');
   if (element) element.textContent = formatTime(liveState.time);
 });
@@ -617,7 +623,7 @@ window.addEventListener('hunt-event', (rawEvent) => {
     const notice=$('#level-notice');notice.textContent=heroes.find(h=>h.id===event.targetId)?.name+' · Nível '+event.data?.progress?.level;notice.hidden=false;
     window.setTimeout(()=>notice.hidden=true,2200);
   }
-  updateHUD();
+  scheduleHUD();
 
   if (
     [

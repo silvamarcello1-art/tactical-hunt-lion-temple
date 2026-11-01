@@ -1,5 +1,32 @@
 # Estado vigente — Roguelite Alpha implementada; publicação bloqueada —01/11/2026
 
+## Continuação autorizada — redução de redundância do HUD em validação
+
+Usuário pediu continuar após47f50cb. Medição CDP isolada confirmou custo de
+snapshots e DOM repetidos no HUD do laboratório; não reproduziu a causa última
+dos timeouts de CI. Correção limitada a apresentação: refresh agrupado por
+microtask, escritas idempotentes e Intl reutilizado. Domínio/input/Pixi/RNG/
+velocidade/testes antigos/limites/workflows/arte/deps intactos.
+Três amostras locais:JS1373–1550ms→574–642ms,parede9379–10106→8084–8603ms;
+mesmos40s lógicos,overlaps0,console limpo. Não é FPS ou garantia de CI.
+Ver HUD_PERFORMANCE_DIAGNOSIS.md para método, arquivos e limites.
+
+Nova fonte: frozen install/typecheck353unit/33files PASS(96,79s),74E2E PASS
+(11,6min),arte reproduzível/build/build:preview/diff PASS. Todos os5cenários
+do push antigo passaram localmente, sem relaxamento. Novos3unit+1E2E protegem
+agrupamento/reentrada/erro/DOM identity. Compilado real-clock Alpha PASS:
+duas salas/22brasas→retirada11→forja8→saldo3/rank1/R,99sativos,console limpo.
+Hunt compilada PASS24kills/4240XP/1540ouro/1token,overlaps/claims/cleanup0,
+errors[]/warnings[]. PNGs HUD/vitória/refúgio inspecionados. Interação manual
+assistida indisponível nesta rodada:conector de navegador falhou mesmo após
+reset;sem contorno. Não confundir revisão de PNG/74E2E com nova partida manual.
+Fonte ainda antes do novo commit; carimbo local de HEAD antigo não comprova
+SHA da working-tree. Após commit/push normal, seguir NOVOS gates do runtime,
+Pages/manifest/smoke. Não reutilizar o PR verde antigo como aprovação da nova
+fonte nem repetir cegamente o job falho. Publicação permanece bloqueada.
+
+## Histórico da rodada anterior — não são gates do ajuste de HUD
+
 ## Resultado remoto final desta rodada
 
 Runtime2dea277811b4c5fe4cf3a95ce27f88723f0c084a, PR4 draft sobre a base de

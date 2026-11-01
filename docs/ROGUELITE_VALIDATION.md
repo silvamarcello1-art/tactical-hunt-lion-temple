@@ -1,5 +1,20 @@
 # Alpha — registro de validação e diagnóstico
 
+## Continuação01/11 — novo ajuste de HUD e validação local
+
+Redundância de HUD medida e reduzida,sem mudar motor/controle/clock/limites.
+Diagnóstico completo em HUD_PERFORMANCE_DIAGNOSIS.md.353unit33files PASS,
+74E2E PASS(11,6min),frozen install/typecheck/arte/builds/diff PASS. Os cinco
+cenários antigos do push passaram nesta fonte. Compiled Alpha real-clock PASS:
+22brasas/retirada11/forja8/saldo3/rank1/R,99sativos,sem fixture ou aceleração.
+Compiled Hunt PASS24kills/4240XP/1540gold/1token,overlaps/claims/cleanup0.
+Console errors[]/warnings[];PNGs inspecionados. Interação assistida CUA falhou
+mesmo após reset,sem reparo/contorno;nenhuma nova sessão manual alegada.
+Public smoke e novos CI ainda pendentes;não aproveitar gates antigos como novos.
+O ganho local de~60%JS/~15%parede não prova causa última nem garante o CI.
+
+## Histórico anterior preservado
+
 ## CI final01/11 — PR verde, push bloqueado
 
 Ambos checkout/health2dea277811b4c5fe4cf3a95ce27f88723f0c084a e350unit/32files

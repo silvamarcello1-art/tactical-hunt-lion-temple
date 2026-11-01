@@ -1,3 +1,12 @@
+## 2026-11-01 — HUD agrupado e idempotente (nova validação)
+
+- Atualização do HUD ao fim do batch síncrono;evita snapshots repetidos por evento.
+- Preserva nós/texto/atributos quando iguais e reutiliza formatadores pt-BR.
+- Mesmos motor/input/grade/Pixi/clock/velocidade;nenhum teste/deadline antigo alterado.
+- Perfil local~60%menos JS/~15%menos parede,não FPS ou causa última de CI provada.
+- Frozen/typecheck353unit/74E2E/arte/builds/diff locais PASS;novo3unit+1E2E.
+- Publicação ainda depende dos novos gates e smoke público,não do CI antigo.
+
 ## 2026-11-01 — Alpha implementada; publicação bloqueada
 
 - Runtime2dea277/PR4 draft enviados, sem merge; Hunt antiga preservada.

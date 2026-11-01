@@ -1,5 +1,34 @@
 # Checkpoint — consolidação visual, movimento e push —24/10/2026
 
+## 01/11 — continuação autorizada/HUD, novos gates locais verdes
+
+Preflight fetch/health47f50cb=origin/CLEAN. Diagnóstico por CPU/CDP em contextos
+Edge isolados,10s controlados/40lógicos,sem/com/sem trace:antes9498/10106/9379ms,
+JS1423/1550/1373;depois8084/8603/8212ms,JS574/642/598. Mesmo estado/overlaps0/
+errors[]/warnings[]. Trace por si não reproduziu lentidãoCI~3s/250ms.
+Correção restrita main/GameplayHUD/coalescedRefresh:microtask por batch,
+escritas sem substituições idênticas e dois Intl reutilizados. Sem mudança
+no motor/grid/input/Pixi/clock/velocidade/deadlines/testes antigos/deps/arte/CI.
+Detalhes e evidências HUD_PERFORMANCE_DIAGNOSIS.md;causa últimaCI não provada.
+
+Frozen install/typecheck353unit33files96,79s/74E2E11,6min/arte reproduzível/
+build/build:preview/diff PASS, fonte congelada durante navegador. Cinco cenários
+que falharam no push anterior passaram localmente. Novo E2E de20eventos→uma
+leitura de progressão/preservação de nós e3unit de scheduler PASS. Primeiro
+teste contou todos62clones do app; corrigido para isolar o HUD, sem alterar
+PlayerControls ou testes prévios. Smokes compilados real-clock PASS:Alpha
+duas salas/22→retirada11→forja8→saldo3/rank1/R,99sativos;Hunt24kills/4240XP/
+1540gold/1token,overlaps/claims/cleanup0. Errors[]/warnings[] em ambos.
+PNGs de combate/vitória/refúgio inspecionados. CUA falhou ao criar seus assets
+internos mesmo após reset;interação manual assistida não revalidada nesta
+rodada,sem contorno por outra automação. Alpha compilada mantém mesmo JS da
+versão anterior;mudança é apenas HUD do laboratório. Não inventar nova sessão
+manual ou benchmark de duração. A inspeção manual anterior permanece histórica.
+Build789módulos/maior chunk431,69kB. Carimbo anterior do build de trabalho não
+é aprovação do SHA novo. Próximo:fechar smoke/QA visual/documentação,commit/
+push normal;novos CI353/74 e Pages,manifest exato/smoke público após sucesso.
+Sem rerun automático de job antigo/merge/force/remoteSites/novas automações.
+
 ## 01/11 — Alpha no GitHub; Pages bloqueado por CI push
 
 Branch feature/roguelite-alpha, runtime2dea277811b4c5fe4cf3a95ce27f88723f0c084a,
