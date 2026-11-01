@@ -1,4 +1,36 @@
-# Estado vigente — preview SQM publicado; smoke público pendente —31/10/2026
+# Estado vigente — Roguelite Alpha em validação —01/11/2026
+
+Novo pedido do usuário substitui o monitor antigo: fundação de action roguelite
+manual sobre o código atual, sem recomeçar o projeto. Branch
+`feature/roguelite-alpha`, base d14938ca33d3d48ae1fdeea44ef946f9b837edfc.
+Entrada `alpha.html`; Hunt permanece em `index.html`. Ver ROGUELITE_ALPHA.md
+e ROGUELITE_ART.md para arquitetura, escopo, fontes e limites.
+
+Implementados Knight solo/Q/E/R desbloqueável,11salas, dois bosses, escolhas
+temporárias, retornos/brasas permanentes/Forja I e Cronista por descobertas.
+Três fundos originais ImageGen builtin. Sem backend/remote Sites/workflow novo.
+Saves antigos preservados; namespace separado e checkpoint de sala.
+
+Gates locais: typecheck/frozen install/arte nativa reproduzível/build/
+build:preview/diff PASS.18unit Alpha PASS, jornada por comandos385750ms de
+combate;4E2E Alpha PASS, inclusive boss real/vitória e clique no corpo visível.
+Bloco serial mvp0+Alpha17/17 PASS(8,3min). Rodada completa anterior73E2E teve
+71PASS/1falha/1nãoexecutado por reload Vite durante edição do agente, comprovado
+no trace; o bloco afetado foi revalidado congelado sem alterar os critérios.
+
+Última suíte unitária padrão346/348:dois timeouts5s em cenários antigos;
+nenhum deadline/assertion/snapshot modificado. Os2testes de picking adicionados
+depois passaram isolados; CI completo esperado350unit/73E2E. Não chamar a suíte
+unitária local inteira de aprovada. Hashes de três Hunts evolutivas continuam
+iguais ao commit-base. Build788módulos/maior chunk431,69kB, sem warning500kB.
+Compiled smoke real-clock PASS, sem fixture/aceleração:duas salas e escolhas,
+22brasas→retirada11→forja8→saldo3/rank1/R, caderno/pausa/um canvas,errors[]/
+warnings[].100s ativos, PNGs inspecionados; não é vitória humana de10–15min nem
+validação de SHA público. CI/deploy/public smoke ainda pendentes.
+ROGUELITE_VALIDATION.md guarda resultados e limites, sem converter diagnóstico
+em aprovação. Nenhum novo preview público deve ser declarado pronto ainda.
+
+## Histórico SQM — não são gates da Alpha
 
 ## Diagnóstico atual — carga antecipada de38outfits confirmada;sem fix
 

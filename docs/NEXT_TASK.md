@@ -1,4 +1,23 @@
-# Próxima tarefa — fechar ajustes de SQM —30/10/2026
+# Próxima tarefa — fechar Roguelite Alpha —31/10/2026
+
+Pedido roguelite substitui a investigação/monitoramento anterior. Branch nova
+feature/roguelite-alpha; não implementar o lazy-loader global pausado, nem
+reativar retries/monitores. Contrato e limites em ROGUELITE_ALPHA.md.
+
+Concluir gates atuais: manter registrados os dois timeouts unitários locais
+sem relaxar5s/asserções.18unit Alpha/4E2E e17E2E do bloco revalidado PASS;
+arte/typecheck/build/build:preview PASS. Fechar smoke compilado real-clock e
+revisão diff; então commit/push normal com status honesto, PR draft sobre a base
+de gameplay para CI padrão350unit/73E2E e Pages somente se verde. Não mover HEAD
+durante checkout/deploy; confirmar manifest antes de dar preview como pronto.
+
+Alpha2: playtests humanos de duração/balanceamento, salas/rotas mais distintas,
+inimigos/bosses com silhuetas e padrões próprios, áudio/feedback, animação mais
+rica; depois registries de regiões/classes/NPCs/descobertas e conteúdo original.
+Não adicionar cidades/classes/itens em massa ou backend antes do aprendizado
+deste slice. Nenhuma paridade comercial com referências foi comprovada.
+
+## Histórico SQM — preservado, não é a tarefa ativa
 
 ## Diagnóstico concluído31/10 — aguardar autorização para correção de carga
 

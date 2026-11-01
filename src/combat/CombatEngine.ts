@@ -1,6 +1,7 @@
 import { awardXp, passiveAmount, progressFromTotal } from './Progression';
 import { effectiveStats, applyEffectiveStats, type Loadout } from './Equipment';
 import { EquipmentDrops } from './EquipmentDrops';
+import type {EncounterSetup} from './EncounterSetup';
 import { monsterProfiles,bossSpecial,monsterWave,committedAttacks } from '../data/encounters';
 import { chooseDirectionalAttack } from './DirectionalTactics';
 import { TemporaryTerrain } from './TemporaryTerrain';
@@ -93,13 +94,19 @@ const clone = <T>(value: T): T => structuredClone(value);
 const MAX_TURNS_PER_FLOOR = 700;
 const NO_PROGRESS_RECOVERY_TURNS = 40;
 const NO_PROGRESS_STALEMATE_TURNS = 80;
+const PROGRESS_EVENTS:ReadonlySet<CombatEvent['type']>=new Set([
+  'damage','heal','death','target_change','movement_completed','cast',
+]);
 const isHero = (entity: SimEntity) =>
   entity.role === 'knight' ||
   entity.role === 'druid' ||
   entity.role === 'sorcerer';
 
 export class CombatEngine {
-  private get abilityDefinitions(){return abilityCatalog(this.trainingMode);}
+  private readonly abilityDefinitions:AbilityDefinition[];
+  private explorationExit=false;
+  get awaitingExit(){return !!this.options.encounter?.holdOpen&&this.currentFloor===this.options.encounter.floors.length&&this.party.some(h=>h.alive)&&!this.enemies.some(e=>e.alive);}
+  finishExploration(){if(this.awaitingExit){this.explorationExit=true;return true;}return false;}
   private vocationAbilities(vocation:AbilityDefinition['vocation'],preferences=this.preferences){return this.abilityDefinitions.filter(a=>a.vocation===vocation&&(preferences[a.id]?.enabled??true)).slice().sort((a,b)=>(preferences[a.id]?.priority??99)-(preferences[b.id]?.priority??99));}
   private events: CombatEvent[] = [];
   private iterator?:Generator<number, HuntResult, void>;
@@ -596,10 +603,18 @@ export class CombatEngine {
     equipmentRewards=false,
     private polishedRules=false,
     readonly trainingMode=false,
-    private readonly options:{singleHeroControl?:boolean;trainingTeam?:boolean;trainingColumns?:number;tacticalControls?:boolean;progressiveHunt?:boolean;strictCellMovement?:boolean}={},
+    private readonly options:{singleHeroControl?:boolean;trainingTeam?:boolean;trainingColumns?:number;tacticalControls?:boolean;progressiveHunt?:boolean;strictCellMovement?:boolean;encounter?:EncounterSetup}={},
   ) {
     this.sessionId = sessionId ?? `hunt-${seed}`;
     this.options={...options};
+    if(options.encounter){
+      this.options.encounter=clone(options.encounter);
+      this.gridMap=new GridMap(30,18,{minX:2,maxX:27,minY:2,maxY:15},clone(options.encounter.blocked));
+      this.resetGridContext();
+      for(const hero of options.encounter.party)this.ownership.set(hero.id,{mode:'MANUAL',ownerId:'local-player'});
+    }
+    // The profile/catalog is fixed for the session. Do not resolve it per cast.
+    this.abilityDefinitions=this.options.encounter?.abilities??abilityCatalog(trainingMode);
     if(trainingMode&&options.trainingTeam){
       const columns=Number.isFinite(options.trainingColumns)?Math.max(30,Math.min(52,Math.round(options.trainingColumns!))):36;
       this.gridMap=new GridMap(columns,18,undefined,[...HUNT_LAYOUT_CONFIG.blockedTiles]);
@@ -668,7 +683,8 @@ export class CombatEngine {
     left: Pick<EntitySnapshot, 'tileX' | 'tileY'>,
     right: Pick<EntitySnapshot, 'tileX' | 'tileY'>,
   ) {
-    return gridDistance(this.tileOf(left), this.tileOf(right));
+    // Same authoritative Chebyshev distance, without two temporary tile objects.
+    return Math.max(Math.abs(left.tileX-right.tileX),Math.abs(left.tileY-right.tileY));
   }
 
   private resetGridContext() {
@@ -1884,6 +1900,7 @@ export class CombatEngine {
   ) {
     const aliveEnemies = enemies.filter((enemy) => enemy.alive);
     if (!aliveEnemies.length) return;
+    if(this.options.encounter)return; // Explicit commands only in the solo manual profile.
     if(this.options.tacticalControls){
       if(this.focusTargetId&&!aliveEnemies.some(e=>e.id===this.focusTargetId))this.focusTargetId=undefined;
     }
@@ -2178,15 +2195,8 @@ export class CombatEngine {
   }
 
   private hasProgressSince(eventIndex: number) {
-    const progressEvents = new Set<CombatEvent['type']>([
-      'damage',
-      'heal',
-      'death',
-      'target_change',
-      'movement_completed',
-      'cast',
-    ]);
-    return this.events.slice(eventIndex).some((event) => progressEvents.has(event.type));
+    for(let i=eventIndex;i<this.events.length;i++)if(PROGRESS_EVENTS.has(this.events[i].type))return true;
+    return false;
   }
 
   private resolveHazards(
@@ -2277,6 +2287,7 @@ export class CombatEngine {
 
   run(): HuntResult {
     if (this.disposed) throw new Error('Cannot run a disposed combat session');
+    if(this.options.encounter?.holdOpen&&!this.explorationExit)throw new Error('Exploration needs an explicit exit');
     // Batch drains the SAME generator but never consumes incremental copies.
     // Keep defensive cloning at the live API boundary, not on discarded batches.
     this.draining=true;
@@ -2333,9 +2344,10 @@ export class CombatEngine {
   }
 
   private *simulate():Generator<number,HuntResult,void> {
-    const party = heroes.map((hero) => this.entity(hero));
+    const encounter=this.options.encounter;
+    const party = (encounter?.party??heroes).map((hero) => this.entity(hero));
     this.party = party;
-    const encounterFloors=this.trainingMode?this.options.trainingTeam?trainingTeamFloors:trainingFloors:this.options.progressiveHunt?progressiveHuntFloors:this.polishedRules?polishedFloors:floors;
+    const encounterFloors=encounter?.floors??(this.trainingMode?this.options.trainingTeam?trainingTeamFloors:trainingFloors:this.options.progressiveHunt?progressiveHuntFloors:this.polishedRules?polishedFloors:floors);
     for (let floorIndex = 0; floorIndex < encounterFloors.length; floorIndex++) {
       this.resetGridContext();
       const floor = floorIndex + 1;
@@ -2347,8 +2359,8 @@ export class CombatEngine {
       const enemies = encounterFloors[floorIndex].map((enemy) => this.entity(enemy));
       this.enemies = enemies;
       for (const hero of party.filter((entity) => entity.alive)) {
-        const original = heroes.find((candidate) => candidate.id === hero.id)!;
-        const requestedTile = this.tileOf(original);
+        const original = (encounter?.party??heroes).find((candidate) => candidate.id === hero.id)!;
+        const requestedTile = this.tileOf(encounter&&floorIndex>0?hero:original);
         this.setTile(hero, requestedTile);
         hero.safeTilePosition = cloneGridPosition(requestedTile);
         const occupied = this.occupancy.occupy(hero.id, requestedTile);
@@ -2392,10 +2404,13 @@ export class CombatEngine {
       let turn = 0;
       let noProgressTurns = 0;
       let interruptedByStalemate = false;
+      let cleared=false;
+      const holdOpen=encounter?.holdOpen&&floorIndex===encounterFloors.length-1;
+      const manaPerTick=encounter?.manaPerTick??0;
       while (
-        enemies.some((enemy) => enemy.alive) &&
+        (enemies.some((enemy) => enemy.alive)||(holdOpen&&!this.explorationExit)) &&
         party.some((hero) => hero.alive) &&
-        turn < MAX_TURNS_PER_FLOOR
+        (encounter||turn < MAX_TURNS_PER_FLOOR)
       ) {
         this.decisionTick=this.now;
         yield this.now;
@@ -2410,12 +2425,18 @@ export class CombatEngine {
         this.resolvePendingProjectiles(party, enemies);
         hazards = this.resolveHazards(hazards, party, enemies);
         this.processCommands(party, enemies, floor);
+        if(manaPerTick)for(const hero of party)hero.mana=Math.min(hero.maxMana,hero.mana+manaPerTick);
         this.resolveRuneDamage(party,enemies,floor);
         this.heroActions(party, enemies, floor, turn);
         for (const enemy of enemies.filter((entity) => !entity.alive)) {
           this.reward(enemy, floor);
         }
         this.monsterActions(enemies, party, hazards, floor, turn);
+        if(encounter&&!cleared&&!enemies.some(e=>e.alive)){
+          cleared=true;
+          this.cancelPendingProjectiles(floor,'encounter-cleared');
+          hazards=this.cancelHazards(hazards,'encounter-cleared');
+        }
         const nextDecision=this.now+250;
         if(this.polishedRules) {
           // Schedule committed lifecycles in timestamp order, independent of
@@ -2437,10 +2458,10 @@ export class CombatEngine {
         noProgressTurns = this.hasProgressSince(progressEventIndex)
           ? 0
           : noProgressTurns + 1;
-        if (noProgressTurns === NO_PROGRESS_RECOVERY_TURNS) {
+        if (!encounter&&noProgressTurns === NO_PROGRESS_RECOVERY_TURNS) {
           this.recoverFromNoProgress(party, enemies, floor);
         }
-        if (!this.trainingMode && noProgressTurns >= NO_PROGRESS_STALEMATE_TURNS) {
+        if (!encounter&&!this.trainingMode && noProgressTurns >= NO_PROGRESS_STALEMATE_TURNS) {
           interruptedByStalemate = true;
           break;
         }
@@ -2483,14 +2504,14 @@ export class CombatEngine {
         turns:turn,
       });
       for (const hero of party) {
-        if (hero.alive) {
+        if (hero.alive&&!encounter) {
           hero.hp = Math.min(hero.maxHp, hero.hp + Math.round(hero.maxHp * 0.4));
           hero.mana = hero.maxMana;
         }
       }
       if (!completion.victory) break;
     }
-    const victory = this.trainingMode?this.floorCompletionReasons.at(-1)==='victory':this.events.some(
+    const victory = this.trainingMode||this.options.encounter?this.floorCompletionReasons.at(-1)==='victory':this.events.some(
       (event) => event.type === 'death' && event.targetId === 'lion-king',
     );
     this.emit('hunt_complete', this.trainingMode?1:4, undefined, undefined, { victory });
@@ -2498,7 +2519,7 @@ export class CombatEngine {
   }
 
   private snapshotResult():HuntResult {
-    const victory = this.trainingMode?this.floorCompletionReasons.at(-1)==='victory':this.events.some(event => event.type === 'death' && event.targetId === 'lion-king');
+    const victory = this.trainingMode||this.options.encounter?this.floorCompletionReasons.at(-1)==='victory':this.events.some(event => event.type === 'death' && event.targetId === 'lion-king');
     return {
       events:this.events,
       duration:this.now,

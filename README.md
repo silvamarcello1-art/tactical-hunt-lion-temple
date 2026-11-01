@@ -1,5 +1,21 @@
 # Lion Temple — Tactical Hunt
 
+## Novo foco — Crônicas da Maré · Roguelite Alpha
+
+Aventura manual em `alpha.html`: Knight solo, costa/prólogo, bosque
+semi-procedural, escolhas temporárias, miniboss/boss e retorno a um refúgio
+persistente com casa, Brasa e Cronista. WASD/setas para mover, espaço/clique
+para engajar, Q/E habilidades, F interação próxima. R após Forja I.
+
+O motor/grade/eventos existentes são reaproveitados. O laboratório anterior
+continua em `index.html`, sem migração ou mistura de saves. Arquitetura, estado
+real dos gates e limites: [Alpha](docs/ROGUELITE_ALPHA.md),
+[arte original e prompts](docs/ROGUELITE_ART.md),
+[estado vigente](docs/CURRENT_STATE.md). Preview não é release estável.
+Meta10–15min total ainda depende de playtests; não é duração humana já medida.
+
+## Histórico da Hunt/laboratório (preservado)
+
 Vertical slice jogável de uma hunt automática 2D com PixiJS. Knight, Druid e
 Sorcerer atravessam três ondas e enfrentam um boss. Um motor incremental usa
 grade autoritativa, A*, LoS e eventos determinísticos; PixiJS representa o

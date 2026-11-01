@@ -1,5 +1,54 @@
 # Checkpoint — consolidação visual, movimento e push —24/10/2026
 
+## 31/10 — novo direcionamento: Crônicas da Maré · Alpha
+
+Atualização01/11 antes de commit/push: runtime concluído e revisado.18unit Alpha
+PASS(16run/combate+2picking);4E2E Alpha PASS novamente com clique no corpo
+visível,4fluxos sem consoleerror. Bloco mvp0+Alpha17/17PASS(8,3min), sem HMR.
+Finais frozen/typecheck/arte nativa reproduzível/build/build:preview/diff PASS;
+788módulos/maior chunk431,69kB. Compilado real-clock PASS:duas salas/escolhas,
+22brasas→retirada11→forja8→saldo3/rank1/R,caderno/pausa/um canvas,errors[]/
+warnings[],100sativos;PNGs inspecionados. Rodada pré-commit explicitamente
+working-tree, não SHA publicado. CI padrão350unit/73E2E e deploy ainda pendentes.
+Última suíte global local346/348 com dois timeouts antigos5s;2testes picking
+adicionados depois passaram. Não declarar unitários globais verdes. Timelines
+da base e atuais comparadas iguais; últimas amostras base5063/5564ms,atual5478/
+4938ms. Não comprovar causa última com isso e não relaxar limites. Ver
+ROGUELITE_VALIDATION.md. Próximo commit/push é entrega de branch/draft para
+validação padrão; Pages só é aprovado se workflow inteiro e smoke público passarem.
+
+Pedido integral anexado pelo usuário autoriza auditar, implementar vertical
+slice roguelite manual, testar, commit/push e preview configurado. Base limpa
+d14938c, branch nova feature/roguelite-alpha. Sem retomar monitores/retries antigos.
+Auditoria e plano curto apresentados antes da implementação. Reuso de engine,
+MovementSystem, comandos, LoS, projéteis, LiveEventPlayer, apresentação e sprites.
+Nova entrada/catálogo/run/hub/save separado; não há um segundo motor de combate.
+
+Arte builtin original costa/bosque/refúgio copiada para assets/roguelite/v1 e
+inspecionada. Briefs/proveniência em ROGUELITE_ART.md. Skill Sites somente
+local; nenhum remote Site. Uma delegação limitada de arte prevista pela skill,
+encerrada; sem novas tarefas/automação/goal.
+
+Validação parcial:16unit Alpha PASS, seed803 jornada por comandos com todas
+salas/bosses,385750ms de combate(sem leitura/exploração). Isso não mede sessão
+humana10–15min. Typecheck/build inicial PASS.3E2E Alpha PASS: prólogo/encontro/
+choice/reload, morte real/depósito/forja, hub/formato futuro/3res. Capturas
+revisadas; ajustada câmera do hub para mostrar prédios e removido desenho de
+bloqueios de borda por cima da arte. Novo E2E boss real em validação.
+
+Rodada unitária inicial concorrente com build/browser:339/348 e timeouts,
+incluindo um balanceamento Alpha ainda em ajuste. Após correções e isolada:
+347/348, único timeout5s da regressão antiga de3Hunts(6,185s); assertions/deadlines
+não alterados.73E2E completos em andamento. Não afirmar gate/publicação verde.
+Rodada completa73E2E:71PASS/1falha/1skip,18,9min. Trace comprova nova navegação
+02:33:20UTC, mesmo instante de edição e log page reload RogueRenderer do Vite.
+Interferência causada pela edição do agente, não aprovação nem falha de regra
+comprovada. Repetir bloco serial congelado.4E2E Alpha passaram incluindo boss.
+Diagnóstico/domínio comparativo em ROGUELITE_VALIDATION.md.
+
+Próximo: fechar regressões, arte/build/preview, revisão diff, documentação,
+commit/push normal, novo PR e verificar CI/manifest/publicação do SHA real.
+
 ## 31/10 — diagnóstico passivo de startup,sem implementação
 
 Humano “sim” à investigação da inicialização. HEAD14f86a7=origin/CLEAN,

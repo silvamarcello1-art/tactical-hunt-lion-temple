@@ -27,12 +27,12 @@ export class SpriteLibrary {
   private disposed = false;
   private definitions = new Map<string,SpriteDefinition>();
   private frames = new Map<string,Texture>();
-  async load() {
+  async load(ids?:readonly string[]) {
     const definitions = await Assets.load<SpriteDefinition[]>(assetUrl('/assets/original/manifests/sprites.json'));
     const native=definitions.map(pixelDefinition);
     const template=native.find(d=>d.id==='knight')!;
     const outfits=outfitSpriteAssets.map(asset=>outfitDefinition(template,asset));
-    await Promise.all([...native,...outfits].map(async rawDefinition => {
+    await Promise.all([...native,...outfits].filter(d=>!ids||ids.includes(d.id)).map(async rawDefinition => {
       const definition=fitSpriteToCell(rawDefinition);
       const sheet = await Assets.load<Texture>(assetUrl(definition.spriteSet));
       if (this.disposed) return;

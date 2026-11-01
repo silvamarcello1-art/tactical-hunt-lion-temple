@@ -1,3 +1,15 @@
+## 2026-10-31 — Crônicas da Maré · Roguelite Alpha (em validação)
+
+- Nova aventura manual em alpha.html sem apagar a Hunt/laboratório.
+- Mesmo motor/grade/timeline, perfil de encontros Knight solo com comandos.
+- Costa/prólogo,bosque semi-procedural,11salas,escolhas,miniboss,boss e refúgio.
+- Save separado,brasas temporárias/permanentes,forja/cura e Cronista por descoberta.
+- Três cenários originais ImageGen builtin; nova HUD/diálogos/câmera/efeitos.
+- Testes novos de domínio e navegador; gates finais/preview ainda em validação.
+- Locais:18unit Alpha/4E2E Alpha/17E2E bloco revalidado,builds/arte PASS;
+  smoke compilado real-clock duas salas→hub/forja PASS,console limpo.
+  Suíte global local mantém dois timeouts antigos5s;CI ainda precisa aprovar.
+
 ## 2026-10-31 — diagnóstico de startup,sem correção
 
 - Observação passiva frio/recarga:idle4,06s/0,73s;timeout anterior não reproduzido.

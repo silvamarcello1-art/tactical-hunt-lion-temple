@@ -1,5 +1,13 @@
 # Arquitetura — janela ampliada e Hunt progressiva (30/10/2026)
 
+## Direcionamento posterior31/10 — Roguelite Alpha
+
+`alpha.html` tem composição própria, mas usa o mesmo CombatEngine/grid/commands/
+timeline/apresentação. `EncounterSetup` configura party solo, ondas, bloqueios e
+habilidades opt-in, sem mudar defaults ou hashes antigos. Estado run/permanente
+e catálogo em roguelite/model; Pixi somente representa eventos. Save versionado
+separado da Hunt. Contratos, extensões e limites em ROGUELITE_ALPHA.md.
+
 Contrato atual:SQM_EXPANSION.md,e controles/foco emTACTICAL_CONSOLIDATION.md.
 main ativa `tacticalControls` no MESMO CombatEngine: foco ofensivo explícito,
 controle exclusivo e approach efêmero, sem Pixi/DOM no domínio. Defaults antigos
