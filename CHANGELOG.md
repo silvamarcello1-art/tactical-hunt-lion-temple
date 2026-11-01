@@ -1,3 +1,11 @@
+## 2026-10-31 — diagnóstico de startup,sem correção
+
+- Observação passiva frio/recarga:idle4,06s/0,73s;timeout anterior não reproduzido.
+- Código+trace comprovam preload bloqueante dos38outfits(4,68MB nofrio),
+  mesmo comdefaults;medições não aprovam smoke nem provam causa do caso anterior.
+- Proposta de carga necessária/sob demanda aguarda autorização;sem mudanças
+  em gameplay/assets/scripts/limites/CI/deploy.
+
 ## 2026-10-31 — reexecução autorizada do smoke falha no startup
 
 - UMA reexecução de qa-training-team mantendo500ms/5s,sem outro QA desta

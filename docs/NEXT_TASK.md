@@ -1,5 +1,22 @@
 # Próxima tarefa — fechar ajustes de SQM —30/10/2026
 
+## Diagnóstico concluído31/10 — aguardar autorização para correção de carga
+
+STARTUP_DIAGNOSIS.md registra duas observações passivas do públicob9:
+idle4060,4ms frio/731,7ms recarga,sem reproduzir o timeout5s anterior.
+Gargalo confirmado por código+trace:aguarda48sprites,incluindo38outfits/
+4,68MB no frio mesmo comdefaults. Causa exata da falha histórica não comprovada.
+Nenhum novo smoke/gate aprovado,fix ou deadline modificado.
+
+Pedir autorização para reduzir rota crítica via sprites necessários primeiro
+e demais outfits sob demanda,esperando atlas antes de aplicar aparência.
+Preservar bots/boss/diálogos/saves/gameplay e5s/500ms;verificar transições de
+aparência e os gates completos existentes após implementação autorizada.
+Não repetir CI/smoke automaticamente como substituto da correção/diagnóstico.
+Outfits/qa-preview públicos continuam pendentes;automação permanece removida.
+
+## Histórico — investigação autorizada e agora concluída acima
+
 ## Atual31/10 — investigar inicialização, somente após direção
 
 Humano autorizou UMA reexecução do smoke de treino mantendo limites.

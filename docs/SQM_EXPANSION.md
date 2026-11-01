@@ -104,6 +104,13 @@ snapshot/hash legado foi regenerado para esconder regressões.
 
 ## Validação e publicação
 
+Diagnóstico31/10 concluído sem fix:ver STARTUP_DIAGNOSIS.md. Abertura passiva
+fria4,06s/recarga0,73s;timeout5s anterior não reproduzido. Confirmado que todos
+38outfits/4,68MB bloqueiam idle mesmo comdefaults;proposta de carga sob demanda
+aguarda autorização. Medição não aprova smokes pendentes nem prova causa histórica.
+
+Histórico de validação:
+
 Estado posterior31/10:humano autorizou UMA reexecução do smoke público de
 treino sem mudar limites. Ela falhou antes do combate:preparing não chegou
 a idle em5s,qa-training-team:14. Clique500ms anterior não foi alcançado.

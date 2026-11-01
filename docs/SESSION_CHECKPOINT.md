@@ -1,5 +1,39 @@
 # Checkpoint — consolidação visual, movimento e push —24/10/2026
 
+## 31/10 — diagnóstico passivo de startup,sem implementação
+
+Humano “sim” à investigação da inicialização. HEAD14f86a7=origin/CLEAN,
+source/assets/tests/scripts/deps/workflows iguais runtime público b9/f1200.
+Criado somente helper de diagnóstico no workspace,não no repo/scripts.
+Duas navegações passivas Edge isolado:cache vazio e recarga. Nenhum combate,
+clique de treino ou reexecução de qa-training-team/outfits/preview.
+Observação até20s não alterou o gate5s;estado registrado no prazo equivalente.
+
+Público b9 confirmado em ambas. Cache vazio:goto retornou1178,3ms,idle4060,4ms,
+intervalo2882,1ms após goto,preparing3268,9ms. Warm:goto281ms,idle731,7ms,
+intervalo450,7ms,preparing584,5ms. Em5s após goto ambos idle,sem pageerror/
+consoleerror/warnings. Timeout histórico não reproduzido,não provar causa dele.
+Código e trace confirmam rota crítica:aguarda todos48sprites/38outfits antes
+de idle;38PNGs somam4.679.730bytes no frio,0bytescache na recarga.
+Trace.network inclui workers;ResourceTiming da mainthread não lista esses PNGs.
+Janela HARmonotônica dos38requests1777,8–3619ms(frío)/561,7–649,8(warm),
+relativa ao primeiro requestdocumento. Longtasks main216ms nofrio/0warm;
+getContextcurto não mede GPU inteira/upload/shaders. Não alegar GPU inocente.
+
+Artefatos workspace sqm-startup-diagnosis/:2JSONs/reports,2tracesZIP/PNGs,
+sqm-startup-diagnosis.log e diagnose-sqm-startup.mjs. Screenshotcold inspecionado.
+Gargalo estrutural e dependência de cache comprovados;causa exata do timeout
+anterior ainda hipótese. Sem timings históricos/traces não atribuir rede/
+GPU/concorrência como causa provada. Semnovo smoke/correção/CI/deploy/automação.
+
+Recomendação NÃO implementada:carregar primeiro sprites necessários ao
+cenário/party/aparência ativa,outrosoutfits sob demanda e aguardar antes de
+aplicar troca. Pedir autorização;preservar5s/500ms e validar transições/gates.
+Diagnóstico não substitui3vitórias/economia/cleanup/38outfits/Hunt pendentes.
+Registro somente docs[skipci],source inalterado.
+
+## Histórico — falha readiness e autorizações anteriores
+
 ## 31/10 — UMA reexecução autorizada do smoke; falha readiness5s
 
 Humano “sim” à única reexecução do smoke público de treino sem alterar limites.

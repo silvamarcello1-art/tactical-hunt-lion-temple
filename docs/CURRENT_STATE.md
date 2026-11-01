@@ -1,5 +1,22 @@
 # Estado vigente — preview SQM publicado; smoke público pendente —31/10/2026
 
+## Diagnóstico atual — carga antecipada de38outfits confirmada;sem fix
+
+Usuário autorizou investigar startup. Duas observações passivas,sem executar
+smoke/combate:idle em4060,4ms frio/731,7ms recarga;após retorno de goto
+2882,1/450,7ms. O preparing>5s anterior NÃO se reproduziu e causa específica
+continua não comprovada. Não converter estas medições em aprovação do smoke.
+
+Gargalo estrutural comprovado:SpriteLibrary aguarda todos48sprites,incluindo
+38outfits mesmo com defaults. Trace dos workers confirmou38PNGs/4.679.730bytes
+no frio e0bytes na recarga;eles bloqueiam idle. Sem erros observados nestas
+duas medições,mas sem benchmark ou garantia. Detalhes STARTUP_DIAGNOSIS.md.
+Proposta para autorização:carregar primeiro sprites necessários e demais
+outfits sob demanda,sem alterar gameplay ou limites5s/500ms. Nada implementado.
+Código/assets/testes/scripts/workflows intactos;somente diagnóstico/documentação.
+
+## Histórico — smoke anterior permanece reprovado
+
 ## Atual — única reexecução do smoke falhou na inicialização
 
 Usuário autorizou UMA reexecução de qa-training-team mantendo os limites.
