@@ -1,5 +1,21 @@
 # Estado vigente — Roguelite Alpha implementada; publicação bloqueada —01/11/2026
 
+## Atual — cache estático implementado; novo runtime em validação
+
+Usuário autorizou implementação após A/B. Base estática da Hunt/treino em cache
+de resolução integral,runas/escombros/fades fora dele. Pan preservado; escala/
+resolução/bounds/conteúdo invalidam. OrçamentoPOT32MiB RGBA estimados/fallback
+integralDPRalto,sem reduzir imagem. Motor/input/grade/Alpha/assets/deps/CI intactos.
+Frozen/typecheck/arte/build/build:preview/diff PASS,10unitnovos/4E2Enovos PASS;
+full78E2E PASS11,4min. Fullunit2vezes362/363:timeout antigoHuntPressure:61/5s;
+isolado10PASS(caso4992ms),nãoéfullverde. Nenhum limite/assertion alterado.
+Medição final40ssoftware35,1–36,9%menos parede/2718eventos idênticos;16s4,2%,
+nativo1,2%. Não é FPS nem garantiaCI. Smokes working-treecompilados treino3wins/
+1184açõesbot/economia,38outfits,Hunt24kills4240XP1540gold1token,Alpha2salas/
+retirada/forja/saldo3 PASS,consolelimpo;carimbo précommitb4a nãoéSHAdafonte nova.
+STATIC_SCENE_CACHE.md contém método,limites/falha e sequência póscommit.
+PR4 mantém estado atual da novaCI; publicação continua bloqueada até gates reais.
+
 ## Atualização — A/B local autorizado concluído, sem fix ou novo CI
 
 BackendSwiftShader reproduzido localmente;13amostras com mesma entrada de sessão

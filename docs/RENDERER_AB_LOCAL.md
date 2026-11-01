@@ -1,5 +1,10 @@
 # Renderer — A/B local autorizado — 01/11/2026
 
+Atualização posterior: usuário autorizou implementar a otimização restrita.
+STATIC_SCENE_CACHE.md descreve a nova fonte,78E2E PASS,timeoutunitário antigo
+preservado e medições finais, que não devem ser confundidas com este protótipo.
+Histórico abaixo preserva o experimento original, inclusive capturas falhas.
+
 ## Resultado
 
 A/B diagnóstico concluído, sem editar runtime, assets, testes, dependências,

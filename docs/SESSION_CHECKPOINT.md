@@ -1,5 +1,24 @@
 # Checkpoint — consolidação visual, movimento e push —24/10/2026
 
+## 01/11 — implementação autorizada do cache, sem relaxamento de gates
+
+Preflightb4a37eb=origin/CLEAN. Mudanças restritas PixiRenderer/renderConfig/
+StaticSceneCache e10unit+4E2E novos;domínio/input/Alpha/assets/deps/workflows
+intactos. Só base estática é armazenada;dynamicrunes/rubble/debug ficam vivos.
+Resolução integral/nearest,budgetPOT4096/8.388.608pixels,fallback sem redução;
+pan no pai,zoom/res/bounds/conteúdo invalidam;dispose idempotente no poolPixi.
+Frozen/typecheck/arte reproduzível/build/build:preview/diff PASS.78E2E PASS11,4min.
+Fullunit3632vezes362PASS/1timeoutHuntPressure:61/5000ms;isolado10PASS,4992ms.
+Não ocultar falha nem contar isolado comofullverde. Domínio não importa renderer.
+Perf40ssoftware2pares ordem invertida14,861→9,381/14,440→9,364s,2718eventos
+idênticos/overlaps0;16sganho4,2%software/1,2%nativo,sem extrapolarCI/FPS.
+Smokes reais compiladosworkingtree4scripts PASS:treino3wins1184açõesbot/economia,
+38outfits,Hunt24kills4240XP1540gold1token,Alpha2salas/22→11→forja8→saldo3/rank1.
+PNGs inspecionados;console/cleanup limpos nos smokes que os medem. Buildcarimbo
+b4a é HEADprécommit, nãoSHAdafonte alterada; fontes/bundles devem ser conferidos
+apóscommit/stamp. STATIC_SCENE_CACHE.md e PR4 registram confirmação e novaCI.
+Não reutilizar CIec42,rerun antigo ou publicar semgates. Sem agente/monitor/goal.
+
 ## 01/11 — A/B local autorizado encerrado
 
 Runtimeec42 intacto;preflight3fca848=origin/CLEAN. Helperrenderer-ab-local.mjs

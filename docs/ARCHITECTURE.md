@@ -1,5 +1,14 @@
 # Arquitetura — janela ampliada e Hunt progressiva (30/10/2026)
 
+## 01/11 — base estática em cache, domínio intacto
+
+PixiRenderer agrupa apenas o cenário imutável em static-terrain dentro da layer
+de terreno. StaticSceneCache controla resolução/orçamento/invalidação/descarte;
+não lê combate nem altera relógio. Runas/fades/escombros/debug continuam siblings
+dinâmicos;pan atua no pai,zoom/DPR/bounds/conteúdo invalidam. Acima do orçamento
+usa desenho original em resolução integral. Contrato/validação/limites em
+STATIC_SCENE_CACHE.md. RogueRenderer/Alpha e todos os resolvers mantidos.
+
 ## Direcionamento posterior31/10 — Roguelite Alpha
 
 `alpha.html` tem composição própria, mas usa o mesmo CombatEngine/grid/commands/

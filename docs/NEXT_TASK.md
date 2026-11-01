@@ -1,5 +1,20 @@
 # Próxima tarefa — desbloquear publicação da Roguelite Alpha —01/11/2026
 
+## Atual — validar o novo runtime de cache no CI, sem retry antigo
+
+Cache implementado após autorização; STATIC_SCENE_CACHE.md registra contrato
+e evidência. Fonte congelada:78E2E PASS11,4min,10unitnovos/typecheck/arte/builds
+PASS. Suíteunit inteira NÃO verde:362/363 duasvezes, timeout5s no teste antigo
+HuntPressure:61;isolado passou4992ms. Não aumentar deadline, ignorar ou corrigir
+combate fora de escopo. Ganho local40ssoftware35,1–36,9%,não garanteCI.
+4smokescompiladosworkingtree PASS; manifestb4a précommit explicitamente não
+identifica runtime novo. Carimbarbundleinalterado comSHA novo e confirmar
+outfits/Hunt exatos; PR4 guarda IDs e evidências póscommit.
+Enviar normal para CI363unit/78E2E/arte/builds/diff; não rerun jobs antigos.
+ManterHEAD remoto congelado duranteCI/deploy(lêbranchviva). Se falhar, colher
+diagnóstico real antes de outra ação. Só após gates/deploy/manifestexatos rodar
+smoke público real e aprovar preview. Nunca Sites/merge/force ou relaxarproteções.
+
 ## Atual — decidir implementação após A/B concluído
 
 Usuário autorizou A/B local; resultado em RENDERER_AB_LOCAL.md. Sem código/CI

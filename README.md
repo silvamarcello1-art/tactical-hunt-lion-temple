@@ -1,5 +1,10 @@
 # Lion Temple — Tactical Hunt
 
+Cache da base estática Hunt/treino implementado, sem alterar combate ou Alpha.
+[Contrato e validação](docs/STATIC_SCENE_CACHE.md):78E2E PASS,builds PASS;
+suíteunitária362/363 por timeout antigo5s. Ganho local não aprova publicação:
+preview continua condicionado aos novos gates/manifest/smoke públicos.
+
 A/B local autorizado concluído, sem alterar o jogo: custo software reproduzido,
 cache experimental de terreno ganhou15,6–20,8%,mas não é fix/CI aprovado.
 [Método e limites](docs/RENDERER_AB_LOCAL.md). Sem novo deploy ou retry.

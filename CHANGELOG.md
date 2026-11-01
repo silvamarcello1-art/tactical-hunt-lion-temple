@@ -1,3 +1,13 @@
+## 2026-11-01 — cache do cenário estático
+
+- Cache em resolução integral da base Hunt/treino;runas/escombros/fades vivos.
+- Pan preservado;zoom/resolução/bounds/conteúdo invalidam;fallback integral
+  quando backingPOT excede orçamento,sem reduzir qualidade ou lógica.
+-10unit/4E2E novos;78E2E completos PASS;typecheck/arte/builds PASS.
+- Fullunit362/363duasvezes:timeout5santigo preservado,nãoéverde isoladamente.
+- A/Bfinal40ssoftware35,1–36,9%menosparede,eventosiguais;4smokescompilados PASS.
+- Sem mudanças de gameplay/deps/workflow/deadlines;preview aguarda novaCI real.
+
 ## 2026-11-01 — A/B local do renderer, sem alteração do jogo
 
 - SwiftShader reproduzido localmente;13amostras controladas com1014eventos iguais.
