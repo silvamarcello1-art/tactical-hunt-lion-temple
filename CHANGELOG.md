@@ -1,4 +1,14 @@
-## 2026-10-30 — janela ampliada/SQM/Hunt progressiva (publicação bloqueada)
+## 2026-10-31 — CI SQM aprovado/Pages publicado; QA público pendente
+
+- Única reexecução autorizada124455903967 PASS332unit/69E2E57,8min/build/diff;
+  Pages124468130514SUCCESS,checkout/manifest exato b9docs-only equivalentef1200.
+- Smoke público training falhou no click training-warden500ms;sem retry/fix ou
+  relaxar limite. Causa não comprovada;outfits/preview públicos não executados.
+- Drill manual/push e geometria públicos PASS;não substituem3vitórias/economia/
+  cleanup/outfits/boss pendentes. Preview não considerado totalmente validado.
+- Diagnóstico/checkpoint/PR preservam histórico;acompanhamento encerrado.
+
+## 2026-10-30 — janela ampliada/SQM/Hunt progressiva (bloqueio histórico de CI)
 
 - Janela19×11(+4colunas),mesmo tile aparente e pan contínuo.
 - Envelope30×30 medido em48atlases,todasposes;sem corte/escala variável porframe,

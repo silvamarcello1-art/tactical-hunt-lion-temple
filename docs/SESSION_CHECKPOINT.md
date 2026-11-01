@@ -1,5 +1,52 @@
 # Checkpoint — consolidação visual, movimento e push —24/10/2026
 
+## 31/10, São Paulo — única reexecução PASS/Pages publicado; smoke público falhou
+
+Autorização humana “sim” para UMA reexecução integral do push. Reexecutado
+job124304078404, novo job124455903967/run41125860437 SUCCESS. Checkout e health:
+b9d0e3134dff5f47e3c76a3641767438c1f2749e=origin/CLEAN. 332unit30files65,96s,
+69E2E1worker57,8min/frozen/typecheck/arte/build/build:preview/diff/upload PASS.
+Novo Pages124468130514 SUCCESS. Nenhuma terceira tentativa ou redeploy extra.
+Preflight local fetch/health b9=origin/CLEAN; diff source/assets/tests/scripts/
+deps/workflows vazio contra f1200c4. Manifest público b9 exato, não presumido.
+PRCI41125868457/124304105807332unit/69E2E58,8min PASS preservado como histórico.
+
+QA público em contextos Edge isolados, SHA b9, label sqm-public. Iniciados
+quatro processos independentes: core(training→outfits→preview), manual, soak
+Hunt e geometria. Não alteram save/contexto do usuário. Core EXIT1:
+qa-training-team.mjs:59:26, locator.click Timeout500ms, alvo training-warden.
+Log resolveu botão Selya·BOT aria-pressed=true, visible/enabled/stable, scroll
+concluído e performing click action; ID não removido/sessão não encerrada no
+catch permitido. Erro relançado. Browser fechado em finally. Log preservado
+sqm-public-training.log; sem trace/JSON final/3capturas de vitória.
+Não declarar3vitórias/economia/console/cleanup final desse smoke como PASS.
+qa-outfits e qa-preview NÃO EXECUTADOS no público porque pipeline parou.
+Concorrência é contexto, NÃO prova de causa; nenhum deadline/asserção foi
+relaxado, script alterado ou execução repetida para obter verde.
+
+Manual helper EXIT0:1×/4×,tap/hold/reversal/8direções,push/approach,Hunt/
+takeover/reset;report manual-sqm-public/report.json,overlap lógico/corporal0,
+sync0,19colunas,console/warningslimpos. Limite:drill não testa3vitórias;
+captura1× mostra DruidKO em combate real;4× treinoencerrado3derrotados.
+Geometria EXIT0:8capturas,4res×2modos19×11,tiles52,45/64,45/80,82/71,55px,
+scrollWidth=viewport. PNGs Hunt/treino1366/1600/1920 e manual1×/4×inspecionados.
+Soak já iniciado antes da falha terminou EXIT0, sem nova execução depois do
+bloqueio:13Hunts/13bosses/rewards/completions/sessões,167545ms1×/123189ms4×,
+party viva/token13,290amostras body/logicaloverlapMAX0,claims finais0,
+console/warnings limpos/loopOFFestável. Último resultado24kills4240XP1478gold/
+1token,PNGthree-huntsinspecionado. Report hunt-sqm-public/report.json.
+Isso comprova loops/Hunt independentes, não substitui treino3vitórias nem
+os scripts obrigatórios qa-outfits/qa-preview ainda não executados.
+
+Novo bloqueio é de SMOKE, não CI/deploy. Preview b9 publicado mas validação
+pública completa pendente; não oferecer como pronto/release estável.
+Diagnóstico workspace SQM_PUBLIC_SMOKE_DIAGNOSIS.md; nenhuma causa raiz
+comprovada. Acompanhamento encerrado/automação removida conforme instrução
+de heartbeat. Pedir direção, sem fixes/reruns/novas permissões automáticos.
+Registro posterior apenas docs[skip ci], sem mudança de runtime.
+
+## Histórico — implementação e primeiro bloqueio de CI
+
 ## 31/10 — SQM implementado e push concluído; CI de publicação bloqueado
 
 Runtime/source f1200c42d3c3450c5ac798e980b2f39285b8ef68. Commit normal em

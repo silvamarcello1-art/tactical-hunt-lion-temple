@@ -1,5 +1,26 @@
 # Próxima tarefa — fechar ajustes de SQM —30/10/2026
 
+## Atual31/10 — decidir sobre falha do smoke público, não repetir CI
+
+Única reexecução124455903967 PASS332unit/69E2E/build/diff; Pages124468130514
+SUCCESS, checkout/manifest público b9d0e3134dff5f47e3c76a3641767438c1f2749e.
+Source equivalente f1200c4. O bloqueio anterior de CI está resolvido.
+
+Novo bloqueio: qa-training-team público falhou no click training-warden500ms,
+linha59. Botão existia/visible/enabled/stable; causa não comprovada. Não aumentar
+limite, ignorar falha ou repetir automaticamente. Não houve JSON final/gate de
+3vitórias; qa-outfits e qa-preview públicos não rodaram porque core parou.
+Manual/push/Hunt/reset e geometria pública PASS, mas não substituem esses gates.
+Soak já iniciado terminou PASS13Hunts/13tokens/290amostras semoverlap/claims0,
+sem nova execução; resultado detalhado no checkpoint.
+Pedir direção específica para eventual UMA nova execução do smoke de treino,
+mantendo código/testes/limites; nenhum novo rerun de CI é necessário.
+Se futuramente autorizado e passar, concluir os dois scripts públicos ainda não
+executados e registrar fatos antes do link como pronto. Acompanhamento encerrado,
+automação removida, sem fixtures substitutas/fix especulativo ou scope extra.
+
+## Histórico — bloqueio anterior do CI, já superado
+
 ## Bloqueio vigente31/10 — pedir direção,sem novas tentativas automáticas
 
 Runtime f1200c42d3c3450c5ac798e980b2f39285b8ef68 implementado/push normal.

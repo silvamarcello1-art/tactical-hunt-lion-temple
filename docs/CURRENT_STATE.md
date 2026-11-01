@@ -1,4 +1,35 @@
-# Estado vigente — SQM implementado; publicação bloqueada no CI —31/10/2026
+# Estado vigente — preview SQM publicado; smoke público pendente —31/10/2026
+
+## Resultado atual — CI aprovado, mas validação pública incompleta
+
+A única reexecução autorizada passou: run41125860437/job124455903967,
+332unit(65,96s)/69E2E(57,8min), frozen/health/typecheck/arte/build/preview/diff.
+Pages124468130514 SUCCESS. Checkout/health e version.json público confirmam
+b9d0e3134dff5f47e3c76a3641767438c1f2749e. Esse checkpoint docs-only é equivalente
+ao código f1200c4; source/tests/scripts/assets/deps/workflows não mudaram.
+
+Smoke público obrigatório qa-training-team falhou em :59:26: clique no botão
+training-warden excedeu500ms. O botão existia, visível/enabled/stable; o log
+parou em performing click action. Causa raiz não comprovada, sem trace da
+falha/JSON final/3vitórias; economia e cleanup finais não foram comprovados
+por esse script. Nenhum timeout, assertion ou script foi alterado/repetido.
+Pipeline parou: qa-outfits e qa-preview públicos não executados nesta rodada.
+
+Evidência independente pública: drill manual/push1×/4×/Hunt/takeover/reset PASS,
+body/logicaloverlap0/sync0/console limpo. É drill de movimento, não gate de
+3vitórias: DruidKO na captura1×; treino4× encerrou com3derrotados. Geometria
+4res×2modos19×11/semoverflow PASS, PNGs dos dois modos nas3res inspecionados.
+Soak público iniciado antes da falha terminou PASS13Hunts/13tokens/partyviva,
+290amostras body/logicaloverlap0/finalclaims0/consolelimpo;últimaHunt24kills/
+4240XP1478gold1token. Não substitui os scripts obrigatórios ainda pendentes.
+Histórico compilado verde não substitui os smokes públicos pendentes.
+
+Preview publicado NÃO é entrega totalmente validada nem release estável.
+Acompanhamento encerrado e automação removida; aguardar direção humana,
+sem novos CI/smokes/fixes automáticos. Diagnóstico no workspace:
+SQM_PUBLIC_SMOKE_DIAGNOSIS.md e sqm-public-training.log.
+
+## Histórico — bloqueio anterior de CI, superado pela reexecução acima
 
 ## Resultado vigente — runtime f1200c4, sem novo deploy
 

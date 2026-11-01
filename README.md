@@ -5,17 +5,16 @@ Sorcerer atravessam três ondas e enfrentam um boss. Um motor incremental usa
 grade autoritativa, A*, LoS e eventos determinísticos; PixiJS representa o
 combate, e HTML/CSS apresenta controles Auto/Manual/Assisted, Party e Analyzer.
 
-Pedido posterior implementado em f1200c4:janela19×11(+4SQMs),corpos/áreas de clique
-limitados ao SQM e inimigos em quantidade/força progressivas. Contrato:
-[SQM expansion](docs/SQM_EXPANSION.md). O link abaixo ainda é a versão anterior.
-Publicação bloqueada31/10:PR332unit/69E2E PASS;CIpush5timeouts/57PASS/
-7nãoexecutados,deploySKIPPED. Local332/69 e smokes compilados PASS.
-
-Preview compartilhado anterior validado30/10 (não release estável):
-[jogar treino](https://silvamarcello1-art.github.io/tactical-hunt-lion-temple/?training=1&v=645267a7c30a8ff0209b061c6d460ff387892b34).
-Hunt e treino usam a mesma janela15×11;controle/foco/push e medidas em
-[Consolidação tática](docs/TACTICAL_CONSOLIDATION.md). Manifest,CI e smokes reais
-registrados em [estado vigente](docs/CURRENT_STATE.md).
+Janela19×11(+4SQMs),corpos/picking no SQM e inimigos em quantidade/força
+progressivas. Contrato: [SQM expansion](docs/SQM_EXPANSION.md).
+Preview compartilhado b9d0e31 publicado31/10 após única reexecução CI
+332unit/69E2E PASS e PagesSUCCESS. Código equivalente f1200c4.
+Validação pública ainda PENDENTE:smoke de treino falhou num clique500ms;
+outfits/preview públicos não executados. Manual/geometria públicos PASS não
+substituem os gates pendentes. Não é release estável ou entrega toda aprovada.
+Manifest,CI,diagnóstico e limites em [estado vigente](docs/CURRENT_STATE.md).
+O enquadramento15×11/preview645 anterior é histórico em
+[Consolidação tática](docs/TACTICAL_CONSOLIDATION.md),não a configuração atual.
 
 ## Recompensas e build — MVP 2B
 

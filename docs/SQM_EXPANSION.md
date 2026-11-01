@@ -104,6 +104,16 @@ snapshot/hash legado foi regenerado para esconder regressões.
 
 ## Validação e publicação
 
+Estado31/10 posterior:única reexecução124455903967 PASS332unit/69E2E57,8min,
+build/diff/Pages124468130514SUCCESS. Checkout/manifest b9d0e31docs-only,
+source equivalente f1200. Novo bloqueio é smoke público training:clique
+training-warden500ms falhou,não repetido/não relaxado,causa não comprovada.
+Manual/push/geometria públicos PASS;não substituem3vitórias/38outfits/boss
+dos scripts obrigatórios ainda pendentes. Não declarar entrega toda validada.
+Detalhes/checkpoint preservam resultados independentes e limites.
+
+Histórico anterior,substituído pelo estado acima:
+
 Resultado31/10:runtimef1200c4 implementado/pushnormal,local332unit/69E2E e
 smokescompilados(13Hunts/3treinos/38outfits/manualpush)PASS. PRCI41125868457
 PASS332/69;pushCI41125860437FAIL57PASS/5timeouts/7nãoexecutados e Pages
