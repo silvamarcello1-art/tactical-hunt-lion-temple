@@ -1,0 +1,42 @@
+name: One-off Windows CPU and render profile
+on:
+  push:
+    branches: ['diagnostics/windows-cpu-profile-ec42']
+    paths:
+      - '.github/workflows/windows-cpu-profile.yml'
+      - 'scripts/diagnostics/windows-cpu-profile.mjs'
+permissions:
+  contents: read
+concurrency:
+  group: windows-cpu-profile-ec42
+  cancel-in-progress: false
+jobs:
+  profile:
+    if: contains(github.event.head_commit.message, '[profile-ec42-once]')
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install msedge
+      - name: Profile unchanged ec42 runtime (not a release gate)
+        run: node scripts/diagnostics/windows-cpu-profile.mjs
+      - name: Preserve CPU, renderer, timeline and timing evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-cpu-render-ec42
+          path: test-results/windows-profile/
+          if-no-files-found: error
+          retention-days: 7
