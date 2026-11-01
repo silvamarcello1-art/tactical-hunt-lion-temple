@@ -1,4 +1,19 @@
-# Próxima tarefa — fechar Roguelite Alpha —31/10/2026
+# Próxima tarefa — desbloquear publicação da Roguelite Alpha —01/11/2026
+
+Implementação/runtime2dea277 concluídos, push normal e PR4 draft. CI PR PASS
+350unit/73E2E/builds; CI push350unit PASS,61E2E PASS/5timeouts/7nãoexecutados,
+deploy SKIPPED. Quatro Alpha E2E passaram em ambos. Público continua b9d0e31;
+não mandar a URL como Alpha pronta nem testar fixtures como smoke público.
+
+Investigar timeouts reais preservados no artefato13070324721 antes de novo
+commit de código ou tentativa. Traces confirmam deadline220/360s seguido de
+teardown/close; causa última da lentidão não comprovada. Nenhum rerun automático,
+relaxamento de assertion/deadline/snapshot ou mudança de workflow/proteção.
+Depois de gates do push verdes, confirmar SHA real no checkout/health/stamp/
+version.json e executar qa-roguelite com URL pública/SHA completo; inspecionar
+costa/bosque/refúgio/console/economia/save. Só então aprovar o preview.
+
+## Plano anterior preservado (CI e commit/push já executados)
 
 Pedido roguelite substitui a investigação/monitoramento anterior. Branch nova
 feature/roguelite-alpha; não implementar o lazy-loader global pausado, nem

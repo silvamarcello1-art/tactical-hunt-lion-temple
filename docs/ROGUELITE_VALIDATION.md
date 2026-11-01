@@ -1,5 +1,40 @@
 # Alpha — registro de validação e diagnóstico
 
+## CI final01/11 — PR verde, push bloqueado
+
+Ambos checkout/health2dea277811b4c5fe4cf3a95ce27f88723f0c084a e350unit/32files
+PASS. PR run41269269697/job124738479668 passou73E2E(1,0h),typecheck,arte,
+build/build:preview/diff; deploy PR SKIPPED por desenho do workflow.
+Push run41269212360/job124738304396 terminou61E2E PASS/5falhas/7nãoexecutados
+(1,4h). As4Alpha E2E passaram em ambos. Deploy124754772262 SKIPPED; nenhuma
+publicação Alpha aprovada. Manifest público pós-falha ainda b9d0e31.
+
+| Cenário antigo que falhou no push | Limite total | Ponto final reportado |
+|---|---|---|
+| equipment:4 |360s|segunda Hunt, controlled-clock/getAttribute em equipment:45|
+| equipment:74 |220s|open-equipment/click em equipment:89|
+| gameplay-shell:53 |360s|três ciclos, controlled-clock/getAttribute em:59|
+| mvp0:379 |360s|três tokens, controlled-clock/getAttribute em:389|
+| tactical-consolidation:23 |220s|Hunt equivalente, controlled-clock em:50|
+
+Os7seguintes no bloco mvp0 serial não executaram; não dispensados. Artefato
+13070324721,16.738.824bytes, SHA256
+13ea0d2e9dd14a188eee2229e97f81bd3321b238bb77e151e6e5f23208335316,
+baixado no workspace como roguelite-ci-push-failure.zip e extraído em
+roguelite-ci-push-diagnostics/. Os5test.trace registram primeiro o timeout
+total, depois After Hooks/Close context com reason=timeout; o erro page closed
+vem depois. Logo, esse erro é consequência do encerramento por prazo, não
+prova de crash espontâneo. No inventário, ASSISTED já estava selecionado,
+clique visível/enabled/stable começou com pouco prazo restante; não há evidência
+de falha de troca do herói. Nos outros, chamadas clockRunFor(250) concluídas
+próximas ao fim duraram~2,9–3,2s, não250ms de relógio de parede.
+
+Esses fatos não comprovam causa última da lentidão. PR passou no mesmo SHA;
+isso não converte o push em PASS nem autoriza redeploy/merge por atalho.
+Nenhum novo retry, alteração de deadlines/assertions/workflow ou fix especulativo.
+Public smoke não executado contra a versão antiga. Fluxo manual compilado
+2dea277 foi inspecionado; duração humana completa10–15min continua não medida.
+
 ## Escopo das evidências
 
 Não misturar aprovação local, CI e publicação. A Alpha deriva de d14938c.

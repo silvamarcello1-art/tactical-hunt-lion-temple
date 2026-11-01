@@ -1,3 +1,13 @@
+## 2026-11-01 — Alpha implementada; publicação bloqueada
+
+- Runtime2dea277/PR4 draft enviados, sem merge; Hunt antiga preservada.
+- PR CI350unit/73E2E/typecheck/arte/builds/diff PASS. Push350unit PASS,
+  E2E61PASS/5timeouts/7nãoexecutados;4Alpha E2E PASS em ambos.
+- Pages SKIPPED corretamente; público ainda b9d0e31, não Alpha pronta.
+- Cinco traces preservados comprovam deadline antes do fechamento do contexto;
+  causa última da lentidão não provada. Sem retry cego ou relaxar gates.
+- Compilado/manual/console/economia validados localmente; sem smoke público.
+
 ## 2026-10-31 — Crônicas da Maré · Roguelite Alpha (em validação)
 
 - Nova aventura manual em alpha.html sem apagar a Hunt/laboratório.

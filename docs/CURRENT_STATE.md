@@ -1,4 +1,28 @@
-# Estado vigente — Roguelite Alpha em validação —01/11/2026
+# Estado vigente — Roguelite Alpha implementada; publicação bloqueada —01/11/2026
+
+## Resultado remoto final desta rodada
+
+Runtime2dea277811b4c5fe4cf3a95ce27f88723f0c084a, PR4 draft sobre a base de
+gameplay. CI PR41269269697/job124738479668 SUCCESS:350unit/32files,
+73E2E(1,0h),typecheck/arte reproduzível/build/build:preview/diff PASS.
+CI push41269212360/job124738304396:350unit PASS, E2E61PASS/5timeouts/
+7nãoexecutados(1,4h). Os4cenários Alpha passaram em AMBOS os jobs. Falhas
+antigas de equipment(2),gameplay-shell,mvp0,tactical-consolidation impediram
+o build/publicação desse push; deploy124754772262 SKIPPED. PR verde não
+substitui o gate do workflow de publicação. Não houve rerun/fix de teste.
+
+Artefato13070324721 preservado e hash verificado;5traces mostram timeout
+total220/360s, teardown e fechamento de contexto antes do erro page closed.
+Avanços de250ms chegaram a levar~3s. Causa última não comprovada; não concluir
+regressão, infraestrutura ou GPU apenas pela diferença entre os jobs.
+Diagnóstico em ROGUELITE_VALIDATION.md. Manifest público conferido após falha:
+b9d0e3134dff5f47e3c76a3641767438c1f2749e, NÃO é a Alpha. Smoke público não
+executado: não existe deploy aprovado2dea277. Preview público NÃO pronto.
+Compilado local2dea277 e fluxo manual inspecionados; limites locais abaixo
+continuam verdadeiros. Próxima ação: investigar timeouts, sem retry cego,
+relaxar limites ou publicar por atalho. Nenhum monitor/automação reativado.
+
+## Registro de implementação e validação local (preservado)
 
 Novo pedido do usuário substitui o monitor antigo: fundação de action roguelite
 manual sobre o código atual, sem recomeçar o projeto. Branch

@@ -1,5 +1,28 @@
 # Checkpoint — consolidação visual, movimento e push —24/10/2026
 
+## 01/11 — Alpha no GitHub; Pages bloqueado por CI push
+
+Branch feature/roguelite-alpha, runtime2dea277811b4c5fe4cf3a95ce27f88723f0c084a,
+PR4 draft criado/attached, push normal. CI PR41269269697/124738479668 PASS:
+350unit/73E2E/typecheck/arte/build/build:preview/diff. CI push41269212360/
+124738304396:350unit PASS;61E2E PASS,5timeouts,7nãoexecutados. Os4Alpha E2E
+passaram em ambos. Deploy124754772262 SKIPPED; nenhum rerun/cancel/forçar deploy.
+Public version.json ainda b9d0e31, verificado após falha; não é entrega Alpha.
+Não executar smoke público contra a versão antiga ou chamar preview pronto.
+
+Artefato13070324721 ZIP/5traces/screenshot/error-context preservados em
+workspace roguelite-ci-push-failure.zip e roguelite-ci-push-diagnostics/.
+SHA25613ea0d2e9dd14a188eee2229e97f81bd3321b238bb77e151e6e5f23208335316.
+Timeout220/360s precede teardown/close e o erro page closed; não é evidência
+de fechamento espontâneo. Avanço250ms~3s no trace; causa última não provada.
+Details ROGUELITE_VALIDATION.md. Sem mudar runtime/testes/assets/limites.
+
+Compilado foi carimbado depois do commit com2dea277, validado manualmente
+via UI:costa→vestígio→encontro→choice→retirada→refúgio/Cronista. Sem vitória
+humana completa/duração10–15min comprovadas. A suíte local global mantém
+timeouts documentados; os gates remotos não os apagam. Atualização seguinte
+é apenas documentação [skip ci]; PR permanece draft/bloqueado para publicação.
+
 ## 31/10 — novo direcionamento: Crônicas da Maré · Alpha
 
 Atualização01/11 antes de commit/push: runtime concluído e revisado.18unit Alpha
