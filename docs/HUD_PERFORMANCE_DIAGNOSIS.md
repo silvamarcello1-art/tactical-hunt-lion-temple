@@ -1,5 +1,39 @@
 # HUD — diagnóstico e redução de trabalho redundante —01/11/2026
 
+## Resultado remoto do ajuste ec42 — bloqueio permanece
+
+Commit ec42a20bbf11ccaa507818c6a5c1cc0f6827e942 normalpush,sem rerun do job antigo.
+Push41283638985/job124780430857:353unit33filesPASS,63E2EPASS/4timeouts/
+7notrun(1,1h). NovoHUDtest e4Alpha E2E PASS. Deploy124794263515 SKIPPED.
+PR41283642777/job124780442773 ainda E2E neste checkpoint;não tratado como gate
+aprovado. Cabe registrar seu resultado ao retomar,não cancelar nem repetir.
+
+Artefato13075973127,15.757.839bytes,ZIP workspace hud-ci-push-failure-ec42.zip,
+extração hud-ci-push-diagnostics-ec42/. SHA256verificado:
+2f37cee97f939886cdd8f027ea2855c77b12ff9dec6662a605b1cd65b414e1b4.
+Quatro traces inspecionados:
+
+| Cenário | Deadline | Fato observado antes do encerramento |
+|---|---|---|
+|equipment:74|220s|ASSISTED selecionado;aba sorcerer ainda em processamento;último clickKnight começa APÓS Closecontext|
+|gameplay-shell:53|360s|completed-cycles=2;clock250ms leva1929/2124/2413/2068ms de parede|
+|mvp0:379|360s|completed-cycles=2;clock250ms leva2269/2096/2203/2193ms|
+|tactical-consolidation:23|220s|session-state=boss;clock250ms leva2301/2141/2282/2277ms|
+
+Todos registram deadline total antes de Close context. Inventário fecha em
+700357,449ms e só depois registra tentativaKnight700366,799ms;último click
+navegador é sorcerer669641,093ms. O seletor final do erro não comprova aba quebrada.
+Sete sucessores seriais do mvp0 não executaram,não foram dispensados.
+
+Ganho local de HUD confirmado,mas gate remoto não resolvido integralmente.
+Causa última CPU/GPU/render/driver/protocolo ainda não comprovada. Próximo
+passo proposto exige decisão:coleta específica/temporária de CPU/render no
+próprio runner Windows,sem alterar assertions/deadlines/velocidade/permissões/
+proteções. Não implementar pipeline diagnóstico nem disparar retry antes
+da autorização. Nenhum novo retry/fix especulativo/deploy forçado nesta rodada.
+
+## Histórico da medição e validação local (não substitui o resultado acima)
+
 ## Problema e fronteira
 
 Continuação autorizada pelo usuário após o bloqueio de publicação da Alpha.

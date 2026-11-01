@@ -1,5 +1,21 @@
 # Próxima tarefa — desbloquear publicação da Roguelite Alpha —01/11/2026
 
+## Bloqueio atual — autorizar perfil no runner, não retry cego
+
+Runtime ec42a20 normalpush;local353unit/74E2E/builds/smokes PASS. PushCI
+353unitPASS/63E2EPASS/4timeouts/7notrun;deploySKIPPED. PRCI ainda executando
+na última leitura. Passes locais/PR eventual não substituem o push falho.
+Não cancelar o PR,rerun ou alterar código/deadlines/clock/workflow agora.
+
+Pedir direção para coleta temporária CPU/render no runner Windows,com mesma
+validação e sem afrouxar gates/permissões/proteções. Essa coleta e sua execução
+diagnóstica precisam de autorização antes de implementação. Ler4traces atuais,
+HUD_PERFORMANCE_DIAGNOSIS.md e resultado final do PR ao retomar. A causa última
+da lentidão não foi comprovada;último seletor pageclosed não é causa provada.
+Publicação permanece bloqueada. Não criar monitores/automação ou novas tarefas.
+
+## Histórico — plano de validação que produziu o bloqueio acima
+
 ## Atual — validar remotamente o ajuste medido de HUD
 
 Continuação autorizada após47f50cb. Correção de redundância UI pronta;novo

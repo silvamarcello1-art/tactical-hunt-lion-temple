@@ -1,5 +1,16 @@
 # Alpha — registro de validação e diagnóstico
 
+## Resultado ec42 — novo push falho, publicação não aprovada
+
+Push41283638985/job124780430857:353unit33filesPASS,63E2EPASS/4timeouts/
+7nãoexecutados(1,1h). HUD novo e4Alpha E2E PASS. Deploy124794263515 SKIPPED.
+PR41283642777/job124780442773 ainda E2E na escrita;nenhum PASS inventado.
+Fonteec42 exata confirmada no checkout/health dos logs;nenhum novo runtime.
+Artefato13075973127/4traces preservados com hash conferido;detalhes abaixo e
+HUD_PERFORMANCE_DIAGNOSIS.md. Deadlines precedem fechamento;causa última
+da lentidão não provada. Não confundir redução local de custo com CI resolvido.
+Coleta CPU/render no runner Windows aguarda decisão;sem retry cego/atalho.
+
 ## Continuação01/11 — novo ajuste de HUD e validação local
 
 Redundância de HUD medida e reduzida,sem mudar motor/controle/clock/limites.

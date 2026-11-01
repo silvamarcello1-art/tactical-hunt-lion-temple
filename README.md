@@ -16,7 +16,8 @@ Meta10–15min total ainda depende de playtests; não é duração humana já me
 
 Continuação01/11: HUD otimizado sem mudar regras/input;353unit/74E2E/builds
 locais PASS. [Diagnóstico e limites](docs/HUD_PERFORMANCE_DIAGNOSIS.md).
-Novo runtime ainda depende de CI/Pages/manifest/smoke;preview não pronto.
+Runtimeec42:pushCI63E2EPASS/4timeouts/7notrun;deploySKIPPED. PR ainda executando
+no checkpoint. Coleta diagnóstica no runner aguarda direção;preview não pronto.
 
 Histórico: runtime2dea277 no PR4 draft. CI PR350unit/73E2E/builds PASS;
 CI push61E2E PASS/5timeouts/7nãoexecutados bloqueou o Pages. Público ainda

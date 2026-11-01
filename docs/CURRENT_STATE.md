@@ -1,5 +1,33 @@
 # Estado vigente — Roguelite Alpha implementada; publicação bloqueada —01/11/2026
 
+## Resultado atual — runtime ec42; push falhou; diagnóstico no runner exige decisão
+
+Fonte ec42a20bbf11ccaa507818c6a5c1cc0f6827e942 enviada normalmente,local=origin/
+CLEAN antes deste checkpoint. Nova CI push41283638985/job124780430857:
+353unit/33files PASS;63E2E PASS/4timeouts/7nãoexecutados(1,1h). Novo teste HUD
+e4Alpha E2E passaram remotamente. Deploy124794263515 SKIPPED. PR41283642777/
+job124780442773 ainda em E2E nesta escrita;não cancelado nem contado como PASS.
+Nenhum retry,novo fix especulativo ou publicação forçada.
+
+O ganho local de HUD é real,mas não resolveu integralmente o gate remoto.
+Artefato13075973127 preservado/hash verificado;quatro traces confirmam timeout
+total220/360s antes de Close context. Três loops ainda em ciclo2;cenário tático
+em boss;avanços250ms virtuais custam~1,9–2,4s de parede. No inventário,o último
+click Knight inicia depois do fechamento,portanto não prova falha dessa aba.
+Não atribuir causa última a CPU/GPU/driver/infra apenas com estes dados.
+
+Próxima ação proposta:coleta temporária de perfil CPU/render no runner Windows,
+mantendo assertions/deadlines/velocidade/permissões/proteções. Alteração da
+coleta do CI e execução diagnóstica nova aguardam autorização do usuário.
+Sem isso,não tentar novos reruns ou ajustes de gameplay/clock para esconder
+o sintoma. PR pode concluir independentemente;não libera o push falho.
+Detalhes HUD_PERFORMANCE_DIAGNOSIS.md;publicação Alpha continua bloqueada.
+Manifest público reconferido:b9d0e3134dff5f47e3c76a3641767438c1f2749e,versão
+anterior. Local compilado carimbadoec42 exato. Nenhum smoke público executado
+contra o site antigo como se fosse a Alpha. Última leitura PR ainda E2E.
+
+## Histórico desta continuação — gates locais não substituem CI
+
 ## Continuação autorizada — redução de redundância do HUD em validação
 
 Usuário pediu continuar após47f50cb. Medição CDP isolada confirmou custo de

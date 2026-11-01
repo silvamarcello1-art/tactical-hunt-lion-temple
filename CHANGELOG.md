@@ -1,3 +1,11 @@
+## 2026-11-01 — ec42 validado localmente; CI push ainda bloqueado
+
+- Correção de HUD enviada;local353unit/74E2E/builds/smokes PASS.
+- Push353unitPASS/63E2EPASS/4timeouts/7nãoexecutados;deploySKIPPED.
+- HUD novo+4Alpha E2E PASS remotamente;PR ainda executando no checkpoint.
+- Quatro traces preservados;deadline precede contextclose,causa última não provada.
+- Coleta CPU/render no runner exige decisão;sem retry/relaxamento/atalho de deploy.
+
 ## 2026-11-01 — HUD agrupado e idempotente (nova validação)
 
 - Atualização do HUD ao fim do batch síncrono;evita snapshots repetidos por evento.

@@ -1,5 +1,31 @@
 # Checkpoint — consolidação visual, movimento e push —24/10/2026
 
+## 01/11 — ec42 enviado; novo push bloqueado; sem retry
+
+Commit ec42a20bbf11ccaa507818c6a5c1cc0f6827e942,normalpush,healthlocal=origin/CLEAN.
+Push41283638985/job124780430857 FAILED353unitPASS/63E2EPASS/4timeouts/7notrun
+(1,1h),deploy124794263515 SKIPPED. HUD novo+4Alpha E2E PASS remotamente.
+PR41283642777/job124780442773 ainda E2E no registro;não cancelado/dispensado.
+Este checkpoint é docs-only[skip ci],não novo runtime;checkout do PR já ocorreu
+em ec42 e não faz fetch posterior. Não alterar código ou repetir jobs.
+
+Artefato13075973127/15.757.839bytes,ZIP workspace hud-ci-push-failure-ec42.zip,
+diretório hud-ci-push-diagnostics-ec42/. SHA256conferido:
+2f37cee97f939886cdd8f027ea2855c77b12ff9dec6662a605b1cd65b414e1b4.
+Quatro test.trace:deadline220/360s→teardown/close→pageclosed. Três loops ainda
+cycles2;boss ainda vivo no cenário tático;clock250ms~1,9–2,4s de parede.
+Inventário:Closecontext700357,449ms;clickKnight700366,799ms já após fechamento.
+Causa última não provada;ganho de CPU local não é correção integral de CI.
+Diagnóstico local/artefatos em HUD_PERFORMANCE_DIAGNOSIS.md e workspace
+HUD_CI_FAILURE_DIAGNOSIS.md. PR4body atualizado preservando histórico.
+
+Decisão necessária:autorizar coleta específica/temporária de CPU/render no
+runner Windows com gates intactos,antes de outra ação de pipeline. Nenhuma
+instrumentaçãoCI/novo retry foi iniciada. CUA indisponível,não contornado.
+Preview público não aprovado;smoke público não substituído por versão antiga.
+Manifest público finalb9d0e31;localcompiladoec42 exato,reconferidos. PR ainda
+em E2E na última leitura;continua executando independentemente deste registro.
+
 ## 01/11 — continuação autorizada/HUD, novos gates locais verdes
 
 Preflight fetch/health47f50cb=origin/CLEAN. Diagnóstico por CPU/CDP em contextos
