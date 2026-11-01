@@ -1,3 +1,11 @@
+## 2026-11-01 — A/B local do renderer, sem alteração do jogo
+
+- SwiftShader reproduzido localmente;13amostras controladas com1014eventos iguais.
+- Terreno contribui ao custo;cache experimental15,6–20,8%mais rápido em2pares.
+- Não entregue comofix:identidade visual/CI completos ainda não comprovados.
+- Capturas falhas/warnings e bloqueio de scriptPNG registrados,sem bypass.
+- Apenas docs;sem novo runtime/CI/retry/deploy. RENDERER_AB_LOCAL.md detalha.
+
 ## 2026-11-01 — coleta única Windows CPU/render
 
 - Diagnóstico isolado83b2f35/run41329694126,artefato13093936077 preservado.

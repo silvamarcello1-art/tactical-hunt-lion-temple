@@ -1,5 +1,18 @@
 # Próxima tarefa — desbloquear publicação da Roguelite Alpha —01/11/2026
 
+## Atual — decidir implementação após A/B concluído
+
+Usuário autorizou A/B local; resultado em RENDERER_AB_LOCAL.md. Sem código/CI
+novo. Software reproduz custo; terreno tem contribuição mensurável. Cache
+experimental em memória ganhou15,6–20,8%,1014eventos idênticos; não é correção
+pronta, pixels iguais ou gate verde. Screenshot failures/warnings preservados;
+comparaçãoPNG numérica bloqueada por execution policy, não contornada.
+Propor, se autorizado, otimização restrita de cenário estático com invalidação
+de terreno/resize/pan/resolução e sem perda visual. Validar fonte congelada,
+domínio/timelines,353unit/74E2E/arte/builds/visual antes de novo commit runtime/CI.
+Não repetir CI antigo, relaxar limites, reduzir qualidade ou mudar permissões.
+Publicação segue bloqueada; A/B e perfis são diagnósticos, não gates.
+
 ## Atual — decidir A/B gráfico após coleta concluída
 
 A coleta única autorizada foi encerrada:run41329694126/job124916989158,

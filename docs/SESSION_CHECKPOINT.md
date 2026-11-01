@@ -1,5 +1,19 @@
 # Checkpoint — consolidação visual, movimento e push —24/10/2026
 
+## 01/11 — A/B local autorizado encerrado
+
+Runtimeec42 intacto;preflight3fca848=origin/CLEAN. Helperrenderer-ab-local.mjs
+e artefatos renderer-ab/ só workspace.13amostras com mesma sessão controlada:
+1014eventos/entidades finais idênticos,16slógicos/overlaps0. Primeirasrodadas
+tinham drops diferentes por sessionId; preservadas, método corrigido sem mudar
+RNG do combate. SwiftShader softwarefull12,933s/85,860sCPU→nodraw5,442/22,979.
+Cache terreno em2pares15,6–20,8%mais rápido,1552→1106draws; não entregue comofix.
+Quatro screenshots5s falharam; parvisual posterior com readback PÓS medição
+inspecionado, não substitui caminho original. Nenhum pageerror;queue warnings
+preservados. BitmapdiffPowerShell bloqueado por política,sem bypass/mudança.
+RENDERER_AB_LOCAL.md guarda comandos/limites/proposta. Servidor4184/browser
+próprios encerrados. Sem CI/deploy/rerun/novoagente/automação. Só docsfeature.
+
 ## 01/11 — coleta única Windows encerrada; sem publicação
 
 Autorização humana executada em branch isolada diagnostics/windows-cpu-profile-ec42,

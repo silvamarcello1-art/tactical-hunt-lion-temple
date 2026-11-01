@@ -1,5 +1,12 @@
 # Windows CI — CPU/render, coleta única — 01/11/2026
 
+Atualização posterior: A/B local explicitamente autorizado foi concluído,
+sem nova execução CI ou mudança de runtime. RENDERER_AB_LOCAL.md registra
+software reproduzido,13amostras de entrada idêntica, contribuição do terreno
+e cache experimental15,6–20,8%mais rápido. Não prova soluçãoCI/pixels idênticos.
+Método e bloqueio da comparaçãoPNG preservados. O relato abaixo permanece
+como evidência original do runner; não foi reexecutado nem substituído.
+
 ## Resultado e fronteira
 
 Coleta explicitamente autorizada pelo usuário. Run41329694126/job124916989158

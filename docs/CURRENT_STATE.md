@@ -1,5 +1,19 @@
 # Estado vigente — Roguelite Alpha implementada; publicação bloqueada —01/11/2026
 
+## Atualização — A/B local autorizado concluído, sem fix ou novo CI
+
+BackendSwiftShader reproduzido localmente;13amostras com mesma entrada de sessão
+mantiveram1014eventos/entidades finais idênticos,16s/overlaps0. Completo software
+12,933s→sem render5,442s;terreno contribui, máscara/efeitos não explicam tudo.
+Cache de terreno só em memória reduziu15,6–20,8% em2pares; não prova CI resolvido
+nem pixels idênticos. Quatro capturas Playwright5s falharam e foram preservadas;
+par posterior com readback pós-métricas inspecionado, não é substituto do gate.
+Comparação numéricaPNG bloqueada pela política de scripts,sem bypass.
+Método/entradas/limites em RENDERER_AB_LOCAL.md. Fonteec42/testes/assets/CI intactos.
+Só documentação atualizada;sem rerun/deploy/qualidade reduzida entregue.
+Próximo passo proposto:otimização restrita do cenário estático, se autorizada,
+com invalidação correta e gates/visual completos. PreviewAlpha segue bloqueado.
+
 ## Atualização — coleta Windows concluída, renderização software dominante
 
 Usuário autorizou UMA coleta CPU/render. Branch isolada diagnostics/windows-cpu-profile-ec42,

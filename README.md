@@ -1,5 +1,9 @@
 # Lion Temple — Tactical Hunt
 
+A/B local autorizado concluído, sem alterar o jogo: custo software reproduzido,
+cache experimental de terreno ganhou15,6–20,8%,mas não é fix/CI aprovado.
+[Método e limites](docs/RENDERER_AB_LOCAL.md). Sem novo deploy ou retry.
+
 Estado01/11: coleta Windows CPU/render autorizada foi encerrada; evidências
 apontam gargalo gráfico software(SwiftShader), não custoJS dominante.
 [Resultado e limites](docs/WINDOWS_CPU_PROFILE.md). Gates ec42 push/PR falharam;
