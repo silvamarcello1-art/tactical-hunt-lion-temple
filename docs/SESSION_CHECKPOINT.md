@@ -1,5 +1,21 @@
 # Checkpoint — consolidação visual, movimento e push —24/10/2026
 
+## 01/11 — coleta única Windows encerrada; sem publicação
+
+Autorização humana executada em branch isolada diagnostics/windows-cpu-profile-ec42,
+commit83b2f35a4a072f71125a8ec6c9a96ac1c40158c5. Run41329694126/job124916989158
+FAILURE;upload13093936077 SUCCESS. ZIP4.880.899bytes/hashSHA256
+747167b74a836e6c7a99bc37772b87b845d8d13be6b6eac5bf5122ece2e1fc4d conferido.
+Feature/runtimeec42, testes/deps/preview.yml intactos. Sem retry/novoPR/Pages.
+Coleta achouSwiftShaderCPU,~441sCPU gráfico/124sparede comJS~0,62s; snapshots
+não explicam a diferença. Trêsloops timeout360s; inventário assertions202s.
+CPU e timeline preservados; watchdog coleta antes de fechar, portantowall512s
+dosloops NÃO amplia aceitação360s. WarningsGPU/readPixels mantidos; causa
+gráfica fina ainda não provada. Método/limites em WINDOWS_CPU_PROFILE.md.
+PR ec42 também terminou falho353unit/62E2EPASS/5timeouts/7notrun,deploySKIPPED.
+Gates locais353unit/74E2E/builds são históricos válidos, não novas execuções.
+Só docs atualizadas na feature. Não iniciar A/B/fix/retry sem nova direção.
+
 ## 01/11 — ec42 enviado; novo push bloqueado; sem retry
 
 Commit ec42a20bbf11ccaa507818c6a5c1cc0f6827e942,normalpush,healthlocal=origin/CLEAN.

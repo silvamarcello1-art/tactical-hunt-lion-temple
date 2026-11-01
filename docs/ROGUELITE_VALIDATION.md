@@ -1,5 +1,16 @@
 # Alpha — registro de validação e diagnóstico
 
+## Atual — perfil Windows concluído; gates ainda bloqueados
+
+PR ec42 terminou353unitPASS/62E2EPASS/5timeouts/7notrun;deploySKIPPED.
+Coleta única autorizada em branch isolada83b2f35:run41329694126 FAILURE,
+artefato13093936077 preservado/hash conferido. Não substitui gates353/74.
+SwiftShaderCPU domina custo remoto;sem/com snapshots124/123s de workload,
+JS0,623/0,647s. Trêsloops timeout360s;inventário assertions202s concluiu.
+Ver WINDOWS_CPU_PROFILE.md para método/janelas/overhead/warnings e limites.
+Runtime e testes intactos;sem outro retry/fix/deploy. Próximo A/B gráfico depende
+de direção. PúblicoAlpha não aprovado;histórico anterior abaixo.
+
 ## Resultado ec42 — novo push falho, publicação não aprovada
 
 Push41283638985/job124780430857:353unit33filesPASS,63E2EPASS/4timeouts/

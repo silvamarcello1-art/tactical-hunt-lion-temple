@@ -1,3 +1,11 @@
+## 2026-11-01 — coleta única Windows CPU/render
+
+- Diagnóstico isolado83b2f35/run41329694126,artefato13093936077 preservado.
+- Mesmo runtimeec42:SwiftShaderCPU domina custo,JS baixo;sem/com snapshots similar.
+- Trêsloops timeout360s;inventário concluiu202s;warnings preservados.
+- PR ec42 também falhou;nenhum novo retry/fix/deploy ou gate relaxado.
+- Método, evidências e limites em docs/WINDOWS_CPU_PROFILE.md;Alpha bloqueada.
+
 ## 2026-11-01 — ec42 validado localmente; CI push ainda bloqueado
 
 - Correção de HUD enviada;local353unit/74E2E/builds/smokes PASS.

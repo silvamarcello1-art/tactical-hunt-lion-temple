@@ -1,5 +1,20 @@
 # Estado vigente — Roguelite Alpha implementada; publicação bloqueada —01/11/2026
 
+## Atualização — coleta Windows concluída, renderização software dominante
+
+Usuário autorizou UMA coleta CPU/render. Branch isolada diagnostics/windows-cpu-profile-ec42,
+commit83b2f35,run41329694126/job124916989158 FAILURE com artefato13093936077
+preservado/hash conferido. Runtimeec42 intacto; sem instrumentação na feature,
+sem retry de gate/deploy. Amostras curtas levam123,7/122,9s sem/com snapshots;
+JS0,623/0,647s; processoGPU440,8/441,9sCPU. Renderer realSwiftShader/CPU,
+4CPUs; evidência forte de gargalo gráfico nativo/software, efeito exato não
+provado. Trêsloops timeout360s; inventário original assertions concluiu202,3s.
+WarningsReadPixels preservados,sem pageerror. Limites do watchdog/coleta,
+janelasCPU e comparação local descritos em WINDOWS_CPU_PROFILE.md.
+PR ec42 FINAL FAILURE353unit/62E2EPASS/5timeouts/7notrun,deploySKIPPED.
+Publicação continua bloqueada. Próximo A/B gráfico exige direção; nenhum
+fix/retry novo iniciado. Registros abaixo são históricos, não estado vigente.
+
 ## Resultado atual — runtime ec42; push falhou; diagnóstico no runner exige decisão
 
 Fonte ec42a20bbf11ccaa507818c6a5c1cc0f6827e942 enviada normalmente,local=origin/

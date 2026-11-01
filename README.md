@@ -1,5 +1,10 @@
 # Lion Temple — Tactical Hunt
 
+Estado01/11: coleta Windows CPU/render autorizada foi encerrada; evidências
+apontam gargalo gráfico software(SwiftShader), não custoJS dominante.
+[Resultado e limites](docs/WINDOWS_CPU_PROFILE.md). Gates ec42 push/PR falharam;
+Alpha pública continua bloqueada. Nenhum novo retry ou fix automático.
+
 ## Novo foco — Crônicas da Maré · Roguelite Alpha
 
 Aventura manual em `alpha.html`: Knight solo, costa/prólogo, bosque

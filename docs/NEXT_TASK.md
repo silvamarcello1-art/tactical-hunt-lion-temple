@@ -1,5 +1,19 @@
 # Próxima tarefa — desbloquear publicação da Roguelite Alpha —01/11/2026
 
+## Atual — decidir A/B gráfico após coleta concluída
+
+A coleta única autorizada foi encerrada:run41329694126/job124916989158,
+artefato13093936077 preservado/hash conferido. Não repetir a coleta/gates.
+WINDOWS_CPU_PROFILE.md mostraSwiftShaderCPU/~441sCPU gráfico por124sparede,
+JS~0,62s; sem/com snapshots parecidos. Trêsloops timeout; inventário concluiu.
+Evidência aponta gargalo gráfico software, mas não prova shader/drawcall causal.
+Propor A/B dirigido do renderer com reprodução software local; requer direção
+antes de nova execução/pipeline/fix. Preservar aparência/motor/input/clock,
+assertions/deadlines/proteções e histórico. Não adotar renderização reduzida
+silenciosamente nem desativar validações para publicar.
+PR ec42 FINAL FAILED,como push;Alpha pública continua bloqueada. Nenhum
+deploy/retry/automação/novoagente iniciado. Instruções abaixo são históricas.
+
 ## Bloqueio atual — autorizar perfil no runner, não retry cego
 
 Runtime ec42a20 normalpush;local353unit/74E2E/builds/smokes PASS. PushCI

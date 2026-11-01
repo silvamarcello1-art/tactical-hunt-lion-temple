@@ -1,5 +1,18 @@
 # HUD — diagnóstico e redução de trabalho redundante —01/11/2026
 
+## Atualização — perfil Windows autorizado e encerrado
+
+Ver WINDOWS_CPU_PROFILE.md:run41329694126,artefato13093936077/hash verificado.
+Mesmo runtimeec42, branchdiagnóstica83b2f35, sem tocar preview.yml/gates.
+Curta124sparede/0,623sJS/440,834sCPU do processoGPU,SwiftShaderCPU/4CPUs.
+Com snapshots123s/0,647sJS/441,896sGPU; não identifica snapshots como dominante.
+Trêsloops timeout360s; inventário concluiu202s antes do limite220s.
+Gargalo gráfico nativo/software fortemente indicado; efeito exato não provado.
+WarningsReadPixels mantidos; não atribuir ao jogo sem timestamps/A/B causal.
+PR ec42 FINAL FAILURE353unit/62E2EPASS/5timeouts/7notrun,deploySKIPPED.
+Coleta não é gate/FPSbenchmark. Nenhum novo fix/retry/publicação; próximo
+A/B específico requer direção. Resultado anterior abaixo preservado como histórico.
+
 ## Resultado remoto do ajuste ec42 — bloqueio permanece
 
 Commit ec42a20bbf11ccaa507818c6a5c1cc0f6827e942 normalpush,sem rerun do job antigo.
