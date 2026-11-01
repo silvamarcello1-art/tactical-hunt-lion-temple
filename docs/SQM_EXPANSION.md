@@ -104,6 +104,15 @@ snapshot/hash legado foi regenerado para esconder regressões.
 
 ## Validação e publicação
 
+Estado posterior31/10:humano autorizou UMA reexecução do smoke público de
+treino sem mudar limites. Ela falhou antes do combate:preparing não chegou
+a idle em5s,qa-training-team:14. Clique500ms anterior não foi alcançado.
+Não repetir novamente ou aumentar limites;causa raiz ainda não comprovada.
+Investigar inicialização depende de direção. CI/Pages e manifest b9aprovados
+permanecem;validação pública obrigatória continua incompleta.
+
+Histórico de QA anterior:
+
 Estado31/10 posterior:única reexecução124455903967 PASS332unit/69E2E57,8min,
 build/diff/Pages124468130514SUCCESS. Checkout/manifest b9d0e31docs-only,
 source equivalente f1200. Novo bloqueio é smoke público training:clique

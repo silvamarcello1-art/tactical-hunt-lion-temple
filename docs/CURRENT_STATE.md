@@ -1,6 +1,29 @@
 # Estado vigente — preview SQM publicado; smoke público pendente —31/10/2026
 
-## Resultado atual — CI aprovado, mas validação pública incompleta
+## Atual — única reexecução do smoke falhou na inicialização
+
+Usuário autorizou UMA reexecução de qa-training-team mantendo os limites.
+Executada uma vez, isolada dos outros QAs desta rodada, URL/SHA b9d0e31,
+label sqm-public-retry. EXIT1 em scripts/qa-training-team.mjs:14:64:
+esperava data-session-state=idle, recebeu preparing por5000ms(14observações).
+A falha ocorreu antes do clique500ms, da própria leitura de manifest do
+script e do combate; não é reprodução comprovada da falha anterior de clique.
+Manifest externo no preflight confirmou b9d0e31. Source/assets/tests/scripts/
+deps/workflows iguais b9/f1200;HEAD1a2f949=origin/CLEAN antes deste registro.
+
+Sem JSON final, trace ou screenshot dessa falha; console/economia/cleanup
+finais não foram comprovados pelo smoke. Browser fechado em finally.
+Pipeline parou:qa-outfits/qa-preview continuam sem execução pública.
+Nenhuma nova tentativa, alteração de5s/500ms ou de código/testes foi feita.
+Causa raiz não comprovada: preparing cobre inicialização do renderer e
+carregamento de assets, mas não há evidência de qual etapa excedeu o tempo.
+Próximo passo exige direção para investigação do carregamento, não novo
+rerun automático. CI/deploy continuam aprovados; site publicado não equivale
+a validação pública completa. Automação continua removida.
+
+## Histórico — resultado da primeira rodada pública
+
+## Resultado anterior — CI aprovado, mas validação pública incompleta
 
 A única reexecução autorizada passou: run41125860437/job124455903967,
 332unit(65,96s)/69E2E(57,8min), frozen/health/typecheck/arte/build/preview/diff.

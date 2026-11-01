@@ -1,5 +1,24 @@
 # Próxima tarefa — fechar ajustes de SQM —30/10/2026
 
+## Atual31/10 — investigar inicialização, somente após direção
+
+Humano autorizou UMA reexecução do smoke de treino mantendo limites.
+Ela foi executada e falhou antes do combate:qa-training-team:14:64,
+idle esperado/preparing recebido por5000ms. Clique500ms não foi alcançado.
+Log workspace sqm-public-retry-training.log;sem JSON final/trace/screenshot
+da falha. Causa raiz não comprovada;não concluir rede/assets/GPU/infra.
+Nenhum limite/script/código alterado ou nova tentativa iniciada.
+Manifest externo b9exato/source equivalente/CLEAN confirmados no preflight.
+qa-outfits eqa-preview públicos continuam pendentes porque pipeline parou.
+
+Pedir direção para diagnóstico do carregamento;NÃO propor nova repetição
+como substituto da investigação. Não rerun CI,já aprovado332/69/Pages.
+Manter histórico dos dois modos de falha:clique500ms anterior e preparação5s
+agora;13Hunts/manual/geometria públicos PASS anteriores não encerram os gates.
+Sem automação ativa,fix especulativo ou novas permissões.
+
+## Histórico — bloqueio anterior do clique, não resultado da nova reexecução
+
 ## Atual31/10 — decidir sobre falha do smoke público, não repetir CI
 
 Única reexecução124455903967 PASS332unit/69E2E/build/diff; Pages124468130514

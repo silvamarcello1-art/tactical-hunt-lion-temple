@@ -1,5 +1,36 @@
 # Checkpoint — consolidação visual, movimento e push —24/10/2026
 
+## 31/10 — UMA reexecução autorizada do smoke; falha readiness5s
+
+Humano “sim” à única reexecução do smoke público de treino sem alterar limites.
+Preflight fetch/health:1a2f949eb4a99316a04a8172b1df73fb2522aa8b=origin/CLEAN;
+diff source/public/assets/tests/scripts/deps/workflows vazio vsb9 e f1200.
+Manifest público externo reconfirmado b9d0e3134dff5f47e3c76a3641767438c1f2749e.
+
+Executado UMA vez qa-training-team.mjs com URL pública/SHA b9/label
+sqm-public-retry,em browser Edge isolado;nenhum outro QA iniciado em paralelo
+nesta rodada. EXIT1 em :14:64:expect html data-session-state idle recebeu
+preparing,timeout5000ms,14observações. O script falhou após page.goto antes
+da leitura interna do manifest,do clique500ms e do combate. Não afirmar
+reprodução da falha training-warden500ms anterior. Não afirmar economia,
+console ou cleanup finais desta tentativa,pois não houve JSON final.
+Browser fechado em finally;semtrace/screenshot da falha. Log bruto preservado
+no workspace sqm-public-retry-training.log. Nenhum gate ou limite alterado.
+
+Comando sequencial stop-on-failure não executou qa-outfits nemqa-preview;
+seguem pendentes,não usar smokes compilados anteriores como substituto.
+Leitura de código apenas:initialize aguarda createRenderer antes de idle;
+mount aguarda app.init e loadAssets. Sem timings de cada etapa/nova captura,
+causa raiz não comprovada; não atribuir a rede/GPU/assets por suposição.
+Nenhum fix/rerun/novo CI/redeploy/automação/agente iniciado. CI332/69 e
+Pages anteriores continuam aprovados,mas validação pública completa pendente.
+
+Direção necessária:investigar carregamento sem relaxar5s/500ms,não repetir
+automaticamente até obter verde. Atualização posterior somente docs[skip ci],
+source idêntico ao runtime público b9. Automação permanece removida.
+
+## Histórico — primeira rodada pública e reexecução do CI
+
 ## 31/10, São Paulo — única reexecução PASS/Pages publicado; smoke público falhou
 
 Autorização humana “sim” para UMA reexecução integral do push. Reexecutado

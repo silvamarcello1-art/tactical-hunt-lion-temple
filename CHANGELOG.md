@@ -1,3 +1,11 @@
+## 2026-10-31 — reexecução autorizada do smoke falha no startup
+
+- UMA reexecução de qa-training-team mantendo500ms/5s,sem outro QA desta
+  rodada em paralelo,falhou em preparing→idle5s antes do combate/clique.
+- Manifest externo b9exato/source inalterado;causa raiz não comprovada.
+  Sem retry adicional,fix ou relaxamento;outfits/preview públicos pendentes.
+- Próxima ação depende de direção para investigação do carregamento.
+
 ## 2026-10-31 — CI SQM aprovado/Pages publicado; QA público pendente
 
 - Única reexecução autorizada124455903967 PASS332unit/69E2E57,8min/build/diff;

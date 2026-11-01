@@ -9,8 +9,10 @@ Janela19×11(+4SQMs),corpos/picking no SQM e inimigos em quantidade/força
 progressivas. Contrato: [SQM expansion](docs/SQM_EXPANSION.md).
 Preview compartilhado b9d0e31 publicado31/10 após única reexecução CI
 332unit/69E2E PASS e PagesSUCCESS. Código equivalente f1200c4.
-Validação pública ainda PENDENTE:smoke de treino falhou num clique500ms;
-outfits/preview públicos não executados. Manual/geometria públicos PASS não
+Validação pública ainda PENDENTE:smoke original falhou num clique500ms;
+UMA reexecução autorizada falhou antes do combate,preparing por5s.
+Nenhum limite foi alterado;outfits/preview públicos não executados.
+Manual/geometria públicos PASS não
 substituem os gates pendentes. Não é release estável ou entrega toda aprovada.
 Manifest,CI,diagnóstico e limites em [estado vigente](docs/CURRENT_STATE.md).
 O enquadramento15×11/preview645 anterior é histórico em
