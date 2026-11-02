@@ -1,5 +1,264 @@
 # Checkpoint — consolidação visual, movimento e push —24/10/2026
 
+## 02/11 — CI idle/DOM encerrado; publicação bloqueada
+
+Runtime8f29e868c8c8bf9ff9bd5e86025db5ac7069513b enviado com autorização explícita.
+Push41505408182/job125483319751 e PR41505417297/job125483352076 FAILURE.
+Ambos370unit/36files,frozen install,health,typecheck PASS.
+E2E push72PASS/4FAIL/7nãoexecutados59,8min;PR73PASS/3FAIL/7nãoexecutados59,6min.
+Três timeouts comuns360s/360s/220s;push também assertion de resize idle:83,
+draws16 não aumentou após64ms. Essa prova passou naPR;causa não comprovada.
+Sete traces preservados/SHA256 conferidos;nenhum pageError registrado.
+Clock250ms custava~2,08–2,62s parede;loops em2ciclos,boss ainda ativo.
+Timeout antes do teardown/sessionclosed;não alegar crash/causa final resolvida.
+Builds/build:preview/diff finais não executados;deploys SKIPPED.
+Manifest público permaneceb9d0e31 anterior;sem smoke público sobre build antigo.
+Detalhes em IDLE_RENDER_CI_DIAGNOSIS.md. Sem fix/retry/limites alterados.
+Próximo passo exige direção para investigação/correção dirigida,não retry cego.
+Resultados locais abaixo e estado CI pendente são histórico,supersedidos aqui.
+
+
+
+## 02/11 — otimização local implementada; envio ao CI retido
+
+Desenho ocioso por invalidação, setters DOM idênticos preservados e lifecycle
+visual de tweens com dono. Ticker/relógio/input/animação ativa mantidos; seleção,
+resize,outfit,mira/push,restauração WebGL/visibilidade invalidam. Sem mudanças
+de combate/grade/RNG/economia/arte/CSS/deps/workflows ou limites antigos.
+Fonte final D medida:3s ociosos93draws→0,CPU gráfica25,476→0,158s,
+inventário2324→829ms. Ativo40s14,876→15,012s:sem ganho relevante,625frames/
+2718eventos idênticos/overlaps0. Não é FPS/VRAM/bateria nem garantia de CI.
+
+Frozen install/typecheck/arte reproduzível/build/build:preview/diff PASS;
+83E2E completos PASS14,9min. Quatro smokes compilados reais PASS:treino3wins/
+1231açõesbot/economia intacta;38sprites/outfits;Hunt24kills4240XP1540gold1token;
+Alpha2encontros/retirada/forja/saldo3/rank1,sem alegar vitória humana completa.
+Erros limpos;warnings limpos nos scripts que os coletam. PNGs inspecionados.
+**Unitários completos NÃO verdes:369/370,timeout antigoHuntPressure:61,
+5721ms no limite5000ms.**7novos PASS,não substituem a suíte. Sem retry até verde.
+
+Histórico de validação preservado:81E2E PASS pré-restauração;82 rodou81PASS/
+1FAIL por tween acessando sprite destruído,parando ticker no boss. Trace
+confirmado e arquivado;guardas de dono resolveram o caso original20,4s no
+full83 com os mesmos limites. Não atribuir falha antiga de CI a esta exceção
+sem evidência. IDLE_RENDER_AND_DOM.md detalha fontes,medições,gates e limites.
+Até este checkpoint não houve push de runtime/novoCI/deploy. Autorização
+condicional para uma nova rodada padrão foi perguntada;sem resposta recebida,
+envio permanece retido. Não ampliar combate/limites ou reexecutar jobs antigos.
+O preview público anterior não contém esta fonte. Entradas abaixo são história.
+
+## 02/11 — investigação residual local concluída; sem fix ou novo CI
+
+21 amostras locais SwiftShader da fonte54:15×40s/2718eventos e6×16s/1014eventos,
+estados finais idênticos por duração/overlaps0. Máscara/efeitos/UI/terreno
+isolados não mostraram solução forte; sem Pixi ainda há composição DOM cara.
+Ocultar shell derruba CPU gráfica do controle sem Pixi, mas quase não reduz
+parede. Desligar CSSmotion não melhorou cena completa. Timeline concentra
+espera inclusiva em swap/apresentação, não comprova shader/causa final do CI.
+Quatro warnings preservados em1caso; sem pageerrors. Medições não são gates/FPS.
+[RESIDUAL_RENDER_COST.md](RESIDUAL_RENDER_COST.md) registra21amostras, hashes,
+limites e proposta restrita a invalidação ociosa/escritas DOM idênticas, se
+autorizada. Nenhum runtime/teste/arte/script/deps/workflow alterado, nem CI,
+retry/deploy/automação novo. CIs54 falhos continuam bloqueando preview público.
+Entradas anteriores são histórico; não há validação remota atual em andamento.
+
+## 01/11 — CI do cache encerrado: publicação bloqueada
+
+Fonte/runtime `54f9a695a825e6e55968f1fe50d9a5fe263b9b6d`.
+Push41340601548/job124949570821 e PR41340605212/job124949581900:
+**FAILURE**, ambos363unit/34files PASS;67E2E PASS/4timeouts/7nãoexecutados(1,3h).
+Os4E2E novos do cache e4Alpha passaram em ambos. Frozen install/health/
+typecheck/arte/art-diff PASS; builds/build:preview/diff finais não executados.
+Deploys124970114637/124969909312 SKIPPED. Não há publicação nova aprovada.
+
+Artefatos13100006520/13100096094 preservados, SHA256 conferidos;8traces analisados.
+Cache estava ativo,1rebuild nos loops;250ms virtuais ainda custavam~2,0–2,6s
+parede. Loops pararam em2ciclos e cenário tático no boss. Timeout total precede
+teardown; vazio/sessionclosed não prova bug de seleção/crash. Causa última
+remanescente não comprovada; ganho local não resolveu o gate completo.
+Diagnóstico: [STATIC_CACHE_CI_DIAGNOSIS.md](STATIC_CACHE_CI_DIAGNOSIS.md).
+Manifest público continua versão anterior b9d0e31; não houve smoke público contra
+build antigo, retry, fix, deploy forçado ou mudança de gates. Histórico local
+362/363unit e78E2E PASS permanece distinto dos resultados remotos.
+Próximo passo exige direção para investigação dirigida, não retry cego.
+Entradas anteriores abaixo são histórico, não CI pendente atual.
+
+## 01/11 — implementação autorizada do cache, sem relaxamento de gates
+
+Preflightb4a37eb=origin/CLEAN. Mudanças restritas PixiRenderer/renderConfig/
+StaticSceneCache e10unit+4E2E novos;domínio/input/Alpha/assets/deps/workflows
+intactos. Só base estática é armazenada;dynamicrunes/rubble/debug ficam vivos.
+Resolução integral/nearest,budgetPOT4096/8.388.608pixels,fallback sem redução;
+pan no pai,zoom/res/bounds/conteúdo invalidam;dispose idempotente no poolPixi.
+Frozen/typecheck/arte reproduzível/build/build:preview/diff PASS.78E2E PASS11,4min.
+Fullunit3632vezes362PASS/1timeoutHuntPressure:61/5000ms;isolado10PASS,4992ms.
+Não ocultar falha nem contar isolado comofullverde. Domínio não importa renderer.
+Perf40ssoftware2pares ordem invertida14,861→9,381/14,440→9,364s,2718eventos
+idênticos/overlaps0;16sganho4,2%software/1,2%nativo,sem extrapolarCI/FPS.
+Smokes reais compiladosworkingtree4scripts PASS:treino3wins1184açõesbot/economia,
+38outfits,Hunt24kills4240XP1540gold1token,Alpha2salas/22→11→forja8→saldo3/rank1.
+PNGs inspecionados;console/cleanup limpos nos smokes que os medem. Buildcarimbo
+b4a é HEADprécommit, nãoSHAdafonte alterada; fontes/bundles devem ser conferidos
+apóscommit/stamp. STATIC_SCENE_CACHE.md e PR4 registram confirmação e novaCI.
+Não reutilizar CIec42,rerun antigo ou publicar semgates. Sem agente/monitor/goal.
+
+## 01/11 — A/B local autorizado encerrado
+
+Runtimeec42 intacto;preflight3fca848=origin/CLEAN. Helperrenderer-ab-local.mjs
+e artefatos renderer-ab/ só workspace.13amostras com mesma sessão controlada:
+1014eventos/entidades finais idênticos,16slógicos/overlaps0. Primeirasrodadas
+tinham drops diferentes por sessionId; preservadas, método corrigido sem mudar
+RNG do combate. SwiftShader softwarefull12,933s/85,860sCPU→nodraw5,442/22,979.
+Cache terreno em2pares15,6–20,8%mais rápido,1552→1106draws; não entregue comofix.
+Quatro screenshots5s falharam; parvisual posterior com readback PÓS medição
+inspecionado, não substitui caminho original. Nenhum pageerror;queue warnings
+preservados. BitmapdiffPowerShell bloqueado por política,sem bypass/mudança.
+RENDERER_AB_LOCAL.md guarda comandos/limites/proposta. Servidor4184/browser
+próprios encerrados. Sem CI/deploy/rerun/novoagente/automação. Só docsfeature.
+
+## 01/11 — coleta única Windows encerrada; sem publicação
+
+Autorização humana executada em branch isolada diagnostics/windows-cpu-profile-ec42,
+commit83b2f35a4a072f71125a8ec6c9a96ac1c40158c5. Run41329694126/job124916989158
+FAILURE;upload13093936077 SUCCESS. ZIP4.880.899bytes/hashSHA256
+747167b74a836e6c7a99bc37772b87b845d8d13be6b6eac5bf5122ece2e1fc4d conferido.
+Feature/runtimeec42, testes/deps/preview.yml intactos. Sem retry/novoPR/Pages.
+Coleta achouSwiftShaderCPU,~441sCPU gráfico/124sparede comJS~0,62s; snapshots
+não explicam a diferença. Trêsloops timeout360s; inventário assertions202s.
+CPU e timeline preservados; watchdog coleta antes de fechar, portantowall512s
+dosloops NÃO amplia aceitação360s. WarningsGPU/readPixels mantidos; causa
+gráfica fina ainda não provada. Método/limites em WINDOWS_CPU_PROFILE.md.
+PR ec42 também terminou falho353unit/62E2EPASS/5timeouts/7notrun,deploySKIPPED.
+Gates locais353unit/74E2E/builds são históricos válidos, não novas execuções.
+Só docs atualizadas na feature. Não iniciar A/B/fix/retry sem nova direção.
+
+## 01/11 — ec42 enviado; novo push bloqueado; sem retry
+
+Commit ec42a20bbf11ccaa507818c6a5c1cc0f6827e942,normalpush,healthlocal=origin/CLEAN.
+Push41283638985/job124780430857 FAILED353unitPASS/63E2EPASS/4timeouts/7notrun
+(1,1h),deploy124794263515 SKIPPED. HUD novo+4Alpha E2E PASS remotamente.
+PR41283642777/job124780442773 ainda E2E no registro;não cancelado/dispensado.
+Este checkpoint é docs-only[skip ci],não novo runtime;checkout do PR já ocorreu
+em ec42 e não faz fetch posterior. Não alterar código ou repetir jobs.
+
+Artefato13075973127/15.757.839bytes,ZIP workspace hud-ci-push-failure-ec42.zip,
+diretório hud-ci-push-diagnostics-ec42/. SHA256conferido:
+2f37cee97f939886cdd8f027ea2855c77b12ff9dec6662a605b1cd65b414e1b4.
+Quatro test.trace:deadline220/360s→teardown/close→pageclosed. Três loops ainda
+cycles2;boss ainda vivo no cenário tático;clock250ms~1,9–2,4s de parede.
+Inventário:Closecontext700357,449ms;clickKnight700366,799ms já após fechamento.
+Causa última não provada;ganho de CPU local não é correção integral de CI.
+Diagnóstico local/artefatos em HUD_PERFORMANCE_DIAGNOSIS.md e workspace
+HUD_CI_FAILURE_DIAGNOSIS.md. PR4body atualizado preservando histórico.
+
+Decisão necessária:autorizar coleta específica/temporária de CPU/render no
+runner Windows com gates intactos,antes de outra ação de pipeline. Nenhuma
+instrumentaçãoCI/novo retry foi iniciada. CUA indisponível,não contornado.
+Preview público não aprovado;smoke público não substituído por versão antiga.
+Manifest público finalb9d0e31;localcompiladoec42 exato,reconferidos. PR ainda
+em E2E na última leitura;continua executando independentemente deste registro.
+
+## 01/11 — continuação autorizada/HUD, novos gates locais verdes
+
+Preflight fetch/health47f50cb=origin/CLEAN. Diagnóstico por CPU/CDP em contextos
+Edge isolados,10s controlados/40lógicos,sem/com/sem trace:antes9498/10106/9379ms,
+JS1423/1550/1373;depois8084/8603/8212ms,JS574/642/598. Mesmo estado/overlaps0/
+errors[]/warnings[]. Trace por si não reproduziu lentidãoCI~3s/250ms.
+Correção restrita main/GameplayHUD/coalescedRefresh:microtask por batch,
+escritas sem substituições idênticas e dois Intl reutilizados. Sem mudança
+no motor/grid/input/Pixi/clock/velocidade/deadlines/testes antigos/deps/arte/CI.
+Detalhes e evidências HUD_PERFORMANCE_DIAGNOSIS.md;causa últimaCI não provada.
+
+Frozen install/typecheck353unit33files96,79s/74E2E11,6min/arte reproduzível/
+build/build:preview/diff PASS, fonte congelada durante navegador. Cinco cenários
+que falharam no push anterior passaram localmente. Novo E2E de20eventos→uma
+leitura de progressão/preservação de nós e3unit de scheduler PASS. Primeiro
+teste contou todos62clones do app; corrigido para isolar o HUD, sem alterar
+PlayerControls ou testes prévios. Smokes compilados real-clock PASS:Alpha
+duas salas/22→retirada11→forja8→saldo3/rank1/R,99sativos;Hunt24kills/4240XP/
+1540gold/1token,overlaps/claims/cleanup0. Errors[]/warnings[] em ambos.
+PNGs de combate/vitória/refúgio inspecionados. CUA falhou ao criar seus assets
+internos mesmo após reset;interação manual assistida não revalidada nesta
+rodada,sem contorno por outra automação. Alpha compilada mantém mesmo JS da
+versão anterior;mudança é apenas HUD do laboratório. Não inventar nova sessão
+manual ou benchmark de duração. A inspeção manual anterior permanece histórica.
+Build789módulos/maior chunk431,69kB. Carimbo anterior do build de trabalho não
+é aprovação do SHA novo. Próximo:fechar smoke/QA visual/documentação,commit/
+push normal;novos CI353/74 e Pages,manifest exato/smoke público após sucesso.
+Sem rerun automático de job antigo/merge/force/remoteSites/novas automações.
+
+## 01/11 — Alpha no GitHub; Pages bloqueado por CI push
+
+Branch feature/roguelite-alpha, runtime2dea277811b4c5fe4cf3a95ce27f88723f0c084a,
+PR4 draft criado/attached, push normal. CI PR41269269697/124738479668 PASS:
+350unit/73E2E/typecheck/arte/build/build:preview/diff. CI push41269212360/
+124738304396:350unit PASS;61E2E PASS,5timeouts,7nãoexecutados. Os4Alpha E2E
+passaram em ambos. Deploy124754772262 SKIPPED; nenhum rerun/cancel/forçar deploy.
+Public version.json ainda b9d0e31, verificado após falha; não é entrega Alpha.
+Não executar smoke público contra a versão antiga ou chamar preview pronto.
+
+Artefato13070324721 ZIP/5traces/screenshot/error-context preservados em
+workspace roguelite-ci-push-failure.zip e roguelite-ci-push-diagnostics/.
+SHA25613ea0d2e9dd14a188eee2229e97f81bd3321b238bb77e151e6e5f23208335316.
+Timeout220/360s precede teardown/close e o erro page closed; não é evidência
+de fechamento espontâneo. Avanço250ms~3s no trace; causa última não provada.
+Details ROGUELITE_VALIDATION.md. Sem mudar runtime/testes/assets/limites.
+
+Compilado foi carimbado depois do commit com2dea277, validado manualmente
+via UI:costa→vestígio→encontro→choice→retirada→refúgio/Cronista. Sem vitória
+humana completa/duração10–15min comprovadas. A suíte local global mantém
+timeouts documentados; os gates remotos não os apagam. Atualização seguinte
+é apenas documentação [skip ci]; PR permanece draft/bloqueado para publicação.
+
+## 31/10 — novo direcionamento: Crônicas da Maré · Alpha
+
+Atualização01/11 antes de commit/push: runtime concluído e revisado.18unit Alpha
+PASS(16run/combate+2picking);4E2E Alpha PASS novamente com clique no corpo
+visível,4fluxos sem consoleerror. Bloco mvp0+Alpha17/17PASS(8,3min), sem HMR.
+Finais frozen/typecheck/arte nativa reproduzível/build/build:preview/diff PASS;
+788módulos/maior chunk431,69kB. Compilado real-clock PASS:duas salas/escolhas,
+22brasas→retirada11→forja8→saldo3/rank1/R,caderno/pausa/um canvas,errors[]/
+warnings[],100sativos;PNGs inspecionados. Rodada pré-commit explicitamente
+working-tree, não SHA publicado. CI padrão350unit/73E2E e deploy ainda pendentes.
+Última suíte global local346/348 com dois timeouts antigos5s;2testes picking
+adicionados depois passaram. Não declarar unitários globais verdes. Timelines
+da base e atuais comparadas iguais; últimas amostras base5063/5564ms,atual5478/
+4938ms. Não comprovar causa última com isso e não relaxar limites. Ver
+ROGUELITE_VALIDATION.md. Próximo commit/push é entrega de branch/draft para
+validação padrão; Pages só é aprovado se workflow inteiro e smoke público passarem.
+
+Pedido integral anexado pelo usuário autoriza auditar, implementar vertical
+slice roguelite manual, testar, commit/push e preview configurado. Base limpa
+d14938c, branch nova feature/roguelite-alpha. Sem retomar monitores/retries antigos.
+Auditoria e plano curto apresentados antes da implementação. Reuso de engine,
+MovementSystem, comandos, LoS, projéteis, LiveEventPlayer, apresentação e sprites.
+Nova entrada/catálogo/run/hub/save separado; não há um segundo motor de combate.
+
+Arte builtin original costa/bosque/refúgio copiada para assets/roguelite/v1 e
+inspecionada. Briefs/proveniência em ROGUELITE_ART.md. Skill Sites somente
+local; nenhum remote Site. Uma delegação limitada de arte prevista pela skill,
+encerrada; sem novas tarefas/automação/goal.
+
+Validação parcial:16unit Alpha PASS, seed803 jornada por comandos com todas
+salas/bosses,385750ms de combate(sem leitura/exploração). Isso não mede sessão
+humana10–15min. Typecheck/build inicial PASS.3E2E Alpha PASS: prólogo/encontro/
+choice/reload, morte real/depósito/forja, hub/formato futuro/3res. Capturas
+revisadas; ajustada câmera do hub para mostrar prédios e removido desenho de
+bloqueios de borda por cima da arte. Novo E2E boss real em validação.
+
+Rodada unitária inicial concorrente com build/browser:339/348 e timeouts,
+incluindo um balanceamento Alpha ainda em ajuste. Após correções e isolada:
+347/348, único timeout5s da regressão antiga de3Hunts(6,185s); assertions/deadlines
+não alterados.73E2E completos em andamento. Não afirmar gate/publicação verde.
+Rodada completa73E2E:71PASS/1falha/1skip,18,9min. Trace comprova nova navegação
+02:33:20UTC, mesmo instante de edição e log page reload RogueRenderer do Vite.
+Interferência causada pela edição do agente, não aprovação nem falha de regra
+comprovada. Repetir bloco serial congelado.4E2E Alpha passaram incluindo boss.
+Diagnóstico/domínio comparativo em ROGUELITE_VALIDATION.md.
+
+Próximo: fechar regressões, arte/build/preview, revisão diff, documentação,
+commit/push normal, novo PR e verificar CI/manifest/publicação do SHA real.
+
 ## 31/10 — diagnóstico passivo de startup,sem implementação
 
 Humano “sim” à investigação da inicialização. HEAD14f86a7=origin/CLEAN,

@@ -1,5 +1,33 @@
 # Arquitetura — janela ampliada e Hunt progressiva (30/10/2026)
 
+## 02/11 — candidato local: invalidação de desenho e identidade DOM
+
+RenderInvalidation só governa o callback de desenho LOW do Pixi. Ticker,
+LiveEventPlayer e input mantêm cadência; atividade/eventos/tweens invalidam
+todo frame necessário, inclusive o último cleanup. Idle/pausa estáveis não
+redesenham. Seleção/resize/outfit/mira/push e restauração/visibilidade invalidam;
+restauração também reconstrói o cache, listeners são abortados no dispose.
+PlayerControls.sync/updateCooldownVisuals preservam setters/identidade quando
+o valor DOM é igual, sem mudar os dados ou comandos. IDLE_RENDER_AND_DOM.md
+registra medição/gates/limites; não implica CI ou publicação aprovados.
+
+## 01/11 — base estática em cache, domínio intacto
+
+PixiRenderer agrupa apenas o cenário imutável em static-terrain dentro da layer
+de terreno. StaticSceneCache controla resolução/orçamento/invalidação/descarte;
+não lê combate nem altera relógio. Runas/fades/escombros/debug continuam siblings
+dinâmicos;pan atua no pai,zoom/DPR/bounds/conteúdo invalidam. Acima do orçamento
+usa desenho original em resolução integral. Contrato/validação/limites em
+STATIC_SCENE_CACHE.md. RogueRenderer/Alpha e todos os resolvers mantidos.
+
+## Direcionamento posterior31/10 — Roguelite Alpha
+
+`alpha.html` tem composição própria, mas usa o mesmo CombatEngine/grid/commands/
+timeline/apresentação. `EncounterSetup` configura party solo, ondas, bloqueios e
+habilidades opt-in, sem mudar defaults ou hashes antigos. Estado run/permanente
+e catálogo em roguelite/model; Pixi somente representa eventos. Save versionado
+separado da Hunt. Contratos, extensões e limites em ROGUELITE_ALPHA.md.
+
 Contrato atual:SQM_EXPANSION.md,e controles/foco emTACTICAL_CONSOLIDATION.md.
 main ativa `tacticalControls` no MESMO CombatEngine: foco ofensivo explícito,
 controle exclusivo e approach efêmero, sem Pixi/DOM no domínio. Defaults antigos

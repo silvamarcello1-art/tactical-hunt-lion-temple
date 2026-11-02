@@ -6,6 +6,11 @@ import {abilityCatalog} from '../data/trainingSpells';
 import {assetUrl} from '../game/assetUrl';
 
 import { abilityReasons, iconMarkup, actionSlots } from '../data/actionBar';
+// Keep DOM identity and avoid invalidating layout/trace snapshots for values
+// that did not change. These helpers never change the update cadence or data.
+function text(element:Element,value:string) { if(element.textContent!==value)element.textContent=value; }
+function attribute(element:Element,name:string,value:string) { if(element.getAttribute(name)!==value)element.setAttribute(name,value); }
+function style(element:HTMLElement,name:string,value:string) { if(element.style.getPropertyValue(name)!==value)element.style.setProperty(name,value); }
 /** Screen-space DOM only. No renderer, transforms or entity display objects. */
 export class GameplayHUD {
   constructor(private training=false){}
@@ -32,38 +37,38 @@ export class GameplayHUD {
     for(const hero of heroes) {
       const entity=entities.find(entity=>entity.id===hero.id)??{...hero,alive:true};
       const card=document.querySelector<HTMLElement>(`#card-${hero.id}`)!;
-      card.classList.toggle('defeated',!entity.alive);card.dataset.alive=String(entity.alive);
-      card.querySelector<HTMLElement>('.hp i')!.style.width=`${Math.max(0,entity.hp/entity.maxHp)*100}%`;
-      card.querySelector<HTMLElement>('.mp i')!.style.width=`${Math.max(0,entity.mana/entity.maxMana)*100}%`;
-      card.querySelector('.hero-vitals')!.textContent=`HP ${Math.ceil(entity.hp)}/${entity.maxHp} · MP ${Math.ceil(entity.mana)}/${entity.maxMana}`;
-      card.querySelector<HTMLElement>('.hp i')!.style.background=entity.hp/entity.maxHp<=.3?'#e27765':entity.hp/entity.maxHp<=.6?'#d4ba64':'var(--hp)';
-      card.querySelector('.hp')!.setAttribute('aria-label',`Vida ${Math.ceil(entity.hp)} de ${entity.maxHp}`);
-      card.querySelector('.mp')!.setAttribute('aria-label',`Mana ${Math.ceil(entity.mana)} de ${entity.maxMana}`);
-      card.querySelector('.hero-level')!.textContent=`Lv. ${progress[hero.id]?.level??1}`;
+      card.classList.toggle('defeated',!entity.alive);attribute(card,'data-alive',String(entity.alive));
+      style(card.querySelector<HTMLElement>('.hp i')!,'width',`${Math.max(0,entity.hp/entity.maxHp)*100}%`);
+      style(card.querySelector<HTMLElement>('.mp i')!,'width',`${Math.max(0,entity.mana/entity.maxMana)*100}%`);
+      text(card.querySelector('.hero-vitals')!,`HP ${Math.ceil(entity.hp)}/${entity.maxHp} · MP ${Math.ceil(entity.mana)}/${entity.maxMana}`);
+      style(card.querySelector<HTMLElement>('.hp i')!,'background',entity.hp/entity.maxHp<=.3?'#e27765':entity.hp/entity.maxHp<=.6?'#d4ba64':'var(--hp)');
+      attribute(card.querySelector('.hp')!,'aria-label',`Vida ${Math.ceil(entity.hp)} de ${entity.maxHp}`);
+      attribute(card.querySelector('.mp')!,'aria-label',`Mana ${Math.ceil(entity.mana)} de ${entity.maxMana}`);
+      text(card.querySelector('.hero-level')!,`Lv. ${progress[hero.id]?.level??1}`);
       const mode=card.querySelector<HTMLElement>('.hero-mode')!;
-      mode.textContent=entity.alive?({AI:'AUTO',MANUAL:'MANUAL',ASSISTED:'ASSISTIDO'}[modeOf(hero.id)]??'AUTO'):'KO';
-      mode.title=entity.alive?modeOf(hero.id).replace('AI','AUTO'):'Derrotado';
-      card.dataset.controlMode=modeOf(hero.id);
+      text(mode,entity.alive?({AI:'AUTO',MANUAL:'MANUAL',ASSISTED:'ASSISTIDO'}[modeOf(hero.id)]??'AUTO'):'KO');
+      attribute(mode,'title',entity.alive?modeOf(hero.id).replace('AI','AUTO'):'Derrotado');
+      attribute(card,'data-control-mode',modeOf(hero.id));
     }
     const current=progress[selected];
-    document.querySelector('#xp-label')!.textContent=current?`Lv. ${current.level} · ${current.xp} / ${current.xpToNextLevel || 'MAX'} XP`:'Lv. 1';
-    document.querySelector<HTMLElement>('#xp-fill')!.style.width=`${current?current.xpToNextLevel?current.xp/current.xpToNextLevel*100:100:0}%`;
+    text(document.querySelector('#xp-label')!,current?`Lv. ${current.level} · ${current.xp} / ${current.xpToNextLevel || 'MAX'} XP`:'Lv. 1');
+    style(document.querySelector<HTMLElement>('#xp-fill')!,'width',`${current?current.xpToNextLevel?current.xp/current.xpToNextLevel*100:100:0}%`);
     const passive=passives.find(p=>p.vocation===selected)!;
     const unlocked=(current?.level??1)>=passive.unlockLevel;
-    document.querySelector('#passive-state')!.textContent=unlocked?'ATIVA':`Lv. ${passive.unlockLevel}`;
+    text(document.querySelector('#passive-state')!,unlocked?'ATIVA':`Lv. ${passive.unlockLevel}`);
     document.querySelector('#passives')!.classList.toggle('locked',!unlocked);
     if(this.training&&['druid','sorcerer'].includes(selected)){
-      const root=document.querySelector<HTMLElement>('#passives')!;root.classList.remove('locked');root.querySelector('b')!.textContent='Mana Buffer';root.querySelector('small')!.textContent='Dano letal excedente → mana ×8; custo extra de 25% a cada 2s.';root.querySelector('#passive-state')!.textContent='TREINO';
+      const root=document.querySelector<HTMLElement>('#passives')!;root.classList.remove('locked');text(root.querySelector('b')!,'Mana Buffer');text(root.querySelector('small')!,'Dano letal excedente → mana ×8; custo extra de 25% a cada 2s.');text(root.querySelector('#passive-state')!,'TREINO');
     }
   }
   availability(statusOf:(abilityId:string)=>{ready:boolean;reason:string;remaining:number},castingId?:string) {
     document.querySelectorAll<HTMLButtonElement>('#action-bar [data-ability]').forEach(button=>{
       const id=button.dataset.ability!;const state=statusOf(id);
       button.disabled=['not-started','actor-dead','session-ended'].includes(state.reason);
-      button.dataset.unavailableReason=state.reason;button.classList.toggle('casting',id===castingId);
+      attribute(button,'data-unavailable-reason',state.reason);button.classList.toggle('casting',id===castingId);
       const a=abilityCatalog(this.training).find(a=>a.id===id)!;
-      button.title=`${a.name} · ${a.words} · Tecla ${button.dataset.hotkey} · ${abilityReasons[state.reason]??state.reason}${state.remaining>0?` (${Math.ceil(state.remaining/1000)}s)`:''} · ${a.targetRule==='ally-only'?'Outro aliado; nunca você':a.group==='healing'?'Padrão: você; Shift permite aliado':'Alvo selecionado / área'} · Shift + tecla: escolher alvo`;
-      button.querySelector('.ability-reason')!.textContent=state.reason==='ok'?'':abilityReasons[state.reason]??state.reason;
+      attribute(button,'title',`${a.name} · ${a.words} · Tecla ${button.dataset.hotkey} · ${abilityReasons[state.reason]??state.reason}${state.remaining>0?` (${Math.ceil(state.remaining/1000)}s)`:''} · ${a.targetRule==='ally-only'?'Outro aliado; nunca você':a.group==='healing'?'Padrão: você; Shift permite aliado':'Alvo selecionado / área'} · Shift + tecla: escolher alvo`);
+      text(button.querySelector('.ability-reason')!,state.reason==='ok'?'':abilityReasons[state.reason]??state.reason);
     });
   }
 }

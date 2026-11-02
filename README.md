@@ -1,5 +1,60 @@
 # Lion Temple — Tactical Hunt
 
+02/11 — candidato local de [desenho ocioso/DOM](docs/IDLE_RENDER_AND_DOM.md):
+93redraws→0 em3s,animação ativa preservada,callback visual aposentado corrigido.
+83E2E/builds/arte/4smokes compilados PASS. Unitários369/370 por timeout antigo5s:
+envio de runtime/CI ainda retido,sem mudança de limite ou nova publicação.
+
+02/11: investigação local de21amostras concluída, sem alteração do jogo/CI.
+[Custo residual e limites](docs/RESIDUAL_RENDER_COST.md): apresentação/composição
+ainda caras; nenhuma remoção de layer/CSS foi entregue como solução. Alpha
+pública continua bloqueada pelos gates falhos abaixo.
+
+Estado final do cache em01/11: push/PR falharam com363unit PASS,
+67E2E PASS/4timeouts/7nãoexecutados cada;4cache+4Alpha E2E PASS.
+Builds remotos e deploy não executados; preview Alpha continua bloqueado.
+[Diagnóstico e próximos limites](docs/STATIC_CACHE_CI_DIAGNOSIS.md).
+Os resultados e planos abaixo preservam o histórico, não gates atuais verdes.
+
+Cache da base estática Hunt/treino implementado, sem alterar combate ou Alpha.
+[Contrato e validação](docs/STATIC_SCENE_CACHE.md):78E2E PASS,builds PASS;
+suíteunitária362/363 por timeout antigo5s. Ganho local não aprova publicação:
+preview continua condicionado aos novos gates/manifest/smoke públicos.
+
+A/B local autorizado concluído, sem alterar o jogo: custo software reproduzido,
+cache experimental de terreno ganhou15,6–20,8%,mas não é fix/CI aprovado.
+[Método e limites](docs/RENDERER_AB_LOCAL.md). Sem novo deploy ou retry.
+
+Estado01/11: coleta Windows CPU/render autorizada foi encerrada; evidências
+apontam gargalo gráfico software(SwiftShader), não custoJS dominante.
+[Resultado e limites](docs/WINDOWS_CPU_PROFILE.md). Gates ec42 push/PR falharam;
+Alpha pública continua bloqueada. Nenhum novo retry ou fix automático.
+
+## Novo foco — Crônicas da Maré · Roguelite Alpha
+
+Aventura manual em `alpha.html`: Knight solo, costa/prólogo, bosque
+semi-procedural, escolhas temporárias, miniboss/boss e retorno a um refúgio
+persistente com casa, Brasa e Cronista. WASD/setas para mover, espaço/clique
+para engajar, Q/E habilidades, F interação próxima. R após Forja I.
+
+O motor/grade/eventos existentes são reaproveitados. O laboratório anterior
+continua em `index.html`, sem migração ou mistura de saves. Arquitetura, estado
+real dos gates e limites: [Alpha](docs/ROGUELITE_ALPHA.md),
+[arte original e prompts](docs/ROGUELITE_ART.md),
+[estado vigente](docs/CURRENT_STATE.md). Preview não é release estável.
+Meta10–15min total ainda depende de playtests; não é duração humana já medida.
+
+Continuação01/11: HUD otimizado sem mudar regras/input;353unit/74E2E/builds
+locais PASS. [Diagnóstico e limites](docs/HUD_PERFORMANCE_DIAGNOSIS.md).
+Runtimeec42:pushCI63E2EPASS/4timeouts/7notrun;deploySKIPPED. PR ainda executando
+no checkpoint. Coleta diagnóstica no runner aguarda direção;preview não pronto.
+
+Histórico: runtime2dea277 no PR4 draft. CI PR350unit/73E2E/builds PASS;
+CI push61E2E PASS/5timeouts/7nãoexecutados bloqueou o Pages. Público ainda
+b9d0e31, não Alpha. Diagnóstico preservado; nenhum retry/relaxamento automático.
+
+## Histórico da Hunt/laboratório (preservado)
+
 Vertical slice jogável de uma hunt automática 2D com PixiJS. Knight, Druid e
 Sorcerer atravessam três ondas e enfrentam um boss. Um motor incremental usa
 grade autoritativa, A*, LoS e eventos determinísticos; PixiJS representa o

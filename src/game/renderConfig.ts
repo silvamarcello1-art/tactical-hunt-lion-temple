@@ -7,6 +7,7 @@ export const RENDER_CONFIG = {
     height:MAP_TILES.height*TILE_SIZE,
     tileSize:TILE_SIZE,
     maxResolution:2,
+    staticCache:{maxDimension:4096,maxPixels:8_388_608},
     cameraBounds:{ x:0,y:0,width:960,height:576 },
     debugEnabled:false,
   },

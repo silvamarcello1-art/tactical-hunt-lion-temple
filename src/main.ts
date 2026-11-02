@@ -1,4 +1,6 @@
 import { GameplayHUD } from './ui/GameplayHUD';
+import {coalescedRefresh} from './ui/coalescedRefresh';
+import {writeText,writeAttribute,writeStyle} from './ui/domWrites';
 import {WORLD_VIEW} from './game/worldViewport';
 import {AppearanceStore} from './app/AppearanceStore';
 import {OutfitPanel} from './ui/OutfitPanel';
@@ -161,14 +163,16 @@ function createNewHuntSessionId() {
   return `hunt-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
+const integerFormatter = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 0 });
+const numberFormatter = new Intl.NumberFormat('pt-BR');
 function formatBossToken(amount: number) {
-  return new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 0 }).format(
+  return integerFormatter.format(
     Math.max(0, Math.round(amount)),
   );
 }
 
 const formatNumber = (value: number) =>
-  new Intl.NumberFormat('pt-BR').format(Math.round(safeNumber(value)));
+  numberFormatter.format(Math.round(safeNumber(value)));
 
 const formatTime = (milliseconds: number) => {
   const ms = safeNumber(milliseconds);
@@ -214,6 +218,9 @@ function setSessionPhase(phase: SessionPhase, message?: string) {
 
 function renderParty() { hud.renderParty(selectedHeroId); }
 function renderActionBar() { hud.renderActions(selectedHeroId,preferences); updateCooldownVisuals(logicalTime); }
+// A rendered frame can dispatch many combat events. Read the final domain
+// snapshot once after that synchronous batch, not once for every event.
+const scheduleHUD = coalescedRefresh(updateHUD);
 function updateHUD() {
   const engine=renderer?.engine;
   hud.update(engine?.entities??[],engine?.progression??progressionStore.snapshot(),id=>engine?.controlOf(id).mode??'AI',selectedHeroId);
@@ -246,14 +253,12 @@ function updateCooldownVisuals(time: number) {
     if (state && remaining === 0) abilityCooldowns.delete(abilityId);
     const duration=domain?.duration??state?.duration??0;
     const ratio = duration>0 ? Math.min(1,remaining/duration) : 0;
-    button
-      .querySelector<HTMLElement>('.cooldown-mask')
-      ?.style.setProperty('--cooldown-angle', `${Math.round(ratio * 360)}deg`);
+    writeStyle(button.querySelector<HTMLElement>('.cooldown-mask')?.style,'--cooldown-angle',`${Math.round(ratio * 360)}deg`);
     const number = button.querySelector<HTMLElement>('.cooldown-number');
-    button.dataset.cooldownRemaining = String(Math.round(remaining));
+    writeAttribute(button,'data-cooldown-remaining',String(Math.round(remaining)));
     button.classList.toggle('cooling-down', remaining > 0);
     if (number) {
-      number.textContent = remaining > 0 ? String(Math.ceil(remaining / 1000)) : '';
+      writeText(number,remaining > 0 ? String(Math.ceil(remaining / 1000)) : '');
     }
   });
 }
@@ -548,7 +553,7 @@ function scheduleLoop() {
 window.addEventListener('hunt-time', (rawEvent) => {
   liveState.setTime((rawEvent as CustomEvent<number>).detail);
   updateCooldownVisuals(liveState.time);
-  updateHUD();
+  scheduleHUD();
   const element = document.querySelector('#time');
   if (element) element.textContent = formatTime(liveState.time);
 });
@@ -617,7 +622,7 @@ window.addEventListener('hunt-event', (rawEvent) => {
     const notice=$('#level-notice');notice.textContent=heroes.find(h=>h.id===event.targetId)?.name+' · Nível '+event.data?.progress?.level;notice.hidden=false;
     window.setTimeout(()=>notice.hidden=true,2200);
   }
-  updateHUD();
+  scheduleHUD();
 
   if (
     [

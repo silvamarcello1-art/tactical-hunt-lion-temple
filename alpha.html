@@ -1,0 +1,16 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#091b21"><title>Tactical Hunt · Crônicas da Maré</title><link rel="icon" href="/favicon.svg"></head><body>
+<main id="alpha" data-state="loading">
+  <header class="masthead"><a class="wordmark" href="./alpha.html">TACTICAL HUNT <span>CRÔNICAS DA MARÉ</span></a><nav><span class="alpha-tag">ROGUELITE · ALPHA</span><a href="./index.html">Laboratório ↗</a><button id="pause">Ⅱ Pausa</button></nav></header>
+  <section class="adventure" aria-label="Aventura manual"><div id="rogue-game" tabindex="0" aria-label="Mundo explorável. WASD para mover, espaço para atacar, F para interagir."></div><div class="vignette"></div>
+    <div class="scene-heading"><span id="chapter">UMA HISTÓRIA ESQUECIDA</span><h1 id="room-name">A maré sempre devolve algo.</h1><p id="objective">Preparando a costa…</p></div>
+    <div class="run-trail" id="trail" aria-label="Salas da jornada"></div>
+    <div class="target-banner" id="target-banner" hidden></div>
+    <div id="interaction" class="interaction" hidden><kbd>F</kbd><span></span></div>
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <div class="vitals"><span class="knight-sigil">♜</span><div><small>O RETORNADO <span>KNIGHT · MANUAL</span></small><div class="meter health"><i id="health-fill"></i><b id="health-text"></b></div><div class="meter mana"><i id="mana-fill"></i><b id="mana-text"></b></div></div></div>
+    <div class="run-purse"><span>✧ <b id="run-embers">0</b> brasas da run</span><small>◇ <b id="bank-embers">0</b> no refúgio · <b id="run-xp">0</b> XP da jornada</small></div>
+  </section>
+  <footer class="commandbar"><div class="movement-help"><b>EXPLORE. LUTE. RETORNE.</b><span>WASD / setas · clique para caminhar<br>Espaço / inimigo: atacar · F: interagir</span></div><div class="skills"><button data-action="attack"><kbd>ESPAÇO</kbd><strong>⚔</strong><span>Golpe</span></button><button data-action="berserk"><kbd>Q</kbd><strong>◒</strong><span>Arco de Ferro</span><small>125 mana</small></button><button data-action="groundshaker"><kbd>E</kbd><strong>✷</strong><span>Ruptura</span><small>200 mana</small></button><button data-action="renewal"><kbd>R</kbd><strong>♧</strong><span>Chama interior</span><small>Forja I necessária</small></button></div><button id="journal">☷ Crônicas</button></footer>
+</main>
+<dialog id="story"><div class="dialog-art"></div><section><span class="eyebrow" id="dialog-eyebrow"></span><h2 id="dialog-title"></h2><div id="dialog-body"></div><div id="dialog-actions"></div></section></dialog>
+<script type="module" src="/src/roguelite/main.ts"></script></body></html>

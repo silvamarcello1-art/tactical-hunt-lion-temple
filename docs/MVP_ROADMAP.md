@@ -1,5 +1,14 @@
 # Roadmap
 
+## Novo direcionamento autorizado31/10/2026 — Roguelite Alpha
+
+Usuário muda o foco para exploração manual, runs e hub persistente sobre a base
+existente. Slice limitado a Knight, costa/bosque, escolhas, miniboss/boss,
+refúgio/casa/Brasa/Cronista e persistência local isolada. ROGUELITE_ALPHA.md é
+o contrato; etapas históricas não proíbem esse pedido posterior explícito.
+Alpha2 depende de playtests e consolidação, não de completar todas as cidades,
+classes, itens, história ou online nesta tarefa. Laboratório anterior preservado.
+
 ## Escopo autorizado posterior em30/10/2026
 
 Somente janela+4SQMs horizontais/pan contínuo,respeito visual/interação aosSQMs

@@ -1,3 +1,103 @@
+## 2026-11-02 — CI idle/DOM encerrado; preview bloqueado
+
+- Fonte8f29e86 enviada com autorização;push/PR370unit PASS,mas E2E falharam.
+- Push72PASS/4FAIL/7nãoexecutados;PR73PASS/3FAIL/7nãoexecutados.
+- Três timeouts comuns;push também falha real de redesenho após resize.
+- Sete traces/logs preservados e hashes conferidos;sem pageError registrado.
+- Deploys SKIPPED;manifest público b9d0e31 anterior;sem retry/fix automático.
+- Diagnóstico e limites em docs/IDLE_RENDER_CI_DIAGNOSIS.md.
+
+## 2026-11-02 — candidato local de invalidação ociosa e lifecycle visual
+
+- Desenho LOW sob demanda emidle/pausa,sem parar ticker/relógio/input/animação ativa.
+- Setters DOM idênticos preservam identidade;seleção/resize/outfits/mira invalidam.
+- WebGL restaurado reconstrói cache;retornoàaba redesenha;listeners removidos.
+- Tweens de unidade descartam donos destruídos,semcatchall ou mudança de combate.
+- 7unit novos/83E2E14,9min/builds/arte/4smokes compilados PASS.
+- Fullunit369/370,timeout originalHuntPressure:61 preservado;sem novo CI/deploy.
+- Medição ociosa93→0draws/25,476→0,158sCPUgráfica;ativo sem ganho relevante.
+
+## 2026-11-02 — investigação local do custo residual, sem runtime novo
+
+-21 amostras locais com estados/eventos idênticos por duração;sem pageerror.
+- Custo persiste em apresentação/composição;reduzir draws não garantiu ganho.
+- Desligar transições não melhorou cena completa;nenhuma redução visual entregue.
+- Perfis/timelines/avisos/hashes preservados em RESIDUAL_RENDER_COST.md.
+- Somente docs;sem fix,retry,CI,deploy ou mudança de deadlines/proteções.
+
+## 2026-11-01 — resultado final do CI do cache; sem publicação
+
+- Push41340601548/PR41340605212 FAILURE:363unit PASS;67E2E PASS/4timeouts/7notrun.
+-4cache+4Alpha E2E PASS em ambos;builds remotos/deploy SKIPPED após falha.
+- Dois artefatos/hash conferidos e8traces preservados;cache ativo,loops lentos.
+- Causa última não comprovada;sem fix/retry/gate relaxado/publicação forçada.
+- Apenas checkpoint documental;fonte54f9a695 permanece intacta.
+
+## 2026-11-01 — cache do cenário estático
+
+- Cache em resolução integral da base Hunt/treino;runas/escombros/fades vivos.
+- Pan preservado;zoom/resolução/bounds/conteúdo invalidam;fallback integral
+  quando backingPOT excede orçamento,sem reduzir qualidade ou lógica.
+-10unit/4E2E novos;78E2E completos PASS;typecheck/arte/builds PASS.
+- Fullunit362/363duasvezes:timeout5santigo preservado,nãoéverde isoladamente.
+- A/Bfinal40ssoftware35,1–36,9%menosparede,eventosiguais;4smokescompilados PASS.
+- Sem mudanças de gameplay/deps/workflow/deadlines;preview aguarda novaCI real.
+
+## 2026-11-01 — A/B local do renderer, sem alteração do jogo
+
+- SwiftShader reproduzido localmente;13amostras controladas com1014eventos iguais.
+- Terreno contribui ao custo;cache experimental15,6–20,8%mais rápido em2pares.
+- Não entregue comofix:identidade visual/CI completos ainda não comprovados.
+- Capturas falhas/warnings e bloqueio de scriptPNG registrados,sem bypass.
+- Apenas docs;sem novo runtime/CI/retry/deploy. RENDERER_AB_LOCAL.md detalha.
+
+## 2026-11-01 — coleta única Windows CPU/render
+
+- Diagnóstico isolado83b2f35/run41329694126,artefato13093936077 preservado.
+- Mesmo runtimeec42:SwiftShaderCPU domina custo,JS baixo;sem/com snapshots similar.
+- Trêsloops timeout360s;inventário concluiu202s;warnings preservados.
+- PR ec42 também falhou;nenhum novo retry/fix/deploy ou gate relaxado.
+- Método, evidências e limites em docs/WINDOWS_CPU_PROFILE.md;Alpha bloqueada.
+
+## 2026-11-01 — ec42 validado localmente; CI push ainda bloqueado
+
+- Correção de HUD enviada;local353unit/74E2E/builds/smokes PASS.
+- Push353unitPASS/63E2EPASS/4timeouts/7nãoexecutados;deploySKIPPED.
+- HUD novo+4Alpha E2E PASS remotamente;PR ainda executando no checkpoint.
+- Quatro traces preservados;deadline precede contextclose,causa última não provada.
+- Coleta CPU/render no runner exige decisão;sem retry/relaxamento/atalho de deploy.
+
+## 2026-11-01 — HUD agrupado e idempotente (nova validação)
+
+- Atualização do HUD ao fim do batch síncrono;evita snapshots repetidos por evento.
+- Preserva nós/texto/atributos quando iguais e reutiliza formatadores pt-BR.
+- Mesmos motor/input/grade/Pixi/clock/velocidade;nenhum teste/deadline antigo alterado.
+- Perfil local~60%menos JS/~15%menos parede,não FPS ou causa última de CI provada.
+- Frozen/typecheck353unit/74E2E/arte/builds/diff locais PASS;novo3unit+1E2E.
+- Publicação ainda depende dos novos gates e smoke público,não do CI antigo.
+
+## 2026-11-01 — Alpha implementada; publicação bloqueada
+
+- Runtime2dea277/PR4 draft enviados, sem merge; Hunt antiga preservada.
+- PR CI350unit/73E2E/typecheck/arte/builds/diff PASS. Push350unit PASS,
+  E2E61PASS/5timeouts/7nãoexecutados;4Alpha E2E PASS em ambos.
+- Pages SKIPPED corretamente; público ainda b9d0e31, não Alpha pronta.
+- Cinco traces preservados comprovam deadline antes do fechamento do contexto;
+  causa última da lentidão não provada. Sem retry cego ou relaxar gates.
+- Compilado/manual/console/economia validados localmente; sem smoke público.
+
+## 2026-10-31 — Crônicas da Maré · Roguelite Alpha (em validação)
+
+- Nova aventura manual em alpha.html sem apagar a Hunt/laboratório.
+- Mesmo motor/grade/timeline, perfil de encontros Knight solo com comandos.
+- Costa/prólogo,bosque semi-procedural,11salas,escolhas,miniboss,boss e refúgio.
+- Save separado,brasas temporárias/permanentes,forja/cura e Cronista por descoberta.
+- Três cenários originais ImageGen builtin; nova HUD/diálogos/câmera/efeitos.
+- Testes novos de domínio e navegador; gates finais/preview ainda em validação.
+- Locais:18unit Alpha/4E2E Alpha/17E2E bloco revalidado,builds/arte PASS;
+  smoke compilado real-clock duas salas→hub/forja PASS,console limpo.
+  Suíte global local mantém dois timeouts antigos5s;CI ainda precisa aprovar.
+
 ## 2026-10-31 — diagnóstico de startup,sem correção
 
 - Observação passiva frio/recarga:idle4,06s/0,73s;timeout anterior não reproduzido.
