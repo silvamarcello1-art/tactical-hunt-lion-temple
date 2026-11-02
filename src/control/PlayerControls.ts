@@ -1,4 +1,5 @@
 import { bindingForCode, abilityReasons } from '../data/actionBar';
+import {writeText,writeAttribute,writeStyle} from '../ui/domWrites';
 import { AssistanceStore } from '../app/AssistanceStore';
 import { heroes } from '../data/config';
 import {abilityCatalog} from '../data/trainingSpells';
@@ -337,29 +338,29 @@ export class PlayerControls {
     const options=this.assistanceStore.get(this.actorId);
     for(const category of ['autoAttack','autoSpells'] as const) {
       const button=document.querySelector<HTMLButtonElement>(`[data-assistance="${category}"]`);
-      if(button) {button.hidden=this.mode!=='ASSISTED';button.setAttribute('aria-pressed',String(options[category]));button.textContent=`${category==='autoAttack'?'Auto Attack':'Auto Magias'} ${options[category]?'ON':'OFF'}`;}
+      if(button) {const hidden=this.mode!=='ASSISTED';if(button.hidden!==hidden)button.hidden=hidden;writeAttribute(button,'aria-pressed',String(options[category]));writeText(button,`${category==='autoAttack'?'Auto Attack':'Auto Magias'} ${options[category]?'ON':'OFF'}`);}
     }
-    this.panel.dataset.autoAttack=String(options.autoAttack);this.panel.dataset.autoSpells=String(options.autoSpells);
+    writeAttribute(this.panel,'data-auto-attack',String(options.autoAttack));writeAttribute(this.panel,'data-auto-spells',String(options.autoSpells));
     this.port.selectTarget(this.selectedTarget);
-    this.panel.dataset.controlMode = this.mode;
-    this.panel.dataset.controlledActor = this.actorId;
-    this.panel.dataset.interactionState = this.interaction.state.kind;
-    this.panel.dataset.heldKeys = String(this.held.size);
-    this.panel.dataset.selectedTarget = this.selectedTarget??'';
+    writeAttribute(this.panel,'data-control-mode',this.mode);
+    writeAttribute(this.panel,'data-controlled-actor',this.actorId);
+    writeAttribute(this.panel,'data-interaction-state',this.interaction.state.kind);
+    writeAttribute(this.panel,'data-held-keys',String(this.held.size));
+    writeAttribute(this.panel,'data-selected-target',this.selectedTarget??'');
     const target=this.port.entities.find(entity=>entity.id===this.selectedTarget);
     const targetStatus=document.querySelector('#target-status');
-    if(targetStatus) targetStatus.textContent=target?`${target.name} · ${target.hp}/${target.maxHp} HP`:'';
-    const focus=document.querySelector('#party-focus');if(focus)focus.textContent=target?`${target.name} · ${target.hp}/${target.maxHp} HP`:'Nenhum alvo · aguardando ordem';
-    const policy=document.querySelector('#mode-policy');if(policy)policy.textContent=this.port.training?'Selecionado Manual. Aliados Auto seguem o foco ofensivo; suporte automático preservado.':'Hunt: automação disponível; selecionar outro herói assume Manual só nele.';
+    writeText(targetStatus,target?`${target.name} · ${target.hp}/${target.maxHp} HP`:'');
+    const focus=document.querySelector('#party-focus');writeText(focus,target?`${target.name} · ${target.hp}/${target.maxHp} HP`:'Nenhum alvo · aguardando ordem');
+    const policy=document.querySelector('#mode-policy');writeText(policy,this.port.training?'Selecionado Manual. Aliados Auto seguem o foco ofensivo; suporte automático preservado.':'Hunt: automação disponível; selecionar outro herói assume Manual só nele.');
     const list=document.querySelector('#battle-targets');
     if(list){
       const enemies=this.port.entities.filter(e=>e.alive&&!heroes.some(h=>h.id===e.id));
       const ids=enemies.map(e=>e.id).join('|');
       if(list.getAttribute('data-roster')!==ids){list.replaceChildren(...enemies.map(e=>{const button=document.createElement('button');button.dataset.battleTarget=e.id;button.textContent=e.name;button.onclick=()=>this.engageTarget(e.id);return button;}));list.setAttribute('data-roster',ids);}
-      for(const button of Array.from(list.querySelectorAll<HTMLButtonElement>('button')))button.setAttribute('aria-pressed',String(button.dataset.battleTarget===this.selectedTarget));
+      for(const button of Array.from(list.querySelectorAll<HTMLButtonElement>('button')))writeAttribute(button,'aria-pressed',String(button.dataset.battleTarget===this.selectedTarget));
     }
     const aiming=['spell-targeting','rune-targeting','push-targeting'].includes(this.interaction.state.kind);
-    this.port.canvas.style.cursor = this.dragActor?'grabbing':aiming ? 'crosshair' : '';
+    writeStyle(this.port.canvas.style,'cursor',this.dragActor?'grabbing':aiming ? 'crosshair' : '');
     if(this.dragActor)this.showPushOptions(this.dragActor.id);
     else {this.port.showPushPreview?.();if(!aiming)this.port.showAim?.();}
     if(this.debug)this.debug.textContent=`${this.actorId} ${this.mode} | ${this.panel.dataset.resolvedBinding??'-'} | ${this.panel.dataset.lastIntent??'-'}:${this.panel.dataset.lastCommandResult??'-'} | attack:${options.autoAttack} spells:${options.autoSpells} | t:${this.port.time.toFixed(0)}ms input:${this.panel.dataset.inputLatencyMs??'-'}ms`;

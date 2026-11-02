@@ -1,5 +1,33 @@
 # Estado vigente — Roguelite Alpha implementada; publicação bloqueada —01/11/2026
 
+## 02/11 — otimização local implementada; envio ao CI retido
+
+Desenho ocioso por invalidação, setters DOM idênticos preservados e lifecycle
+visual de tweens com dono. Ticker/relógio/input/animação ativa mantidos; seleção,
+resize,outfit,mira/push,restauração WebGL/visibilidade invalidam. Sem mudanças
+de combate/grade/RNG/economia/arte/CSS/deps/workflows ou limites antigos.
+Fonte final D medida:3s ociosos93draws→0,CPU gráfica25,476→0,158s,
+inventário2324→829ms. Ativo40s14,876→15,012s:sem ganho relevante,625frames/
+2718eventos idênticos/overlaps0. Não é FPS/VRAM/bateria nem garantia de CI.
+
+Frozen install/typecheck/arte reproduzível/build/build:preview/diff PASS;
+83E2E completos PASS14,9min. Quatro smokes compilados reais PASS:treino3wins/
+1231açõesbot/economia intacta;38sprites/outfits;Hunt24kills4240XP1540gold1token;
+Alpha2encontros/retirada/forja/saldo3/rank1,sem alegar vitória humana completa.
+Erros limpos;warnings limpos nos scripts que os coletam. PNGs inspecionados.
+**Unitários completos NÃO verdes:369/370,timeout antigoHuntPressure:61,
+5721ms no limite5000ms.**7novos PASS,não substituem a suíte. Sem retry até verde.
+
+Histórico de validação preservado:81E2E PASS pré-restauração;82 rodou81PASS/
+1FAIL por tween acessando sprite destruído,parando ticker no boss. Trace
+confirmado e arquivado;guardas de dono resolveram o caso original20,4s no
+full83 com os mesmos limites. Não atribuir falha antiga de CI a esta exceção
+sem evidência. IDLE_RENDER_AND_DOM.md detalha fontes,medições,gates e limites.
+Até este checkpoint não houve push de runtime/novoCI/deploy. Autorização
+condicional para uma nova rodada padrão foi perguntada;sem resposta recebida,
+envio permanece retido. Não ampliar combate/limites ou reexecutar jobs antigos.
+O preview público anterior não contém esta fonte. Entradas abaixo são história.
+
 ## 02/11 — investigação residual local concluída; sem fix ou novo CI
 
 21 amostras locais SwiftShader da fonte54:15×40s/2718eventos e6×16s/1014eventos,

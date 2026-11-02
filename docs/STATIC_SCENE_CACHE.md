@@ -1,5 +1,10 @@
 # Cache do cenário estático — implementação autorizada, 01/11/2026
 
+02/11: candidato local de desenho sob demanda em IDLE_RENDER_AND_DOM.md.
+Cache continua integral; contexto WebGL restaurado invalida sua textura e a
+cena. Não muda orçamento, sampling ou cadência ativa. Os gates anteriores54
+abaixo não aprovam automaticamente esta nova fonte.
+
 Investigação posterior02/11:21amostras locais da fonte54 em
 [RESIDUAL_RENDER_COST.md](RESIDUAL_RENDER_COST.md). Custo de apresentação e
 composição persiste; nenhuma layer isolada ou remoção CSSmotion resolveu a cena

@@ -1,5 +1,10 @@
 # Lion Temple — Tactical Hunt
 
+02/11 — candidato local de [desenho ocioso/DOM](docs/IDLE_RENDER_AND_DOM.md):
+93redraws→0 em3s,animação ativa preservada,callback visual aposentado corrigido.
+83E2E/builds/arte/4smokes compilados PASS. Unitários369/370 por timeout antigo5s:
+envio de runtime/CI ainda retido,sem mudança de limite ou nova publicação.
+
 02/11: investigação local de21amostras concluída, sem alteração do jogo/CI.
 [Custo residual e limites](docs/RESIDUAL_RENDER_COST.md): apresentação/composição
 ainda caras; nenhuma remoção de layer/CSS foi entregue como solução. Alpha

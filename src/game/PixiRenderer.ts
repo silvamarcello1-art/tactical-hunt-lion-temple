@@ -1,5 +1,6 @@
 import { OriginalEffects } from './presentation/OriginalEffects';
 import { StaticSceneCache } from './StaticSceneCache';
+import { RenderInvalidation } from './RenderInvalidation';
 import {WORLD_VIEW,worldCamera,viewportPoint,type WorldCamera} from './worldViewport';
 import { abilityNames } from '../data/actionBar';
 import { assetUrl } from './assetUrl';
@@ -18,6 +19,7 @@ import {
   Text,
   TextStyle,
   Texture,
+  UPDATE_PRIORITY,
   type Ticker,
 } from 'pixi.js';
 import type { CombatEngine } from '../combat/CombatEngine';
@@ -79,6 +81,7 @@ type Tween = {
   update: (progress: number) => void;
   done?: () => void;
   key?: string;
+  owner?: {destroyed:boolean};
 };
 
 type RendererOptions = {
@@ -87,11 +90,26 @@ type RendererOptions = {
   appearanceSprite?:(heroId:string)=>string;
   /** Reference renderer for visual regression tests; production defaults on. */
   cacheStaticTerrain?:boolean;
+  /** Original continuous renderer, only for measured/visual regression comparisons. */
+  continuousRendering?:boolean;
 };
 
 export class PixiRenderer {
   readonly app = new Application();
   readonly engine: CombatEngine;
+  private readonly renderInvalidation=new RenderInvalidation();
+  private readonly renderEvents=new AbortController();
+  private readonly contextRestored=()=>{
+    this.staticTerrainCache.invalidate();
+    this.renderInvalidation.invalidate();
+  };
+  private readonly visibilityChanged=()=>{
+    if(document.visibilityState==='visible')this.renderInvalidation.invalidate();
+  };
+  private readonly continuousRendering:boolean;
+  private readonly renderHandler=()=>{
+    if(!this.destroyed&&this.renderInvalidation.consume(this.continuousRendering))this.app.render();
+  };
   get result():HuntResult { return this.engine.result; }
   beforeTick?:(time:number) => void;
   readonly units = new Map<string, Unit>();
@@ -126,7 +144,12 @@ export class PixiRenderer {
   readonly player: LiveEventPlayer;
   private readonly aimTile=new Graphics();
   private readonly pushHints=new Graphics();
+  private pushPreviewKey?:string;
+  private aimKey?:string;
   showPushPreview(preview?:import('../combat/PushSystem').PushPreview){
+    const key=preview?JSON.stringify(preview):'';
+    if(key===this.pushPreviewKey)return;
+    this.pushPreviewKey=key;this.renderInvalidation.invalidate();
     this.pushHints.clear();if(this.parent)this.parent.dataset.pushDestinations=preview?JSON.stringify(preview.destinations):'';
     if(!preview){this.pushHints.removeFromParent();return;}
     if(!this.pushHints.parent)this.telegraphLayer.addChild(this.pushHints);
@@ -134,6 +157,9 @@ export class PixiRenderer {
     this.pushHints.rect(preview.origin.x*32-15,preview.origin.y*32-15,30,30).stroke({color:0xedcf88,width:2});
   }
   showAim(tile?:GridPoint,ready=true){
+    const key=tile?`${tile.x}:${tile.y}:${ready}`:'';
+    if(key===this.aimKey)return;
+    this.aimKey=key;this.renderInvalidation.invalidate();
     this.aimTile.clear();if(this.parent)this.parent.dataset.aimTile=tile?`${tile.x}:${tile.y}:${ready?'valid':'invalid'}`:'';
     if(!tile){this.aimTile.removeFromParent();return;}
     if(!this.aimTile.parent)this.telegraphLayer.addChild(this.aimTile);
@@ -233,14 +259,17 @@ export class PixiRenderer {
   private readonly tickerHandler = (ticker: Ticker) => {
     if (this.destroyed) return;
     const timelineWasRunning = this.player.isRunning;
+    const animating=timelineWasRunning||(this.player.completed&&this.tweens.length>0);
+    if(animating)this.renderInvalidation.invalidate();
     this.player.update(ticker.deltaMS);
-    this.syncPresentation();
+    if(animating||this.renderInvalidation.pending||this.continuousRendering)this.syncPresentation();
     if (timelineWasRunning || this.player.completed) {
       this.updateTweens(ticker.deltaMS);
     }
   };
 
   constructor(engine: CombatEngine, options: RendererOptions = {}) {
+    this.continuousRendering=options.continuousRendering??false;
     this.cacheStaticTerrain = options.cacheStaticTerrain ?? true;
     this.appearanceSprite=options.appearanceSprite;
     this.debugEnabled =
@@ -272,9 +301,13 @@ export class PixiRenderer {
       autoDensity:true,
     });
     if (this.destroyed) return;
+    // Keep the original ticker/clock cadence; gate only its low-priority draw.
+    this.app.ticker.remove(this.app.render,this.app);
     await this.loadAssets();
     if (this.destroyed) return;
     parent.replaceChildren(this.app.canvas);
+    this.app.canvas.addEventListener('webglcontextrestored',this.contextRestored,{signal:this.renderEvents.signal});
+    document.addEventListener('visibilitychange',this.visibilityChanged,{signal:this.renderEvents.signal});
     this.app.stage.sortableChildren = true;
     this.terrainLayer.label = 'terrain';
     this.staticTerrainLayer.label = 'static-terrain';
@@ -337,6 +370,7 @@ export class PixiRenderer {
     this.floorText.zIndex = 60;
     this.overlayLayer.addChild(this.floorText);
     this.app.ticker.add(this.tickerHandler);
+    this.app.ticker.add(this.renderHandler,undefined,UPDATE_PRIORITY.LOW);
     parent.dataset.debugEnabled = String(this.debugEnabled);
     parent.dataset.pathRecalculations = String(
       this.result.gridMetrics.pathRecalculations,
@@ -379,6 +413,7 @@ export class PixiRenderer {
   destroy() {
     if (this.destroyed) return;
     this.destroyed = true;
+    this.renderEvents.abort();
     this.viewportObserver?.disconnect();
     this.staticTerrainCache.destroy();
     this.player.dispose();
@@ -400,6 +435,7 @@ export class PixiRenderer {
     this.pushHints.removeFromParent();this.pushHints.destroy();
     this.bossFill = undefined;
     this.app.ticker?.remove(this.tickerHandler);
+    this.app.ticker?.remove(this.renderHandler);
     try {
       this.sprites.destroy();
       this.effectSheet.destroy();
@@ -424,6 +460,7 @@ export class PixiRenderer {
   }
 
   selectHero(heroId: string) {
+    this.renderInvalidation.invalidate();
     this.selectedHeroId = heroId;
     for (const [id, unit] of this.units) {
       if (unit.hero && unit.selection) {
@@ -437,6 +474,7 @@ export class PixiRenderer {
    * Any resize letterboxing uses neutral stone, never fake playable yellow. */
   private resizeViewport() {
     if(!this.parent||this.destroyed)return;
+    this.renderInvalidation.invalidate();
     const bounds=this.parent.getBoundingClientRect();
     const width=Math.max(1,bounds.width),height=Math.max(1,bounds.height);
     this.viewportSize={width,height};
@@ -723,6 +761,7 @@ export class PixiRenderer {
   }
 
   selectTarget(targetId?:string) {
+    if(this.selectedTargetId!==targetId)this.renderInvalidation.invalidate();
     this.selectedTargetId = targetId;
     const target = targetId ? this.units.get(targetId) : undefined;
     this.targetRing.visible = !!target && target.currentHp > 0;
@@ -1007,7 +1046,7 @@ export class PixiRenderer {
       body.scale.set(
         (.4 + progress * .6) * RENDER_CONFIG.entity.scale,
       );
-    });
+    },undefined,0,undefined,body);
     if (boss) this.createBossBar(snapshot);
   }
 
@@ -1037,6 +1076,7 @@ export class PixiRenderer {
   /** Cosmetic-only: no engine calls, orders, selection, animation clock or reset. */
   refreshAppearance(heroId:string){
     const unit=this.units.get(heroId);if(!unit?.hero)return;
+    this.renderInvalidation.invalidate();
     const id=this.appearanceSprite?.(heroId)??heroId;
     unit.definition=this.sprites.definition(id);unit.spriteKey=id;
     // Move only name/vitals above the new adornment envelope. Logical footpoint,
@@ -1104,6 +1144,7 @@ export class PixiRenderer {
         if (unit.sprite instanceof AnimatedSprite) unit.sprite.gotoAndStop(0);
         this.setUnitState(unit, 'idle');
       },
+      0,undefined,unit.sprite,
     );
   }
 
@@ -1121,6 +1162,7 @@ export class PixiRenderer {
         unit.sprite.alpha = 1;
         this.setUnitState(unit, 'idle');
       },
+      0,undefined,unit.sprite,
     );
   }
 
@@ -1184,6 +1226,7 @@ export class PixiRenderer {
   }
 
   private applyEvent(event: CombatEvent) {
+    this.renderInvalidation.invalidate();
     if(event.type==='mana_buffer'&&event.data?.entity){const unit=this.units.get(event.targetId!);if(unit){unit.currentHp=event.data.entity.hp;unit.currentMana=event.data.entity.mana;this.drawVitals(unit);this.spellLabel(unit.body.x,unit.body.y-76,'Mana Buffer');}}
     if(event.type==='rune_used'){
       const source=this.units.get(event.sourceId!);if(source)this.castPulse(source);
@@ -1361,6 +1404,7 @@ export class PixiRenderer {
               this.syncDiagnostics();
             }
           },
+          0,undefined,unit.body,
         );
       }
     }
@@ -1703,9 +1747,11 @@ export class PixiRenderer {
     done?: Tween['done'],
     delay = 0,
     key?: string,
+    owner?: {destroyed:boolean},
   ) {
     if (this.destroyed) return;
-    this.tweens.push({ elapsed:-delay, duration, update, done, key });
+    this.tweens.push({ elapsed:-delay, duration, update, done, key, owner });
+    this.renderInvalidation.invalidate();
     this.syncDiagnostics();
   }
 
@@ -1816,6 +1862,9 @@ export class PixiRenderer {
     if (!Number.isFinite(delta) || delta < 0 || this.destroyed) return;
     const active: Tween[] = [];
     for (const tween of this.tweens) {
+      // A death/respawn can retire its owner earlier in this same frame.
+      // Discard only that stale visual callback, never swallow arbitrary errors.
+      if(tween.owner?.destroyed)continue;
       tween.elapsed += delta * this.player.speed;
       if (tween.elapsed < 0) {
         active.push(tween);

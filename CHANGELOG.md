@@ -1,3 +1,13 @@
+## 2026-11-02 — candidato local de invalidação ociosa e lifecycle visual
+
+- Desenho LOW sob demanda emidle/pausa,sem parar ticker/relógio/input/animação ativa.
+- Setters DOM idênticos preservam identidade;seleção/resize/outfits/mira invalidam.
+- WebGL restaurado reconstrói cache;retornoàaba redesenha;listeners removidos.
+- Tweens de unidade descartam donos destruídos,semcatchall ou mudança de combate.
+- 7unit novos/83E2E14,9min/builds/arte/4smokes compilados PASS.
+- Fullunit369/370,timeout originalHuntPressure:61 preservado;sem novo CI/deploy.
+- Medição ociosa93→0draws/25,476→0,158sCPUgráfica;ativo sem ganho relevante.
+
 ## 2026-11-02 — investigação local do custo residual, sem runtime novo
 
 -21 amostras locais com estados/eventos idênticos por duração;sem pageerror.

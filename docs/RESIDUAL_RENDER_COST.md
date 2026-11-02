@@ -1,5 +1,10 @@
 # Custo residual de apresentação — investigação local, 01–02/11/2026
 
+Continuação autorizada02/11: implementação restrita candidata descrita em
+IDLE_RENDER_AND_DOM.md. Benefício ocioso medido, não aceleração de combate;
+limites/gates novos independentes. O restante deste documento preserva o
+diagnóstico anterior à implementação, não uma proibição ainda sem autorização.
+
 ## Resultado e fronteiras
 
 Investigação autorizada após os dois CIs falhos do cache. Foram concluídas

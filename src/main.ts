@@ -1,5 +1,6 @@
 import { GameplayHUD } from './ui/GameplayHUD';
 import {coalescedRefresh} from './ui/coalescedRefresh';
+import {writeText,writeAttribute,writeStyle} from './ui/domWrites';
 import {WORLD_VIEW} from './game/worldViewport';
 import {AppearanceStore} from './app/AppearanceStore';
 import {OutfitPanel} from './ui/OutfitPanel';
@@ -252,14 +253,12 @@ function updateCooldownVisuals(time: number) {
     if (state && remaining === 0) abilityCooldowns.delete(abilityId);
     const duration=domain?.duration??state?.duration??0;
     const ratio = duration>0 ? Math.min(1,remaining/duration) : 0;
-    button
-      .querySelector<HTMLElement>('.cooldown-mask')
-      ?.style.setProperty('--cooldown-angle', `${Math.round(ratio * 360)}deg`);
+    writeStyle(button.querySelector<HTMLElement>('.cooldown-mask')?.style,'--cooldown-angle',`${Math.round(ratio * 360)}deg`);
     const number = button.querySelector<HTMLElement>('.cooldown-number');
-    button.dataset.cooldownRemaining = String(Math.round(remaining));
+    writeAttribute(button,'data-cooldown-remaining',String(Math.round(remaining)));
     button.classList.toggle('cooling-down', remaining > 0);
     if (number) {
-      number.textContent = remaining > 0 ? String(Math.ceil(remaining / 1000)) : '';
+      writeText(number,remaining > 0 ? String(Math.ceil(remaining / 1000)) : '');
     }
   });
 }

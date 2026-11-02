@@ -1,5 +1,16 @@
 # Arquitetura — janela ampliada e Hunt progressiva (30/10/2026)
 
+## 02/11 — candidato local: invalidação de desenho e identidade DOM
+
+RenderInvalidation só governa o callback de desenho LOW do Pixi. Ticker,
+LiveEventPlayer e input mantêm cadência; atividade/eventos/tweens invalidam
+todo frame necessário, inclusive o último cleanup. Idle/pausa estáveis não
+redesenham. Seleção/resize/outfit/mira/push e restauração/visibilidade invalidam;
+restauração também reconstrói o cache, listeners são abortados no dispose.
+PlayerControls.sync/updateCooldownVisuals preservam setters/identidade quando
+o valor DOM é igual, sem mudar os dados ou comandos. IDLE_RENDER_AND_DOM.md
+registra medição/gates/limites; não implica CI ou publicação aprovados.
+
 ## 01/11 — base estática em cache, domínio intacto
 
 PixiRenderer agrupa apenas o cenário imutável em static-terrain dentro da layer
