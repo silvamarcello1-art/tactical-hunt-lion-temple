@@ -1,3 +1,11 @@
+## 2026-11-02 — investigação local do custo residual, sem runtime novo
+
+-21 amostras locais com estados/eventos idênticos por duração;sem pageerror.
+- Custo persiste em apresentação/composição;reduzir draws não garantiu ganho.
+- Desligar transições não melhorou cena completa;nenhuma redução visual entregue.
+- Perfis/timelines/avisos/hashes preservados em RESIDUAL_RENDER_COST.md.
+- Somente docs;sem fix,retry,CI,deploy ou mudança de deadlines/proteções.
+
 ## 2026-11-01 — resultado final do CI do cache; sem publicação
 
 - Push41340601548/PR41340605212 FAILURE:363unit PASS;67E2E PASS/4timeouts/7notrun.

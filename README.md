@@ -1,5 +1,10 @@
 # Lion Temple — Tactical Hunt
 
+02/11: investigação local de21amostras concluída, sem alteração do jogo/CI.
+[Custo residual e limites](docs/RESIDUAL_RENDER_COST.md): apresentação/composição
+ainda caras; nenhuma remoção de layer/CSS foi entregue como solução. Alpha
+pública continua bloqueada pelos gates falhos abaixo.
+
 Estado final do cache em01/11: push/PR falharam com363unit PASS,
 67E2E PASS/4timeouts/7nãoexecutados cada;4cache+4Alpha E2E PASS.
 Builds remotos e deploy não executados; preview Alpha continua bloqueado.

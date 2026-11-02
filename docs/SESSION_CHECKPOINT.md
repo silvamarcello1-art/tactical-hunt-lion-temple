@@ -1,5 +1,20 @@
 # Checkpoint — consolidação visual, movimento e push —24/10/2026
 
+## 02/11 — investigação residual local concluída; sem fix ou novo CI
+
+21 amostras locais SwiftShader da fonte54:15×40s/2718eventos e6×16s/1014eventos,
+estados finais idênticos por duração/overlaps0. Máscara/efeitos/UI/terreno
+isolados não mostraram solução forte; sem Pixi ainda há composição DOM cara.
+Ocultar shell derruba CPU gráfica do controle sem Pixi, mas quase não reduz
+parede. Desligar CSSmotion não melhorou cena completa. Timeline concentra
+espera inclusiva em swap/apresentação, não comprova shader/causa final do CI.
+Quatro warnings preservados em1caso; sem pageerrors. Medições não são gates/FPS.
+[RESIDUAL_RENDER_COST.md](RESIDUAL_RENDER_COST.md) registra21amostras, hashes,
+limites e proposta restrita a invalidação ociosa/escritas DOM idênticas, se
+autorizada. Nenhum runtime/teste/arte/script/deps/workflow alterado, nem CI,
+retry/deploy/automação novo. CIs54 falhos continuam bloqueando preview público.
+Entradas anteriores são histórico; não há validação remota atual em andamento.
+
 ## 01/11 — CI do cache encerrado: publicação bloqueada
 
 Fonte/runtime `54f9a695a825e6e55968f1fe50d9a5fe263b9b6d`.

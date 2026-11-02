@@ -1,5 +1,10 @@
 # Cache do cenário estático — implementação autorizada, 01/11/2026
 
+Investigação posterior02/11:21amostras locais da fonte54 em
+[RESIDUAL_RENDER_COST.md](RESIDUAL_RENDER_COST.md). Custo de apresentação e
+composição persiste; nenhuma layer isolada ou remoção CSSmotion resolveu a cena
+completa. Não é fix/gate novo; os dois CIs abaixo continuam falhos.
+
 ## 01/11 — CI do cache encerrado: publicação bloqueada
 
 Fonte/runtime `54f9a695a825e6e55968f1fe50d9a5fe263b9b6d`.
