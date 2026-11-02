@@ -1,5 +1,24 @@
 # Checkpoint — consolidação visual, movimento e push —24/10/2026
 
+## 02/11 — CI idle/DOM encerrado; publicação bloqueada
+
+Runtime8f29e868c8c8bf9ff9bd5e86025db5ac7069513b enviado com autorização explícita.
+Push41505408182/job125483319751 e PR41505417297/job125483352076 FAILURE.
+Ambos370unit/36files,frozen install,health,typecheck PASS.
+E2E push72PASS/4FAIL/7nãoexecutados59,8min;PR73PASS/3FAIL/7nãoexecutados59,6min.
+Três timeouts comuns360s/360s/220s;push também assertion de resize idle:83,
+draws16 não aumentou após64ms. Essa prova passou naPR;causa não comprovada.
+Sete traces preservados/SHA256 conferidos;nenhum pageError registrado.
+Clock250ms custava~2,08–2,62s parede;loops em2ciclos,boss ainda ativo.
+Timeout antes do teardown/sessionclosed;não alegar crash/causa final resolvida.
+Builds/build:preview/diff finais não executados;deploys SKIPPED.
+Manifest público permaneceb9d0e31 anterior;sem smoke público sobre build antigo.
+Detalhes em IDLE_RENDER_CI_DIAGNOSIS.md. Sem fix/retry/limites alterados.
+Próximo passo exige direção para investigação/correção dirigida,não retry cego.
+Resultados locais abaixo e estado CI pendente são histórico,supersedidos aqui.
+
+
+
 ## 02/11 — otimização local implementada; envio ao CI retido
 
 Desenho ocioso por invalidação, setters DOM idênticos preservados e lifecycle

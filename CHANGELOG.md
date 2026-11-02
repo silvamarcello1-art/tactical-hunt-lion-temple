@@ -1,3 +1,12 @@
+## 2026-11-02 — CI idle/DOM encerrado; preview bloqueado
+
+- Fonte8f29e86 enviada com autorização;push/PR370unit PASS,mas E2E falharam.
+- Push72PASS/4FAIL/7nãoexecutados;PR73PASS/3FAIL/7nãoexecutados.
+- Três timeouts comuns;push também falha real de redesenho após resize.
+- Sete traces/logs preservados e hashes conferidos;sem pageError registrado.
+- Deploys SKIPPED;manifest público b9d0e31 anterior;sem retry/fix automático.
+- Diagnóstico e limites em docs/IDLE_RENDER_CI_DIAGNOSIS.md.
+
 ## 2026-11-02 — candidato local de invalidação ociosa e lifecycle visual
 
 - Desenho LOW sob demanda emidle/pausa,sem parar ticker/relógio/input/animação ativa.
